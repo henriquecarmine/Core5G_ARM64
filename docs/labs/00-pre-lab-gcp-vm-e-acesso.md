@@ -42,15 +42,15 @@ Sugestão alinhada aos labs (Docker, várias imagens, core + UERANSIM):
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Nome                    | Ex.: `lab-open5gs`                                                                                                                                                                     |
 | Região / zona           | Escolha uma zona próxima (ex.: `southamerica-east1-a`); se usar `gcloud` depois, mantenha a **mesma zona** nos comandos.                                                               |
-| Série / tipo de máquina | **E2** ou **N2**, **4 vCPU**, **8–16 GiB** de memória (16 GiB reduz risco de falha no *pull* / *compose*).                                                                             |
-| SO                      | **Ubuntu 22.04 LTS** ou **24.04 LTS** (x86_64).                                                                                                                                        |
+| Série / tipo de máquina | **T2A** (Tau T2A, ARM `aarch64`), **4 vCPU**, **8–16 GiB** de memória (16 GiB reduz risco de falha no *pull* / *compose*). Equivalente AWS validado neste projeto: **EC2 `t4g.micro`** (Graviton2 / Neoverse-N1) — ver §4 da [Bíblia do projeto](../../core5g-arm64-bible.md). |
+| SO                      | **Ubuntu 22.04 LTS** ou **24.04 LTS**, imagem **`aarch64`** (no GCP, família **T2A** já entrega Ubuntu ARM; no AWS Console, escolha a AMI marcada **arm64**).                          |
 | Disco de inicialização  | **50–80 GB** balanceado ou SSD (imagens Docker ocupam bastante espaço).                                                                                                                |
 | Firewall                | **Permitir HTTP/HTTPS** é opcional. Para abrir a WebUI pela **internet sem `gcloud`** (seção 7.1), você criará uma **regra de firewall** só para a porta **9999** (e etiquetas na VM). |
 
 
 Crie a instância e aguarde o estado **Em execução**.
 
-**ARM (opcional, comparação arquitetura):** famílias como **T2A** usam `aarch64`. Antes de gravar, valide se todas as imagens do `docker compose` sobem sem emulação; caso contrário, mantenha a VM **x86_64** como roteiro principal.
+**Por que ARM e não x86_64:** este projeto foi originalmente escrito pensando numa VM **x86_64** (`E2`/`N2`), mas foi adaptado e **validado de ponta a ponta numa instância ARM real** (AWS `t4g.micro`, Ubuntu 24.04.4 LTS, kernel `6.17`, Docker `29.6.0` — pacotes `arm64`). Use ARM (`T2A` no GCP, `t4g`/`t4g.micro`+ no AWS) como roteiro principal: é mais barato e já confirmado funcionando sem emulação. Único cuidado real encontrado: **imagens Docker sem build `arm64`** — ver bug documentado em [`core5g-arm64-bible.md` §8.1](../../core5g-arm64-bible.md#81--imagens-gradiantopen5gs-sem-build-arm64) (fixar `gradiant/open5gs`/`gradiant/open5gs-webui` na tag `2.7.2`, já refletido em `server/.env`). Se alguma imagem do seu `docker compose` não tiver manifest `arm64`, é esse o sintoma a procurar — não é motivo para voltar a x86_64 por padrão.
 
 ---
 
@@ -187,7 +187,7 @@ Confira se a pasta `core/` e `ueransim/` existem e que os scripts têm permissã
 
 ## Checklist rápido (docente / gravador)
 
-- VM Ubuntu x86_64, RAM e disco suficientes.
+- VM Ubuntu **`aarch64`/ARM** (família `T2A` no GCP; `t4g` no AWS — validado neste projeto), RAM e disco suficientes.
 - SSH testado (navegador; `gcloud` só se for usar Opção B).
 - Docker + Compose v2 funcionando sem sudo.
 - Clone do repo no caminho esperado pelos roteiros 01/02.

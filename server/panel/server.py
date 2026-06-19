@@ -52,6 +52,16 @@ COMMANDS: dict[str, dict] = {
     "down-all": {"cmd": ["bash", "-c", "./scripts/down_ran.sh; ./scripts/down_core.sh"], "cwd": SERVER_DIR},
     "status": {"cmd": ["./scripts/healthcheck.sh"], "cwd": SERVER_DIR},
     "test-throughput": {"cmd": ["./scripts/test_throughput.sh"], "cwd": SERVER_DIR},
+    "test-system-status": {"cmd": ["./scripts/test-system-status.sh"], "cwd": SERVER_DIR},
+    "test-ue-connection": {"cmd": ["./scripts/test_ue_connection.sh"], "cwd": SERVER_DIR},
+    "test-upf-failover": {"cmd": ["./scripts/test_upf_failover.sh"], "cwd": SERVER_DIR},
+    "p2-up-core": {"cmd": ["./scripts/up_core.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-down-core": {"cmd": ["./scripts/down_core.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-up-e2-lab": {"cmd": ["./scripts/up_e2_lab.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-down-e2-lab": {"cmd": ["./scripts/down_e2_lab.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-test-e2-sm": {"cmd": ["./scripts/test_e2_sm.sh", "all"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-test-e2-kpm": {"cmd": ["./scripts/test_e2_kpm.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-test-e2-rc": {"cmd": ["./scripts/test_e2_rc_attach.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
 }
 
 _VALID_DISTANCES = {"none", "100m", "500m", "1km", "3km", "off"}
@@ -177,6 +187,28 @@ def read_container_stats() -> list[dict]:
     return containers
 
 
+def process_running(pattern: str) -> bool:
+    try:
+        return subprocess.run(
+            ["pgrep", "-f", pattern], capture_output=True, timeout=3
+        ).returncode == 0
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return False
+
+
+def read_group_status(containers: list[dict]) -> dict[str, bool]:
+    """Estado on/off dos toggles do painel: Projeto 1 via docker (containers
+    do compose), Projeto 2 via docker (core) + processo nativo (gNB/RIC, que
+    não roda em container)."""
+    names = [c["name"] for c in containers]
+    return {
+        "p1-core": any("nrf" in n for n in names),
+        "p1-ran": any("ueransim" in n for n in names),
+        "p2-core": any("oai-amf" in n for n in names),
+        "p2-e2lab": process_running("nr-softmodem") or process_running("nearRT-RIC"),
+    }
+
+
 def stream_telemetry() -> Iterator[str]:
     prev_idle, prev_total = read_cpu_times()
     while True:
@@ -188,7 +220,8 @@ def stream_telemetry() -> Iterator[str]:
 
         host = read_host_metrics()
         host["cpu_pct"] = cpu_pct
-        payload = {"host": host, "containers": read_container_stats()}
+        containers = read_container_stats()
+        payload = {"host": host, "containers": containers, "groups": read_group_status(containers)}
         yield json.dumps(payload) + "\n"
 
 

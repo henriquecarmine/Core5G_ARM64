@@ -38,6 +38,19 @@ else
     echo "Docker instalado: $(sudo docker --version)"
 fi
 
+# Shim docker-compose (v1) -> docker compose (v2 plugin): scripts de terceiros
+# (oai-cn5g-fed/docker-compose/core-network.py) ainda chamam o binário antigo.
+if ! command -v docker-compose &> /dev/null; then
+    sudo tee /usr/local/bin/docker-compose > /dev/null <<'EOF'
+#!/bin/bash
+exec docker compose "$@"
+EOF
+    sudo chmod +x /usr/local/bin/docker-compose
+    echo "Shim docker-compose -> docker compose criado em /usr/local/bin/docker-compose."
+else
+    echo "docker-compose já disponível: $(docker-compose version --short 2>/dev/null || echo ok)"
+fi
+
 echo ""
 echo "=========================================="
 echo "2/5 - Swap de ${SWAP_SIZE_GB}G (swappiness=${SWAPPINESS})"

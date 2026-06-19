@@ -38,6 +38,14 @@ prazos" do `pdfs/aula04-xapps_opensource.pdf`):
 
 ---
 
+## Créditos
+
+Repositório mantido por **Henrique Carmine** —
+[henriquecarmine@gmail.com](mailto:henriquecarmine@gmail.com) ·
+[@henriquecarmine](https://github.com/henriquecarmine).
+
+---
+
 ## 2. Como tudo isso funciona, explicado para quem não é técnico
 
 Pensa na rede 5G como uma **empresa de entregas** (tipo Correios), só que em
@@ -308,11 +316,11 @@ UE                  gNB              AMF          AUSF    UDM    SMF    UPF
  │◄──Security Mode Cmd──│◄────────────────│               │      │      │
  │──Security Mode Cmp──►│────────────────►│               │      │      │
  │◄──Reg Accept─────────│◄────────────────│               │      │      │
- │──PDU Session Req─────►│────────────────►│──────────────────────►SMF  │
+ │──PDU Session Req────►│────────────────►│──────────────────────►SMF   │
  │                      │                 │                      │──N4──►UPF
  │◄─PDU Session Accept──│◄────────────────│◄─────────────────────│      │
  │ (uesimtun0 UP)       │                 │                      │      │
- │═════════GTP-U sobre N3══════════════════════════════════════════►│ N6►internet
+ │═════════GTP-U sobre N3══════════════════════════════════════════►    │ N6►internet
 ```
 
 ---
@@ -375,12 +383,16 @@ UE                  gNB              AMF          AUSF    UDM    SMF    UPF
 | Hostname | `core5g-arm64.duckdns.org` (DDNS — IP público é dinâmico) |
 | IP original (histórico) | `3.145.40.200` — **nunca hardcodar**, sempre usar o hostname |
 | Usuário | `ubuntu` |
-| Chave SSH | `ssl/core5g_openran_arm64.pem` |
-| SO | Ubuntu 24.04.4 LTS, kernel 6.17, `aarch64` |
-| CPU | 2 vCPUs |
-| RAM | 906 MiB (instância pequena, provável `t4g.micro`) |
+| Chave SSH | `ssl/core5g_openran_arm64.pem` (Ed25519) |
+| Tipo de instância | **AWS EC2 `t4g.micro`** (Graviton2 / Neoverse-N1, `aarch64`) — confirmado via metadata da instância (IMDSv2) |
+| Região AWS | `us-east-2` |
+| SO | Ubuntu 24.04.4 LTS (`noble`), kernel `6.17.0-1017-aws`, `aarch64` |
+| CPU | 2 vCPUs — `Neoverse-N1` (ARM Graviton2) |
+| RAM | 906 MiB |
 | Swap | 8 GiB em `/swapfile`, `vm.swappiness=10`, persistente via `/etc/fstab` |
 | Disco | ~29 GB total |
+| Docker | `29.6.0` (pacotes `docker-ce`/`docker-ce-cli`/`containerd.io` arquitetura `arm64`, repositório oficial Docker) |
+| Docker Compose | `v5.1.4` (plugin) |
 
 ### Acesso manual (só pra debug — preferir `./deploy.sh ssh`)
 
@@ -554,6 +566,27 @@ Em `server/oai-cn-gnb-e2/`:
 Fluxo de subida documentado em
 `server/oai-cn-gnb-e2/docs/E2_FLEXRIC.md`: Core → RIC → gNB → xApp.
 
+### 7.a Projeto 1 vs. Projeto 2 — em que exatamente eles diferem
+
+Os dois implementam uma rede 5G fim a fim, mas em pontos opostos do
+espectro "simples e validado" ↔ "complexo e fiel ao O-RAN":
+
+| Aspecto | Projeto 1 (Open5GS + UERANSIM) | Projeto 2 (OAI + FlexRIC) |
+|---|---|---|
+| Core 5G | Open5GS (imagens prontas, `gradiant/open5gs`) | OAI CN5G (`oai-cn5g-fed/`), UPF em VPP |
+| RAN | UERANSIM — gNB/UE **simulados em software**, sem PHY/MAC reais | gNB OAI `nr-softmodem` em **RFSIM** — PHY/MAC/RLC/PDCP/RRC reais, rádio 100% software (sem hardware de RF) |
+| Camada de controle externa (RIC) | **Não existe** — rede monolítica, sem separação dado/controle | **FlexRIC** (near-RT RIC) conectado ao gNB via E2AP (porta 36421) |
+| Inteligência/observabilidade | Scripts do painel (`tc netem`, `iperf3`) simulam canal/medem banda de fora | **xApps** (`xapp_kpm_moni`, `xapp_kpm_rc`) consomem métricas/controlam o gNB de dentro da arquitetura, via Service Models E2 padronizados (KPM v2.03, RC v1.03) + SMs custom (MAC/RLC/PDCP/GTP) |
+| Conceito 3GPP/O-RAN ilustrado | Registro NAS, sessão PDU, QoS, failover de UPF — "rede 5G funciona" | Separação **CU/DU/RIC**, *RAN programável*: o RIC pode observar (KPM) e atuar (RC) sobre o gNB em tempo quase-real — é o conceito central de Open RAN |
+| Complexidade de build | Imagens Docker prontas, só `docker compose up` | Build C/C++ nativo a partir do source (`build_oai`, FlexRIC), pesado em CPU/RAM/disco — não tem imagem pronta pra ARM64 |
+| Estado em 2026-06-18 | Completo, validado E2E (§9), já apresentado | Build do zero em andamento no servidor (ver `CHANGELOG.md` v0.8.0) — nada estava funcional antes disso, apesar de aparências de progresso anterior |
+
+Em uma frase: o **Projeto 1** prova que uma rede 5G básica funciona ponta
+a ponta; o **Projeto 2** acrescenta a camada de **RAN inteligente e
+programável** (RIC + xApps falando E2 com o gNB) que é a própria
+definição de O-RAN — e é tecnicamente mais pesado porque não há imagem
+Docker pronta: tudo é compilado a partir do source, nativo `aarch64`.
+
 ---
 
 ## 8. Bugs reais encontrados e corrigidos
@@ -665,8 +698,20 @@ CPU/RAM-intensivo) — ainda não medido, testar com cautela.
 
 - [ ] Confirmar com o professor a rubrica/plano de testes oficiais do
       Projeto 2 (não publicados no repo de origem na data da checagem).
-- [ ] Buildar e validar `server/oai-cn-gnb-e2/` no servidor (medir uso de
-      RAM/CPU do build do OAI — instância pequena pode não bastar).
+- [x] Diagnóstico do estado real do Projeto 2 (2026-06-18): nada estava
+      funcional — `.so` de Service Model eram x86-64 (errado pra ARM64),
+      único log existente mostrava E2SM-RC falhando com core dump, sem
+      nenhum binário compilado no servidor. Ver `CHANGELOG.md` v0.8.0.
+- [ ] Buildar e validar `server/oai-cn-gnb-e2/` no servidor — **em
+      andamento**: dependências instaladas com sucesso
+      (`build_oai --ninja -I`); `build_e2.sh` (gNB+nrUE+agente E2)
+      rodando; faltam `build_flexric_tools.sh` (RIC+xApps+SMs nativos
+      aarch64) e a validação E2E (`up_e2_lab.sh` + `test_e2_*.sh`).
+      Projeto 1 foi parado temporariamente no servidor pra liberar RAM
+      durante o build — religar depois.
+- [x] Grupo "Projeto 2 — OAI/FlexRIC (E2)" no painel (`server.py` +
+      `index.html`): botões up/down/test do E2 lab, mesmo mecanismo
+      genérico `data-cmd` → `POST /api/run/{cmd}` do Projeto 1.
 - [ ] Avaliar reportar os bugs do §8 ao professor/repositório original.
 - [ ] Implementar o restante do blueprint do painel de observabilidade
       (`docs/blueprint-painel-observabilidade.md`) — telemetria (§5) e

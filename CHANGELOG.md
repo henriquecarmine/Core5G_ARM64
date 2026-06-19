@@ -16,8 +16,68 @@ PATCH em correções pontuais.
 | 0.5.0  | 2026-06-19 | Modal UE + action bar + rodapé de versão        |
 | 0.6.0  | 2026-06-18 | UE Lab unificado + logs coloridos + 3GPP/Shannon |
 | 0.7.0  | 2026-06-18 | Legendas de fórmulas + dropdown duração + info banda + logs corrigidos + visão O-RAN |
+| 0.8.0  | 2026-06-18 | Build do Projeto 2 (OAI/FlexRIC) no servidor + grupo "Projeto 2" no painel |
 
 ---
+
+### Projeto 2 (OAI + FlexRIC/E2) — diagnóstico de estado real, build no servidor, botões no painel
+
+- **Diagnóstico (2026-06-18)**: pesquisa nos `pdfs/` + inspeção direta do
+  servidor mostraram que, ao contrário da impressão inicial ("progresso
+  substancial"), **nada do Projeto 2 estava de fato funcional**:
+  - `server/oai-cn-gnb-e2/flexric-lib/*.so` (8 libs de Service Model)
+    eram binários **x86-64**, não `aarch64` — herdados do material do
+    curso, inúteis no servidor ARM64 de produção.
+  - O único log não-vazio (`logs/test_rc_run.log`) registrava uma
+    **falha**: assertion error no E2SM-RC (`e2ap_dec_e42_setup_response`,
+    `protocolIEs.list.count == 3` falhou) terminando em `Aborted (core
+    dumped)`.
+  - Não havia nenhum binário compilado (`nr-softmodem`, `nearRT-RIC`) em
+    lugar nenhum do `~/server/oai-cn-gnb-e2/` remoto — só código-fonte.
+  - Conclusão: Projeto 2 precisa ser **buildado do zero e validado**,
+    não "religado" — com a apresentação em 2026-06-20 (Aula 06), restavam
+    ~2 dias.
+- **Decisão de execução**: build feito **direto no servidor de
+  produção** (AWS `t4g.micro`, 906 MiB RAM), em vez de localmente, porque
+  o build precisa ser nativo `aarch64` e o servidor é o único ambiente
+  ARM64 disponível. Para caber na RAM, **Projeto 1 foi parado
+  temporariamente** (`down_ran.sh` + `down_core.sh`) antes do build —
+  RAM livre subiu de ~162 MiB para ~555 MiB.
+- **Princípio confirmado com o usuário**: tudo que é código/config fica
+  versionado no repo e chega ao servidor só via `./deploy.sh` (já
+  existia `sync-oai` pra isso); a única coisa que roda via SSH direto é
+  a **compilação em si** (não dá pra "deployar" um build nativo
+  ARM64 como arquivo estático — tem que compilar na máquina de destino).
+  Avaliada a ideia de criar um subcomando `build-oai` no `deploy.sh` e
+  **descartada** por decisão do usuário ("tá bom como está").
+- **Pipeline de build executado no servidor** (scripts 100% versionados
+  em `server/oai-cn-gnb-e2/scripts/`, sincronizados via
+  `./deploy.sh sync-oai`):
+  1. `sudo ./build_oai --ninja -I` (dentro de
+     `openairinterface5g/cmake_targets/`) — instala dependências de
+     sistema (ninja, libsctp, libconfig, etc.) via apt. **Concluído com
+     sucesso** ("BUILD SHOULD BE SUCCESSFUL").
+  2. `./scripts/build_e2.sh` — clona o submódulo FlexRIC (branch `dev`)
+     se ausente, compila `nr-softmodem` + `nr-uesoftmodem` com agente E2
+     embutido (`-DE2AP_VERSION=E2AP_V2 -DKPM_VERSION=KPM_V2_03`). Em
+     andamento no momento deste registro.
+  3. *(pendente)* `./scripts/build_flexric_tools.sh` — compila o
+     `nearRT-RIC` + xApps (`xapp_kpm_moni`, `xapp_kpm_rc`, etc.) e os 8
+     `.so` de Service Model nativos `aarch64` (substituindo os x86-64
+     herdados), via `sync_flexric_lib.sh`.
+  4. *(pendente)* validação E2E: `up_e2_lab.sh`, `test_e2_sm.sh
+     cust|oran|all`, `test_e2_kpm.sh`, `test_e2_rc_attach.sh`,
+     `verify_e2_lab.sh`.
+  5. *(pendente)* religar o Projeto 1 (`up_core.sh`/`up_ran.sh` ou
+     painel) depois da validação, já que foi parado só pra liberar RAM.
+- **Painel**: novo grupo **"Projeto 2 — OAI/FlexRIC (E2)"** na coluna de
+  comandos (ao lado de "Projeto 1 — Open5GS"), com botões:
+  `Up Core+gNB (OAI)`, `Up E2 lab (RIC+xApps)`, `Testar E2 SM (all)`,
+  `Testar E2SM-KPM`, `Testar E2SM-RC (attach)`, `Down E2 lab`, `Down all
+  (OAI)`. Reaproveita o mecanismo genérico já existente
+  (`button[data-cmd]` → `POST /api/run/{cmd}`), só com novas entradas no
+  dict `COMMANDS` de `server/panel/server.py` apontando pros scripts em
+  `server/oai-cn-gnb-e2/scripts/` (cwd diferente do Projeto 1).
 
 ## [0.7.0] — 2026-06-18
 

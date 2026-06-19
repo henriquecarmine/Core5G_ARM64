@@ -106,7 +106,7 @@ docker run --rm hello-world
 | `permission denied` ao rodar `docker` | Grupo `docker`: `newgrp docker` ou nova sessão SSH após `usermod`. |
 | `docker compose` não encontrado | Confirme o pacote `docker-compose-plugin` (ex.: `dpkg -l` e busque por esse nome). |
 | Proxy corporativo | Configure proxy para `apt` e para o *daemon* Docker conforme a política da rede. |
-| ARM64 (`aarch64`) | O repositório acima usa `dpkg --print-architecture`; use imagens dos *compose* compatíveis com ARM ou espere emulação, conforme o projeto. |
+| ARM64 (`aarch64`) | O repositório acima usa `dpkg --print-architecture`, então já resolve para `arm64` sem ajuste manual — é exatamente o que este projeto usa em produção (AWS `t4g.micro`, Ubuntu 24.04.4, Docker `29.6.0`, pacotes `docker-ce`/`docker-ce-cli`/`containerd.io` em `arm64`). O único cuidado real é a **imagem do compose**, não o Docker em si: confirme que cada imagem publica manifest `linux/arm64/v8` (ex.: `gradiant/open5gs` só publica `arm64` até a tag `2.7.2` — ver [`core5g-arm64-bible.md` §8.1](../../core5g-arm64-bible.md#81--imagens-gradiantopen5gs-sem-build-arm64)); sem isso, `docker compose up` falha com `no matching manifest for linux/arm64/v8`. |
 
 ---
 

@@ -598,7 +598,7 @@ Buildar nativamente para arm64 no Mac Apple Silicon (Docker Desktop com engine `
 Script: [`build-oai-arm64.sh`](build-oai-arm64.sh) na raiz do repositório.
 
 ```bash
-./build-oai-arm64.sh build    # compila as 7 imagens localmente no Mac
+./build-oai-arm64.sh build    # compila as 6 imagens localmente no Mac
 ./build-oai-arm64.sh save     # exporta para /tmp/oai-images/*.tar
 ./build-oai-arm64.sh upload   # scp dos .tar para o servidor
 ./build-oai-arm64.sh load     # docker load no servidor + rm dos .tar
@@ -690,6 +690,62 @@ O `oai-upf-vpp` depende de:
 - VPP 21.01 + DPDK com dependências x86-específicas
 
 O lab principal usa o UPF do Open5GS (`open5gs-upfd`), não o `oai-upf-vpp`, portanto o build bem-sucedido dos 6 componentes de Control Plane (AMF, SMF, NRF, UDR, UDM, AUSF) é suficiente para todos os cenários de teste documentados.
+
+#### Resultado — builds concluídos em 2026-06-19
+
+Compilação realizada no Mac Apple Silicon (M-series) via Docker Desktop `linux/arm64`. Total de tempo: ~40 min por imagem (base stage + build from source + cmake + make). Imagens carregadas no servidor AWS t4g.micro (Graviton2, Ohio) e verificadas com `uname -m → aarch64`.
+
+| Imagem                         | Tag    | Tamanho | Build SHA (digest)                                        |
+|-------------------------------|--------|---------|-----------------------------------------------------------|
+| oaisoftwarealliance/oai-amf   | v1.5.1 | 280 MB  | `sha256:404e88009215...` |
+| oaisoftwarealliance/oai-smf   | v1.5.1 | 260 MB  | `sha256:90d5058e53c6...` |
+| oaisoftwarealliance/oai-nrf   | v1.5.1 | 264 MB  | `sha256:49528805e9ae...` |
+| oaisoftwarealliance/oai-udr   | v1.5.1 | 268 MB  | `sha256:3d2cab6d1063...` |
+| oaisoftwarealliance/oai-udm   | v1.5.1 | 257 MB  | `sha256:f49f777b6d06...` |
+| oaisoftwarealliance/oai-ausf  | v1.5.1 | 255 MB  | `sha256:e7a98d7f0ee8...` |
+
+#### Onde estão os arquivos
+
+**Servidor AWS** (destino final):
+```
+# Imagens já carregadas no daemon Docker — prontas para uso:
+docker images | grep oaisoftwarealliance
+```
+
+**Mac local** (arquivos `.tar` para redistribuição / backup):
+```
+/tmp/oai-images/oai-amf.tar    (~63 MB)
+/tmp/oai-images/oai-smf.tar    (~60 MB)
+/tmp/oai-images/oai-nrf.tar    (~60 MB)
+/tmp/oai-images/oai-udr.tar    (~61 MB)
+/tmp/oai-images/oai-udm.tar    (~59 MB)
+/tmp/oai-images/oai-ausf.tar   (~59 MB)
+# total: ~362 MB em /tmp/oai-images/
+```
+
+Para recarregar em qualquer host arm64:
+```bash
+docker load -i /tmp/oai-images/oai-amf.tar
+# ... repetir para cada componente
+```
+
+Para recompilar do zero (requer Mac Apple Silicon + Docker Desktop):
+```bash
+git clone https://github.com/henriquecarmine/Core5G_ARM64.git
+cd Core5G_ARM64
+cp .env.example .env   # preencher AWS_SERVER_HOST e AWS_SSH_KEY_PATH
+./build-oai-arm64.sh build   # ~4 h total para os 6 componentes
+./build-oai-arm64.sh save    # exporta para /tmp/oai-images/
+./build-oai-arm64.sh upload  # scp para o servidor
+./build-oai-arm64.sh load    # docker load no servidor
+```
+
+**Dockerfiles** com todos os patches arm64 aplicados:
+```
+server/oai-cn-gnb-e2/oai-cn5g-fed/component/oai-<comp>/docker/Dockerfile.<comp>.ubuntu
+server/oai-cn-gnb-e2/oai-cn5g-fed/component/oai-<comp>/build/scripts/build_helper.<comp>
+server/oai-cn-gnb-e2/oai-cn5g-fed/component/oai-<comp>/src/*/CMakeLists.txt
+```
 
 ---
 

@@ -94,8 +94,8 @@ done
 echo "Iniciando nrUE em background..."
 if [ "$GNB_NRB" = "106" ]; then
     UE_RF_ARGS=(--rfsim -r 106 --numerology 1 --band 78 -C 3619200000 --ssb 516)
-elif [ "$GNB_NRB" = "24" ]; then
-    UE_RF_ARGS=(--rfsim -r 24 --numerology 1 --band 78 -C 3604320000 --ssb 40)
+elif [ "$GNB_NRB" = "25" ]; then
+    UE_RF_ARGS=(--rfsim -r 25 --numerology 1 --band 78 -C 3604320000 --ssb 40)
 else
     UE_RF_ARGS=(--rfsim -r "$GNB_NRB" --numerology 1 --band 78 -C "$GNB_DL_FREQ")
 fi

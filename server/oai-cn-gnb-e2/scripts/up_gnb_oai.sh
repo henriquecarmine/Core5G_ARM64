@@ -91,27 +91,32 @@ for i in $(seq 1 10); do
     fi
 done
 
-echo "Iniciando nrUE em background..."
-if [ "$GNB_NRB" = "106" ]; then
-    UE_RF_ARGS=(--rfsim -r 106 --numerology 1 --band 78 -C 3619200000 --ssb 516)
-elif [ "$GNB_NRB" = "51" ]; then
-    UE_RF_ARGS=(--rfsim -r 51 --numerology 1 --band 78 -C 3469440000 --ssb 186)
+UE_PID=""
+if [ "${SKIP_UE:-0}" = "1" ]; then
+    echo "SKIP_UE=1 — nrUE omitido (libera ~438 MB para gNB + Core no t4g.micro)."
 else
-    UE_RF_ARGS=(--rfsim -r "$GNB_NRB" --numerology 1 --band 78 -C "$GNB_DL_FREQ")
+    echo "Iniciando nrUE em background..."
+    if [ "$GNB_NRB" = "106" ]; then
+        UE_RF_ARGS=(--rfsim -r 106 --numerology 1 --band 78 -C 3619200000 --ssb 516)
+    elif [ "$GNB_NRB" = "51" ]; then
+        UE_RF_ARGS=(--rfsim -r 51 --numerology 1 --band 78 -C 3469440000 --ssb 186)
+    else
+        UE_RF_ARGS=(--rfsim -r "$GNB_NRB" --numerology 1 --band 78 -C "$GNB_DL_FREQ")
+    fi
+    sudo nohup ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \
+        "${UE_RF_ARGS[@]}" \
+        > "$UE_LOG" 2>&1 &
+    UE_PID=$!
+    echo "  nrUE PID: $UE_PID (logs: $UE_LOG)"
 fi
-sudo nohup ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \
-    "${UE_RF_ARGS[@]}" \
-    > "$UE_LOG" 2>&1 &
-UE_PID=$!
-echo "  nrUE PID: $UE_PID (logs: $UE_LOG)"
 
 echo ""
 echo "=========================================="
 echo "gNB OAI iniciado com sucesso!"
 echo "=========================================="
 echo ""
-echo "PIDs: gNB=$GNB_PID, nrUE=$UE_PID"
-echo "Logs: $GNB_LOG, $UE_LOG"
+echo "PIDs: gNB=$GNB_PID${UE_PID:+, nrUE=$UE_PID}"
+echo "Logs: $GNB_LOG${UE_PID:+, $UE_LOG}"
 echo ""
 echo "Para parar: ./scripts/down_gnb_oai.sh"
 echo ""

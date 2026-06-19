@@ -41,7 +41,7 @@ GNB_CONF_24="${SCRIPT_DIR}/gnb_24prb.conf"
 if [ "$AVAIL_MB" -lt 700 ] && [ -f "$GNB_CONF_24" ]; then
     export GNB_CONF_PATH="$GNB_CONF_24"
     export GNB_NRB=24
-    export GNB_DL_FREQ=3604800000
+    export GNB_DL_FREQ=3604320000   # frequência calculada pelo gNB para 24 PRBs band 78
     echo "  Usando 24 PRBs (RAM insuficiente para 106 PRBs; upgrade para t4g.small para 100 MHz)."
 else
     echo "  Usando 106 PRBs (100 MHz, config padrão)."

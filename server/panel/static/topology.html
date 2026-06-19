@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Core5G_ARM64 — Topologia Open RAN</title>
+<style>
+  :root {
+    --bg:#16181d; --panel:#1e2128; --border:#2c3038; --text:#e6e6e6;
+    --muted:#8a8f98; --accent:#e8590c; --green:#2f9e44; --yellow:#f59f00;
+    --red:#e03131; --info:#4dabf7;
+    --c-external:#4dabf7; --c-admin:#b197fc; --c-ran:#2f9e44; --c-core:#e8590c;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+  /* ---- Identidade: barra superior + botões mono ---- */
+  header { padding:11px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; flex-shrink:0; }
+  header h1 { font-size:15px; margin:0; font-weight:600; letter-spacing:.01em; }
+  header h1 b { color:var(--accent); font-weight:600; }
+  .btn { display:inline-flex; align-items:center; gap:7px; background:#21242b; color:var(--text);
+         border:1px solid var(--border); border-radius:7px; padding:6px 12px; font-size:12.5px;
+         cursor:pointer; text-decoration:none; transition:border-color .15s, background .15s; white-space:nowrap; }
+  .btn:hover { border-color:var(--accent); background:#262a32; }
+  .btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+  .modes { display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; }
+  .modes button { background:#1b1e24; color:var(--muted); border:none; border-right:1px solid var(--border);
+                  padding:6px 13px; font-size:12.5px; cursor:pointer; transition:.15s; }
+  .modes button:last-child { border-right:none; }
+  .modes button:hover { color:var(--text); background:#262a32; }
+  .modes button.active { background:var(--accent); color:#fff; }
+  .spacer { margin-left:auto; }
+
+  /* ---- Palco ---- */
+  #stage { flex:1; position:relative; overflow:hidden;
+           background:radial-gradient(circle at 1px 1px,#23262e 1px,transparent 0); background-size:26px 26px; }
+  svg#diagram { width:100%; height:100%; cursor:grab; }
+  svg#diagram.grabbing { cursor:grabbing; }
+  .zoom-ctrl { position:absolute; bottom:14px; right:14px; display:flex; gap:6px; }
+  .zoom-ctrl button { width:32px; height:32px; background:var(--panel); border:1px solid var(--border);
+                      color:var(--text); border-radius:6px; cursor:pointer; font-size:16px; }
+  .zoom-ctrl button:hover { border-color:var(--accent); }
+  .mode-hint { position:absolute; top:12px; left:14px; font-size:12px; color:var(--muted);
+               background:rgba(30,33,40,.9); padding:7px 13px; border-radius:7px; border:1px solid var(--border); max-width:440px; }
+
+  /* ---- Cards (nós) ---- */
+  .node { cursor:pointer; }
+  .node .card { rx:9; stroke-width:1.5; fill:var(--panel); }
+  .node .title { font-size:12.5px; font-weight:600; fill:var(--text); }
+  .node .role  { font-size:12px; font-weight:600; }
+  .node .tech  { font-size:9.5px; fill:var(--muted); font-family:"SF Mono",Menlo,Consolas,monospace; }
+  .node.planned .card { fill:#1a1c20; stroke:#3a3f48 !important; stroke-dasharray:5 4; }
+  .node.planned .title { fill:#5a606b; } .node.planned .role { fill:#5a606b !important; }
+  .node .dot { r:4; }
+
+  .link { stroke-width:1.6; fill:none; }
+  .link.dashed { stroke-dasharray:6 5; }
+  .link.planned { stroke:#3a3f48; stroke-dasharray:4 5; }
+  .link.warn { stroke:var(--red); stroke-width:2.2; }
+  .link.flow { stroke-width:3; stroke-dasharray:9 7; animation:flowmove .55s linear infinite; }
+  .link.flow.planned { stroke-width:2.4; }
+  @keyframes flowmove { from { stroke-dashoffset:0; } to { stroke-dashoffset:-16; } }
+  .link-label { font-size:10px; fill:var(--text); font-family:"SF Mono",Menlo,Consolas,monospace; }
+  .link-label-bg { fill:var(--bg); opacity:.9; }
+
+  /* ---- Rodapé: legenda sempre visível ---- */
+  footer { flex-shrink:0; border-top:1px solid var(--border); background:var(--panel);
+           padding:8px 16px; display:flex; align-items:center; gap:18px; overflow-x:auto; font-size:11.5px; }
+  footer .grp { display:flex; align-items:center; gap:12px; }
+  footer .sep { width:1px; height:22px; background:var(--border); flex-shrink:0; }
+  .lyk { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; color:var(--muted); }
+  .lyk .sw { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+  .ifk { display:inline-flex; gap:5px; white-space:nowrap; }
+  .ifk .k { font-family:"SF Mono",Menlo,Consolas,monospace; color:var(--info); }
+  .ifk .v { color:var(--muted); }
+
+  /* ---- Modal (clique no nó) ---- */
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:200; align-items:center; justify-content:center; }
+  .overlay.open { display:flex; }
+  #node-modal { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:560px; max-height:84vh; display:flex; flex-direction:column; overflow:hidden; }
+  .modal-head { display:flex; align-items:flex-start; justify-content:space-between; padding:15px 18px; border-bottom:1px solid var(--border); }
+  .modal-head h3 { font-size:15px; margin:0; }
+  .modal-head .role-badge { font-size:12px; font-weight:600; margin-top:3px; }
+  .modal-head .x { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
+  .modal-body { padding:16px 18px; overflow-y:auto; }
+  .badge { display:inline-block; padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; margin-bottom:12px; }
+  .b-run{background:#163a1f;color:#69db7c} .b-stop{background:#3a1616;color:#ff8787}
+  .b-plan{background:#26282d;color:#7a808b} .b-ext{background:#16263a;color:#74c0fc}
+  .flow3 { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+  .flow3 .row { display:flex; gap:10px; align-items:flex-start; }
+  .flow3 .ic { font-size:14px; flex-shrink:0; width:18px; text-align:center; }
+  .flow3 .lab { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .flow3 .val { font-size:13px; line-height:1.45; }
+  #node-modal dl { margin:0; border-top:1px solid var(--border); padding-top:10px; }
+  #node-modal dt { color:var(--muted); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; margin-top:9px; }
+  #node-modal dd { margin:2px 0 0; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px; word-break:break-word; }
+
+  /* ---- Overlay de Logs ---- */
+  #logs-modal { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:860px; height:82vh; display:flex; flex-direction:column; overflow:hidden; }
+  #logs-head { display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid var(--border); }
+  #logs-head h3 { font-size:14px; margin:0; }
+  #logs-head .x { margin-left:auto; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
+  #logs-body { flex:1; overflow-y:auto; padding:8px 0; }
+  .logsec { border-bottom:1px solid var(--border); }
+  .logsec h4 { margin:0; padding:9px 18px 6px; font-size:12px; color:var(--accent); display:flex; align-items:center; gap:8px; }
+  .logsec h4 .dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
+  .logsec pre { margin:0; padding:0 18px 10px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11px; line-height:1.5; color:#9aa4b2; white-space:pre-wrap; word-break:break-word; }
+  #logs-empty { color:var(--muted); padding:24px; text-align:center; }
+  #logs-ts { font-size:11px; color:var(--muted); }
+  .logsec pre .err { color:#ff8787; } .logsec pre .warn { color:#ffd43b; }
+
+  /* #3 — badge de RAN ao vivo no card do gNB */
+  .gnb-live { font-size:10px; font-family:"SF Mono",Menlo,Consolas,monospace; fill:var(--green); }
+
+  /* #1 — pacote viajante (modo Fluxo) */
+  .packet { fill:#ffd43b; }
+
+  /* #2 — tour guiado */
+  #tour-box { display:none; position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+              width:min(560px,90%); background:var(--panel); border:1px solid var(--accent); border-radius:10px;
+              padding:13px 16px; box-shadow:0 10px 30px rgba(0,0,0,.4); z-index:50; }
+  #tour-box.open { display:block; }
+  #tour-box .t { font-size:13px; font-weight:600; margin-bottom:4px; }
+  #tour-box .t .chip { font-size:10px; font-weight:600; padding:2px 8px; border-radius:9px; margin-right:8px; color:#fff; }
+  #tour-box .c { font-size:12.5px; color:var(--muted); line-height:1.45; }
+  #tour-box .nav { display:flex; gap:8px; margin-top:11px; align-items:center; }
+  #tour-box .nav .step { font-size:11px; color:var(--muted); margin-right:auto; }
+  #tour-box .nav button { background:#21242b; color:var(--text); border:1px solid var(--border); border-radius:6px; padding:5px 13px; font-size:12px; cursor:pointer; }
+  #tour-box .nav button:hover { border-color:var(--accent); }
+  #tour-box .nav button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .node.tour-dim, .link.tour-dim, .link-label.tour-dim, .link-label-bg.tour-dim { opacity:.12 !important; }
+</style>
+</head>
+<body class="mode-tecnico">
+<header>
+  <h1>Core5G<b>_ARM64</b> · Topologia</h1>
+  <a class="btn" href="/" title="Voltar ao painel">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> Painel
+  </a>
+  <button class="btn" id="logs-btn" title="Logs ao vivo dos componentes">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg> Logs
+  </button>
+  <button class="btn" id="tour-btn" title="Tour guiado pelas camadas">
+    <svg viewBox="0 0 24 24"><path d="M12 2l2.5 6.5L21 9l-5 4 1.5 7L12 16l-5.5 4L8 13 3 9l6.5-.5z"/></svg> Tour
+  </button>
+  <div class="modes spacer">
+    <button data-mode="simplificado">Simplificado</button>
+    <button data-mode="tecnico" class="active">Técnico</button>
+    <button data-mode="fluxo">Fluxo de dados</button>
+    <button data-mode="troubleshooting">Troubleshooting</button>
+  </div>
+</header>
+
+<div id="stage">
+  <div class="mode-hint" id="mode-hint"></div>
+  <svg id="diagram" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="zoom-ctrl">
+    <button id="zin">+</button><button id="zout">−</button><button id="zfit">⤢</button>
+  </div>
+  <div id="tour-box">
+    <div class="t" id="tour-title"></div>
+    <div class="c" id="tour-caption"></div>
+    <div class="nav">
+      <span class="step" id="tour-step"></span>
+      <button id="tour-prev">← Anterior</button>
+      <button id="tour-next" class="primary">Próximo →</button>
+      <button id="tour-exit">Sair</button>
+    </div>
+  </div>
+</div>
+
+<footer id="legend"></footer>
+
+<!-- Modal de detalhe do nó -->
+<div class="overlay" id="node-overlay">
+  <div id="node-modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="nm-title">—</h3>
+        <div class="role-badge" id="nm-role"></div>
+      </div>
+      <button class="x" id="nm-close">×</button>
+    </div>
+    <div class="modal-body">
+      <span class="badge" id="nm-status"></span>
+      <div class="flow3">
+        <div class="row"><div class="ic" style="color:var(--info)">↘</div><div><div class="lab">De onde vem a informação</div><div class="val" id="nm-from"></div></div></div>
+        <div class="row"><div class="ic" style="color:var(--accent)">⚙</div><div><div class="lab">O que faz</div><div class="val" id="nm-does"></div></div></div>
+        <div class="row"><div class="ic" style="color:var(--green)">↗</div><div><div class="lab">Para onde vai</div><div class="val" id="nm-to"></div></div></div>
+      </div>
+      <dl id="nm-tech"></dl>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay de logs -->
+<div class="overlay" id="logs-overlay">
+  <div id="logs-modal">
+    <div id="logs-head">
+      <h3>Logs ao vivo — o que está acontecendo</h3>
+      <span id="logs-ts"></span>
+      <label style="font-size:12px;color:var(--muted)"><input type="checkbox" id="logs-auto" checked style="vertical-align:middle"> auto (5s)</label>
+      <button class="btn" id="logs-refresh"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg> Atualizar</button>
+      <button class="x" id="logs-close">×</button>
+    </div>
+    <div id="logs-body"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// Topologia Open RAN — lê /api/topology (inventário real + status vivo).
+// Edite static/openran-topology.json para alterar o desenho (ver _como_atualizar).
+// ============================================================================
+const NODE_W = 184, NODE_H = 66, SVGNS = "http://www.w3.org/2000/svg";
+let TOPO = null, currentMode = "tecnico", logsTimer = null, gnbStats = null, tourLayer = null;
+const svg = document.getElementById("diagram");
+const FLOW_IFACES = new Set(["RF","N2","E2","E42","N3","N4","N6"]);
+const SECONDARY = new Set(["SBI","Nausf","Nsmf","Nudm","Nudr","SQL","Telemetria"]);
+const MODE_HINTS = {
+  simplificado: "Visão de alto nível: componentes e caminhos principais. Detalhes secundários ocultos.",
+  tecnico: "Visão técnica: todos os nós com IP, portas e rede reais.",
+  fluxo: "Fluxo de dados: o caminho UE→gNB→Core é animado (em cinza, o que está inativo).",
+  troubleshooting: "Troubleshooting: cor por status — verde no ar, vermelho parado, cinza a implementar."
+};
+
+function el(t,a,p){ const n=document.createElementNS(SVGNS,t); for(const k in a)n.setAttribute(k,a[k]); if(p)p.appendChild(n); return n; }
+function nodeById(id){ return TOPO.nodes.find(n=>n.id===id); }
+function center(n){ return {x:n.x+NODE_W/2, y:n.y+NODE_H/2}; }
+function layerColor(n){ return getComputedStyle(document.documentElement).getPropertyValue("--c-"+n.layer).trim(); }
+function statusOf(n){ if(n.kind==="external")return "external"; if(n.planned)return "planned"; return (TOPO.live_status&&TOPO.live_status[n.id])||"stopped"; }
+const STATUS_BADGE={running:["b-run","no ar"],stopped:["b-stop","parado"],planned:["b-plan","a implementar"],external:["b-ext","externo"]};
+function borderColor(n){ const s=statusOf(n); if(s==="planned")return "#3a3f48";
+  if(currentMode==="troubleshooting"){ if(s==="running")return "var(--green)"; if(s==="stopped")return "var(--red)"; return "#3a3f48"; }
+  return layerColor(n); }
+
+function render(){
+  svg.innerHTML="";
+  const defs=el("defs",{},svg);
+  [["arrow","var(--muted)"],["arrow-warn","var(--red)"],["arrow-plan","#3a3f48"]].forEach(([id,col])=>{
+    const m=el("marker",{id,markerWidth:9,markerHeight:9,refX:7,refY:3,orient:"auto",markerUnits:"strokeWidth"},defs);
+    el("path",{d:"M0,0 L7,3 L0,6 Z",fill:col},m);
+  });
+  const gL=el("g",{},svg), gN=el("g",{},svg);
+
+  TOPO.links.forEach(lk=>{
+    const a=nodeById(lk.from), b=nodeById(lk.to); if(!a||!b)return;
+    // modo simplificado: esconde links secundários (SBI mesh, SQL, telemetria)
+    if(currentMode==="simplificado" && SECONDARY.has(lk.iface)) return;
+    const ca=center(a), cb=center(b);
+    const cls=["link"]; let marker="arrow";
+    if(lk.warn){cls.push("warn");marker="arrow-warn";}
+    else if(lk.planned){cls.push("planned");marker="arrow-plan";}
+    else if(lk.dashed)cls.push("dashed");
+    const isFlow = currentMode==="fluxo" && FLOW_IFACES.has(lk.iface);
+    if(isFlow) cls.push("flow");
+    // tour: esmaece o que não toca a camada em foco
+    const tourDim = tourLayer && a.layer!==tourLayer && b.layer!==tourLayer;
+    if(tourDim) cls.push("tour-dim");
+    const stroke=lk.warn?"var(--red)":lk.planned?"#3a3f48":layerColor(b);
+    el("path",{d:`M${ca.x},${ca.y} L${cb.x},${cb.y}`,class:cls.join(" "),stroke,"marker-end":`url(#${marker})`},gL);
+    // #1 pacote viajante: ponto animado percorrendo o link no modo Fluxo
+    if(isFlow && !lk.planned){
+      const dot=el("circle",{r:3.5,class:"packet"},gL);
+      const dur=(Math.hypot(cb.x-ca.x,cb.y-ca.y)/260+0.5).toFixed(2)+"s";
+      el("animate",{attributeName:"cx",from:ca.x,to:cb.x,dur,repeatCount:"indefinite"},dot);
+      el("animate",{attributeName:"cy",from:ca.y,to:cb.y,dur,repeatCount:"indefinite"},dot);
+    }
+    // rótulo SEMPRE visível
+    const mx=(ca.x+cb.x)/2, my=(ca.y+cb.y)/2, tw=lk.iface.length*6.4+10;
+    el("rect",{x:mx-tw/2,y:my-8,width:tw,height:15,rx:3,class:"link-label-bg"+(tourDim?" tour-dim":"")},gL);
+    const t=el("text",{x:mx,y:my+3,"text-anchor":"middle",class:"link-label"+(tourDim?" tour-dim":"")},gL); t.textContent=lk.iface;
+  });
+
+  TOPO.nodes.forEach(n=>{
+    const tourDim = tourLayer && n.layer!==tourLayer;
+    const g=el("g",{class:"node"+(n.planned?" planned":"")+(tourDim?" tour-dim":"")},gN); g.dataset.id=n.id;
+    el("rect",{x:n.x,y:n.y,width:NODE_W,height:NODE_H,rx:9,class:"card",stroke:borderColor(n)},g);
+    el("rect",{x:n.x,y:n.y,width:4,height:NODE_H,rx:2,fill:layerColor(n),opacity:n.planned?.4:1},g);
+    const tt=el("text",{x:n.x+14,y:n.y+20,class:"title"},g); tt.textContent=n.label;
+    // PALAVRA-FUNÇÃO em destaque (o que o componente faz, em 1 palavra)
+    const rl=el("text",{x:n.x+14,y:n.y+37,class:"role",fill:n.planned?"#5a606b":layerColor(n)},g); rl.textContent=n.role||"";
+    // #3 — métrica de RAN ao vivo no card do gNB (SNR/MCS/PRB do log real)
+    if(n.id==="gnb" && gnbStats && gnbStats.up && gnbStats.snr!==undefined){
+      const parts=[`SNR ${gnbStats.snr}dB`];
+      if(gnbStats.mcs!==undefined)parts.push(`MCS ${gnbStats.mcs}`);
+      if(gnbStats.prb!==undefined)parts.push(`${gnbStats.prb} PRB`);
+      el("text",{x:n.x+14,y:n.y+54,class:"gnb-live"},g).textContent="● "+parts.join(" · ");
+    } else if(currentMode!=="simplificado"){
+      const tech=el("text",{x:n.x+14,y:n.y+53,class:"tech"},g);
+      const bits=[]; if(n.ip&&n.ip!=="—")bits.push(n.ip); if(n.ports&&n.ports!=="—")bits.push(n.ports.split(/[·,]/)[0].trim());
+      tech.textContent=bits.join("  ·  ").slice(0,32);
+    }
+    const s=statusOf(n);
+    if(s!=="external"){ const col=s==="running"?"var(--green)":s==="stopped"?"var(--red)":"#5a606b";
+      el("circle",{cx:n.x+NODE_W-12,cy:n.y+12,class:"dot",fill:col},g); }
+    g.addEventListener("click",()=>openNode(n.id));
+  });
+  document.getElementById("mode-hint").textContent=MODE_HINTS[currentMode];
+}
+
+// ---- modal do nó (de onde vem / o que faz / pra onde vai) ----
+function openNode(id){
+  const n=nodeById(id);
+  document.getElementById("nm-title").textContent=n.label;
+  const roleEl=document.getElementById("nm-role"); roleEl.textContent=n.role||""; roleEl.style.color=layerColor(n);
+  const [bc,bt]=STATUS_BADGE[statusOf(n)];
+  const stEl=document.getElementById("nm-status"); stEl.className="badge "+bc; stEl.textContent=bt;
+  document.getElementById("nm-from").textContent=n.from||"—";
+  document.getElementById("nm-does").textContent=n.does||n.fn||"—";
+  document.getElementById("nm-to").textContent=n.to||"—";
+  const tech=document.getElementById("nm-tech");
+  const kind={container:"Container Docker",native:"Processo nativo (host)",systemd:"Serviço systemd",external:"Externo"}[n.kind]||n.kind;
+  let h=`<dt>Tipo</dt><dd>${kind}</dd>`;
+  if(n.image)h+=`<dt>Imagem / binário</dt><dd>${n.image}</dd>`;
+  if(n.ip&&n.ip!=="—")h+=`<dt>IP</dt><dd>${n.ip}</dd>`;
+  if(n.ports&&n.ports!=="—")h+=`<dt>Portas</dt><dd>${n.ports}</dd>`;
+  if(n.network)h+=`<dt>Rede</dt><dd>${n.network}</dd>`;
+  const conns=TOPO.links.filter(l=>l.from===n.id||l.to===n.id)
+    .map(l=>`${l.iface}: ${l.from===n.id?"→ "+nodeById(l.to).label:"← "+nodeById(l.from).label}`);
+  if(conns.length)h+=`<dt>Conexões</dt><dd style="font-family:inherit">${conns.join("<br>")}</dd>`;
+  tech.innerHTML=h;
+  document.getElementById("node-overlay").classList.add("open");
+}
+document.getElementById("nm-close").onclick=()=>document.getElementById("node-overlay").classList.remove("open");
+document.getElementById("node-overlay").addEventListener("click",e=>{ if(e.target.id==="node-overlay")e.currentTarget.classList.remove("open"); });
+
+// ---- legenda no rodapé (sempre visível) ----
+function renderLegend(){
+  const f=document.getElementById("legend");
+  let h='<div class="grp">';
+  for(const k in TOPO.layers) h+=`<span class="lyk"><span class="sw" style="background:${TOPO.layers[k].color}"></span>${TOPO.layers[k].label}</span>`;
+  h+='</div><div class="sep"></div><div class="grp">';
+  TOPO.interfaces_legend.forEach(i=>{ h+=`<span class="ifk"><span class="k">${i.iface}</span><span class="v">${i.desc}</span></span>`; });
+  h+='</div>';
+  f.innerHTML=h;
+}
+
+// ---- logs ao vivo ----
+function colorLog(l){
+  const e=escapeHtml(l);
+  const cls=/error|fail|reject|refused|cannot|killed|exit code [1-9]|❌|✕/i.test(l) ? "err"
+           : /warn|retry|timeout|starting|obsolete/i.test(l) ? "warn" : "";
+  return cls ? `<span class="${cls}">${e}</span>` : e;
+}
+async function loadLogs(){
+  const body=document.getElementById("logs-body");
+  try{
+    const res=await fetch("/api/topology/logs",{cache:"no-store"});
+    if(res.status===401){ window.location.href="/login"; return; }
+    const d=await res.json();
+    document.getElementById("logs-ts").textContent="atualizado "+new Date().toLocaleTimeString("pt-BR");
+    if(!d.sections.length){ body.innerHTML='<div id="logs-empty">Nenhum log disponível agora (componentes parados?).</div>'; return; }
+    body.innerHTML=d.sections.map(s=>`<div class="logsec"><h4><span class="dot"></span>${s.title}</h4><pre>${s.lines.map(colorLog).join("\n")}</pre></div>`).join("");
+  }catch(e){ body.innerHTML='<div id="logs-empty">Falha ao carregar logs.</div>'; }
+}
+function escapeHtml(s){ return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function openLogs(){ document.getElementById("logs-overlay").classList.add("open"); loadLogs();
+  if(document.getElementById("logs-auto").checked) logsTimer=setInterval(loadLogs,5000); }
+function closeLogs(){ document.getElementById("logs-overlay").classList.remove("open"); clearInterval(logsTimer); logsTimer=null; }
+document.getElementById("logs-btn").onclick=openLogs;
+document.getElementById("logs-close").onclick=closeLogs;
+document.getElementById("logs-refresh").onclick=loadLogs;
+document.getElementById("logs-overlay").addEventListener("click",e=>{ if(e.target.id==="logs-overlay")closeLogs(); });
+document.getElementById("logs-auto").onchange=e=>{ clearInterval(logsTimer); logsTimer=null; if(e.target.checked)logsTimer=setInterval(loadLogs,5000); };
+
+// ---- pan / zoom ----
+let vb={x:0,y:0,w:1300,h:900};
+function applyVB(){ svg.setAttribute("viewBox",`${vb.x} ${vb.y} ${vb.w} ${vb.h}`); }
+function fit(){ vb={x:-20,y:-20,w:TOPO.canvas.w+40,h:TOPO.canvas.h+40}; applyVB(); }
+svg.addEventListener("wheel",e=>{ e.preventDefault(); const s=e.deltaY>0?1.1:0.9; const r=svg.getBoundingClientRect();
+  const mx=vb.x+(e.clientX-r.left)/r.width*vb.w, my=vb.y+(e.clientY-r.top)/r.height*vb.h;
+  vb.x=mx-(mx-vb.x)*s; vb.y=my-(my-vb.y)*s; vb.w*=s; vb.h*=s; applyVB(); },{passive:false});
+let drag=null;
+svg.addEventListener("mousedown",e=>{ drag={x:e.clientX,y:e.clientY}; svg.classList.add("grabbing"); });
+window.addEventListener("mouseup",()=>{ drag=null; svg.classList.remove("grabbing"); });
+window.addEventListener("mousemove",e=>{ if(!drag)return; const r=svg.getBoundingClientRect();
+  vb.x-=(e.clientX-drag.x)/r.width*vb.w; vb.y-=(e.clientY-drag.y)/r.height*vb.h; drag={x:e.clientX,y:e.clientY}; applyVB(); });
+document.getElementById("zin").onclick=()=>{ vb.w*=.85; vb.h*=.85; applyVB(); };
+document.getElementById("zout").onclick=()=>{ vb.w/=.85; vb.h/=.85; applyVB(); };
+document.getElementById("zfit").onclick=fit;
+
+document.querySelectorAll(".modes button").forEach(b=>b.onclick=()=>{
+  currentMode=b.dataset.mode;
+  document.querySelectorAll(".modes button").forEach(x=>x.classList.toggle("active",x===b));
+  document.body.className="mode-"+currentMode; render();
+});
+
+// ---- #2 tour guiado pelas camadas ----
+const TOUR = [
+  { layer:"external", title:"Usuário / Admin", caption:"Tudo começa aqui: o operador acessa o painel pelo navegador (HTTPS). É a borda externa — quem comanda e observa a rede." },
+  { layer:"admin", title:"Administração", caption:"O Caddy termina o TLS e autentica; o painel FastAPI faz observabilidade leve (telemetria, logs, controle do lab) — sem Prometheus/Grafana." },
+  { layer:"ran", title:"RAN + RIC (host nativo)", caption:"O coração O-RAN: o UE simulado fala por rádio (RFSIM) com o gNB; o gNB reporta ao near-RT RIC pela E2, e os xApps rodam a inteligência (ex.: previsão de throughput por UE)." },
+  { layer:"core", title:"Core 5G (containers)", caption:"O núcleo 5G: AMF (mobilidade) recebe o gNB por N2, autentica via AUSF/UDM, cria sessão via SMF; o UPF (inativo no ARM64) levaria os dados à internet (N6)." },
+];
+let tourIdx=0;
+function showTour(i){
+  tourIdx=(i+TOUR.length)%TOUR.length;
+  const s=TOUR[tourIdx]; tourLayer=s.layer;
+  const col=TOPO.layers[s.layer].color;
+  document.getElementById("tour-title").innerHTML=`<span class="chip" style="background:${col}">Camada ${tourIdx+1}</span>${s.title}`;
+  document.getElementById("tour-caption").textContent=s.caption;
+  document.getElementById("tour-step").textContent=`${tourIdx+1} / ${TOUR.length}`;
+  render();
+}
+function startTour(){ document.getElementById("tour-box").classList.add("open"); showTour(0); }
+function endTour(){ tourLayer=null; document.getElementById("tour-box").classList.remove("open"); render(); }
+document.getElementById("tour-btn").onclick=()=>{ tourLayer?endTour():startTour(); };
+document.getElementById("tour-next").onclick=()=>showTour(tourIdx+1);
+document.getElementById("tour-prev").onclick=()=>showTour(tourIdx-1);
+document.getElementById("tour-exit").onclick=endTour;
+
+// ---- #3 métrica de RAN ao vivo do gNB ----
+async function loadGnbStats(){
+  try{ const r=await fetch("/api/topology/gnb-stats",{cache:"no-store"}); if(r.ok) gnbStats=await r.json(); }catch(e){}
+}
+
+async function load(){
+  const res=await fetch("/api/topology",{cache:"no-store"});
+  if(res.status===401){ window.location.href="/login"; return; }
+  TOPO=await res.json(); await loadGnbStats(); fit(); render(); renderLegend();
+}
+load();
+// status vivo + métrica do gNB a cada 10s
+setInterval(async()=>{ try{ const r=await fetch("/api/topology",{cache:"no-store"});
+  if(r.ok){ const d=await r.json(); TOPO.live_status=d.live_status; await loadGnbStats(); render(); } }catch(e){} },10000);
+</script>
+</body>
+</html>

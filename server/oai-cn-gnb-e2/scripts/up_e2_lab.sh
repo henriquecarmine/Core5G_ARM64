@@ -32,10 +32,19 @@ fi
 sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
 sleep 3
 AVAIL_MB=$(awk '/MemAvailable/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
-echo "  RAM disponível: ${AVAIL_MB} MB (gNB precisa de ~710 MB)"
-if [ "$AVAIL_MB" -lt 700 ]; then
-    echo "  AVISO: menos de 700 MB disponíveis — gNB pode falhar por OOM."
-    echo "         Para fix definitivo: upgrade para t4g.small (2 GB RAM)."
+echo "  RAM disponível: ${AVAIL_MB} MB"
+
+# Escolhe config de acordo com memória disponível:
+#   106 PRBs (100 MHz) → 710 MB RSS — requer t4g.small (2 GB)
+#   24 PRBs (~10 MHz)  → ~150 MB RSS — funciona no t4g.micro (906 MB)
+GNB_CONF_24="${SCRIPT_DIR}/gnb_24prb.conf"
+if [ "$AVAIL_MB" -lt 700 ] && [ -f "$GNB_CONF_24" ]; then
+    export GNB_CONF_PATH="$GNB_CONF_24"
+    export GNB_NRB=24
+    export GNB_DL_FREQ=3604800000
+    echo "  Usando 24 PRBs (RAM insuficiente para 106 PRBs; upgrade para t4g.small para 100 MHz)."
+else
+    echo "  Usando 106 PRBs (100 MHz, config padrão)."
 fi
 
 # 2. nearRT-RIC (leve, ~80 MB; inicia antes do gNB para E2 setup imediato)

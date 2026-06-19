@@ -21,6 +21,11 @@ fi
 GNB_LOG="$LOG_DIR/gnb_oai.log"
 UE_LOG="$LOG_DIR/ue_oai.log"
 
+# Config variável: suporta 24 PRBs (~150 MB RSS) para t4g.micro com pouca RAM
+GNB_CONF="${GNB_CONF_PATH:-$OAI_DIR/scripts/gnb.conf}"
+GNB_NRB="${GNB_NRB:-106}"
+GNB_DL_FREQ="${GNB_DL_FREQ:-3619200000}"
+
 echo "=========================================="
 echo "Iniciando RAN gNB OAI (gNB + nrUE)"
 echo "=========================================="
@@ -66,9 +71,9 @@ pkill -f "nr-softmodem" 2>/dev/null || true
 pkill -f "nr-uesoftmodem" 2>/dev/null || true
 sleep 2
 
-echo "Iniciando gNB em background..."
+echo "Iniciando gNB em background (conf: $GNB_CONF, NRB=$GNB_NRB, f=$GNB_DL_FREQ Hz)..."
 cd "$BUILD_DIR"
-sudo nohup ./nr-softmodem -O "$OAI_DIR/scripts/gnb.conf" \
+sudo nohup ./nr-softmodem -O "$GNB_CONF" \
     --gNBs.[0].min_rxtxtime 6 \
     --rfsim \
     "${E2_SM_ARGS[@]}" \
@@ -87,8 +92,13 @@ for i in $(seq 1 10); do
 done
 
 echo "Iniciando nrUE em background..."
+if [ "$GNB_NRB" = "106" ]; then
+    UE_RF_ARGS=(--rfsim -r 106 --numerology 1 --band 78 -C 3619200000 --ssb 516)
+else
+    UE_RF_ARGS=(--rfsim -r "$GNB_NRB" --numerology 1 --band 78 -C "$GNB_DL_FREQ")
+fi
 sudo nohup ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \
-    --rfsim -r 106 --numerology 1 --band 78 -C 3619200000 --ssb 516 \
+    "${UE_RF_ARGS[@]}" \
     > "$UE_LOG" 2>&1 &
 UE_PID=$!
 echo "  nrUE PID: $UE_PID (logs: $UE_LOG)"

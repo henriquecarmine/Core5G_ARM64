@@ -6,6 +6,70 @@ t4g (Graviton2 / aarch64).
 
 ---
 
+## Não quer compilar? Baixe as imagens prontas
+
+As 6 imagens já foram compiladas e estão disponíveis. Você não precisa fazer o build do zero.
+
+### Opção A — Google Drive do projeto (recomendada)
+
+Os arquivos `.tar` estão em:
+
+```
+PROJETOS/Core5G_ARM64/artifacts/oai-images/
+├── oai-amf.tar    (63 MB)
+├── oai-smf.tar    (60 MB)
+├── oai-nrf.tar    (60 MB)
+├── oai-udr.tar    (61 MB)
+├── oai-udm.tar    (59 MB)
+└── oai-ausf.tar   (59 MB)
+```
+
+> Os `.tar` não são versionados no git (são muito grandes), mas ficam permanentemente no Google Drive do projeto.
+
+Para carregar num host arm64:
+
+```bash
+# copiar os .tar para o servidor e carregar
+scp -i sua-chave.pem oai-amf.tar ubuntu@<servidor>:~/
+ssh -i sua-chave.pem ubuntu@<servidor> "docker load -i ~/oai-amf.tar && rm ~/oai-amf.tar"
+
+# ou carregar direto no host local
+docker load -i oai-amf.tar
+```
+
+Repita para cada componente (`oai-smf`, `oai-nrf`, `oai-udr`, `oai-udm`, `oai-ausf`).
+
+### Opção B — Exportar do servidor de laboratório
+
+As imagens já estão carregadas no servidor AWS Graviton2 (`core5g-arm64.duckdns.org`).
+Se tiver acesso SSH ao servidor, exporte diretamente de lá:
+
+```bash
+ssh ubuntu@core5g-arm64.duckdns.org \
+  "docker save oaisoftwarealliance/oai-amf:v1.5.1 | gzip" > oai-amf.tar.gz
+
+# descompactar e carregar no seu host:
+docker load -i oai-amf.tar.gz
+```
+
+Ou copiar o arquivo sem compressão:
+
+```bash
+ssh ubuntu@core5g-arm64.duckdns.org "docker save oaisoftwarealliance/oai-amf:v1.5.1 -o ~/oai-amf.tar"
+scp ubuntu@core5g-arm64.duckdns.org:~/oai-amf.tar .
+docker load -i oai-amf.tar
+```
+
+### Verificar após carregar
+
+```bash
+docker images | grep oaisoftwarealliance
+docker run --rm oaisoftwarealliance/oai-amf:v1.5.1 uname -m
+# esperado: aarch64
+```
+
+---
+
 ## Por que é necessário compilar?
 
 As imagens oficiais em `hub.docker.com/u/oaisoftwarealliance` são **exclusivamente

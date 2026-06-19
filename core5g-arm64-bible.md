@@ -786,22 +786,34 @@ Compilação realizada no Mac Apple Silicon (M-series) via Docker Desktop `linux
 docker images | grep oaisoftwarealliance
 ```
 
-**Mac local** (arquivos `.tar` para redistribuição / backup):
+**Google Drive do projeto** (cópia permanente dos `.tar`):
 ```
-/tmp/oai-images/oai-amf.tar    (~63 MB)
-/tmp/oai-images/oai-smf.tar    (~60 MB)
-/tmp/oai-images/oai-nrf.tar    (~60 MB)
-/tmp/oai-images/oai-udr.tar    (~61 MB)
-/tmp/oai-images/oai-udm.tar    (~59 MB)
-/tmp/oai-images/oai-ausf.tar   (~59 MB)
-# total: ~362 MB em /tmp/oai-images/
+PROJETOS/Core5G_ARM64/artifacts/oai-images/
+├── oai-amf.tar    (63 MB)
+├── oai-smf.tar    (60 MB)
+├── oai-nrf.tar    (60 MB)
+├── oai-udr.tar    (61 MB)
+├── oai-udm.tar    (59 MB)
+└── oai-ausf.tar   (59 MB)
+# total: ~362 MB  — não versionados no git, ficam no Drive
 ```
 
-Para recarregar em qualquer host arm64:
+Para carregar em qualquer host arm64 sem recompilar:
 ```bash
-docker load -i /tmp/oai-images/oai-amf.tar
-# ... repetir para cada componente
+# copiar do Drive para o servidor e carregar:
+scp -i sua-chave.pem artifacts/oai-images/oai-amf.tar ubuntu@<servidor>:~/
+ssh -i sua-chave.pem ubuntu@<servidor> "docker load -i ~/oai-amf.tar && rm ~/oai-amf.tar"
+# repetir para cada componente
 ```
+
+Para exportar diretamente do servidor de laboratório (se tiver acesso SSH):
+```bash
+ssh ubuntu@core5g-arm64.duckdns.org "docker save oaisoftwarealliance/oai-amf:v1.5.1 -o ~/oai-amf.tar"
+scp ubuntu@core5g-arm64.duckdns.org:~/oai-amf.tar .
+docker load -i oai-amf.tar
+```
+
+> Guia completo de download (sem compilar): [`OAI-CORE-ARM64.md §Download`](server/oai-cn-gnb-e2/docs/OAI-CORE-ARM64.md)
 
 Para recompilar do zero (requer Mac Apple Silicon + Docker Desktop):
 ```bash

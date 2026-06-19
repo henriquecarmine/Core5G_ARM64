@@ -22,6 +22,25 @@ PATCH em correções pontuais.
 | 0.11.0 | 2026-06-19 | Tela de login + topologia interativa + seletor de projeto + estabilidade da instância + README |
 | 0.11.1 | 2026-06-19 | Fix: interferência/distância (P1) agora afetam a medição + resumo no throughput |
 | 0.12.0 | 2026-06-19 | Colorimetria ISO/ANSI + resumo didático em TODOS os testes; fixes (canal, failover, anti-freeze KPM/RC) |
+| 0.12.1 | 2026-06-19 | Testes agrupados por projeto no menu + bloqueio mútuo (só o projeto ativo testa) |
+
+---
+
+## [0.12.1] — 2026-06-19
+
+### Testes agrupados por projeto + bloqueio mútuo
+
+- Os testes do menu lateral passam a ficar **dentro do grupo de cada projeto**:
+  "Testes do Projeto 1" (Status/Healthcheck, status detalhado, conectividade do
+  UE, failover UPF) sob Projeto 1; "Testes do Projeto 2" (E2 SM/KPM/RC) sob
+  Projeto 2. O antigo grupo "Testes (gerais)" foi removido.
+- **Bloqueio mútuo** (`refreshTestLocks`): só os testes do **projeto ativo**
+  ficam habilitados; os do outro projeto (e ambos, quando nada está no ar)
+  ficam desabilitados e esmaecidos, com a nota "Ative o Projeto X". O estado
+  vem da telemetria (grupos on/off). UE Lab e Demonstração E2E (testes do
+  Projeto 1, na barra superior) seguem o mesmo bloqueio.
+- Não há "Testes globais": todos os testes atuais são específicos de um projeto
+  (healthcheck/status checam o Open5GS).
 
 ---
 

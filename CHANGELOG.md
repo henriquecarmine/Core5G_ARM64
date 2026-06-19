@@ -17,6 +17,118 @@ PATCH em correções pontuais.
 | 0.6.0  | 2026-06-18 | UE Lab unificado + logs coloridos + 3GPP/Shannon |
 | 0.7.0  | 2026-06-18 | Legendas de fórmulas + dropdown duração + info banda + logs corrigidos + visão O-RAN |
 | 0.8.0  | 2026-06-18 | Build do Projeto 2 (OAI/FlexRIC) no servidor + grupo "Projeto 2" no painel |
+| 0.9.0  | 2026-06-19 | `build-oai-arm64.sh` — compila 7 imagens OAI para arm64 no Mac Apple Silicon |
+
+---
+
+## [0.9.0] — 2026-06-19
+
+### Build das imagens OAI 5G Core para arm64
+
+#### Problema
+
+As imagens `oaisoftwarealliance/oai-{amf,smf,nrf,udr,udm,ausf,upf-vpp}:v1.5.1`
+no Docker Hub são amd64-only (sem `linux/arm64/v8`). O servidor AWS t4g.micro
+(Graviton2, `aarch64`) falha ao tentar subir qualquer uma delas:
+`exec /usr/bin/python3: exec format error`, container sai com código 255.
+
+O servidor não tem QEMU/binfmt-misc — e adicionar emulação em produção seria
+lento e frágil. Decisão: **compilar nativamente no Mac Apple Silicon**
+(Docker Desktop `linux/arm64`), exportar como `.tar`, fazer `scp` para o
+servidor e `docker load`.
+
+#### `build-oai-arm64.sh` (novo, raiz do repo)
+
+Script com 4 subcomandos encadeáveis:
+
+```
+./build-oai-arm64.sh build    # docker build --platform linux/arm64 nas 7 imagens
+./build-oai-arm64.sh save     # docker save → /tmp/oai-images/*.tar
+./build-oai-arm64.sh upload   # scp de cada .tar para ~/  no servidor
+./build-oai-arm64.sh load     # docker load + rm do .tar no servidor
+./build-oai-arm64.sh all      # sequência completa (padrão)
+```
+
+Lê `AWS_SERVER_HOST`, `AWS_SERVER_USER`, `AWS_SSH_KEY_PATH` do `.env` da
+raiz — sem IP/hostname hardcoded. Usa o mesmo `.pem` que o `deploy.sh`.
+
+#### Bugs encontrados e corrigidos no script
+
+**Bug 1 — `declare -A` (bash 3.2 do macOS)**
+
+macOS vem com bash 3.2 que não suporta arrays associativos (`declare -A`).
+O script original lançava `oai: unbound variable` ao executar. Corrigido
+substituindo o array por string simples `COMPONENTS="oai-amf oai-smf ..."` e
+iterando com `for comp in $COMPONENTS`.
+
+**Bug 2 — Dockerfile nomeado sem prefixo `oai-`**
+
+O arquivo se chama `Dockerfile.amf.ubuntu`, não `Dockerfile.oai-amf.ubuntu`.
+O script gerava o caminho errado e pulava todos os 7 componentes com "Dockerfile
+não encontrado". Corrigido com `shortname="${comp#oai-}"` para remover o
+prefixo antes de montar o nome do arquivo.
+
+**Bug 3 — `libboost1.67-dev` não disponível para arm64 no Ubuntu 18.04**
+
+O `build_helper.amf` (e equivalentes) adiciona o PPA `ppa:mhier/libboost-latest`
+e tenta instalar `libboost1.67-dev`. Esse PPA não publica pacotes arm64, causando
+`E: Unable to locate package libboost1.67-dev` e aborto com "AMF deps
+installation failed" aos ~123 s de build.
+
+Corrigido passando `--build-arg BASE_IMAGE=ubuntu:focal` ao `docker build`.
+Ubuntu 20.04 tem Boost 1.71 nos repositórios padrão e o `build_helper` tem um
+case `ubuntu20.04` que instala `libboost-all-dev` diretamente, sem PPA. O
+Dockerfile suporta bionic, focal e jammy explicitamente — usar focal é o
+caminho suportado pelo upstream para arm64.
+
+**Bug 4 — `-msse4.2` hardcoded no CMakeLists.txt de todos os componentes**
+
+Após o Bug 3 ser resolvido, a compilação falha com:
+```
+cc: error: unrecognized command line option '-msse4.2'
+```
+O bloco de detecção de arquitetura em cada `src/*/CMakeLists.txt` só trata
+`armv7l` explicitamente; qualquer outra arquitetura cai no `else` e recebe
+`-msse4.2` (flag SSE4.2 x86 que não existe em ARM64). Em build
+`linux/arm64`, `CMAKE_SYSTEM_PROCESSOR = aarch64` → make falha em todos os
+arquivos `.c/.cpp` que passam pelo GCC cross-compilado.
+
+Corrigido editando o bloco `if/else/endif` nos CMakeLists.txt de
+`oai-amf`, `oai-smf`, `oai-nrf`, `oai-udr`, `oai-udm`, `oai-ausf`:
+
+```cmake
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+  set(C_FLAGS_PROCESSOR "")
+```
+
+`oai-upf-vpp` usa VPP com build system próprio — não afetado.
+
+**Bug 5 — `libasan2` inválido silencia o `apt-get` inteiro no `build_helper.udm`**
+
+O `PACKAGE_LIST` ubuntu do `build_helper.udm` terminava com `libasan2` (pacote
+inexistente no Ubuntu 20.04 arm64). O `apt-get install -y` falha inteiro quando
+qualquer pacote da lista não é encontrado. O erro é silenciado porque o `ret=$?`
+subsequente captura o código de saída do bloco `if/case` (sempre 0 para
+ubuntu20.04), não do `apt-get`. Resultado: `libconfig++-dev` nunca instalado →
+`cmake` falha com `None of the required 'libconfig++' found`.
+
+Corrigido removendo a linha `libasan2` (e depois `libasan` que também não existe
+como pacote genérico) do `PACKAGE_LIST` ubuntu em `build_helper.udm`. O
+`libasan5` já está em `specific_packages` para ubuntu20.04.
+
+#### Estado em 2026-06-19
+
+Build completo (Bugs 1–5 corrigidos) rodando para 6 componentes (AMF, SMF, NRF,
+UDR, UDM, AUSF). `oai-upf-vpp` requer port adicional (libhyperscan-dev
+indisponível em arm64 + caminhos x86_64 hardcoded). Próximos passos:
+`save` → `upload` → `load` → `up_core.sh` (OAI 5GC no servidor) → validação E2E.
+
+#### `core5g-arm64-bible.md` — §7.b (novo)
+
+Nova subseção documentando a estratégia de build arm64, o script
+`build-oai-arm64.sh`, pré-requisitos (Docker Desktop Apple Silicon), os 4 bugs
+corrigidos e a tabela de parâmetros do `docker build`. Destinada a qualquer
+pessoa que queira replicar o laboratório em hardware ARM64.
 
 ---
 

@@ -587,6 +587,110 @@ programável** (RIC + xApps falando E2 com o gNB) que é a própria
 definição de O-RAN — e é tecnicamente mais pesado porque não há imagem
 Docker pronta: tudo é compilado a partir do source, nativo `aarch64`.
 
+### 7.b Build das imagens OAI 5G Core para arm64
+
+As imagens Docker do OAI 5G Core (`oaisoftwarealliance/oai-{amf,smf,nrf,udr,udm,ausf,upf-vpp}:v1.5.1`) no Docker Hub são **amd64-only** — não há variante `linux/arm64/v8`. O servidor AWS t4g.micro (Graviton2, `aarch64`) não tem QEMU/binfmt-misc configurado, então qualquer tentativa de rodar essas imagens falha com `exec /usr/bin/python3: exec format error` e o container sai com código 255.
+
+#### Estratégia adotada
+
+Buildar nativamente para arm64 no Mac Apple Silicon (Docker Desktop com engine `linux/arm64`), exportar como `.tar`, transferir via `scp` e carregar no servidor com `docker load`. Os Dockerfiles estão vendorizados no repositório em `server/oai-cn-gnb-e2/oai-cn5g-fed/component/oai-*/docker/Dockerfile.*.ubuntu`.
+
+Script: [`build-oai-arm64.sh`](build-oai-arm64.sh) na raiz do repositório.
+
+```bash
+./build-oai-arm64.sh build    # compila as 7 imagens localmente no Mac
+./build-oai-arm64.sh save     # exporta para /tmp/oai-images/*.tar
+./build-oai-arm64.sh upload   # scp dos .tar para o servidor
+./build-oai-arm64.sh load     # docker load no servidor + rm dos .tar
+./build-oai-arm64.sh all      # executa os 4 passos em sequência
+```
+
+**Pré-requisito**: Docker Desktop instalado no Mac Apple Silicon. Cada build leva 20–40 min por imagem (compilação C++ do OAI a partir do source).
+
+#### Parâmetros do build
+
+| Parâmetro | Valor |
+|---|---|
+| `--platform` | `linux/arm64` |
+| `--build-arg BASE_IMAGE` | `ubuntu:focal` (ver §8.5) |
+| `--target` | nome do componente (ex.: `oai-amf`) |
+| `-f` | `component/<comp>/docker/Dockerfile.<shortname>.ubuntu` |
+| contexto | diretório do componente (ex.: `component/oai-amf/`) |
+
+#### Bugs encontrados e corrigidos durante o desenvolvimento do script
+
+**Bug 1 — `declare -A` não suportado no bash 3.2 do macOS**
+
+macOS 14/15 vem com bash 3.2 (limitação de licença GPLv2). O script original usava `declare -A COMPONENTS=(...)` (bash 4+), causando `oai: unbound variable` ao rodar.
+
+Correção: substituído por string simples iterada com `for comp in $COMPONENTS`:
+```bash
+COMPONENTS="oai-amf oai-smf oai-nrf oai-udr oai-udm oai-ausf"
+# oai-upf-vpp excluído: requer libhyperscan (Intel-only, inexistente no arm64)
+for comp in $COMPONENTS; do ...
+```
+
+**Bug 2 — Nome errado do Dockerfile**
+
+O Dockerfile se chama `Dockerfile.amf.ubuntu` (sem o prefixo `oai-`), não `Dockerfile.oai-amf.ubuntu`. O script gerava o nome errado, causando "Dockerfile não encontrado" para todos os 7 componentes.
+
+Correção: adicionado `shortname="${comp#oai-}"` para remover o prefixo antes de montar o caminho:
+```bash
+shortname="${comp#oai-}"   # oai-amf → amf
+dockerfile="$ctx/docker/Dockerfile.${shortname}.ubuntu"
+```
+
+**Bug 3 — `libboost1.67-dev` não disponível no repositório arm64 do Ubuntu 18.04**
+
+O `build_helper.amf` (e equivalentes de cada componente) para `ubuntu18.04` adiciona o PPA `ppa:mhier/libboost-latest` e instala `libboost1.67-dev`. Esse PPA não publica pacotes arm64 — o `apt-get install` falha com `E: Unable to locate package libboost1.67-dev`, e o build aborta com "AMF deps installation failed".
+
+Correção: passar `--build-arg BASE_IMAGE=ubuntu:focal`. Ubuntu 20.04 tem Boost 1.71 nos repositórios padrão; o `build_helper` tem um case específico `ubuntu20.04` que instala `libboost-all-dev` diretamente, sem PPA. O Dockerfile suporta bionic, focal e jammy explicitamente — usar focal é o caminho suportado.
+
+**Bug 4 — `-msse4.2` hardcoded no CMakeLists.txt de todos os componentes**
+
+Após resolver o Bug 3, a compilação falha com `cc: error: unrecognized command line option '-msse4.2'`. O bloco de detecção de arquitetura em cada `src/*/CMakeLists.txt` tem:
+
+```cmake
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "armv7l")
+  set(C_FLAGS_PROCESSOR "-gdwarf-2 -mfloat-abi=hard -mfpu=neon -lgcc -lrt")
+else (CMAKE_SYSTEM_PROCESSOR STREQUAL "armv7l")  # ← else genérico
+  set(C_FLAGS_PROCESSOR "-msse4.2")              # ← flag x86 SSE4.2
+endif()
+```
+
+No build `linux/arm64`, `CMAKE_SYSTEM_PROCESSOR` é `aarch64` — cai no `else` e tenta compilar com `-msse4.2` (instrução x86 SIMD que não existe em ARM).
+
+Correção aplicada nos 5 componentes afetados (`oai-amf`, `oai-smf`, `oai-nrf`, `oai-udr`, `oai-udm`, `oai-ausf`):
+
+```cmake
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "armv7l")
+  set(C_FLAGS_PROCESSOR "-gdwarf-2 -mfloat-abi=hard -mfpu=neon -lgcc -lrt")
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+  set(C_FLAGS_PROCESSOR "")   # ← ARM64 nativo, sem flags arquitetura-específicas
+else()
+  set(C_FLAGS_PROCESSOR "-msse4.2")
+endif()
+```
+
+O `oai-upf-vpp` usa VPP com sistema de build próprio e não tem essa flag.
+
+**Bug 5 — `libasan2` inválido em `build_helper.udm` silencia o `apt-get` inteiro**
+
+O `build_helper.udm` tinha `libasan2` no `PACKAGE_LIST` ubuntu (linha que não está presente nos outros componentes). O `libasan2` não existe no Ubuntu 20.04 arm64 (`libasan5` é a versão correta, já incluída em `specific_packages`). O `apt-get install -y` falha inteiro com `E: Unable to locate package libasan2` — mas o erro é silenciado porque o `ret=$?` subsequente captura o código de saída do bloco `if/case` (que retorna 0 para ubuntu20.04), não do `apt-get`. Resultado: nenhum pacote do `PACKAGE_LIST` é instalado, incluindo `libconfig++-dev`. O cmake então falha com `None of the required 'libconfig++' found`.
+
+Correção: remover a linha `libasan2` (e o `libasan` genérico que também não existe) do `PACKAGE_LIST` ubuntu em `build_helper.udm`. O `libasan5` já está em `specific_packages` para ubuntu20.04.
+
+Arquivo afetado: `server/.../oai-udm/build/scripts/build_helper.udm`
+
+**Limitação conhecida — `oai-upf-vpp` não portável para arm64**
+
+O `oai-upf-vpp` depende de:
+- `libhyperscan-dev` — biblioteca de regex SIMD da Intel, inexistente no repositório Ubuntu arm64
+- Caminhos `/usr/lib/x86_64-linux-gnu/` hardcoded no Dockerfile final
+- VPP 21.01 + DPDK com dependências x86-específicas
+
+O lab principal usa o UPF do Open5GS (`open5gs-upfd`), não o `oai-upf-vpp`, portanto o build bem-sucedido dos 6 componentes de Control Plane (AMF, SMF, NRF, UDR, UDM, AUSF) é suficiente para todos os cenários de teste documentados.
+
 ---
 
 ## 8. Bugs reais encontrados e corrigidos
@@ -702,13 +806,12 @@ CPU/RAM-intensivo) — ainda não medido, testar com cautela.
       funcional — `.so` de Service Model eram x86-64 (errado pra ARM64),
       único log existente mostrava E2SM-RC falhando com core dump, sem
       nenhum binário compilado no servidor. Ver `CHANGELOG.md` v0.8.0.
-- [ ] Buildar e validar `server/oai-cn-gnb-e2/` no servidor — **em
-      andamento**: dependências instaladas com sucesso
-      (`build_oai --ninja -I`); `build_e2.sh` (gNB+nrUE+agente E2)
-      rodando; faltam `build_flexric_tools.sh` (RIC+xApps+SMs nativos
-      aarch64) e a validação E2E (`up_e2_lab.sh` + `test_e2_*.sh`).
-      Projeto 1 foi parado temporariamente no servidor pra liberar RAM
-      durante o build — religar depois.
+- [ ] Buildar e validar `server/oai-cn-gnb-e2/` — **em andamento**:
+      build das 7 imagens OAI 5G Core para arm64 rodando no Mac Apple
+      Silicon via `build-oai-arm64.sh` (ver §7.b); após conclusão, fazer
+      `save` → `upload` → `load` no servidor; então `up_core.sh` (OAI 5GC)
+      e validação E2E (`up_e2_lab.sh` + `test_e2_*.sh`). Projeto 1 parado
+      temporariamente pra liberar RAM — religar depois.
 - [x] Grupo "Projeto 2 — OAI/FlexRIC (E2)" no painel (`server.py` +
       `index.html`): botões up/down/test do E2 lab, mesmo mecanismo
       genérico `data-cmd` → `POST /api/run/{cmd}` do Projeto 1.

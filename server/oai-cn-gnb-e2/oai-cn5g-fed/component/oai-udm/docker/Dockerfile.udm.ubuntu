@@ -62,6 +62,7 @@ RUN ./build_udm --install-deps --force && \
 #---------------------------------------------------------------------
 FROM oai-udm-base as oai-udm-builder
 # Building UDM
+ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
 WORKDIR /openair-udm/build/scripts
 RUN ldconfig && \
     ./build_udm --clean --Verbose --build-type Release --jobs && \

@@ -60,6 +60,7 @@ RUN ./build_ausf --install-deps --force && \
 #---------------------------------------------------------------------
 FROM oai-ausf-base as oai-ausf-builder
 # Building AUSF
+ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
 WORKDIR /openair-ausf/build/scripts
 RUN ldconfig && \
     ./build_ausf --clean --Verbose --build-type Release --jobs && \

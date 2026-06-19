@@ -44,7 +44,6 @@ RUN apt update && \
         wget \
         make \
         build-essential \
-        libhyperscan-dev \
   && rm -rf /var/lib/apt/lists/*
 
 
@@ -87,8 +86,7 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && \
     DEBIAN_FRONTEND=noninteractive apt-get install --yes \
         net-tools \
-        tzdata\
-        libhyperscan-dev \
+        tzdata \
         iproute2 \
         iputils-ping \
         curl \
@@ -111,8 +109,7 @@ COPY --from=vpp-upf-builder \
 
 COPY --from=vpp-upf-builder \
       /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/vpp_plugins/upf_plugin.so \
-      /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/vpp_plugins/dpdk_plugin.so \
-      /usr/lib/x86_64-linux-gnu/vpp_plugins/
+      /usr/lib/aarch64-linux-gnu/vpp_plugins/
 
 COPY --from=vpp-upf-builder \
 #     /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/libnat.so.21.01.1 \
@@ -121,7 +118,7 @@ COPY --from=vpp-upf-builder \
      /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/libvlibmemory.so.21.01.1 \
      /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/libvlib.so.21.01.1 \
      /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/libsvm.so.21.01.1 \
-     /usr/lib/x86_64-linux-gnu/
+     /usr/lib/aarch64-linux-gnu/
 
 RUN ldconfig && \
     ldd /openair-upf/bin/vpp && \

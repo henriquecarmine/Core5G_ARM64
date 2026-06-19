@@ -22,17 +22,23 @@ else
     echo "[1/4] Core OAI já em execução."
 fi
 
-# 1.5 — Liberar memória: parar container de dados (não necessário para E2)
-# t4g.micro tem 906 MB; gNB (C++) precisa de ~150 MB que o swap não entrega a tempo.
+# 1.5 — Liberar RAM para o gNB (binário C++ precisa de ~150 MB físicos ao iniciar).
+# t4g.micro = 906 MB: OAI Core swapia ~600 MB, sobrando apenas ~40 MB livres.
+# Paramos containers não-essenciais para E2 (gNB precisa só de AMF+NRF+SMF),
+# depois reiniciamos em background enquanto gNB inicializa.
 AVAIL_MB=$(awk '/MemAvailable/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 999)
-if [ "$AVAIL_MB" -lt 300 ]; then
+MEM_OK=1
+if [ "$AVAIL_MB" -lt 200 ]; then
+    MEM_OK=0
     echo ""
-    echo "[1.5/4] Memória disponível: ${AVAIL_MB}MB — parando oai-ext-dn para liberar RAM..."
-    docker stop oai-ext-dn 2>/dev/null || true
+    echo "[1.5/4] Memória: ${AVAIL_MB}MB livres — parando containers não-essenciais para liberar RAM..."
+    for c in oai-ext-dn oai-ausf oai-udm oai-udr mysql; do
+        docker stop "$c" 2>/dev/null && printf '  parado: %s\n' "$c" || true
+    done
     sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
-    sleep 3
+    sleep 5
     AVAIL_MB=$(awk '/MemAvailable/ {printf "%d", $2/1024}' /proc/meminfo)
-    echo "    Disponível após liberação: ${AVAIL_MB}MB"
+    echo "  Memória após liberação: ${AVAIL_MB}MB"
 fi
 
 # 2. nearRT-RIC
@@ -45,10 +51,22 @@ echo ""
 echo "[3/4] Iniciando gNB OAI + nrUE (E2 agent → 127.0.0.1)..."
 "$SCRIPT_DIR/up_gnb_oai.sh"
 
+# 3.5 — Restaurar containers parados para autenticação do UE
+if [ "$MEM_OK" -eq 0 ]; then
+    echo ""
+    echo "[3.5/4] gNB ativo — reativando containers de auth/dados em background..."
+    (
+        for c in mysql oai-udr oai-udm oai-ausf oai-ext-dn; do
+            docker start "$c" 2>/dev/null || true
+            sleep 3
+        done
+    ) &
+fi
+
 # 4. Aguardar registro UE
 echo ""
-echo "[4/4] Aguardando UE registrar (30s)..."
-sleep 30
+echo "[4/4] Aguardando UE registrar (45s, containers auth voltam a subir)..."
+sleep 45
 
 echo ""
 echo "=========================================="

@@ -90,7 +90,14 @@ def list_services() -> dict[str, Path]:
     """Descobre os serviços dos dois docker-compose (core + RAN) em runtime,
     em vez de manter uma lista hardcoded que pode ficar desatualizada."""
     services: dict[str, Path] = {}
-    for cwd in (SERVER_DIR, SERVER_DIR / "ueransim"):
+    compose_dirs = [
+        SERVER_DIR,
+        SERVER_DIR / "ueransim",
+        SERVER_DIR / "oai-cn-gnb-e2" / "oai-cn5g-fed" / "docker-compose",
+    ]
+    for cwd in compose_dirs:
+        if not cwd.is_dir():
+            continue
         try:
             out = subprocess.run(
                 ["docker", "compose", "config", "--services"],
@@ -202,9 +209,9 @@ def read_group_status(containers: list[dict]) -> dict[str, bool]:
     não roda em container)."""
     names = [c["name"] for c in containers]
     return {
-        "p1-core": any("nrf" in n for n in names),
-        "p1-ran": any("ueransim" in n for n in names),
-        "p2-core": any("oai-amf" in n for n in names),
+        "p1-core": any("open5gs-nrf" in n for n in names),
+        "p1-ran": any(n == "ueransim" for n in names),
+        "p2-core": any(n == "oai-amf" for n in names),
         "p2-e2lab": process_running("nr-softmodem") or process_running("nearRT-RIC"),
     }
 

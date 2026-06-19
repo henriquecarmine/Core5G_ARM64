@@ -704,6 +704,15 @@ const CONTAINER_ROLES = [
   ['webui', { short: 'Painel Open5GS', full: 'WebUI oficial do Open5GS, usada para cadastrar assinantes manualmente (alternativa aos scripts).' }],
   ['ueransim', { short: 'RAN simulada (gNB+UE)', full: 'UERANSIM: simula o gNB (estação rádio-base) e o UE (celular) conectando-se ao core via N2/N3.' }],
   ['panel', { short: 'Este painel', full: 'core5g-panel: o próprio painel de controle que você está usando agora.' }],
+  // OAI P2 core containers
+  ['oai-amf',  { short: 'AMF (OAI)', full: 'OAI AMF: Access and Mobility Management Function — autentica UE via N1/N2 (NGAP).' }],
+  ['oai-smf',  { short: 'SMF (OAI)', full: 'OAI SMF: Session Management Function — gerencia sessões PDU e controla UPF via N4/PFCP.' }],
+  ['oai-nrf',  { short: 'NRF (OAI)', full: 'OAI NRF: Network Repository Function — registro e descoberta de NFs via SBI.' }],
+  ['oai-udr',  { short: 'UDR (OAI)', full: 'OAI UDR: Unified Data Repository — dados do assinante no MySQL.' }],
+  ['oai-udm',  { short: 'UDM (OAI)', full: 'OAI UDM: Unified Data Management — lógica de assinante sobre o UDR.' }],
+  ['oai-ausf', { short: 'AUSF (OAI)', full: 'OAI AUSF: Authentication Server Function — 5G-AKA sobre credenciais UDM.' }],
+  ['oai-ext-dn', { short: 'DN externo (OAI)', full: 'OAI External Data Network: servidor de tráfego (iperf3) para teste de throughput P2.' }],
+  ['mysql',    { short: 'Banco de dados (OAI)', full: 'MySQL: backend de assinantes do OAI Core (substituído por MongoDB no Open5GS).' }],
 ];
 
 function containerRole(name) {

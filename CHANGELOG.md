@@ -17,7 +17,54 @@ PATCH em correções pontuais.
 | 0.6.0  | 2026-06-18 | UE Lab unificado + logs coloridos + 3GPP/Shannon |
 | 0.7.0  | 2026-06-18 | Legendas de fórmulas + dropdown duração + info banda + logs corrigidos + visão O-RAN |
 | 0.8.0  | 2026-06-18 | Build do Projeto 2 (OAI/FlexRIC) no servidor + grupo "Projeto 2" no painel |
-| 0.9.0  | 2026-06-19 | `build-oai-arm64.sh` — compila 7 imagens OAI para arm64 no Mac Apple Silicon |
+| 0.9.0  | 2026-06-19 | `build-oai-arm64.sh` — script de build OAI arm64 + Bugs 1-3 corrigidos     |
+| 0.10.0 | 2026-06-19 | 6 imagens OAI arm64 concluídas (Bugs 4-5), deployed no servidor AWS         |
+
+---
+
+## [0.10.0] — 2026-06-19
+
+### Build OAI arm64 — pipeline completo
+
+6 imagens OAI 5G Core compiladas nativamente para `linux/arm64`, exportadas e
+carregadas no servidor AWS t4g.micro (Graviton2, Ohio). Verificação:
+`docker run oai-amf → uname -m → aarch64` ✔
+
+#### Bug 4 — `-msse4.2` em todos os CMakeLists.txt
+
+Flag SSE4.2 (x86 SIMD) hardcoded no `else` genérico do bloco de detecção de
+arquitetura. Em `linux/arm64`, `CMAKE_SYSTEM_PROCESSOR = aarch64` cai nesse
+`else` e o GCC rejeita a flag.
+
+Correção: `elseif (aarch64|arm64) set(C_FLAGS_PROCESSOR "")` nos 6 componentes
+(AMF, SMF, NRF, UDR, UDM, AUSF).
+
+#### Bug 5 — `libasan2` no `build_helper.udm` silencia o `apt-get` inteiro
+
+O `PACKAGE_LIST` ubuntu do `build_helper.udm` terminava com `libasan2`
+(pacote inexistente no Ubuntu 20.04 arm64). O `apt-get install -y` falha
+inteiro quando qualquer pacote da lista não existe. O erro é silenciado pelo
+`ret=$?` pós-`case` (captura o código do bloco `if`, sempre 0) → `libconfig++-dev`
+nunca instalado → cmake falha com `None of the required 'libconfig++' found`.
+
+Correção: remover `libasan2` do PACKAGE_LIST ubuntu (o `libasan5` correto já
+está em `specific_packages` para ubuntu20.04).
+
+#### UPF-VPP excluído do build arm64
+
+`libhyperscan-dev` é Intel-only — não existe no repositório Ubuntu focal arm64.
+O lab usa Open5GS UPF; os 6 componentes de Control Plane são suficientes.
+
+#### Resultado
+
+| Imagem           | Tamanho | Status |
+|------------------|---------|--------|
+| oai-amf:v1.5.1  | 280 MB  | ✔ |
+| oai-smf:v1.5.1  | 260 MB  | ✔ |
+| oai-nrf:v1.5.1  | 264 MB  | ✔ |
+| oai-udr:v1.5.1  | 268 MB  | ✔ |
+| oai-udm:v1.5.1  | 257 MB  | ✔ |
+| oai-ausf:v1.5.1 | 255 MB  | ✔ |
 
 ---
 

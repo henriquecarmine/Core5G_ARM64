@@ -4,11 +4,15 @@
 #
 # Requer gNB compilado com E2: ./scripts/build_e2.sh
 #
-# ESTRATÉGIA DE MEMÓRIA (t4g.micro = 906 MB RAM):
-#   nr-softmodem aloca 710 MB RSS ao inicializar (buffers IQ para 106 RBs @ 30 kHz).
-#   OAI Core (8 containers C++) mais nearRT-RIC consomem ~300 MB adicionais.
-#   Solução: inicia gNB + RIC PRIMEIRO (com containers parados), depois sobe
-#   o Core em background. gNB reconecta ao AMF automaticamente quando ele sobe.
+# RÁDIO: usa 51 PRBs (20 MHz) por padrão — o gNB RFSIM em 106 PRBs satura os
+#   2 vCPUs do t4g.medium (load >15) e derruba o tempo de resposta do Core.
+#   Em 51 PRBs a CPU do gNB cai de ~200% para ~8%, deixando o Core e o RIC
+#   rodarem JUNTOS de forma estável. Override: GNB_CONF_PATH/GNB_NRB no ambiente.
+#
+# MEMÓRIA: a partir do t4g.medium (3,7 GB) o Core completo + gNB + RIC cabem
+#   juntos com folga, então o lab NÃO derruba mais o Core (modo "full").
+#   Em instâncias pequenas (<1,5 GB livre) cai no modo "lite": para o Core,
+#   omite o nrUE e sobe só AMF+NRF em background (comportamento antigo).
 
 set -euo pipefail
 
@@ -21,62 +25,76 @@ echo "Laboratório E2: RIC + gNB + Core OAI + UE"
 echo "=========================================="
 echo ""
 
-# 1. Parar todos os containers OAI para liberar RAM ao gNB
-echo "[1/4] Parando containers OAI (liberar ~300 MB para nr-softmodem)..."
-RUNNING_OAI=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'oai-|mysql|vpp-upf' || true)
-if [ -n "$RUNNING_OAI" ]; then
-    echo "$RUNNING_OAI" | xargs docker stop 2>/dev/null | xargs -I{} echo "  parado: {}" || true
-else
-    echo "  (nenhum container OAI rodando)"
-fi
-sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
-sleep 3
-AVAIL_MB=$(awk '/MemAvailable/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
-echo "  RAM disponível: ${AVAIL_MB} MB"
-
-# Escolhe config de acordo com memória disponível:
-#   106 PRBs (100 MHz) → 710 MB RSS — requer t4g.small (2 GB)
-#   24 PRBs (~10 MHz)  → ~150 MB RSS — funciona no t4g.micro (906 MB)
+# Config de rádio: 51 PRBs por padrão (CPU baixa, cabe em 2 vCPUs).
 GNB_CONF_24="${SCRIPT_DIR}/gnb_24prb.conf"
-if [ "$AVAIL_MB" -lt 700 ] && [ -f "$GNB_CONF_24" ]; then
+if [ -z "${GNB_CONF_PATH:-}" ] && [ -f "$GNB_CONF_24" ]; then
     export GNB_CONF_PATH="$GNB_CONF_24"
     export GNB_NRB=51
-    export GNB_DL_FREQ=3469440000   # 51 PRBs band 78, Point A=630684; gNB imprime params UE no log
-    export SKIP_UE=1                 # nrUE usa ~438 MB — omitir para caber no t4g.micro
-    echo "  Usando 51 PRBs (RAM insuficiente para 106 PRBs; upgrade para t4g.small para 100 MHz)."
-else
-    echo "  Usando 106 PRBs (100 MHz, config padrão)."
+    export GNB_DL_FREQ=3469440000   # 51 PRBs band 78, Point A=630684
 fi
 
-# 2. nearRT-RIC (leve, ~80 MB; inicia antes do gNB para E2 setup imediato)
-echo ""
-echo "[2/4] Iniciando nearRT-RIC..."
-"$SCRIPT_DIR/up_flexric.sh"
+AVAIL_MB=$(awk '/MemAvailable/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 0)
+echo "RAM disponível: ${AVAIL_MB} MB"
 
-# 3. gNB + nrUE (710 MB RSS — principal consumidor de memória)
-echo ""
-echo "[3/4] Iniciando gNB OAI + nrUE (E2 agent → 127.0.0.1)..."
-"$SCRIPT_DIR/up_gnb_oai.sh"
+if [ "$AVAIL_MB" -ge 1500 ]; then
+    # ---------- MODO FULL (t4g.medium ou maior) ----------
+    echo "Modo FULL: Core completo + gNB + RIC + UE juntos (RAM suficiente)."
+    echo ""
+    echo "[1/3] Garantindo Core OAI completo no ar..."
+    if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^oai-amf$'; then
+        "$SCRIPT_DIR/up_core.sh"
+    else
+        echo "  Core já está rodando."
+    fi
 
-# 4. Subir AMF+NRF em background — suficiente para gNB se registrar via N2
-# SMF/UDM/UDR/AUSF/MySQL ficam de fora para não causar OOM (t4g.micro = 906 MB).
-# gNB (51 PRBs, ~355 MB) + RIC (~80 MB) + AMF (~50 MB) + NRF (~50 MB) ≈ 735 MB < 906 MB.
-echo ""
-echo "[4/4] Subindo AMF e NRF em background (gNB registra via N2; UE auth requer t4g.small)..."
-(
-    docker start oai-nrf 2>/dev/null
-    for _ in $(seq 1 15); do
-        STATUS=$(docker inspect -f '{{.State.Health.Status}}' oai-nrf 2>/dev/null || echo missing)
-        [ "$STATUS" = "healthy" ] && break
-        sleep 2
-    done
-    docker start oai-amf 2>/dev/null
-    echo "AMF e NRF iniciados" >> "$LOG_DIR/up_core_bg.log"
-) &
+    echo ""
+    echo "[2/3] Iniciando nearRT-RIC..."
+    "$SCRIPT_DIR/up_flexric.sh"
 
-echo ""
-echo "Aguardando AMF subir (30s)..."
-sleep 30
+    echo ""
+    echo "[3/3] Iniciando gNB OAI + nrUE (E2 agent → 127.0.0.1, 51 PRBs)..."
+    "$SCRIPT_DIR/up_gnb_oai.sh"
+else
+    # ---------- MODO LITE (instância pequena, <1,5 GB livre) ----------
+    echo "Modo LITE: RAM baixa — Core parado, nrUE omitido, só AMF+NRF em bg."
+    export SKIP_UE=1
+
+    echo ""
+    echo "[1/4] Parando containers OAI (liberar RAM para nr-softmodem)..."
+    RUNNING_OAI=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'oai-|mysql|vpp-upf' || true)
+    if [ -n "$RUNNING_OAI" ]; then
+        echo "$RUNNING_OAI" | xargs docker stop 2>/dev/null | xargs -I{} echo "  parado: {}" || true
+    else
+        echo "  (nenhum container OAI rodando)"
+    fi
+    sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
+    sleep 3
+
+    echo ""
+    echo "[2/4] Iniciando nearRT-RIC..."
+    "$SCRIPT_DIR/up_flexric.sh"
+
+    echo ""
+    echo "[3/4] Iniciando gNB OAI (E2 agent → 127.0.0.1, 51 PRBs)..."
+    "$SCRIPT_DIR/up_gnb_oai.sh"
+
+    echo ""
+    echo "[4/4] Subindo AMF e NRF em background (gNB registra via N2)..."
+    (
+        docker start oai-nrf 2>/dev/null
+        for _ in $(seq 1 15); do
+            STATUS=$(docker inspect -f '{{.State.Health.Status}}' oai-nrf 2>/dev/null || echo missing)
+            [ "$STATUS" = "healthy" ] && break
+            sleep 2
+        done
+        docker start oai-amf 2>/dev/null
+        echo "AMF e NRF iniciados" >> "$LOG_DIR/up_core_bg.log"
+    ) &
+
+    echo ""
+    echo "Aguardando AMF subir (30s)..."
+    sleep 30
+fi
 
 echo ""
 echo "=========================================="

@@ -21,6 +21,28 @@ fi
 GNB_LOG="$LOG_DIR/gnb_oai.log"
 UE_LOG="$LOG_DIR/ue_oai.log"
 
+# --- Proteção contra congelamento da instância (2 vCPUs) ---------------------
+# O gNB/nrUE RFSIM podem saturar os 2 vCPUs em picos e travar a máquina inteira
+# (SSH/painel/Core deixam de responder até precisar reboot). Para impedir isso,
+# rodamos os processos nativos dentro de um scope do systemd com teto de CPU
+# (CPUQuota) e prioridade baixa (Nice). Mesmo num pico, o SO reserva CPU para
+# sshd/painel/dockerd (Nice 0) e o lab degrada em vez de congelar.
+# Override por ambiente: GNB_CPUQUOTA / UE_CPUQUOTA / RAN_NICE.
+GNB_CPUQUOTA="${GNB_CPUQUOTA:-120%}"
+UE_CPUQUOTA="${UE_CPUQUOTA:-60%}"
+RAN_NICE="${RAN_NICE:-10}"
+# Nota: 'Nice' não é propriedade de scope (só de service). Para scopes usamos
+# CPUQuota (teto rígido) + CPUWeight (prioridade cgroup, default 100) e aplicamos
+# a prioridade do escalonador via o comando 'nice' como prefixo do processo.
+if command -v systemd-run >/dev/null 2>&1; then
+    CAP_GNB=(systemd-run --scope -q --unit=oai-gnb -p "CPUQuota=${GNB_CPUQUOTA}" -p "CPUWeight=20" nice -n "${RAN_NICE}")
+    CAP_UE=(systemd-run --scope -q --unit=oai-nrue -p "CPUQuota=${UE_CPUQUOTA}" -p "CPUWeight=20" nice -n "${RAN_NICE}")
+else
+    CAP_GNB=(nice -n "${RAN_NICE}")
+    CAP_UE=(nice -n "${RAN_NICE}")
+    echo "AVISO: systemd-run ausente — só nice, sem teto rígido de CPU."
+fi
+
 # Config variável: suporta 24 PRBs (~150 MB RSS) para t4g.micro com pouca RAM
 GNB_CONF="${GNB_CONF_PATH:-$OAI_DIR/scripts/gnb.conf}"
 GNB_NRB="${GNB_NRB:-106}"
@@ -69,11 +91,15 @@ fi
 # Parar instâncias anteriores se existirem
 pkill -f "nr-softmodem" 2>/dev/null || true
 pkill -f "nr-uesoftmodem" 2>/dev/null || true
+# Limpa scopes do systemd de execuções anteriores (evita "unit already exists")
+sudo systemctl reset-failed oai-gnb.scope oai-nrue.scope 2>/dev/null || true
+sudo systemctl stop oai-gnb.scope oai-nrue.scope 2>/dev/null || true
 sleep 2
 
 echo "Iniciando gNB em background (conf: $GNB_CONF, NRB=$GNB_NRB, f=$GNB_DL_FREQ Hz)..."
 cd "$BUILD_DIR"
-sudo nohup ./nr-softmodem -O "$GNB_CONF" \
+echo "  (teto CPU: ${GNB_CPUQUOTA}, Nice ${RAN_NICE} — protege a instância contra freeze)"
+sudo nohup "${CAP_GNB[@]}" ./nr-softmodem -O "$GNB_CONF" \
     --gNBs.[0].min_rxtxtime 6 \
     --rfsim \
     "${E2_SM_ARGS[@]}" \
@@ -103,7 +129,7 @@ else
     else
         UE_RF_ARGS=(--rfsim -r "$GNB_NRB" --numerology 1 --band 78 -C "$GNB_DL_FREQ")
     fi
-    sudo nohup ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \
+    sudo nohup "${CAP_UE[@]}" ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \
         "${UE_RF_ARGS[@]}" \
         > "$UE_LOG" 2>&1 &
     UE_PID=$!

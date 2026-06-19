@@ -18,7 +18,23 @@ add_executable(xapp_kpm_moni
 		      )
 target_compile_definitions(xapp_kpm_moni PRIVATE KPM_MEAS_LIST="${KPM_MEAS_LIST}")
 
-add_executable(xapp_gtp_mac_rlc_pdcp_moni 
+add_executable(xapp_ue_tp_moni
+		xapp_ue_tp_moni.c
+                ../../../../src/util/alg_ds/alg/defer.c
+		../../../../src/util/alg_ds/alg/murmur_hash_32.c
+		../../../../src/util/alg_ds/ds/assoc_container/assoc_ht_open_address.c
+              )
+
+ target_link_libraries(xapp_ue_tp_moni
+                      PUBLIC
+                      e42_xapp
+                      -pthread
+                      -lsctp
+                      -ldl
+		      )
+target_compile_definitions(xapp_ue_tp_moni PRIVATE KPM_MEAS_LIST="${KPM_MEAS_LIST}")
+
+add_executable(xapp_gtp_mac_rlc_pdcp_moni
 		xapp_gtp_mac_rlc_pdcp_moni.c
                 ../../../../src/util/alg_ds/alg/defer.c
               )

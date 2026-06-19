@@ -10,6 +10,7 @@ Roteiros para execução em sala ou de forma autônoma e para elaboração do **
 | [01 — Infraestrutura e Core 5GC (Open5GS)](01-core-open5gs.md) | Docker, subida do core, assinante, WebUI, verificações iniciais |
 | [02 — UERANSIM: N2/N3 e teste E2E](02-ueransim-n2-n3-e2e.md) | gNB + UE em container, NGAP, GTP-U, testes e capturas N3/N6 |
 | [03 — Relatório, entrega e avaliação](03-relatorio-entrega-avaliacao.md) | O que entregar, evidências obrigatórias, rubrica |
+| [OAI Core arm64 — Build manual](../../server/oai-cn-gnb-e2/docs/OAI-CORE-ARM64.md) | Compilar imagens OAI para arm64: pré-requisitos, passo a passo, 5 bugs resolvidos |
 
 **Pré-requisitos:** Linux com Docker e Docker Compose v2, usuário com permissão para `docker` (e eventualmente `sudo` para `sysctl` na inicialização do core e para `tcpdump` no *host*, se fizer capturas avançadas).
 

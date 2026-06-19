@@ -4,6 +4,8 @@ Guia passo a passo para reproduzir o laboratório **5G SA nativo** (Core Docker 
 
 > **Escopo:** este lab corre no **host** (Docker só para o Core). **Não** utiliza Kind multicluster nem integração com SD-RAN/Aether.
 
+> **Imagens do Core em arm64:** as imagens `oaisoftwarealliance/*:v1.5.1` não existem no DockerHub para `linux/arm64`. Elas foram compiladas nativamente neste projeto. Consulte o guia completo em [OAI-CORE-ARM64.md](OAI-CORE-ARM64.md) antes de tentar subir o Core num host Graviton2/Apple Silicon.
+
 ---
 
 ## 1. Resultados obtidos (resumo)

@@ -2,6 +2,8 @@
 
 Guia detalhado para instalação, build e execução do **gNB OAI** e **nrUE** em modo **RFSIM** (simulador de RF), integrado ao Core OAI do projeto oai-cn-gnb-e2.
 
+> **Rodando em arm64 (AWS Graviton2 / Apple Silicon)?** As imagens Docker do Core OAI não existem para `linux/arm64` no DockerHub. Elas precisam ser compiladas manualmente. Consulte [OAI-CORE-ARM64.md](OAI-CORE-ARM64.md) para o guia completo de build, os 5 bugs encontrados e como corrigi-los.
+
 ---
 
 ## Índice

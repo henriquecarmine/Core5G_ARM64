@@ -21,6 +21,56 @@ PATCH em correções pontuais.
 | 0.10.0 | 2026-06-19 | 6 imagens OAI arm64 concluídas (Bugs 4-5), deployed no servidor AWS         |
 | 0.11.0 | 2026-06-19 | Tela de login + topologia interativa + seletor de projeto + estabilidade da instância + README |
 | 0.11.1 | 2026-06-19 | Fix: interferência/distância (P1) agora afetam a medição + resumo no throughput |
+| 0.12.0 | 2026-06-19 | Colorimetria ISO/ANSI + resumo didático em TODOS os testes; fixes (canal, failover, anti-freeze KPM/RC) |
+
+---
+
+## [0.12.0] — 2026-06-19
+
+Padronização visual e didática de **todos os testes** do painel, mais correções
+de bugs reais encontrados ao testar um por um.
+
+### Colorimetria ISO/ANSI + resumo didático (todos os testes)
+
+- Painel passa a **renderizar ANSI de verdade** nos dois consoles (principal e
+  UE Lab): `renderLogLine` converte SGR em `<span>` coloridos (HTML-escapado),
+  com fallback para o colorizador por conteúdo (`lineColor`, agora também
+  reconhece ✓/✗/⚠). Verde=ok, amarelo=atenção, vermelho=erro, azul=info.
+- Lib bash compartilhada **`scripts/lib/testlog.sh`** (P1 e P2): helpers
+  minimalistas `section/ok/warn/err/info/step/kv` + bloco **`summary`**
+  padronizado ("O que fez" + "Resultado" colorido).
+- Refatorados com cor + resumo: `test_channel`, `test_throughput`,
+  `test_ue_connection`, `test_upf_failover`, `test-system-status`,
+  `healthcheck` (P1) e `test_e2_sm`, `test_e2_kpm`, `test_e2_rc_attach` (P2).
+
+### Fix — interferência/distância não aplicava (bug do `jitter`)
+
+`test_channel.sh` montava `tc netem ... jitter Xms`, mas `jitter` **não é
+palavra-chave** do `tc` (respondia `What is "jitter"?` e não aplicava nada). O
+relatório saía sempre igual. Corrigido para a forma certa (`delay <atraso>
+<jitter> loss <perda>%`) + força a medição pelo túnel + ping de confirmação.
+Validado: ideal 148 Mbit/s → 1km/media 608 Kbit/s (10% perda, 41 ms).
+
+### Fix — `test_upf_failover` abortava (nomes de container desatualizados)
+
+Usava `docker compose ps | grep "upf-a.*Up"` (não casa com o nome real
+`open5gs-upf-containerized-a` nem com o status "running" do compose v2) e
+`docker compose exec ueransim` (ueransim é container avulso). Trocado por
+checagem robusta por serviço (`--status running`) e `docker exec` para o UE.
+
+### Robustez — anti-freeze também nos testes KPM/RC
+
+`test_e2_kpm.sh` e `test_e2_rc_attach.sh` reiniciavam o gNB/UE RFSIM **sem** o
+teto de CPU (risco de congelar a instância). Passam a usar o mesmo
+`systemd-run --scope` com `CPUQuota`/`CPUWeight`/`nice`. Validado: máquina
+responsiva (echo < 0,5 s) sob load alto.
+
+### Operação
+
+- `test_e2_sm.sh` aborta na hora (com resumo) se o gNB não estiver no ar, em
+  vez de travar 30 s por xApp.
+- `sch_netem` carregado/persistido no `server-bootstrap.sh` (necessário para o
+  `tc netem`).
 
 ---
 

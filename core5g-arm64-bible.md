@@ -983,11 +983,22 @@ CPU/RAM-intensivo) — ainda não medido, testar com cautela.
       `POST /api/subscriber`; guest bloqueado com 403.
 - [x] **Ferramentas de teste no painel**:
   - Teste de banda: `iperf3` entre `ueransim` (uesimtun0) e `dn` —
-    baseline ~168 Mbits/s confirmado (`scripts/test_throughput.sh`).
-  - Teste de interferência: `tc netem` em uesimtun0, botões on/off —
-    5% perda + 50 ms delay → ~1.87 Mbits/s (~90× degradação confirmada).
-  - Distância relativa: perfis perto/medio/longe/off via `tc netem` —
-    longe (10%/120ms) aplicado e verificado via `tc qdisc show`.
+    baseline ~150 Mbits/s confirmado (`scripts/test_throughput.sh`).
+  - Teste de interferência/distância: `tc netem` em uesimtun0 via
+    `scripts/test_channel.sh` (modelos 3GPP TR 38.901 + Shannon). Ideal
+    ~148 Mbit/s → 1km/media ~608 Kbit/s (perda/RTT acompanham).
+- [x] **Colorimetria ISO/ANSI + resumo didático em todos os testes**
+      (v0.12.0): lib `scripts/lib/testlog.sh` + render ANSI no painel; cada
+      teste termina com "O que fez" + "Resultado" colorido. Ver `CHANGELOG.md`.
+- [x] **Anti-freeze**: gNB/nrUE RFSIM rodam sob `systemd-run --scope` com
+      `CPUQuota`/`CPUWeight`/`nice` em `up_gnb_oai.sh`, `test_e2_kpm.sh` e
+      `test_e2_rc_attach.sh` — a instância de 2 vCPUs não congela mais.
+
+> **Pega operacional (5G-AKA / SQN):** se o UE não registra e o log mostra
+> `Authentication Failure due to SQN out of range`, o número de sequência do
+> assinante (UDM/MongoDB) dessincronizou do SIM. Solução: re-cadastrar o
+> assinante (`./scripts/add-subscriber.sh`, que deleta+insere e zera o SQN) e
+> reiniciar o UE (`docker restart ueransim`). O `uesimtun0` volta em segundos.
 
 ---
 

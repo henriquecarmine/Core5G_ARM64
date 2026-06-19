@@ -117,7 +117,9 @@ cd ~/server/oai-cn-gnb-e2
 Recursos: telemetria ao vivo, logs filtrados/coloridos, UE Lab, Demonstração
 E2E, **seletor de projeto** (liga um e desliga o outro), **topologia interativa**
 (containers/portas/redes reais, clicáveis) e os testes de Service Model E2 com
-explicação didática de cada resultado.
+explicação didática de cada resultado. **Todos os testes** saem com colorimetria
+consistente (ANSI/ISO) e um **resumo final** explicando o que o teste fez e o
+resultado.
 
 > **Acesse sempre pelo domínio**, nunca pelo IP — o certificado é do domínio.
 > Se o IP mudou e o navegador não abre, limpe o cache DNS local

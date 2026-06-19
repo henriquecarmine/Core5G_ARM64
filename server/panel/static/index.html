@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Core5G_ARM64 — Painel</title>
+<style>
+  :root {
+    --bg: #16181d;
+    --panel: #1e2128;
+    --border: #2c3038;
+    --text: #e6e6e6;
+    --muted: #8a8f98;
+    --accent: #e8590c;
+    --green: #2f9e44;
+    --yellow: #f59f00;
+    --red: #e03131;
+    --info: #4dabf7;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; }
+  header { padding:14px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  header h1 { font-size:17px; margin:0; }
+  header h1 span { color:var(--accent); }
+  #whoami { color:var(--muted); font-size:13px; }
+  #whoami.guest { color:#ffb84d; }
+  #guest-banner { display:none; background:#4a2f0c; color:#ffb84d; padding:7px 24px; font-size:13px; }
+
+  /* Telemetria */
+  #telemetry { display:flex; gap:20px; padding:5px 24px; border-bottom:1px solid var(--border); background:var(--panel); font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px; color:var(--muted); white-space:pre; }
+  #telemetry span { color:var(--text); }
+  #tm-containers-wrap { padding:0 24px; border-bottom:1px solid var(--border); }
+  #tm-containers-wrap summary { cursor:pointer; color:var(--muted); font-size:12px; padding:6px 0; }
+  #tm-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:8px; }
+  #tm-table th { text-align:left; color:var(--muted); padding:4px 8px; border-bottom:1px solid var(--border); }
+  #tm-table td { padding:4px 8px; border-bottom:1px solid #20232a; }
+
+  /* Action bar */
+  #action-bar { display:flex; gap:8px; padding:8px 24px; border-bottom:1px solid var(--border); background:var(--panel); align-items:center; }
+  #action-bar .bar-label { font-size:11px; color:var(--muted); margin-right:4px; text-transform:uppercase; letter-spacing:.05em; }
+  #action-bar button { display:inline-block; width:auto; padding:5px 13px; margin-bottom:0; background:#262a32; color:var(--text); border:1px solid var(--border); border-radius:6px; cursor:pointer; font-size:12.5px; transition:background .15s; }
+  #action-bar button:hover:not(:disabled) { background:#313640; border-color:var(--accent); }
+  #action-bar button:disabled { opacity:.4; cursor:not-allowed; }
+  #uelab-open-btn { border-color:var(--accent); color:var(--accent); }
+  #uelab-open-btn:hover:not(:disabled) { background:rgba(232,89,12,.12) !important; }
+
+  /* Layout */
+  main { display:grid; grid-template-columns:260px 1fr; gap:16px; padding:16px 24px; flex:1; min-height:0; }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:14px; overflow-y:auto; }
+  .panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0 0 8px 0; }
+  .group { margin-bottom:16px; }
+  button { display:block; width:100%; padding:8px 10px; margin-bottom:5px; background:#262a32; color:var(--text); border:1px solid var(--border); border-radius:6px; cursor:pointer; font-size:13px; text-align:left; transition:background .15s; }
+  button:hover:not(:disabled) { background:#313640; border-color:var(--accent); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  button.danger:hover:not(:disabled) { border-color:var(--red); }
+  button.primary { border-color:var(--accent); }
+  select, input { display:block; width:100%; padding:7px 9px; margin-bottom:4px; background:#262a32; color:var(--text); border:1px solid var(--border); border-radius:6px; font-size:13px; }
+  .field-help { font-size:11px; color:var(--muted); margin:0 0 7px 0; line-height:1.3; }
+  .help-intro { font-size:11.5px; color:var(--muted); margin:0 0 9px 0; line-height:1.4; }
+  .help-intro code { color:var(--text); }
+
+  /* Console */
+  #console-wrap { display:flex; flex-direction:column; min-height:0; }
+  #console-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  #status-pill { font-size:12px; padding:3px 10px; border-radius:12px; background:#262a32; color:var(--muted); }
+  #status-pill.running { background:#4a2f0c; color:#ffb84d; }
+  #status-pill.ok { background:#163a1f; color:#69db7c; }
+  #status-pill.error { background:#3a1616; color:#ff8787; }
+  #clear-btn, #copy-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; width:auto; padding:4px 8px; margin:0; }
+  #output { flex:1; background:#0d0e11; border:1px solid var(--border); border-radius:6px; padding:12px; overflow-y:auto; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px; white-space:pre-wrap; line-height:1.5; }
+
+  /* Footer */
+  footer { padding:7px 24px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); text-align:center; }
+
+  /* ---- UE Lab overlay ---- */
+  #uelab-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:100; align-items:center; justify-content:center; }
+  #uelab-overlay.open { display:flex; }
+  #uelab-panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:1140px; height:88vh; display:flex; flex-direction:column; overflow:hidden; }
+  #uelab-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  #uelab-header h2 { font-size:15px; margin:0; }
+  #uelab-header-sub { font-size:11.5px; color:var(--muted); margin-left:12px; }
+  #uelab-close { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; width:auto; padding:0 4px; line-height:1; }
+  #uelab-body { display:grid; grid-template-columns:300px 1fr; flex:1; min-height:0; overflow:hidden; }
+
+  /* UE Lab — left (UE list) */
+  #uelab-left { border-right:1px solid var(--border); padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
+  .lab-section-title { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:6px; }
+  .ue-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .ue-table th { color:var(--muted); padding:4px 6px; border-bottom:1px solid var(--border); text-align:left; font-weight:normal; font-size:11px; }
+  .ue-table td { padding:5px 6px; border-bottom:1px solid #1c1f26; vertical-align:middle; }
+  .del-btn { background:none; border:none; color:var(--muted); cursor:pointer; width:auto; padding:2px 6px; font-size:13px; margin:0; display:inline; }
+  .del-btn:hover { color:var(--red); }
+  #uelab-refresh-btn { background:none; border:1px solid var(--border); color:var(--muted); font-size:12px; cursor:pointer; border-radius:6px; padding:5px 10px; width:auto; margin:0; }
+  #uelab-refresh-btn:hover { border-color:var(--accent); color:var(--text); }
+
+  /* Register form inside lab */
+  #ue-reg-details { border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
+  #ue-reg-details summary { cursor:pointer; font-size:12.5px; color:var(--accent); user-select:none; }
+  #ue-reg-details[open] summary { margin-bottom:10px; }
+  #ue-reg-details label { display:block; font-size:11.5px; color:var(--muted); margin:8px 0 3px; }
+  .input-row { display:flex; gap:5px; margin-bottom:2px; }
+  .input-row input { flex:1; margin-bottom:0; }
+  .suggest-btn { background:#262a32; border:1px solid var(--border); color:var(--muted); border-radius:6px; font-size:11px; padding:0 8px; cursor:pointer; white-space:nowrap; width:auto; transition:border-color .15s,color .15s; }
+  .suggest-btn:hover { color:var(--accent); border-color:var(--accent); }
+  .formula-legend { font-size:10px; color:#404858; line-height:1.6; margin-top:5px; font-family:"SF Mono",Menlo,monospace; }
+  .formula-legend em { color:#5a6a80; font-style:normal; }
+  .channel-info-bar { font-size:10.5px; color:#404858; font-family:"SF Mono",Menlo,monospace; margin-bottom:10px; padding:5px 10px; background:#13151a; border-radius:4px; border:1px solid #1e2028; }
+  .band-dl { color:#4dabf7; }
+  .band-ul { color:#69db7c; }
+  #lab-duration { width:auto; flex:none; padding:5px 10px; font-size:12px; margin-bottom:0; }
+  .oran-arch { background:#0d0e11; border:1px solid var(--border); border-radius:6px; padding:10px 12px; font-family:"SF Mono",Menlo,monospace; font-size:10.5px; color:#404858; white-space:pre; line-height:1.6; margin-top:6px; }
+  details > summary { list-style:none; }
+  details > summary::-webkit-details-marker { display:none; }
+
+  /* UE Lab — right (tests + result) */
+  #uelab-right { padding:18px 20px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
+
+  /* Conditions */
+  .condition-block { background:#1a1d24; border:1px solid var(--border); border-radius:8px; padding:14px 16px; }
+  .condition-block label { display:block; font-size:12px; color:var(--muted); margin-bottom:5px; }
+  .formula-box { background:#0d0e11; border:1px solid var(--border); border-radius:4px; padding:7px 10px; font-family:"SF Mono",Menlo,monospace; font-size:10.5px; color:#6a7280; margin-top:6px; white-space:pre-wrap; line-height:1.45; }
+
+  /* Action buttons row */
+  .lab-btn-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .lab-btn-row button { width:auto; flex:1; min-width:120px; }
+
+  /* Result card */
+  #result-card { background:#0d0e11; border:1px solid var(--border); border-radius:8px; padding:16px 18px; display:none; }
+  .result-value { font-size:32px; font-weight:700; font-family:"SF Mono",Menlo,monospace; color:var(--accent); }
+  .result-value span { font-size:14px; color:var(--muted); font-weight:normal; margin-left:4px; }
+  .result-meta { font-size:12px; color:var(--muted); margin-top:6px; font-family:"SF Mono",Menlo,monospace; }
+
+  /* Lab console */
+  #lab-console { background:#0d0e11; border:1px solid var(--border); border-radius:6px; padding:10px 12px; font-family:"SF Mono",Menlo,monospace; font-size:11.5px; white-space:pre-wrap; line-height:1.5; overflow-y:auto; flex:1; min-height:140px; max-height:240px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Core5G<span>_ARM64</span> — Painel</h1>
+  <div id="whoami">carregando...</div>
+</header>
+<div id="guest-banner">Modo somente leitura — guest pode visualizar, mas não executar comandos.</div>
+<div id="telemetry">
+  <span id="tm-cpu">CPU —</span>
+  <span id="tm-ram">RAM 1G [===========]</span>
+  <span id="tm-swap">Swap 8G [===========]</span>
+  <span id="tm-disk">Disk —</span>
+</div>
+<details id="tm-containers-wrap">
+  <summary>Containers (CPU / RAM)</summary>
+  <table id="tm-table">
+    <thead><tr><th>Nome</th><th>CPU</th><th>RAM</th></tr></thead>
+    <tbody id="tm-containers"></tbody>
+  </table>
+</details>
+
+<div id="action-bar">
+  <span class="bar-label">Lab</span>
+  <button id="uelab-open-btn">⚗ UE Lab</button>
+</div>
+
+<main>
+  <div class="panel">
+    <div class="group">
+      <h2>Servidor</h2>
+      <button data-cmd="status">Status / Healthcheck</button>
+    </div>
+    <div class="group">
+      <h2>Projeto 1 — Open5GS</h2>
+      <button class="primary" data-cmd="up-core">Up core</button>
+      <button class="primary" data-cmd="up-ran">Up RAN</button>
+      <button class="primary" data-cmd="up-all">Up all</button>
+      <button class="danger" data-cmd="down-core">Down core</button>
+      <button class="danger" data-cmd="down-ran">Down RAN</button>
+      <button class="danger" data-cmd="down-all">Down all</button>
+    </div>
+    <div class="group">
+      <h2>Logs</h2>
+      <select id="log-service"></select>
+      <button id="logs-btn">Ver logs</button>
+      <button id="logs-stop-btn" class="danger">Parar logs</button>
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-size:11px;color:var(--muted);padding:3px 0">ℹ Arquitetura O-RAN</summary>
+        <div class="oran-arch"><span style="color:#5a6a8f">SMO / Non-RT RIC</span>
+  rApp · A1 Policy · O1 Management
+     ↕ O1 / A1
+<span style="color:#5a6a8f">Near-RT RIC</span> (Projeto 2 — FlexRIC)
+  xApp KPM · xApp RC · E2 termination
+     ↕ E2 (E2AP / E2SM-KPM / E2SM-RC)
+<span style="color:#4dabf7">O-gNB</span> (OAI nr-softmodem / UERANSIM)
+  O-CU-CP · O-CU-UP · O-DU · (O-RU sim)
+  <span style="color:#69db7c">↑ UL</span> DRB.UEThpUl / RRU.PrbTotUl
+  <span style="color:#4dabf7">↓ DL</span> DRB.UEThpDl / RRU.PrbTotDl
+     ↕ N2 (NGAP) / N3 (GTP-U)
+<span style="color:#4dabf7">5GC Open5GS</span> (Projeto 1)
+  AMF · SMF · UPF · AUSF · UDM · PCF
+     ↕ N1 (NAS) / N6 (internet)
+<span style="color:#69db7c">UE</span> → uesimtun0 → iperf3</div>
+      </details>
+    </div>
+  </div>
+
+  <div id="console-wrap">
+    <div id="console-toolbar">
+      <span id="status-pill">ocioso</span>
+      <span>
+        <button id="copy-btn">copiar</button>
+        <button id="clear-btn">limpar</button>
+      </span>
+    </div>
+    <div id="output">Pronto. Clique em um comando à esquerda ou abra o UE Lab.</div>
+  </div>
+</main>
+
+<footer>
+  Core5G_ARM64 v<span id="version-label">—</span> &nbsp;·&nbsp; Grupo 6 — UE-TP-rApp &nbsp;·&nbsp; CESAR School
+</footer>
+
+<!-- =================== UE Lab =================== -->
+<div id="uelab-overlay">
+  <div id="uelab-panel">
+    <div id="uelab-header">
+      <div style="display:flex;align-items:baseline;gap:0">
+        <h2>UE Lab</h2>
+        <span id="uelab-header-sub">— Gerenciamento de Subscribers &amp; Testes de Canal 5G</span>
+      </div>
+      <button id="uelab-close">×</button>
+    </div>
+
+    <div id="uelab-body">
+
+      <!-- ===== COLUNA ESQUERDA: UE list + register ===== -->
+      <div id="uelab-left">
+
+        <div>
+          <div class="lab-section-title">Subscribers cadastrados</div>
+          <table class="ue-table">
+            <thead><tr><th>IMSI</th><th>MSISDN</th><th></th></tr></thead>
+            <tbody id="ue-list-body">
+              <tr><td colspan="3" style="color:var(--muted);font-size:12px">Carregando...</td></tr>
+            </tbody>
+          </table>
+          <button id="uelab-refresh-btn" style="margin-top:6px">↻ Atualizar</button>
+        </div>
+
+        <details id="ue-reg-details">
+          <summary>+ Cadastrar novo UE</summary>
+
+          <label for="lab-imsi">IMSI <span style="color:var(--accent)">*</span></label>
+          <div class="input-row">
+            <input id="lab-imsi" placeholder="001010000000001">
+            <button class="suggest-btn" onclick="labSuggestImsi()">Sugerir</button>
+          </div>
+          <p class="field-help">MCC(3) + MNC(2) + MSIN(10) — ex.: 001 01 0000000001</p>
+
+          <label for="lab-msisdn">MSISDN</label>
+          <div class="input-row">
+            <input id="lab-msisdn" placeholder="33638060001">
+            <button class="suggest-btn" onclick="labSuggestMsisdn()">Sugerir</button>
+          </div>
+          <p class="field-help">Número E.164 do subscriber</p>
+
+          <label for="lab-k">K (Ki) — 128 bits</label>
+          <div class="input-row">
+            <input id="lab-k" placeholder="32 hex">
+            <button class="suggest-btn" onclick="suggestHex('lab-k')">Sugerir</button>
+          </div>
+          <p class="field-help">Chave de autenticação gravada no eSIM/USIM — usada em AKA (3GPP TS 33.102)</p>
+
+          <label for="lab-opc">OPc — 128 bits</label>
+          <div class="input-row">
+            <input id="lab-opc" placeholder="32 hex">
+            <button class="suggest-btn" onclick="suggestHex('lab-opc')">Sugerir</button>
+          </div>
+          <p class="field-help">Operator Ciphering Key — derivada de OP ⊕ f(K); vai ao UDR, não ao ar</p>
+
+          <label for="lab-amf">AMF</label>
+          <div class="input-row">
+            <input id="lab-amf" placeholder="8000">
+            <button class="suggest-btn" onclick="document.getElementById('lab-amf').value='8000'">8000</button>
+          </div>
+          <p class="field-help">Authentication Management Field — bitmap 16 bits (3GPP TS 33.102)</p>
+
+          <button class="primary" id="lab-register-btn" style="margin-top:8px">Cadastrar</button>
+        </details>
+
+      </div>
+
+      <!-- ===== COLUNA DIREITA: condições + resultado + console ===== -->
+      <div id="uelab-right">
+
+        <details style="margin-bottom:6px">
+          <summary style="cursor:pointer;font-size:11px;color:var(--muted);padding:3px 0">ℹ Fluxo do teste no contexto O-RAN</summary>
+          <div class="oran-arch" style="margin-top:6px"><span style="color:#5a6a8f">rApp UE-TP</span> (tema do grupo) → consome KPMs do RIC para prever throughput
+     ↕ A1 / E2
+<span style="color:#5a6a8f">Near-RT RIC</span> → subscreve E2SM-KPM: DRB.UEThpDl/Ul · RRU.PrbTotDl/Ul
+     ↕ E2 (por UE)
+<span style="color:#4dabf7">O-gNB</span> [Split 7.2: O-CU-CP + O-CU-UP + O-DU + O-RU (simulado)]
+  n78 · TDD 3.5 GHz · BW 100 MHz · 30 kHz SCS · 66 PRBs
+  <span style="color:#e8590c">tc netem em uesimtun0</span> ← este painel aplica delay/loss aqui
+     ↕ N2 (NGAP) / N3 (GTP-U)
+<span style="color:#4dabf7">5GC Open5GS</span> → AMF (registro) · SMF/UPF (sessão PDU · N4/N6)
+     ↕ uesimtun0 (TUN 10.60.0.x)
+<span style="color:#69db7c">UE</span> iperf3 client → DN iperf3 server (<span style="color:#69db7c">mede throughput real aqui</span>)</div>
+        </details>
+
+        <div>
+          <div class="lab-section-title">Condições do Canal</div>
+          <div class="channel-info-bar">
+            5G NR <span class="band-dl">n78</span> · TDD · 3.3–3.8 GHz · BW 100 MHz · SCS 30 kHz · 66 PRBs
+            &nbsp;·&nbsp; <span class="band-dl">↓ DL ~665 Mbps</span> &nbsp;·&nbsp; <span class="band-ul">↑ UL ~250 Mbps</span>
+          </div>
+
+          <div class="condition-block">
+            <label>Distância UE ↔ gNB</label>
+            <select id="lab-dist">
+              <option value="none">Canal ideal — sem atenuação de percurso</option>
+              <option value="100m">100 m — PL 102.6 dB · RSRP −44 dBm · delay 1 ms · loss 0%</option>
+              <option value="500m">500 m — PL 129.9 dB · RSRP −72 dBm · delay 8 ms · loss 2%</option>
+              <option value="1km"> 1 km — PL 141.7 dB · RSRP −84 dBm · delay 20 ms · loss 8%</option>
+              <option value="3km"> 3 km — PL 159.6 dB · RSRP −102 dBm · delay 50 ms · loss 20% (borda de célula)</option>
+            </select>
+            <div class="formula-box">PL(d) = 13.54 + 39.08·log₁₀(d) + 20·log₁₀(f_c) − 0.6·(h_UT−1.5)
+[3GPP TR 38.901 · UMa NLOS · f_c = 3.5 GHz · h_UT = 1.5 m]</div>
+            <div class="formula-legend">
+<em>PL(d)</em> = Path Loss em dB (atenuação total do sinal)
+<em>d</em>     = distância UE ↔ gNB em metros
+<em>f_c</em>   = frequência portadora em GHz (3.5 GHz = banda n78)
+<em>h_UT</em>  = altura do UE acima do solo em metros (padrão: 1.5 m)
+<em>UMa</em>   = Urban Macro (macro-célula urbana, h_BS = 25 m)
+<em>NLOS</em>  = Non-Line-of-Sight (sem visada direta UE↔antena)</div>
+          </div>
+
+          <div class="condition-block">
+            <label>Interferência de Rádio</label>
+            <select id="lab-interf">
+              <option value="none">Sem interferência — canal limpo</option>
+              <option value="fraca">Fraca — C/I > 20 dB · SINR 20 dB · C_max 665 Mbps · PDR 99% · +5 ms</option>
+              <option value="media">Média — C/I ≈ 15 dB · SINR 15 dB · C_max 498 Mbps · PDR 95% · +20 ms</option>
+              <option value="alta"> Alta  — C/I < 10 dB · SINR  5 dB · C_max 207 Mbps · PDR 85% · +50 ms</option>
+            </select>
+            <div class="formula-box">SINR = C_signal / (N₀ + I)  →  C_max = B · log₂(1 + SINR)
+[Shannon–Hartley · B = 100 MHz · 5G NR n78 TDD]</div>
+            <div class="formula-legend">
+<em>SINR</em>     = Signal-to-Interference-plus-Noise Ratio (dB)
+<em>C_signal</em> = potência do sinal útil recebido (dBm)
+<em>N₀</em>       = piso de ruído térmico (kTB, ≈ −100 dBm / 100 MHz)
+<em>I</em>        = potência total da interferência co-canal (dBm)
+<em>B</em>        = largura de banda do canal = 100 MHz (n78 TDD)
+<em>C_max</em>    = capacidade máxima teórica do canal (Mbps)
+<em>C/I</em>      = Carrier-to-Interference ratio (nível de qualidade do sinal)</div>
+          </div>
+        </div>
+
+        <div class="lab-btn-row">
+          <select id="lab-duration" title="Duração do teste iperf3">
+            <option value="5">5 s</option>
+            <option value="10" selected>10 s</option>
+            <option value="30">30 s</option>
+            <option value="60">60 s</option>
+          </select>
+          <button class="primary" id="lab-run-btn">▶ Medir Throughput</button>
+          <button id="lab-apply-btn">↕ Só aplicar condições</button>
+          <button class="danger" id="lab-reset-btn">✕ Limpar canal</button>
+        </div>
+
+        <!-- Resultado em evidência -->
+        <div id="result-card">
+          <div class="lab-section-title">Resultado do Teste</div>
+          <div class="result-value" id="result-bw">— <span>Mbits/s</span></div>
+          <div class="result-meta" id="result-meta"></div>
+        </div>
+
+        <!-- Console inline -->
+        <div>
+          <div class="lab-section-title">Console</div>
+          <div id="lab-console"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Utilitários =====
+function stripAnsi(s) {
+  return s.replace(/\x1b\[[0-9;]*[mGKJHFABCDSTlu]/g, '');
+}
+
+function lineColor(line) {
+  if (/FATAL|CRITICAL|EMERG|ALERT/i.test(line))         return 'var(--red)';
+  if (/\bERROR\b|REJECT|FAIL(ED)?|EXCEPTION/i.test(line)) return 'var(--red)';
+  if (/WARN(ING)?/i.test(line))                          return 'var(--yellow)';
+  if (/\b(DEBUG|TRACE|DEBU)\b/i.test(line))              return '#5a6170';
+  if (/\bINFO\b|\bNOTICE\b|\bNOTI\b/i.test(line))       return 'var(--info)';
+  return 'var(--text)';
+}
+
+function randomDigits(n) {
+  return Array.from(crypto.getRandomValues(new Uint8Array(n))).map(b => b % 10).join('');
+}
+
+function randomHex32() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, '0').toUpperCase()).join('');
+}
+
+function suggestHex(id) { document.getElementById(id).value = randomHex32(); }
+
+// Sequência lógica: incrementa contador salvo em localStorage
+function nextUeCounter() {
+  const n = parseInt(localStorage.getItem('ue_seq') || '0') + 1;
+  localStorage.setItem('ue_seq', n);
+  return n;
+}
+function currentCounter() { return parseInt(localStorage.getItem('ue_seq') || '0'); }
+
+function labSuggestImsi() {
+  const n = nextUeCounter();
+  document.getElementById('lab-imsi').value = '00101' + String(n).padStart(10, '0');
+  labSuggestMsisdn(n);
+}
+function labSuggestMsisdn(n) {
+  const seq = n !== undefined ? n : currentCounter();
+  document.getElementById('lab-msisdn').value = '336' + String(38060000 + seq).padStart(8, '0');
+}
+
+// ===== Estado global =====
+const output   = document.getElementById('output');
+const statusPill = document.getElementById('status-pill');
+const whoamiEl = document.getElementById('whoami');
+const guestBanner = document.getElementById('guest-banner');
+const buttons  = document.querySelectorAll('button[data-cmd]');
+const ueLab = {
+  overlay:    document.getElementById('uelab-overlay'),
+  listBody:   document.getElementById('ue-list-body'),
+  labConsole: document.getElementById('lab-console'),
+  resultCard: document.getElementById('result-card'),
+  resultBw:   document.getElementById('result-bw'),
+  resultMeta: document.getElementById('result-meta'),
+};
+let isGuest = false;
+
+function setStatus(state, label) { statusPill.className = state; statusPill.textContent = label; }
+
+function setRunning(running) {
+  buttons.forEach(b => b.disabled = running || isGuest);
+  document.getElementById('uelab-open-btn').disabled = running || isGuest;
+}
+
+// ===== Auth =====
+async function loadWhoami() {
+  try {
+    const data = await (await fetch('/api/whoami')).json();
+    isGuest = data.role === 'guest';
+    whoamiEl.textContent = (data.user || '?') + ' (' + data.role + ')';
+    whoamiEl.className = isGuest ? 'guest' : '';
+    guestBanner.style.display = isGuest ? 'block' : 'none';
+    setRunning(false);
+  } catch { whoamiEl.textContent = 'erro'; }
+}
+
+// ===== Versão =====
+async function loadVersion() {
+  try {
+    const d = await (await fetch('/api/version')).json();
+    document.getElementById('version-label').textContent = d.version;
+  } catch {}
+}
+
+// ===== Console principal =====
+function appendLine(line) {
+  const clean = stripAnsi(line).replace(/\r/g, '');
+  const div = document.createElement('div');
+  div.style.color = lineColor(clean);
+  div.textContent = clean;
+  output.appendChild(div);
+  output.scrollTop = output.scrollHeight;
+}
+
+async function streamToConsole(resp) {
+  const reader = resp.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let idx;
+    while ((idx = buf.indexOf('\n')) >= 0) { appendLine(buf.slice(0, idx)); buf = buf.slice(idx + 1); }
+  }
+  if (buf) appendLine(buf);
+}
+
+async function runCommand(cmd) {
+  if (isGuest) return;
+  setRunning(true);
+  setStatus('running', 'executando: ' + cmd);
+  output.innerHTML = '';
+  try {
+    const resp = await fetch('/api/run/' + cmd, { method: 'POST' });
+    if (resp.status === 403) { appendLine(await resp.text()); setStatus('error', 'bloqueado'); return; }
+    await streamToConsole(resp);
+    setStatus('ok', 'concluído: ' + cmd);
+  } catch (e) {
+    appendLine('[erro: ' + e + ']'); setStatus('error', 'erro');
+  } finally { setRunning(false); }
+}
+
+buttons.forEach(b => b.addEventListener('click', () => runCommand(b.dataset.cmd)));
+document.getElementById('clear-btn').addEventListener('click', () => { output.innerHTML = ''; });
+document.getElementById('copy-btn').addEventListener('click', async () => {
+  try {
+    const lines = Array.from(output.children).map(e => e.textContent);
+    await navigator.clipboard.writeText(lines.length ? lines.join('\n') : output.textContent);
+    setStatus('ok', 'copiado');
+  } catch { setStatus('error', 'falha ao copiar'); }
+});
+
+// ===== Logs =====
+let logsAbort = null;
+const SERVICE_LABELS = {
+  amf:    'AMF · N1/N2 · UE auth & mobility (NGAP)',
+  ausf:   'AUSF · 5G-AKA · authentication server',
+  bsf:    'BSF · Nbsf · PCF-session binding discovery',
+  dn:     'DN · N6 · UPF egress / iperf3 server',
+  mongodb:'MongoDB · UDR backend (subscribers)',
+  nrf:    'NRF · SBI · NF registration & discovery',
+  nssf:   'NSSF · S-NSSAI · network slice selection',
+  pcf:    'PCF · Npcf · AM/SM policy (QoS, rules)',
+  scp:    'SCP · SBI proxy between NFs',
+  smf:    'SMF · N4/PFCP · PDU session & UPF control',
+  udm:    'UDM · subscriber profile (IMSI, Ki, slice)',
+  udr:    'UDR · subscriber data storage (via MongoDB)',
+  'upf-a':'UPF-A · N3/GTP-U + N6 · user-plane primary',
+  'upf-b':'UPF-B · N3/GTP-U + N6 · user-plane backup',
+  webui:  'Open5GS WebUI · subscriber admin UI',
+  ueransim:'UERANSIM · gNB(N2/N3) + UE → uesimtun0',
+};
+
+async function loadServices() {
+  try {
+    const d = await (await fetch('/api/services')).json();
+    const sel = document.getElementById('log-service');
+    sel.innerHTML = '';
+    d.services.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = SERVICE_LABELS[s] ? (s + ' — ' + SERVICE_LABELS[s]) : s;
+      sel.appendChild(opt);
+    });
+  } catch {}
+}
+
+function stopLogs() { if (logsAbort) { logsAbort.abort(); logsAbort = null; } }
+
+async function startLogs() {
+  const svc = document.getElementById('log-service').value;
+  if (!svc) return;
+  stopLogs();
+  logsAbort = new AbortController();
+  output.innerHTML = '';
+  setStatus('running', 'logs: ' + svc);
+  try {
+    const resp = await fetch('/api/logs/' + encodeURIComponent(svc), { signal: logsAbort.signal });
+    await streamToConsole(resp);
+    setStatus('ok', 'logs: ' + svc);
+  } catch (e) {
+    if (e.name !== 'AbortError') { appendLine('[erro: ' + e + ']'); setStatus('error', 'erro nos logs'); }
+    else setStatus('', 'ocioso');
+  }
+}
+
+document.getElementById('logs-btn').addEventListener('click', startLogs);
+document.getElementById('logs-stop-btn').addEventListener('click', stopLogs);
+
+// ===== Telemetria =====
+function levelColor(pct) {
+  if (pct < 50) return 'var(--green)';
+  if (pct < 80) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function renderBar(el, prefix, pct, width = 11) {
+  const filled = Math.max(0, Math.min(width, Math.round(width * pct / 100)));
+  let fillStr = '='.repeat(filled) + Math.round(pct) + '%';
+  if (fillStr.length > width) fillStr = fillStr.slice(0, width);
+  const trackStr = '·'.repeat(Math.max(0, width - fillStr.length));
+  el.textContent = '';
+  el.append(document.createTextNode(prefix + ' ['));
+  const fs = document.createElement('span'); fs.style.color = levelColor(pct); fs.textContent = fillStr; el.appendChild(fs);
+  const ts = document.createElement('span'); ts.style.color = '#ffffff'; ts.textContent = trackStr; el.appendChild(ts);
+  el.append(document.createTextNode(']'));
+}
+
+function renderTelemetry(data) {
+  const h = data.host;
+  const cpuEl = document.getElementById('tm-cpu');
+  renderBar(cpuEl, 'CPU ' + h.cpu_count + 'x ' + h.cpu_model.replace('Neoverse-','Neo-'), h.cpu_pct);
+  cpuEl.title = 'load ' + h.load1;
+  const ramEl = document.getElementById('tm-ram');
+  renderBar(ramEl, 'RAM 1G', h.mem_pct);
+  ramEl.title = (h.mem_used_mb/1024).toFixed(1)+'G / '+Math.round(h.mem_total_mb/1024)+'G';
+  const swapPct = h.swap_total_mb ? 100*h.swap_used_mb/h.swap_total_mb : 0;
+  const swapEl = document.getElementById('tm-swap');
+  renderBar(swapEl, 'Swap 8G', swapPct);
+  swapEl.title = (h.swap_used_mb/1024).toFixed(1)+'G / '+Math.round(h.swap_total_mb/1024)+'G';
+  const diskEl = document.getElementById('tm-disk');
+  renderBar(diskEl, 'Disk', h.disk_pct);
+  diskEl.title = h.disk_used_gb+'/'+h.disk_total_gb+' GB';
+  const tbody = document.getElementById('tm-containers');
+  tbody.innerHTML = '';
+  data.containers.forEach(c => {
+    const tr = document.createElement('tr');
+    ['name','cpu_pct','mem_usage'].forEach(k => { const td=document.createElement('td'); td.textContent=c[k]; tr.appendChild(td); });
+    tbody.appendChild(tr);
+  });
+}
+
+async function startTelemetry() {
+  try {
+    const resp = await fetch('/api/telemetry');
+    const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf='';
+    while(true) {
+      const {done,value}=await reader.read(); if(done)break;
+      buf+=dec.decode(value,{stream:true}); let idx;
+      while((idx=buf.indexOf('\n'))>=0){const l=buf.slice(0,idx);buf=buf.slice(idx+1);if(l.trim())renderTelemetry(JSON.parse(l));}
+    }
+  } catch {}
+  setTimeout(startTelemetry, 3000);
+}
+
+// ===== UE Lab =====
+document.getElementById('uelab-open-btn').addEventListener('click', openUeLab);
+document.getElementById('uelab-close').addEventListener('click', closeUeLab);
+document.getElementById('uelab-overlay').addEventListener('click', e => { if(e.target===document.getElementById('uelab-overlay'))closeUeLab(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape')closeUeLab(); });
+
+function openUeLab() { if(isGuest)return; document.getElementById('uelab-overlay').classList.add('open'); loadUeList(); }
+function closeUeLab() { document.getElementById('uelab-overlay').classList.remove('open'); }
+
+// --- UE list ---
+async function loadUeList() {
+  ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);font-size:11px">Carregando...</td></tr>';
+  try {
+    const d = await (await fetch('/api/subscribers')).json();
+    ueLab.listBody.innerHTML = '';
+    if (!d.subscribers || d.subscribers.length === 0) {
+      ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);font-size:11px">Nenhum subscriber cadastrado.</td></tr>';
+      return;
+    }
+    d.subscribers.forEach(sub => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-family:monospace;font-size:11.5px">${sub.imsi}</td>
+        <td style="color:var(--muted);font-size:11px">${sub.msisdn || '—'}</td>
+        <td><button class="del-btn" title="Remover" onclick="deleteUe('${sub.imsi}')">✕</button></td>`;
+      ueLab.listBody.appendChild(tr);
+    });
+  } catch {
+    ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--red);font-size:11px">Erro ao carregar lista.</td></tr>';
+  }
+}
+
+document.getElementById('uelab-refresh-btn').addEventListener('click', loadUeList);
+
+async function deleteUe(imsi) {
+  if (!confirm('Remover subscriber IMSI ' + imsi + '?')) return;
+  labAppendLine('Removendo ' + imsi + '...');
+  try {
+    const resp = await fetch('/api/subscriber/' + imsi, { method: 'DELETE' });
+    const text = await resp.text();
+    stripAnsi(text).split('\n').forEach(l => labAppendLine(l));
+    loadUeList();
+  } catch (e) { labAppendLine('[erro: ' + e + ']'); }
+}
+
+// --- Register UE ---
+document.getElementById('lab-register-btn').addEventListener('click', async () => {
+  if (isGuest) return;
+  const imsi = document.getElementById('lab-imsi').value.trim();
+  if (!imsi) { labAppendLine('IMSI é obrigatório.'); return; }
+  const payload = {
+    imsi,
+    msisdn: document.getElementById('lab-msisdn').value.trim(),
+    k:   document.getElementById('lab-k').value.trim(),
+    opc: document.getElementById('lab-opc').value.trim(),
+    amf: document.getElementById('lab-amf').value.trim(),
+  };
+  ueLab.labConsole.innerHTML = '';
+  labAppendLine('Cadastrando UE ' + imsi + '...');
+  try {
+    const resp = await fetch('/api/subscriber', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    await labStream(resp);
+    loadUeList();
+  } catch (e) { labAppendLine('[erro: ' + e + ']'); }
+});
+
+// --- Lab console helpers ---
+function labAppendLine(line) {
+  const clean = stripAnsi(line).replace(/\r/g, '');
+  if (!clean.trim()) return;
+  const div = document.createElement('div');
+  div.style.color = lineColor(clean);
+  div.textContent = clean;
+  ueLab.labConsole.appendChild(div);
+  ueLab.labConsole.scrollTop = ueLab.labConsole.scrollHeight;
+}
+
+// Parse iperf3 summary line
+function parseIperf3(line) {
+  const m = line.match(/(\d+\.?\d*)\s+(M|G|K)bits\/sec\s+(sender|receiver)/i);
+  if (!m) return null;
+  return { bw: parseFloat(m[1]), unit: m[2]+'bits/s', dir: m[3].toLowerCase() };
+}
+
+function showResult(bw, unit, meta) {
+  ueLab.resultCard.style.display = 'block';
+  ueLab.resultBw.innerHTML = bw + ' <span>' + unit + '</span>';
+  ueLab.resultMeta.textContent = meta || '';
+}
+
+async function labStream(resp, onLine) {
+  const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
+  while (true) {
+    const { done, value } = await reader.read(); if (done) break;
+    buf += dec.decode(value, { stream: true }); let idx;
+    while ((idx = buf.indexOf('\n')) >= 0) {
+      const raw = buf.slice(0, idx); buf = buf.slice(idx + 1);
+      labAppendLine(raw);
+      if (onLine) onLine(stripAnsi(raw));
+    }
+  }
+  if (buf) labAppendLine(buf);
+}
+
+// --- Test buttons ---
+document.getElementById('lab-run-btn').addEventListener('click', async () => {
+  if (isGuest) return;
+  ueLab.labConsole.innerHTML = '';
+  ueLab.resultCard.style.display = 'none';
+
+  const dist  = document.getElementById('lab-dist').value;
+  const interf = document.getElementById('lab-interf').value;
+
+  // 1. Apply conditions
+  if (dist !== 'none' || interf !== 'none') {
+    labAppendLine('→ Configurando canal (' + dist + ' / ' + interf + ')...');
+    const cr = await fetch('/api/channel', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ distance: dist, interference: interf }),
+    });
+    await labStream(cr);
+    labAppendLine('');
+  }
+
+  // 2. Run throughput
+  const duration = document.getElementById('lab-duration').value;
+  labAppendLine('→ Medindo throughput (iperf3, ' + duration + 's)...');
+  let lastResult = null;
+  const conditions = (dist !== 'none' ? dist : '') + (interf !== 'none' ? (dist !== 'none' ? ' + ' : '') + interf : '');
+  const tr = await fetch('/api/throughput', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ duration: parseInt(duration) }),
+  });
+  await labStream(tr, line => {
+    const r = parseIperf3(line);
+    if (r && r.dir === 'sender') lastResult = r;
+  });
+
+  if (lastResult) {
+    showResult(lastResult.bw, lastResult.unit,
+      'TCP sender · UE → DN · canal: ' + (conditions || 'ideal'));
+  }
+});
+
+document.getElementById('lab-apply-btn').addEventListener('click', async () => {
+  if (isGuest) return;
+  ueLab.labConsole.innerHTML = '';
+  const dist  = document.getElementById('lab-dist').value;
+  const interf = document.getElementById('lab-interf').value;
+  const resp = await fetch('/api/channel', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ distance: dist, interference: interf }),
+  });
+  await labStream(resp);
+});
+
+document.getElementById('lab-reset-btn').addEventListener('click', async () => {
+  if (isGuest) return;
+  ueLab.labConsole.innerHTML = '';
+  const resp = await fetch('/api/channel', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ distance: 'off', interference: 'none' }),
+  });
+  await labStream(resp);
+  ueLab.resultCard.style.display = 'none';
+});
+
+// ===== Boot =====
+loadWhoami();
+loadServices();
+loadVersion();
+startTelemetry();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# segredos — ficam só no Google Drive
+.env
+server/.env
+ssl/
+
+# artefatos gerados localmente
+.DS_Store
+client/.venv/
+client/__pycache__/
+.claude/

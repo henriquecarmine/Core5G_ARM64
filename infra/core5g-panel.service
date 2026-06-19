@@ -1,0 +1,15 @@
+[Unit]
+Description=Core5G_ARM64 - Painel de controle (FastAPI/uvicorn, server-side)
+After=network.target docker.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/server/panel
+Environment=PANEL_GUEST_USER=__PANEL_GUEST_USER__
+ExecStart=/home/ubuntu/server/panel/.venv/bin/uvicorn server:app --host 127.0.0.1 --port 8765
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

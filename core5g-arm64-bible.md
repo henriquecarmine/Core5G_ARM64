@@ -948,12 +948,27 @@ CPU/RAM-intensivo) — ainda não medido, testar com cautela.
       funcional — `.so` de Service Model eram x86-64 (errado pra ARM64),
       único log existente mostrava E2SM-RC falhando com core dump, sem
       nenhum binário compilado no servidor. Ver `CHANGELOG.md` v0.8.0.
-- [ ] Buildar e validar `server/oai-cn-gnb-e2/` — **em andamento**:
-      build das 7 imagens OAI 5G Core para arm64 rodando no Mac Apple
-      Silicon via `build-oai-arm64.sh` (ver §7.b); após conclusão, fazer
-      `save` → `upload` → `load` no servidor; então `up_core.sh` (OAI 5GC)
-      e validação E2E (`up_e2_lab.sh` + `test_e2_*.sh`). Projeto 1 parado
-      temporariamente pra liberar RAM — religar depois.
+- [x] Buildar e validar `server/oai-cn-gnb-e2/` (2026-06-19): 6 imagens OAI
+      5G Core arm64 construídas no Mac Apple Silicon, carregadas no servidor;
+      `up_e2_lab.sh` sobe Core OAI + nearRT-RIC + gNB(E2) + nrUE; E2 SETUP OK,
+      8 RAN functions registradas (2,3,142–148), `test_e2_sm.sh all` passa
+      (xApps subscrevem KPM/RC/MAC/RLC/PDCP/GTP). UE chega a `RRC_CONNECTED`.
+- [x] **Estabilidade da instância** (2026-06-19): o gNB/nrUE RFSIM saturavam
+      os 2 vCPUs do `t4g.medium` e **congelavam a máquina** (vários reboots
+      forçados). Corrigido envelopando os processos nativos em *scopes* do
+      systemd com `CPUQuota` (120%/60%) + `CPUWeight=20` + `nice 10` em
+      `up_gnb_oai.sh` — reserva CPU pro sistema, impede o freeze sem quebrar
+      o E2 (validado: máquina responsiva sob carga, E2 SM test passa).
+- [ ] **xApp UE-TP-rApp** (tema do grupo): previsão de throughput por UE a
+      partir de RSSI/RSRP/CQI/PRB. Esqueleto em `xapp_ue_tp_moni.c`; falta o
+      modelo de previsão. **Próximo grande passo após a apresentação.**
+- [ ] Registro NAS do UE no Projeto 2 bloqueado pelo bug **AUSF↔UDM HTTP/2**
+      (chamada `auth-events` leva ~1,16s e estoura o `CURL_TIMEOUT_MS=1000`
+      hardcoded no AMF). E2/RIC/xApps funcionam; só o anexo do UE falha.
+      Exige recompilar o AMF — documentado, não corrigido.
+- [ ] Persistir os symlinks do FlexRIC (`/usr/local/lib/flexric` e
+      `/usr/local/etc/flexric`) no `infra/server-bootstrap.sh` — hoje são
+      criados à mão e se perdem ao trocar de instância.
 - [x] Grupo "Projeto 2 — OAI/FlexRIC (E2)" no painel (`server.py` +
       `index.html`): botões up/down/test do E2 lab, mesmo mecanismo
       genérico `data-cmd` → `POST /api/run/{cmd}` do Projeto 1.
@@ -978,6 +993,9 @@ CPU/RAM-intensivo) — ainda não medido, testar com cautela.
 
 ## 11. Referências dentro do repositório
 
+- [`README.md`](README.md) — porta de entrada: **como reproduzir** o estado
+  atual do zero, roadmap com datas e **como colaborar** (contato:
+  [hc@cesar.school](mailto:hc@cesar.school) · [@henriquecarmine](https://github.com/henriquecarmine)).
 - [`CHANGELOG.md`](CHANGELOG.md) — histórico cronológico detalhado de cada ação.
 - [`docs/blueprint-painel-observabilidade.md`](docs/blueprint-painel-observabilidade.md) — desenho do painel.
 - [`docs/labs/`](docs/labs/) — guias originais do curso (instalação Docker, pré-lab GCP/VM, core Open5GS, UERANSIM, relatório de entrega).

@@ -19,6 +19,68 @@ PATCH em correções pontuais.
 | 0.8.0  | 2026-06-18 | Build do Projeto 2 (OAI/FlexRIC) no servidor + grupo "Projeto 2" no painel |
 | 0.9.0  | 2026-06-19 | `build-oai-arm64.sh` — script de build OAI arm64 + Bugs 1-3 corrigidos     |
 | 0.10.0 | 2026-06-19 | 6 imagens OAI arm64 concluídas (Bugs 4-5), deployed no servidor AWS         |
+| 0.11.0 | 2026-06-19 | Tela de login + topologia interativa + seletor de projeto + estabilidade da instância + README |
+
+---
+
+## [0.11.0] — 2026-06-19
+
+Bloco grande de funcionalidade voltado à apresentação do Projeto 2 (20/06).
+
+### Painel — tela de login dedicada
+
+- `login.html` minimalista (tema escuro): usuário/senha + botão "Entrar como
+  convidado". Substitui o popup de Basic Auth do Caddy por **autenticação de
+  sessão via cookie HMAC** (`server.py`: `make_session_token`/`read_session_token`,
+  middleware `require_session`, `PUBLIC_PATHS`). Caddy passou a ser **TLS-only**.
+- Rodapé do login com repositório, versão, CESAR School e "Mantido por
+  Henrique Carmine — @henriquecarmine".
+
+### Painel — múltiplos usuários admin via `.env`
+
+- `PANEL_EXTRA_USERS="user:senha,..."` no `.env` cria admins extras (acesso
+  total) sem mexer no `PANEL_USER` principal. Plumbado de ponta a ponta:
+  `.env` → `deploy.sh` → `server-bootstrap.sh` → unit systemd → `server.py`
+  (dict `ADMIN_USERS`). Ex.: `grupo6:grupo6`.
+
+### Painel — topologia interativa (containers reais)
+
+- `topology.html` + `openran-topology.json`: inventário **real** (16 nós,
+  20 links) com containers/portas/redes do lab, não um O-RAN genérico.
+  Camadas, interfaces nomeadas (N2/N3/N4/E2/E42/SBI…), legenda fixa no rodapé,
+  clique no nó → modal (de onde vem / o que faz / pra onde vai), overlay de
+  logs, animação de pacotes no modo "Fluxo", tour guiado e stats de RAN ao vivo.
+- Endpoints: `/topology`, `/api/topology` (status ao vivo), `/api/topology/logs`,
+  `/api/topology/gnb-stats`.
+
+### Painel — seletor de projeto + demo E2E + logs no modal
+
+- Seletor mutuamente exclusivo (`switch_project.sh`, `/api/switch/{p1|p2|off}`):
+  desliga um projeto e sobe o outro, com progresso minimalista.
+- Demonstração E2E do Projeto 1 (`demo_e2e.sh`): ping + IP público + iperf3.
+- Modal de operação em 2 colunas (passos + **logs ao vivo**), anti-flicker
+  (linhas de container atualizadas no lugar), estados tri-state on/loading/off.
+- Identidade visual unificada (ícones mono + descrição nos botões).
+- Explicação didática (bloco azul) após cada teste E2 SM/KPM/RC explicando o
+  que aconteceu. Rótulos de telemetria corrigidos (RAM 4G, Disk 30G).
+- Rodapé do painel: crédito "projeto mantido por @henriquecarmine" em azul,
+  discreto, à direita.
+
+### Projeto 2 — estabilidade da instância (anti-freeze)
+
+- O gNB/nrUE RFSIM saturavam os 2 vCPUs do `t4g.medium` e **congelavam a
+  máquina** (vários reboots forçados em 19/06). Corrigido em `up_gnb_oai.sh`:
+  processos nativos rodam em *scopes* do systemd com `CPUQuota` (120%/60%) +
+  `CPUWeight=20` + `nice 10`. Reserva CPU pro sistema e impede o freeze **sem
+  quebrar o E2** — validado: máquina responsiva sob carga, `test_e2_sm.sh all`
+  passa, UE chega a `RRC_CONNECTED`.
+
+### Documentação
+
+- Novo **`README.md`** na raiz: porta de entrada com reprodução do zero,
+  roadmap com datas e como colaborar (contato `hc@cesar.school`).
+- Bible §10 atualizada (Projeto 2 funcional, anti-freeze, roadmap UE-TP-rApp,
+  bug AUSF↔UDM, symlinks FlexRIC) + ponteiro para o README.
 
 ---
 

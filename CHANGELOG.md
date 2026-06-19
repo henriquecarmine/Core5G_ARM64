@@ -20,6 +20,37 @@ PATCH em correções pontuais.
 | 0.9.0  | 2026-06-19 | `build-oai-arm64.sh` — script de build OAI arm64 + Bugs 1-3 corrigidos     |
 | 0.10.0 | 2026-06-19 | 6 imagens OAI arm64 concluídas (Bugs 4-5), deployed no servidor AWS         |
 | 0.11.0 | 2026-06-19 | Tela de login + topologia interativa + seletor de projeto + estabilidade da instância + README |
+| 0.11.1 | 2026-06-19 | Fix: interferência/distância (P1) agora afetam a medição + resumo no throughput |
+
+---
+
+## [0.11.1] — 2026-06-19
+
+### Fix — testes de interferência/distância do Projeto 1 não tinham efeito
+
+Os testes de interferência e distância aplicavam `tc netem` em `uesimtun0`,
+mas **a medição não passava por essa interface**, então o resultado era sempre
+o mesmo. Duas causas:
+
+- **Roteamento:** a tabela do UE não tinha rota por `uesimtun0` — o tráfego pro
+  DN (`10.50.0.100`) saía pelo bridge `eth0`, ignorando o túnel 5G e o `netem`.
+  O `iperf3 -B` liga só o IP de origem, não força a interface. **Correção:**
+  `test_throughput.sh` agora adiciona rota `/32` dedicada pro DN via `uesimtun0`,
+  forçando a medição pelo túnel (onde o `netem` morde).
+- **Módulo `sch_netem` ausente** no kernel (não carregado por padrão).
+  **Correção:** `server-bootstrap.sh` carrega e persiste o módulo
+  (`/etc/modules-load.d/netem.conf`).
+
+Validado: ideal **171 Mbit/s** → interferência 5%/50ms **1.0 Mbit/s** →
+distância "longe" 10%/120ms **604 Kbit/s**, com perda/RTT acompanhando.
+
+### Resumo no fim do teste de throughput
+
+`test_throughput.sh` passa a imprimir um bloco final: condição de canal
+simulada (loss/delay ativos), estado do UE (`nr-cli`: CM/MM, célula, TAC),
+throughput de envio/recepção, retransmissões TCP, perda de pacotes e latência
+RTT médio/máx + jitter. Os testes de interferência/distância também medem e
+mostram o efeito (perda/RTT pelo túnel) ao serem aplicados.
 
 ---
 

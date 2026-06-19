@@ -71,6 +71,14 @@ else
 fi
 free -h
 
+# Módulo sch_netem: necessário para os testes de interferência/distância do
+# Projeto 1 (tc netem em uesimtun0). Não vem carregado por padrão; persistir
+# para sobreviver a reboots.
+if ! lsmod | grep -q '^sch_netem'; then
+    sudo modprobe sch_netem 2>/dev/null && echo "Módulo sch_netem carregado." || echo "AVISO: sch_netem indisponível (instale linux-modules-extra)."
+fi
+echo 'sch_netem' | sudo tee /etc/modules-load.d/netem.conf > /dev/null
+
 echo ""
 echo "=========================================="
 echo "3/5 - DuckDNS"

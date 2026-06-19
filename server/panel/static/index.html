@@ -520,10 +520,68 @@ function stripAnsi(s) {
   return s.replace(/\x1b\[[0-9;]*[mGKJHFABCDSTlu]/g, '');
 }
 
+function escHtml(s) {
+  return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+
+// Paleta ANSI → cores do painel (colorimetria consistente controlada pelos scripts).
+const ANSI_COLORS = {
+  '31': 'var(--red)', '91': 'var(--red)',
+  '32': 'var(--green)', '92': 'var(--green)',
+  '33': 'var(--yellow)', '93': 'var(--yellow)',
+  '34': 'var(--info)', '94': 'var(--info)',
+  '36': 'var(--info)', '96': 'var(--info)',
+  '90': 'var(--muted)', '37': 'var(--text)',
+};
+
+// Renderiza uma linha: se tiver ANSI, converte em <span> coloridos (HTML-escapado);
+// senão, cai no colorizador por conteúdo (lineColor) — mantém o comportamento antigo.
+function renderLogLine(line) {
+  const raw = line.replace(/\r/g, '');
+  if (!/\x1b\[/.test(raw)) {
+    return { html: escHtml(raw), color: lineColor(raw) };
+  }
+  let html = '', cur = null, bold = false, last = 0, m;
+  const re = /\x1b\[([0-9;]*)m/g;
+  const emit = (txt) => {
+    if (!txt) return;
+    let style = '';
+    if (cur) style += 'color:' + cur + ';';
+    if (bold) style += 'font-weight:600;';
+    html += style ? '<span style="' + style + '">' + escHtml(txt) + '</span>' : escHtml(txt);
+  };
+  while ((m = re.exec(raw))) {
+    emit(raw.slice(last, m.index));
+    last = re.lastIndex;
+    let codes = m[1].split(';').filter(x => x !== '');
+    if (codes.length === 0) codes = ['0'];
+    for (const c of codes) {
+      if (c === '0') { cur = null; bold = false; }
+      else if (c === '1') bold = true;
+      else if (c === '22') bold = false;
+      else if (c in ANSI_COLORS) cur = ANSI_COLORS[c];
+      else if (c === '39') cur = null;
+    }
+  }
+  emit(raw.slice(last));
+  return { html, color: null };
+}
+
 function lineColor(line) {
+  // Glifos de status usados pelos scripts (cobre todos os testes legados)
+  if (/[❌✗]|FALHOU|\bFALHA\b/i.test(line))              return 'var(--red)';
+  if (/[⚠]/.test(line))                                  return 'var(--yellow)';
+  if (/[✅✓]/.test(line))                                return 'var(--green)';
   if (/FATAL|CRITICAL|EMERG|ALERT/i.test(line))         return 'var(--red)';
-  if (/\bERROR\b|REJECT|FAIL(ED)?|EXCEPTION/i.test(line)) return 'var(--red)';
-  if (/WARN(ING)?/i.test(line))                          return 'var(--yellow)';
+  if (/\bERROR\b|REJECT|FAIL(ED)?|EXCEPTION|\bErro\b|não detectado|não está rodando/i.test(line)) return 'var(--red)';
+  if (/WARN(ING)?|AVISO/i.test(line))                    return 'var(--yellow)';
+  // ----- Medições de canal / throughput (Projeto 1) -----
+  if (/\b0(\.0+)?%\s*packet loss\b/i.test(line))         return 'var(--green)';      // perda zero = ótimo
+  if (/packet loss|perda de pacotes/i.test(line))        return 'var(--yellow)';      // qualquer perda
+  if (/Mbits\/sec|Gbits\/sec|SUCCESS|sucesso|✓|Aplicado|ATIVA|ATIV[OA]|CONNECTED|REGISTERED/i.test(line)) return 'var(--green)';
+  if (/Kbits\/sec|degradad|Latência|\bRTT\b|jitter|netem|\bdelay\b|\bloss\b/i.test(line)) return 'var(--yellow)';
+  if (/RESUMO|Sinal|Célula|Estado do UE|Distância|Interferência|^\s*Canal|RSRP|SINR|PL =/i.test(line)) return 'var(--info)';
+  if (/^\s*={3,}|^\s*-{3,}/.test(line))                  return '#5a6170';            // separadores
   if (/\b(DEBUG|TRACE|DEBU)\b/i.test(line))              return '#5a6170';
   if (/\bINFO\b|\bNOTICE\b|\bNOTI\b/i.test(line))       return 'var(--info)';
   return 'var(--text)';
@@ -613,10 +671,10 @@ async function loadVersion() {
 
 // ===== Console principal =====
 function appendLine(line) {
-  const clean = stripAnsi(line).replace(/\r/g, '');
+  const { html, color } = renderLogLine(line);
   const div = document.createElement('div');
-  div.style.color = lineColor(clean);
-  div.textContent = clean;
+  if (color) div.style.color = color;
+  div.innerHTML = html;
   output.appendChild(div);
   output.scrollTop = output.scrollHeight;
 }
@@ -1056,9 +1114,10 @@ document.getElementById('lab-register-btn').addEventListener('click', async () =
 function labAppendLine(line) {
   const clean = stripAnsi(line).replace(/\r/g, '');
   if (!clean.trim()) return;
+  const { html, color } = renderLogLine(line);
   const div = document.createElement('div');
-  div.style.color = lineColor(clean);
-  div.textContent = clean;
+  if (color) div.style.color = color;
+  div.innerHTML = html;
   ueLab.labConsole.appendChild(div);
   ueLab.labConsole.scrollTop = ueLab.labConsole.scrollHeight;
 }

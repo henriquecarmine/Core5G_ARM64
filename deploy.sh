@@ -45,7 +45,7 @@ cmd_bootstrap() {
     rsync -az -e "ssh ${SSH_OPTS[*]}" infra/server-bootstrap.sh "$REMOTE:~/server-bootstrap.sh"
     rsync -az -e "ssh ${SSH_OPTS[*]}" infra/core5g-panel.service "$REMOTE:~/core5g-panel.service.template"
     echo "==> Executando bootstrap (idempotente)"
-    remote_exec "DUCKDNS_DOMAIN='${DUCKDNS_DOMAIN:-}' DUCKDNS_TOKEN='${DUCKDNS_TOKEN:-}' SWAP_SIZE_GB='${SWAP_SIZE_GB:-8}' SWAPPINESS='${SWAPPINESS:-10}' AWS_SERVER_HOST='${AWS_SERVER_HOST:-}' PANEL_USER='${PANEL_USER:-}' PANEL_PASSWORD='${PANEL_PASSWORD:-}' PANEL_GUEST_USER='${PANEL_GUEST_USER:-}' PANEL_GUEST_PASSWORD='${PANEL_GUEST_PASSWORD:-}' bash ~/server-bootstrap.sh"
+    remote_exec "DUCKDNS_DOMAIN='${DUCKDNS_DOMAIN:-}' DUCKDNS_TOKEN='${DUCKDNS_TOKEN:-}' SWAP_SIZE_GB='${SWAP_SIZE_GB:-8}' SWAPPINESS='${SWAPPINESS:-10}' AWS_SERVER_HOST='${AWS_SERVER_HOST:-}' PANEL_USER='${PANEL_USER:-}' PANEL_PASSWORD='${PANEL_PASSWORD:-}' PANEL_GUEST_USER='${PANEL_GUEST_USER:-}' PANEL_GUEST_PASSWORD='${PANEL_GUEST_PASSWORD:-}' PANEL_EXTRA_USERS='${PANEL_EXTRA_USERS:-}' bash ~/server-bootstrap.sh"
 }
 
 cmd_panel() {

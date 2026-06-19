@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Core5G_ARM64 — Login</title>
+<style>
+  :root {
+    --bg: #16181d;
+    --panel: #1e2128;
+    --border: #2c3038;
+    --text: #e6e6e6;
+    --muted: #8a8f98;
+    --accent: #e8590c;
+    --red: #e03131;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .card {
+    width: 360px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 36px 32px 28px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.35);
+  }
+  .card h1 {
+    margin: 0 0 4px;
+    font-size: 19px;
+    text-align: center;
+    font-weight: 600;
+  }
+  .card h1 span { color: var(--accent); }
+  .topic {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12.5px;
+    margin: 0 0 22px;
+    line-height: 1.4;
+  }
+  .version-badge {
+    display: block;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    margin: -16px 0 22px;
+    letter-spacing: .03em;
+  }
+  label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 6px;
+  }
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    background: #15171c;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input[type="text"]:focus, input[type="password"]:focus {
+    border-color: var(--accent);
+  }
+  button {
+    width: 100%;
+    padding: 11px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter .15s, background .15s;
+  }
+  #btn-login {
+    background: var(--accent);
+    color: #fff;
+    margin-bottom: 12px;
+  }
+  #btn-login:hover { filter: brightness(1.08); }
+  #btn-login:disabled { opacity: .6; cursor: default; }
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 14px;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  #btn-guest {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  #btn-guest:hover { color: var(--text); border-color: var(--muted); }
+  #error {
+    display: none;
+    background: #3a1616;
+    color: #ff8787;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  footer {
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  footer a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+  footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Core5G<span>_ARM64</span></h1>
+    <p class="topic">Open5GS + UERANSIM + OAI 5G Core<br>Painel de controle do laboratório 5G</p>
+    <span class="version-badge">v__VERSION__</span>
+
+    <div id="error">Usuário ou senha inválidos.</div>
+
+    <form id="login-form">
+      <label for="user">Usuário</label>
+      <input type="text" id="user" autocomplete="username" autofocus>
+
+      <label for="pass">Senha</label>
+      <input type="password" id="pass" autocomplete="current-password">
+
+      <button type="submit" id="btn-login">Entrar</button>
+    </form>
+
+    <div class="divider">ou</div>
+
+    <button id="btn-guest" type="button">Entrar como convidado</button>
+
+    <footer>
+      <a href="https://github.com/henriquecarmine/Core5G_ARM64" target="_blank" rel="noopener">github.com/henriquecarmine/Core5G_ARM64</a><br>
+      v__VERSION__ &nbsp;·&nbsp; CESAR School<br>
+      Mantido por Henrique Carmine —
+      <a href="https://github.com/henriquecarmine" target="_blank" rel="noopener">@henriquecarmine</a>
+    </footer>
+  </div>
+
+<script>
+const errorBox = document.getElementById("error");
+const btnLogin = document.getElementById("btn-login");
+
+async function tryLogin(url, body) {
+  errorBox.style.display = "none";
+  btnLogin.disabled = true;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (res.ok) {
+      window.location.href = "/";
+    } else {
+      errorBox.style.display = "block";
+    }
+  } catch (e) {
+    errorBox.textContent = "Falha de conexão. Tente novamente.";
+    errorBox.style.display = "block";
+  } finally {
+    btnLogin.disabled = false;
+  }
+}
+
+document.getElementById("login-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const user = document.getElementById("user").value.trim();
+  const pass = document.getElementById("pass").value;
+  if (!user || !pass) return;
+  tryLogin("/api/login", { user, pass });
+});
+
+document.getElementById("btn-guest").addEventListener("click", () => {
+  tryLogin("/api/login/guest", null);
+});
+</script>
+</body>
+</html>

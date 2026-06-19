@@ -6,7 +6,12 @@ After=network.target docker.service
 Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/server/panel
+Environment=PANEL_USER=__PANEL_USER__
+Environment=PANEL_PASSWORD=__PANEL_PASSWORD__
 Environment=PANEL_GUEST_USER=__PANEL_GUEST_USER__
+Environment=PANEL_GUEST_PASSWORD=__PANEL_GUEST_PASSWORD__
+Environment=PANEL_EXTRA_USERS=__PANEL_EXTRA_USERS__
+Environment=PANEL_SECRET=__PANEL_SECRET__
 ExecStart=/home/ubuntu/server/panel/.venv/bin/uvicorn server:app --host 127.0.0.1 --port 8765
 Restart=always
 RestartSec=3

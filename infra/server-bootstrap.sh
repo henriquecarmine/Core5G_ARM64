@@ -112,7 +112,7 @@ fi
 
 echo ""
 echo "=========================================="
-echo "5/5 - Caddy (HTTPS + basic_auth) + serviço do painel"
+echo "5/5 - Caddy (HTTPS, TLS-only) + serviço do painel (autentica via cookie)"
 echo "=========================================="
 if [ -z "${AWS_SERVER_HOST:-}" ]; then
     echo "AWS_SERVER_HOST não fornecido, pulando Caddy/painel."
@@ -132,26 +132,39 @@ else
         echo "Caddy já instalado: $(caddy version)"
     fi
 
-    ADMIN_HASH="$(caddy hash-password --plaintext "$PANEL_PASSWORD")"
-    GUEST_HASH="$(caddy hash-password --plaintext "$PANEL_GUEST_PASSWORD")"
-
+    # Auth agora é feita pelo próprio painel (sessão por cookie assinado),
+    # não pelo Caddy — só assim a tela de login customizada funciona (o
+    # basic_auth do Caddy dispara o popup nativo do navegador antes de a
+    # página carregar, o que não dá pra substituir por HTML).
     sudo tee /etc/caddy/Caddyfile > /dev/null <<CADDYFILE
 ${AWS_SERVER_HOST} {
-    basic_auth {
-        ${PANEL_USER} ${ADMIN_HASH}
-        ${PANEL_GUEST_USER} ${GUEST_HASH}
-    }
-    reverse_proxy 127.0.0.1:8765 {
-        header_up X-Remote-User {http.auth.user.id}
-    }
+    reverse_proxy 127.0.0.1:8765
 }
 CADDYFILE
     sudo systemctl reload caddy 2>/dev/null || sudo systemctl restart caddy
     sudo systemctl enable caddy
     echo "Caddyfile gerado e Caddy (re)iniciado."
 
+    # PANEL_SECRET assina o cookie de sessão; persiste em ~/.panel_secret no
+    # servidor (fora do repo) pra sobreviver a redeploys sem invalidar sessões.
+    if [ -z "${PANEL_SECRET:-}" ]; then
+        if [ -f ~/.panel_secret ]; then
+            PANEL_SECRET="$(cat ~/.panel_secret)"
+        else
+            PANEL_SECRET="$(openssl rand -hex 32)"
+            echo "$PANEL_SECRET" > ~/.panel_secret
+            chmod 600 ~/.panel_secret
+        fi
+    fi
+
     if [ -f ~/core5g-panel.service.template ] && [ -d ~/server/panel/.venv ]; then
-        sed "s/__PANEL_GUEST_USER__/${PANEL_GUEST_USER}/" ~/core5g-panel.service.template \
+        sed -e "s/__PANEL_USER__/${PANEL_USER}/" \
+            -e "s/__PANEL_PASSWORD__/${PANEL_PASSWORD}/" \
+            -e "s/__PANEL_GUEST_USER__/${PANEL_GUEST_USER}/" \
+            -e "s/__PANEL_GUEST_PASSWORD__/${PANEL_GUEST_PASSWORD}/" \
+            -e "s|__PANEL_EXTRA_USERS__|${PANEL_EXTRA_USERS:-}|" \
+            -e "s/__PANEL_SECRET__/${PANEL_SECRET}/" \
+            ~/core5g-panel.service.template \
             | sudo tee /etc/systemd/system/core5g-panel.service > /dev/null
         sudo systemctl daemon-reload
         sudo systemctl enable --now core5g-panel

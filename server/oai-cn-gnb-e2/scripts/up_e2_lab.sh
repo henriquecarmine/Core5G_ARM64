@@ -57,17 +57,25 @@ echo ""
 echo "[3/4] Iniciando gNB OAI + nrUE (E2 agent → 127.0.0.1)..."
 "$SCRIPT_DIR/up_gnb_oai.sh"
 
-# 4. Subir Core OAI em background enquanto UE aguarda
+# 4. Subir AMF+NRF em background — suficiente para gNB se registrar via N2
+# SMF/UDM/UDR/AUSF/MySQL ficam de fora para não causar OOM (t4g.micro = 906 MB).
+# gNB (51 PRBs, ~355 MB) + RIC (~80 MB) + AMF (~50 MB) + NRF (~50 MB) ≈ 735 MB < 906 MB.
 echo ""
-echo "[4/4] gNB ativo — subindo Core OAI em background (gNB reconecta ao AMF via N2)..."
+echo "[4/4] Subindo AMF e NRF em background (gNB registra via N2; UE auth requer t4g.small)..."
 (
-    cd "$PROJECT_DIR"
-    bash scripts/up_core.sh > "$LOG_DIR/up_core_bg.log" 2>&1 && echo "Core OAI pronto" >> "$LOG_DIR/up_core_bg.log" || true
+    docker start oai-nrf 2>/dev/null
+    for _ in $(seq 1 15); do
+        STATUS=$(docker inspect -f '{{.State.Health.Status}}' oai-nrf 2>/dev/null || echo missing)
+        [ "$STATUS" = "healthy" ] && break
+        sleep 2
+    done
+    docker start oai-amf 2>/dev/null
+    echo "AMF e NRF iniciados" >> "$LOG_DIR/up_core_bg.log"
 ) &
 
 echo ""
-echo "Aguardando UE registrar e Core subir (90s)..."
-sleep 90
+echo "Aguardando AMF subir (30s)..."
+sleep 30
 
 echo ""
 echo "=========================================="

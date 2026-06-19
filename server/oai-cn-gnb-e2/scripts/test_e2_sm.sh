@@ -16,6 +16,10 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 LOG_DIR="${OAI_LOG_DIR:-$PROJECT_DIR/logs}"
 DURATION="${XAPP_DURATION:-30}"
 SM="${1:-cust}"
+# shellcheck source=lib/testlog.sh
+source "$SCRIPT_DIR/lib/testlog.sh"
+
+E2_OK=0; SUBS=0; RAN_ANY=0   # acumuladores para o resumo final
 
 FLEXRIC="$PROJECT_DIR/openairinterface5g/openair2/E2AP/flexric"
 FLEXRIC_BUILD="$FLEXRIC/build"
@@ -53,23 +57,32 @@ kill_stale_xapps() {
 
 ensure_ric_running() {
     if ! pgrep -x "nearRT-RIC" >/dev/null 2>&1; then
-        echo "nearRT-RIC não está rodando; iniciando..."
+        step "nearRT-RIC não está rodando; iniciando..."
         "$SCRIPT_DIR/up_flexric.sh"
         sleep 2
     fi
     if ! pgrep -x "nearRT-RIC" >/dev/null 2>&1; then
-        echo "ERRO: nearRT-RIC falhou ao iniciar. Ver logs/nearRT-RIC.log"
+        err "nearRT-RIC falhou ao iniciar (ver logs/nearRT-RIC.log)"
         exit 1
     fi
+    ok "nearRT-RIC no ar (porta E2AP 36421)"
 }
 
+section "Teste E2 Service Models — O-RAN (gNB → E2 → near-RT RIC → xApps)"
 ensure_flexric_xapps
 ensure_ric_running
 kill_stale_xapps
 
 if ! pgrep -f "nr-softmodem" >/dev/null 2>&1; then
-    echo "AVISO: gNB (nr-softmodem) não detectado. Execute: ./scripts/up_gnb_oai.sh"
+    err "gNB (nr-softmodem) NÃO está rodando — teste abortado."
+    info "Sem o gNB não há nó E2 conectado ao RIC; cada xApp ficaria ${DURATION}s esperando à toa."
+    info "Suba o Projeto 2: no painel use o seletor → Projeto 2, ou no servidor ./scripts/up_e2_lab.sh"
+    info "Projeto 1 (Open5GS) e Projeto 2 (OAI) são mutuamente exclusivos — só um por vez."
+    summary "tentou exercitar os Service Models via interface E2 com xApps do FlexRIC" \
+            "abortado: gNB do Projeto 2 não está no ar (suba o Projeto 2 antes)" err
+    exit 1
 fi
+ok "gNB (nr-softmodem) detectado — nó E2 disponível"
 
 run_xapp() {
     local name="$1"
@@ -81,18 +94,26 @@ run_xapp() {
         echo "      Execute: ./scripts/build_flexric_tools.sh"
         exit 1
     }
-    echo "Executando $name por ${DURATION}s (log: $log)..."
+    RAN_ANY=1
+    step "executando $name por ${DURATION}s..."
     set +e
     timeout "$((DURATION + 20))" env XAPP_DURATION="$DURATION" "$bin" > "$log" 2>&1
     local rc=$?
     set -e
     if [ "$rc" -eq 124 ]; then
-        echo "AVISO: timeout após ${DURATION}s (normal para alguns xApps)."
+        info "timeout após ${DURATION}s (normal: o xApp roda por tempo fixo)"
     elif [ "$rc" -ne 0 ]; then
-        echo "AVISO: xApp terminou com código $rc (ver $log)."
-        tail -5 "$log" 2>/dev/null | sed 's/^/  /' || true
+        warn "xApp terminou com código $rc (ver $log)"
+        tail -5 "$log" 2>/dev/null | while IFS= read -r l; do warn "$l"; done || true
     fi
-    grep -iE 'Connected E2 nodes|Successfully subscribed|Registered node|INDICATION|latency|Test xApp run SUCCESS' "$log" 2>/dev/null | head -15 | sed 's/^/  /' || true
+    # Contabiliza resultado para o resumo
+    grep -qiE 'Connected E2 nodes *= *[1-9]' "$log" 2>/dev/null && E2_OK=1
+    local s; s="$(grep -ciE 'Successfully subscribed' "$log" 2>/dev/null || echo 0)"
+    SUBS=$((SUBS + s))
+    grep -qiE 'Test xApp run SUCCESS' "$log" 2>/dev/null && ok "$name: ciclo assinar→indicação→cancelar OK"
+    # Mostra as linhas relevantes coloridas
+    grep -iE 'Connected E2 nodes|Successfully subscribed|Registered node|INDICATION|latency|Test xApp run SUCCESS' "$log" 2>/dev/null \
+        | head -15 | while IFS= read -r l; do info "$l"; done || true
 }
 
 case "$SM" in
@@ -155,5 +176,13 @@ case "$SM" in
         ;;
 esac
 
-echo ""
-echo "Teste concluído. Logs em: $LOG_DIR/"
+info "logs detalhados em: $LOG_DIR/"
+if [ "$RAN_ANY" = 1 ]; then
+    if [ "$E2_OK" = 1 ]; then
+        summary "subiu o near-RT RIC, conectou o nó E2 do gNB e rodou xApps que leram os Service Models (KPM/RC/MAC/RLC/PDCP/GTP) pela interface E2" \
+                "cadeia O-RAN provada fim-a-fim: gNB → E2 → RIC → xApps (${SUBS} assinatura(s) bem-sucedida(s))" ok
+    else
+        summary "rodou xApps do FlexRIC para exercitar os Service Models via E2" \
+                "xApps rodaram, mas nenhum nó E2 conectou (gNB sem E2 SETUP) — verifique o gNB e o RIC" warn
+    fi
+fi

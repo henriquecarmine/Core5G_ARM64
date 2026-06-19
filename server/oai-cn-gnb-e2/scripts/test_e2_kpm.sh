@@ -19,6 +19,16 @@ FLEXRIC_LIB="${FLEXRIC_LIB_DIR:-$PROJECT_DIR/flexric-lib}"
 [[ "$FLEXRIC_LIB" == */ ]] || FLEXRIC_LIB="${FLEXRIC_LIB}/"
 DURATION="${XAPP_DURATION:-30}"
 LOG="$LOG_DIR/xapp_kpm_lab.log"
+# shellcheck source=lib/testlog.sh
+source "$SCRIPT_DIR/lib/testlog.sh"
+
+# Teto de CPU para os processos RFSIM (impede congelar a instância de 2 vCPUs).
+if command -v systemd-run >/dev/null 2>&1; then
+    CAP_GNB=(systemd-run --scope -q -p CPUQuota=120% -p CPUWeight=20 nice -n 10)
+    CAP_UE=(systemd-run --scope -q -p CPUQuota=60% -p CPUWeight=20 nice -n 10)
+else
+    CAP_GNB=(nice -n 10); CAP_UE=(nice -n 10)
+fi
 
 export KPM_SST="${KPM_SST:-222}"
 export KPM_SD="${KPM_SD:-123}"
@@ -72,13 +82,13 @@ ensure_e2_stack() {
         sudo ip addr add 192.168.70.129/24 dev demo-oai 2>/dev/null || true
     fi
 
-    echo "Iniciando gNB+UE (SMs: ${FLEXRIC_LIB})..."
+    step "iniciando gNB+UE (SMs: ${FLEXRIC_LIB}; teto de CPU ativo)"
     cd "$BUILD_DIR"
-    sudo nohup ./nr-softmodem -O "$OAI_DIR/scripts/gnb.conf" \
+    sudo nohup "${CAP_GNB[@]}" ./nr-softmodem -O "$OAI_DIR/scripts/gnb.conf" \
         --gNBs.[0].min_rxtxtime 6 --rfsim "${E2_SM_ARGS[@]}" \
         >> "$LOG_DIR/gnb_oai.log" 2>&1 &
     sleep 12
-    sudo nohup ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \
+    sudo nohup "${CAP_UE[@]}" ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \
         --rfsim -r 106 --numerology 1 --band 78 -C 3619200000 --ssb 516 \
         >> "$LOG_DIR/ue_oai.log" 2>&1 &
 
@@ -131,21 +141,20 @@ wait "$XPID" 2>/dev/null || true
 
 [ -n "$TRAFFIC_PID" ] && kill "$TRAFFIC_PID" 2>/dev/null || true
 
-echo ""
-echo "=== Resultados KPM ==="
-grep -iE 'Connected E2 nodes|Successfully subscribed|INDICATION|DRB\.|RRU\.|PrbTot|UEThp|PdcpSdu|Condition NSSAI' "$LOG" | head -40 || true
+section "Resultados E2SM-KPM (SST=$KPM_SST SD=$KPM_SD)"
+grep -iE 'Connected E2 nodes|Successfully subscribed|INDICATION|DRB\.|RRU\.|PrbTot|UEThp|PdcpSdu|Condition NSSAI' "$LOG" \
+    | head -40 | while IFS= read -r l; do info "$l"; done || true
 
+DID="subiu RIC+gNB+UE, assinou o E2SM-KPM (métricas de desempenho do RAN) no slice $KPM_SST/$KPM_SD e coletou indicações por ${DURATION}s"
 if grep -qiE 'INDICATION|DRB\.|RRU\.|PrbTot|UEThp|PdcpSdu' "$LOG"; then
-    echo ""
-    echo "KPM INDICATIONs recebidas."
+    ok "KPM INDICATIONs recebidas (métricas vivas do RAN)"
+    summary "$DID" "RIC recebeu métricas KPM em tempo real do gNB via E2 — base do UE-TP-rApp" ok
 elif grep -qi "Successfully subscribed" "$LOG"; then
-    echo ""
-    echo "Subscrição KPM OK; sem métricas no período (aumente XAPP_DURATION ou KPM_TRAFFIC=1)."
+    warn "subscrição KPM OK, mas sem métricas no período"
+    summary "$DID" "assinatura E2SM-KPM funcionou, porém sem tráfego no período (use KPM_TRAFFIC=1 ou aumente XAPP_DURATION)" warn
 else
-    echo ""
-    echo "Sem métricas KPM visíveis. Verifique:"
-    echo "  - flexric-lib/ com libkpm_sm.so do submodule (não /usr/local)"
-    echo "  - UE com sessão PDU slice $KPM_SST/$KPM_SD"
-    echo "  - grep 'E2SM-KPM\\|E2 SETUP' logs/gnb_oai.log logs/nearRT-RIC.log"
+    err "sem métricas KPM visíveis"
+    info "verifique: flexric-lib/ com libkpm_sm.so do submodule; UE com sessão PDU slice $KPM_SST/$KPM_SD; logs/gnb_oai.log"
+    summary "$DID" "nenhuma indicação nem assinatura KPM — provável falha de E2 SETUP ou SM incompatível" err
 fi
-echo "Log completo: $LOG"
+info "log completo: $LOG"

@@ -4,6 +4,12 @@ Imagens Docker do OAI 5G Core Control Plane compiladas para `linux/arm64`
 (Apple Silicon / AWS Graviton2). As imagens oficiais do DockerHub são
 `amd64`-only; estes arquivos são o resultado do build nativo neste projeto.
 
+## Download
+
+Os `.tar` não estão versionados no Git (tamanho > 100 MB). Baixe pelo Google Drive:
+
+**[oai-images-arm64.tar.gz — Google Drive](https://drive.google.com/file/d/1fPaqfkM7CzhliUmx8DzMD0kkD0-U3adg/view?usp=sharing)**
+
 ## Arquivos
 
 | Arquivo | Componente | Função 3GPP | Tamanho |

@@ -3,6 +3,11 @@
 server/.env
 ssl/
 
+# artefatos binários grandes — ficam no Google Drive / GHCR
+artifacts/oai-images/*.tar
+artifacts/oai-images/*.tar.gz
+artifacts/oai-images/*.zip
+
 .DS_Store
 client/.venv/
 client/__pycache__/

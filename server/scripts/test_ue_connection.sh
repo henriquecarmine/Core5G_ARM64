@@ -7,6 +7,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_DIR"
+# shellcheck source=lib/testlog.sh
+source "$SCRIPT_DIR/lib/testlog.sh"
 
 UE_CONTAINER="ueransim"
 TEST_HOSTS=("8.8.8.8" "8.8.4.4" "1.1.1.1")
@@ -131,12 +133,8 @@ echo ""
 echo "  💡 Dica: Execute './scripts/test-system-status.sh' para verificação detalhada do sistema"
 echo ""
 
-echo "=========================================="
-echo "Resumo dos Testes"
-echo "=========================================="
-echo ""
-echo "IP do UE: $UE_ACTUAL_IP"
-echo "Gateway: $DEFAULT_GW"
-echo ""
-echo "✅ Testes de conectividade básica concluídos!"
-echo ""
+kv "IP do UE" "$UE_ACTUAL_IP"
+kv "Gateway" "$DEFAULT_GW"
+
+summary "verificou a conectividade fim-a-fim do UE: ping a DNS públicos, resolução DNS, acesso HTTP (IP público), rota padrão, alcance dos UPFs e registro N2/PFCP" \
+        "UE $UE_ACTUAL_IP ativo — veja acima quais checagens passaram (✓) ou falharam (✗)" ok

@@ -7,6 +7,10 @@
 # Não usar set -e para permitir tratamento de erros
 set +e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/testlog.sh
+source "$SCRIPT_DIR/lib/testlog.sh"
+
 # Após unificação, UE e gNB rodam no mesmo serviço/container `ueransim`
 UE_CONTAINER="ueransim"
 UPF_A_CONTAINER="upf-a"
@@ -22,29 +26,34 @@ echo "Open5GS Containerized"
 echo "=========================================="
 echo ""
 
-# Verificar se os containers estão rodando
+# Helpers de verificação (docker compose novo: status "running"; nomes != serviço)
+svc_running() { docker compose ps --services --status running 2>/dev/null | grep -qx "$1"; }
+ctr_running() { docker inspect -f '{{.State.Running}}' "$1" 2>/dev/null | grep -q true; }
+
+# Verificar se os componentes necessários estão rodando.
+# ueransim é um container avulso (compose separado); upf-a/upf-b/smf são serviços.
 MISSING_CONTAINERS=()
-for container in "$UE_CONTAINER" "$UPF_A_CONTAINER" "$UPF_B_CONTAINER" "$SMF_CONTAINER"; do
-    if ! docker compose ps | grep -q "$container.*Up"; then
-        MISSING_CONTAINERS+=("$container")
-    fi
+ctr_running "$UE_CONTAINER" || MISSING_CONTAINERS+=("$UE_CONTAINER (container)")
+for svc in "$UPF_A_CONTAINER" "$UPF_B_CONTAINER" "$SMF_CONTAINER"; do
+    svc_running "$svc" || MISSING_CONTAINERS+=("$svc (serviço)")
 done
 
 if [ ${#MISSING_CONTAINERS[@]} -gt 0 ]; then
-    echo "❌ Erro: Containers não estão rodando:"
+    err "Containers não estão rodando:"
     for container in "${MISSING_CONTAINERS[@]}"; do
         echo "   - $container"
     done
-    echo ""
-    echo "Execute: ./scripts/up.sh"
+    echo "Execute: ./scripts/up.sh (core) e ./scripts/up_ran.sh (RAN)"
+    summary "verificou os pré-requisitos do teste de failover de UPF" \
+            "abortado: componentes ausentes (${MISSING_CONTAINERS[*]})" err
     exit 1
 fi
 
-echo "✅ Todos os containers necessários estão rodando"
+ok "Todos os componentes necessários estão rodando (ueransim, upf-a, upf-b, smf)"
 echo ""
 
 # Obter IP do UE
-UE_IP=$(docker compose exec $UE_CONTAINER ip addr show 2>/dev/null | grep -oP 'inet \K10\.60\.\d+\.\d+' | head -1 || echo "")
+UE_IP=$(docker exec $UE_CONTAINER ip addr show 2>/dev/null | grep -oP 'inet \K10\.60\.\d+\.\d+' | head -1 || echo "")
 if [ -z "$UE_IP" ]; then
     echo "❌ Erro: UE não possui IP atribuído!"
     echo ""
@@ -54,7 +63,7 @@ if [ -z "$UE_IP" ]; then
     echo ""
     echo "Verifique:"
     echo "  - Execute: ./scripts/test-system-status.sh"
-    echo "  - Logs do UE: docker compose logs $UE_CONTAINER"
+    echo "  - Logs do UE: docker logs $UE_CONTAINER"
     exit 1
 fi
 
@@ -62,7 +71,7 @@ echo "📡 UE IP: $UE_IP"
 echo ""
 
 # Verificar se há problema de AMF context que pode afetar o teste (logs do container único)
-AMF_CONTEXT_ERROR=$(docker compose logs ueransim 2>&1 | grep -c "AMF context not found" 2>/dev/null | head -1 || echo "0")
+AMF_CONTEXT_ERROR=$(docker logs ueransim 2>&1 | grep -c "AMF context not found" 2>/dev/null | head -1 || echo "0")
 if [ "$AMF_CONTEXT_ERROR" -gt 0 ] 2>/dev/null; then
     echo "⚠️  Aviso: Problema de 'AMF context not found' detectado"
     echo "   Isso pode afetar o registro de novos UEs"
@@ -77,14 +86,9 @@ check_active_upf() {
     # Usar docker compose ps com filtro para verificar se está rodando
     UPF_A_RUNNING="no"
     UPF_B_RUNNING="no"
-    
-    if docker compose ps $UPF_A_CONTAINER 2>/dev/null | grep -q "Up"; then
-        UPF_A_RUNNING="yes"
-    fi
-    
-    if docker compose ps $UPF_B_CONTAINER 2>/dev/null | grep -q "Up"; then
-        UPF_B_RUNNING="yes"
-    fi
+
+    svc_running "$UPF_A_CONTAINER" && UPF_A_RUNNING="yes"
+    svc_running "$UPF_B_CONTAINER" && UPF_B_RUNNING="yes"
     
     # Se apenas uma está rodando, essa é a ativa (prioridade sobre logs)
     if [ "$UPF_A_RUNNING" = "no" ] && [ "$UPF_B_RUNNING" = "yes" ]; then
@@ -163,7 +167,7 @@ check_active_upf() {
 
 # Função para testar conectividade
 test_connectivity() {
-    if docker compose exec $UE_CONTAINER ping -c 1 -W 2 $TEST_HOST > /dev/null 2>&1; then
+    if docker exec $UE_CONTAINER ping -c 1 -W 2 $TEST_HOST > /dev/null 2>&1; then
         return 0
     else
         return 1
@@ -402,10 +406,5 @@ if ! docker compose ps | grep -q "$UPF_B_CONTAINER.*Up"; then
     start_upf $UPF_B_CONTAINER
 fi
 
-echo "✅ Testes de failover concluídos!"
-echo ""
-echo "💡 Informações Adicionais:"
-echo "  - Para verificação detalhada do sistema: ./scripts/test-system-status.sh"
-echo "  - Para teste de conectividade: ./scripts/test_ue_connection.sh"
-echo "  - Para verificar logs: docker compose logs <serviço>"
-echo ""
+summary "derrubou um UPF durante tráfego contínuo do UE e observou se a sessão sobrevive (failover do plano de usuário entre UPF-A e UPF-B via SMF/PFCP)" \
+        "teste de failover concluído — veja acima a continuidade do ping durante a queda do UPF" ok

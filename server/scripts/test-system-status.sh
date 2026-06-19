@@ -9,6 +9,8 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 RAN_CONTAINER="ueransim"
+# shellcheck source=lib/testlog.sh
+source "$SCRIPT_DIR/lib/testlog.sh"
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -134,17 +136,17 @@ echo "Resumo e Recomendações"
 echo "=========================================="
 echo ""
 
+DID="inspecionou os containers do core/RAN, versão do UERANSIM, IP do UE, célula servidora e erros conhecidos nos logs"
 if [ "$AMF_CONTEXT_ERROR" -gt 0 ] 2>/dev/null; then
-    echo -e "${RED}⚠️  PROBLEMA CRÍTICO DETECTADO${NC}"
+    err "PROBLEMA CRÍTICO DETECTADO"
     echo "Use UERANSIM 3.2.6 (configurado no projeto) e reinicie: docker restart ueransim"
+    summary "$DID" "problema crítico: 'AMF context not found' — incompatibilidade de versão do UERANSIM" err
 elif [ -z "$UE_IP" ] || [ "$UE_CELL_FOUND" -eq 0 ] 2>/dev/null; then
-    echo -e "${YELLOW}⚠️  PROBLEMAS DETECTADOS${NC}"
+    warn "PROBLEMAS DETECTADOS"
     echo "Verifique: ./scripts/add-subscriber.sh && ./scripts/up_ran.sh"
     echo "Logs: docker logs ueransim"
+    summary "$DID" "UE sem IP ou sem célula — registre o assinante e suba a RAN" warn
 else
-    echo -e "${GREEN}✅ Sistema parece estar funcionando${NC}"
+    ok "Sistema parece estar funcionando"
+    summary "$DID" "tudo saudável: containers no ar, UE com IP e célula servidora ativa" ok
 fi
-
-echo "=========================================="
-echo "Fim da Verificação"
-echo "=========================================="

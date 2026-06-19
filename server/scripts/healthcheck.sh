@@ -12,6 +12,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$PROJECT_DIR"
+# shellcheck source=lib/testlog.sh
+source "$SCRIPT_DIR/lib/testlog.sh"
 
 # Cores
 GREEN='\033[0;32m'
@@ -195,13 +197,5 @@ else
     echo -e "${RED}✗ UE não está rodando${NC}"
 fi
 
-echo ""
-echo "=========================================="
-echo "Healthcheck concluído"
-echo "=========================================="
-echo ""
-echo "💡 Dicas:"
-echo "  - Para verificação detalhada: ./scripts/test-system-status.sh"
-echo "  - Para teste de conectividade: ./scripts/test_ue_connection.sh"
-echo "  - Para teste de failover: ./scripts/test_upf_failover.sh"
-echo ""
+summary "checou a saúde dos serviços Open5GS: containers no ar, NRF saudável, interfaces N2/N3/N4/N6, associação PFCP e sessão do UE" \
+        "veja acima cada item (✓ ok / ⚠ atenção / ✗ falha); use os testes detalhados para aprofundar" ok

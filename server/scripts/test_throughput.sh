@@ -3,13 +3,13 @@
 # verdade (UE -> gNB -> UPF -> DN). Garante que o tráfego sai por uesimtun0
 # (rota dedicada pro DN), senão o kernel manda pelo bridge eth0 e o `tc netem`
 # de interferência/distância (aplicado em uesimtun0) não teria efeito nenhum
-# na medição. Ao final, imprime um RESUMO com condição de canal simulada,
-# perda, latência e estado do UE.
-# Tema do grupo (UE-TP-rApp) é previsão de throughput por UE — esta é a
-# medição real que alimentaria esse modelo.
+# na medição. Ao final, imprime um RESUMO didático.
 # Uso: ./scripts/test_throughput.sh [duracao_segundos]
 
 set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/testlog.sh
+source "$SCRIPT_DIR/lib/testlog.sh"
 
 DURATION="${IPERF_DURATION:-${1:-10}}"
 DN_CONTAINER="open5gs-dn-containerized"
@@ -18,25 +18,21 @@ UE_CONTAINER="ueransim"
 UE_IMSI="${UE_IMSI:-imsi-001010000000002}"
 TUN="uesimtun0"
 
-echo "=========================================="
-echo "Teste de Throughput (iperf3) — UE -> DN"
-echo "=========================================="
-echo ""
+section "Teste de Throughput (iperf3) — UE → DN pelo túnel 5G"
 
-UE_IP="$(docker exec "$UE_CONTAINER" sh -c "ip -4 addr show $TUN 2>/dev/null | grep -oE '([0-9]+\.){3}[0-9]+' | head -1")"
+UE_IP="$(docker exec "$UE_CONTAINER" sh -c "ip -4 addr show $TUN 2>/dev/null | grep -oE '([0-9]+\.){3}[0-9]+' | head -1" 2>/dev/null || true)"
 if [ -z "$UE_IP" ]; then
-    echo "ERRO: interface $TUN não encontrada — o UE está registrado com sessão PDU ativa?"
+    err "interface $TUN não encontrada — o UE está registrado com sessão PDU ativa?"
+    summary "tentou medir o throughput UE→DN pelo túnel 5G" \
+            "não foi possível: UE sem sessão PDU (suba o Projeto 1 e registre o UE)" err
     exit 1
 fi
-echo "UE IP ($TUN): $UE_IP"
-echo "Destino (DN): $DN_IP"
+kv "UE IP ($TUN)" "$UE_IP"
+kv "Destino (DN)" "$DN_IP"
 
 # Garante que o tráfego pro DN atravessa o túnel 5G (e não o bridge eth0).
-# Sem isso, tc netem em uesimtun0 não afeta a medição (o "resultado sempre
-# igual"). Rota /32 dedicada, idempotente.
 docker exec "$UE_CONTAINER" ip route replace "$DN_IP/32" dev "$TUN" 2>/dev/null \
-    && echo "Rota: $DN_IP via $TUN (tráfego forçado pelo túnel 5G)"
-echo ""
+    && step "rota $DN_IP via $TUN (tráfego forçado pelo túnel 5G)"
 
 # Condição de canal simulada ativa (tc netem aplicado por interferência/distância)
 NETEM="$(docker exec "$UE_CONTAINER" tc qdisc show dev "$TUN" 2>/dev/null | grep -o 'netem.*' || true)"
@@ -51,7 +47,7 @@ fi
 docker exec -d "$DN_CONTAINER" sh -c "iperf3 -s -1 -p 5201 > /tmp/iperf3-server.log 2>&1"
 sleep 1
 
-echo "Rodando iperf3 por ${DURATION}s (pelo túnel)..."
+step "rodando iperf3 por ${DURATION}s..."
 echo ""
 IPERF_OUT="$(docker exec "$UE_CONTAINER" iperf3 -c "$DN_IP" -p 5201 -B "$UE_IP" -t "$DURATION" 2>&1)"
 echo "$IPERF_OUT"
@@ -83,23 +79,19 @@ CELL="$(echo "$ST" | awk -F': ' '/current-cell/{print $2}')"
 TAC="$(echo "$ST" | awk -F': ' '/current-tac/{print $2}')"
 [ -z "$CM" ] && CM="?"; [ -z "$MM" ] && MM="?"; [ -z "$CELL" ] && CELL="?"
 
-echo ""
-echo "=========================================="
-echo "  RESUMO DA MEDIÇÃO"
-echo "=========================================="
-echo "  Sinal / canal simulado : $COND"
-echo "  Estado do UE           : $CM · $MM"
-echo "  Célula servidora       : cell $CELL (TAC $TAC) · PLMN 001/01"
-echo "  Throughput  (envio)    : $SEND_BW   |  retransmissões TCP: $RETR"
-echo "  Throughput  (recepção) : $RECV_BW"
-echo "  Perda de pacotes       : $LOSS"
-echo "  Latência RTT médio/máx : ${RTT_AVG} / ${RTT_MAX} ms   |  jitter: ${RTT_JIT} ms"
-echo "------------------------------------------"
+section "Medição"
+kv "Sinal / canal simulado" "$COND"
+kv "Estado do UE" "$CM · $MM"
+kv "Célula servidora" "cell $CELL (TAC $TAC) · PLMN 001/01"
+kv "Throughput (envio)" "$SEND_BW   (retransmissões TCP: $RETR)"
+kv "Throughput (recepção)" "$RECV_BW"
+kv "Perda de pacotes" "$LOSS"
+kv "Latência RTT médio/máx" "${RTT_AVG} / ${RTT_MAX} ms   (jitter ${RTT_JIT} ms)"
+
 if [ -n "$NETEM" ]; then
-    echo "  ➜ Canal degradado: a interferência/distância aplicada em $TUN está"
-    echo "    reduzindo a banda e elevando perda/latência (compare com o ideal)."
+    summary "mediu a banda real UE→DN pelo túnel 5G com o canal degradado (interferência/distância via tc netem em $TUN)" \
+            "banda reduzida e perda/latência elevadas — compare com o canal ideal: ${SEND_BW}, ${LOSS}" warn
 else
-    echo "  ➜ Canal ideal: aplique interferência ou distância e rode de novo"
-    echo "    para ver a banda cair e a perda/latência subir."
+    summary "mediu a banda real UE→DN pelo túnel 5G (iperf3) e o estado do rádio do UE" \
+            "canal ideal: ${SEND_BW}, ${LOSS}. Aplique interferência/distância e rode de novo para ver cair." ok
 fi
-echo "=========================================="

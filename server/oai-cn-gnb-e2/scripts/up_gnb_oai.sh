@@ -77,7 +77,14 @@ GNB_PID=$!
 echo "  gNB PID: $GNB_PID (logs: $GNB_LOG)"
 
 echo "Aguardando gNB estabilizar..."
-sleep 10
+for i in $(seq 1 10); do
+    sleep 1
+    if ! kill -0 "$GNB_PID" 2>/dev/null; then
+        echo "ERRO: gNB morreu durante a inicialização (PID $GNB_PID)."
+        echo "      Verifique memória disponível (free -h) e o log: $GNB_LOG"
+        exit 1
+    fi
+done
 
 echo "Iniciando nrUE em background..."
 sudo nohup ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \

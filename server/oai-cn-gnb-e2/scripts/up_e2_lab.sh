@@ -22,6 +22,19 @@ else
     echo "[1/4] Core OAI já em execução."
 fi
 
+# 1.5 — Liberar memória: parar container de dados (não necessário para E2)
+# t4g.micro tem 906 MB; gNB (C++) precisa de ~150 MB que o swap não entrega a tempo.
+AVAIL_MB=$(awk '/MemAvailable/ {printf "%d", $2/1024}' /proc/meminfo 2>/dev/null || echo 999)
+if [ "$AVAIL_MB" -lt 300 ]; then
+    echo ""
+    echo "[1.5/4] Memória disponível: ${AVAIL_MB}MB — parando oai-ext-dn para liberar RAM..."
+    docker stop oai-ext-dn 2>/dev/null || true
+    sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null || true
+    sleep 3
+    AVAIL_MB=$(awk '/MemAvailable/ {printf "%d", $2/1024}' /proc/meminfo)
+    echo "    Disponível após liberação: ${AVAIL_MB}MB"
+fi
+
 # 2. nearRT-RIC
 echo ""
 echo "[2/4] Iniciando nearRT-RIC..."

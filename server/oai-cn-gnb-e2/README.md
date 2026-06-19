@@ -8,6 +8,9 @@ Pilha **OpenAirInterface** (5G Core em Docker + gNB/nrUE nativos com **RFSIM**) 
 
 | Documento | Conteúdo |
 |-----------|----------|
+| [docs/OAI-CORE-ARM64.md](docs/OAI-CORE-ARM64.md) | Build das imagens Core para arm64: pré-requisitos, passo a passo, 5 bugs corrigidos, download |
+| [docs/INSTALACAO_GNB_OAI.md](docs/INSTALACAO_GNB_OAI.md) | Build e execução do gNB OAI (RFSIM) |
+| [docs/TUTORIAL_LAB_E2.md](docs/TUTORIAL_LAB_E2.md) | Reproduzir o lab E2 completo (Core + gNB + nearRT-RIC + xApps) |
 | [docs/E2_FLEXRIC.md](docs/E2_FLEXRIC.md) | Build, deploy, scripts, troubleshooting E2 |
 | [docs/E2_SERVICE_MODELS.md](docs/E2_SERVICE_MODELS.md) | KPM, RC, custom SMs e testes |
 | [../../docs/labs/02-oai-cn-gnb-flexric-e2.md](../../docs/labs/02-oai-cn-gnb-flexric-e2.md) | Roteiro da disciplina e entregáveis Projeto 2 |

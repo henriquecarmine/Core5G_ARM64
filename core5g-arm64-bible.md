@@ -605,7 +605,79 @@ Script: [`build-oai-arm64.sh`](build-oai-arm64.sh) na raiz do repositório.
 ./build-oai-arm64.sh all      # executa os 4 passos em sequência
 ```
 
-**Pré-requisito**: Docker Desktop instalado no Mac Apple Silicon. Cada build leva 20–40 min por imagem (compilação C++ do OAI a partir do source).
+#### Pré-requisitos
+
+| Requisito | Detalhe |
+|---|---|
+| Máquina | Mac Apple Silicon (M1/M2/M3/M4) — arm64 nativo |
+| Docker Desktop | ≥ 4.x com engine `linux/arm64` habilitada |
+| Espaço em disco | ≥ 20 GB livres (imagens intermediárias + .tar exportados) |
+| Tempo | ~40 min por imagem × 6 = ~4 h no total |
+| SSH key | `ssl/core5g_openran_arm64.pem` com acesso ao servidor |
+| `.env` | configurado com `AWS_SERVER_HOST`, `AWS_SERVER_USER`, `AWS_SSH_KEY_PATH` |
+
+> **Por que Mac Apple Silicon?** O Docker Desktop no M-series roda containers `linux/arm64` _nativamente_ — sem emulação QEMU. Compilar o OAI (C++ pesado) via emulação levaria 5–10× mais tempo e frequentemente trava por OOM.
+
+#### Como compilar — passo a passo
+
+**1. Clonar o repositório e configurar o .env**
+
+```bash
+git clone https://github.com/henriquecarmine/Core5G_ARM64.git
+cd Core5G_ARM64
+cp .env.example .env
+# editar .env: AWS_SERVER_HOST, AWS_SERVER_USER, AWS_SSH_KEY_PATH
+```
+
+**2. Compilar as 6 imagens**
+
+```bash
+./build-oai-arm64.sh build
+# Cada docker build compila o OAI a partir do source dentro do container arm64.
+# A ordem importa: AMF → SMF → NRF → UDR → UDM → AUSF
+# Cache Docker é reutilizado em recompilações parciais.
+```
+
+O que acontece por dentro de cada build (multi-stage Dockerfile):
+1. **base stage** — `apt-get install` das dependências de sistema + build tools
+2. **base stage** — compilação de spdlog, Pistache, nlohmann/json e nghttp2 a partir do git
+3. **builder stage** — `cmake` configura o projeto + `make -j$(nproc)` compila o binário
+4. **target stage** — copia apenas o binário e `.so` necessários para a imagem final mínima
+
+**3. Exportar para .tar**
+
+```bash
+./build-oai-arm64.sh save
+# Cria /tmp/oai-images/oai-{amf,smf,nrf,udr,udm,ausf}.tar (~60 MB cada)
+```
+
+**4. Enviar para o servidor**
+
+```bash
+./build-oai-arm64.sh upload
+# scp de cada .tar para ~/ no servidor via SSH
+```
+
+**5. Carregar no daemon Docker do servidor**
+
+```bash
+./build-oai-arm64.sh load
+# docker load -i ~/oai-{comp}.tar && rm ~/oai-{comp}.tar  (para cada componente)
+```
+
+**Ou tudo de uma vez:**
+
+```bash
+./build-oai-arm64.sh all
+```
+
+**Verificar que as imagens são realmente arm64:**
+
+```bash
+# no servidor:
+docker run --rm oaisoftwarealliance/oai-amf:v1.5.1 uname -m
+# esperado: aarch64
+```
 
 #### Parâmetros do build
 
@@ -617,7 +689,9 @@ Script: [`build-oai-arm64.sh`](build-oai-arm64.sh) na raiz do repositório.
 | `-f` | `component/<comp>/docker/Dockerfile.<shortname>.ubuntu` |
 | contexto | diretório do componente (ex.: `component/oai-amf/`) |
 
-#### Bugs encontrados e corrigidos durante o desenvolvimento do script
+#### Problemas encontrados — e como foram corrigidos
+
+Estes são os erros que aparecem ao tentar compilar as imagens OAI para arm64 **a partir do código original do repositório**. Os patches já estão aplicados neste repo; esta seção existe para documentar o raciocínio e ajudar quem tentar fazer o mesmo em outra base de código.
 
 **Bug 1 — `declare -A` não suportado no bash 3.2 do macOS**
 

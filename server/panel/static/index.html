@@ -18,6 +18,23 @@
   }
   * { box-sizing: border-box; }
   body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; }
+  /* ===== Loader global + spinner por botão (nenhuma tela morta) ===== */
+  #top-loader { position:fixed; top:0; left:0; right:0; height:3px; z-index:9999; overflow:hidden;
+                opacity:0; transition:opacity .25s; pointer-events:none; }
+  #top-loader.on { opacity:1; }
+  #top-loader::before { content:''; position:absolute; top:0; bottom:0; width:35%;
+    background:linear-gradient(90deg, transparent, var(--accent) 35%, #ffd0a8, var(--accent) 65%, transparent);
+    box-shadow:0 0 10px var(--accent); animation:tl-slide 1.05s cubic-bezier(.4,0,.2,1) infinite; }
+  @keyframes tl-slide { 0%{left:-35%} 100%{left:100%} }
+  /* Spinner que aparece dentro de qualquer botão em ação */
+  .btn-spin { display:inline-block; width:13px; height:13px; border:2px solid currentColor;
+              border-right-color:transparent; border-radius:50%; vertical-align:-2px; margin-right:7px;
+              flex-shrink:0; animation:btn-spin-rot .6s linear infinite; }
+  @keyframes btn-spin-rot { to { transform:rotate(360deg); } }
+  button.is-loading { color:var(--accent); border-color:var(--accent); cursor:progress; opacity:1 !important; }
+  button.toggle-btn.is-loading { color:inherit; }
+  .del-btn.is-loading .btn-spin { width:11px; height:11px; margin:0; }
+
   /* ===== Menu superior (top bar) ===== */
   #topbar { border-bottom:1px solid var(--border); background:var(--panel); flex-shrink:0; }
   #topbar-main { display:flex; align-items:center; gap:18px; padding:10px 24px; }
@@ -269,6 +286,7 @@
 </style>
 </head>
 <body>
+<div id="top-loader"></div>
 <header id="topbar">
   <div id="topbar-main">
     <div class="tb-left">
@@ -844,8 +862,41 @@ function appendExplain(cmd) {
   output.scrollTop = output.scrollHeight;
 }
 
-async function runCommand(cmd) {
+// ===== Loader: nenhuma ação deixa a tela "morta" =====
+const topLoader = document.getElementById('top-loader');
+let _loaderN = 0;
+function loaderInc() { _loaderN++; topLoader.classList.add('on'); }
+function loaderDec() { _loaderN = Math.max(0, _loaderN - 1); if (_loaderN === 0) topLoader.classList.remove('on'); }
+function btnLoading(btn, on) {
+  if (!btn) return;
+  if (on) {
+    if (!btn.querySelector('.btn-spin')) {
+      const s = document.createElement('span');
+      s.className = 'btn-spin';
+      btn.insertBefore(s, btn.firstChild);
+    }
+    btn.classList.add('is-loading');
+  } else {
+    const s = btn.querySelector('.btn-spin');
+    if (s) s.remove();
+    btn.classList.remove('is-loading');
+  }
+}
+// Envolve qualquer ação assíncrona: barra global no topo + spinner no botão,
+// sempre limpa no fim (mesmo com erro).
+async function withLoader(btn, fn) {
+  loaderInc();
+  btnLoading(btn, true);
+  try { return await fn(); }
+  finally { btnLoading(btn, false); loaderDec(); }
+}
+
+async function runCommand(cmd, srcBtn) {
   if (isGuest) return;
+  // Feedback imediato: spinner no botão (ou estado 'loading' no toggle) + barra global.
+  loaderInc();
+  if (srcBtn && srcBtn.dataset.toggle) setToggleState(srcBtn, 'loading');
+  else btnLoading(srcBtn, true);
   setRunning(true);
   setStatus('running', 'executando: ' + cmd);
   const badge = pushRunHeader(cmd);
@@ -859,15 +910,19 @@ async function runCommand(cmd) {
   } catch (e) {
     appendLine('[erro: ' + e + ']'); setStatus('error', 'erro');
     setRunBadge(badge, 'error', 'erro');
-  } finally { setRunning(false); }
+  } finally {
+    setRunning(false);
+    if (srcBtn && !srcBtn.dataset.toggle) btnLoading(srcBtn, false);
+    loaderDec();
+  }
 }
 
-buttons.forEach(b => b.addEventListener('click', () => runCommand(b.dataset.cmd)));
+buttons.forEach(b => b.addEventListener('click', () => runCommand(b.dataset.cmd, b)));
 toggleButtons.forEach(b => {
   setToggleState(b, false);
-  b.addEventListener('click', () => runCommand(b.dataset.state === 'on' ? b.dataset.down : b.dataset.up));
+  b.addEventListener('click', () => runCommand(b.dataset.state === 'on' ? b.dataset.down : b.dataset.up, b));
 });
-document.getElementById('diag-test-btn').addEventListener('click', () => runCommand(document.getElementById('diag-test-select').value));
+document.getElementById('diag-test-btn').addEventListener('click', e => runCommand(document.getElementById('diag-test-select').value, e.currentTarget));
 document.getElementById('clear-btn').addEventListener('click', () => { output.innerHTML = ''; });
 document.getElementById('copy-btn').addEventListener('click', async () => {
   try {
@@ -923,6 +978,8 @@ async function startLogs() {
   logsAbort = new AbortController();
   output.innerHTML = '';
   setStatus('running', 'logs: ' + svc);
+  const logsBtn = document.getElementById('logs-btn');
+  loaderInc(); btnLoading(logsBtn, true);
   try {
     const resp = await fetch('/api/logs/' + encodeURIComponent(svc), { signal: logsAbort.signal });
     await streamToConsole(resp);
@@ -930,6 +987,8 @@ async function startLogs() {
   } catch (e) {
     if (e.name !== 'AbortError') { appendLine('[erro: ' + e + ']'); setStatus('error', 'erro nos logs'); }
     else setStatus('', 'ocioso');
+  } finally {
+    btnLoading(logsBtn, false); loaderDec();
   }
 }
 
@@ -1142,8 +1201,9 @@ function openUeLab() { if(isGuest)return; document.getElementById('uelab-overlay
 function closeUeLab() { document.getElementById('uelab-overlay').classList.remove('open'); }
 
 // --- UE list ---
-async function loadUeList() {
+async function loadUeList(srcBtn) {
   ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);font-size:11px">Carregando...</td></tr>';
+  loaderInc(); btnLoading(srcBtn, true);
   try {
     const d = await (await fetch('/api/subscribers')).json();
     ueLab.listBody.innerHTML = '';
@@ -1156,29 +1216,31 @@ async function loadUeList() {
       tr.innerHTML = `
         <td style="font-family:monospace;font-size:11.5px">${sub.imsi}</td>
         <td style="color:var(--muted);font-size:11px">${sub.msisdn || '—'}</td>
-        <td><button class="del-btn" title="Remover" onclick="deleteUe('${sub.imsi}')">✕</button></td>`;
+        <td><button class="del-btn" title="Remover" onclick="deleteUe('${sub.imsi}', this)">✕</button></td>`;
       ueLab.listBody.appendChild(tr);
     });
   } catch {
     ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--red);font-size:11px">Erro ao carregar lista.</td></tr>';
-  }
+  } finally { btnLoading(srcBtn, false); loaderDec(); }
 }
 
-document.getElementById('uelab-refresh-btn').addEventListener('click', loadUeList);
+document.getElementById('uelab-refresh-btn').addEventListener('click', e => loadUeList(e.currentTarget));
 
-async function deleteUe(imsi) {
+async function deleteUe(imsi, srcBtn) {
   if (!confirm('Remover subscriber IMSI ' + imsi + '?')) return;
   labAppendLine('Removendo ' + imsi + '...');
+  loaderInc(); btnLoading(srcBtn, true);
   try {
     const resp = await fetch('/api/subscriber/' + imsi, { method: 'DELETE' });
     const text = await resp.text();
     stripAnsi(text).split('\n').forEach(l => labAppendLine(l));
     loadUeList();
   } catch (e) { labAppendLine('[erro: ' + e + ']'); }
+  finally { btnLoading(srcBtn, false); loaderDec(); }
 }
 
 // --- Register UE ---
-document.getElementById('lab-register-btn').addEventListener('click', async () => {
+document.getElementById('lab-register-btn').addEventListener('click', async e => {
   if (isGuest) return;
   const imsi = document.getElementById('lab-imsi').value.trim();
   if (!imsi) { labAppendLine('IMSI é obrigatório.'); return; }
@@ -1191,15 +1253,17 @@ document.getElementById('lab-register-btn').addEventListener('click', async () =
   };
   ueLab.labConsole.innerHTML = '';
   labAppendLine('Cadastrando UE ' + imsi + '...');
-  try {
-    const resp = await fetch('/api/subscriber', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    await labStream(resp);
-    loadUeList();
-  } catch (e) { labAppendLine('[erro: ' + e + ']'); }
+  await withLoader(e.currentTarget, async () => {
+    try {
+      const resp = await fetch('/api/subscriber', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      await labStream(resp);
+      loadUeList();
+    } catch (e) { labAppendLine('[erro: ' + e + ']'); }
+  });
 });
 
 // --- Lab console helpers ---
@@ -1242,66 +1306,71 @@ async function labStream(resp, onLine) {
 }
 
 // --- Test buttons ---
-document.getElementById('lab-run-btn').addEventListener('click', async () => {
+document.getElementById('lab-run-btn').addEventListener('click', async ev => {
   if (isGuest) return;
   ueLab.labConsole.innerHTML = '';
   ueLab.resultCard.style.display = 'none';
+  await withLoader(ev.currentTarget, async () => {
+    const dist  = document.getElementById('lab-dist').value;
+    const interf = document.getElementById('lab-interf').value;
 
-  const dist  = document.getElementById('lab-dist').value;
-  const interf = document.getElementById('lab-interf').value;
+    // 1. Apply conditions
+    if (dist !== 'none' || interf !== 'none') {
+      labAppendLine('→ Configurando canal (' + dist + ' / ' + interf + ')...');
+      const cr = await fetch('/api/channel', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ distance: dist, interference: interf }),
+      });
+      await labStream(cr);
+      labAppendLine('');
+    }
 
-  // 1. Apply conditions
-  if (dist !== 'none' || interf !== 'none') {
-    labAppendLine('→ Configurando canal (' + dist + ' / ' + interf + ')...');
-    const cr = await fetch('/api/channel', {
+    // 2. Run throughput
+    const duration = document.getElementById('lab-duration').value;
+    labAppendLine('→ Medindo throughput (iperf3, ' + duration + 's)...');
+    let lastResult = null;
+    const conditions = (dist !== 'none' ? dist : '') + (interf !== 'none' ? (dist !== 'none' ? ' + ' : '') + interf : '');
+    const tr = await fetch('/api/throughput', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ duration: parseInt(duration) }),
+    });
+    await labStream(tr, line => {
+      const r = parseIperf3(line);
+      if (r && r.dir === 'sender') lastResult = r;
+    });
+
+    if (lastResult) {
+      showResult(lastResult.bw, lastResult.unit,
+        'TCP sender · UE → DN · canal: ' + (conditions || 'ideal'));
+    }
+  });
+});
+
+document.getElementById('lab-apply-btn').addEventListener('click', async ev => {
+  if (isGuest) return;
+  ueLab.labConsole.innerHTML = '';
+  await withLoader(ev.currentTarget, async () => {
+    const dist  = document.getElementById('lab-dist').value;
+    const interf = document.getElementById('lab-interf').value;
+    const resp = await fetch('/api/channel', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ distance: dist, interference: interf }),
     });
-    await labStream(cr);
-    labAppendLine('');
-  }
-
-  // 2. Run throughput
-  const duration = document.getElementById('lab-duration').value;
-  labAppendLine('→ Medindo throughput (iperf3, ' + duration + 's)...');
-  let lastResult = null;
-  const conditions = (dist !== 'none' ? dist : '') + (interf !== 'none' ? (dist !== 'none' ? ' + ' : '') + interf : '');
-  const tr = await fetch('/api/throughput', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ duration: parseInt(duration) }),
+    await labStream(resp);
   });
-  await labStream(tr, line => {
-    const r = parseIperf3(line);
-    if (r && r.dir === 'sender') lastResult = r;
-  });
-
-  if (lastResult) {
-    showResult(lastResult.bw, lastResult.unit,
-      'TCP sender · UE → DN · canal: ' + (conditions || 'ideal'));
-  }
 });
 
-document.getElementById('lab-apply-btn').addEventListener('click', async () => {
+document.getElementById('lab-reset-btn').addEventListener('click', async ev => {
   if (isGuest) return;
   ueLab.labConsole.innerHTML = '';
-  const dist  = document.getElementById('lab-dist').value;
-  const interf = document.getElementById('lab-interf').value;
-  const resp = await fetch('/api/channel', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ distance: dist, interference: interf }),
+  await withLoader(ev.currentTarget, async () => {
+    const resp = await fetch('/api/channel', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ distance: 'off', interference: 'none' }),
+    });
+    await labStream(resp);
+    ueLab.resultCard.style.display = 'none';
   });
-  await labStream(resp);
-});
-
-document.getElementById('lab-reset-btn').addEventListener('click', async () => {
-  if (isGuest) return;
-  ueLab.labConsole.innerHTML = '';
-  const resp = await fetch('/api/channel', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ distance: 'off', interference: 'none' }),
-  });
-  await labStream(resp);
-  ueLab.resultCard.style.display = 'none';
 });
 
 // ===== Modal de operação (genérico: Demonstração E2E + troca de projeto) =====
@@ -1367,6 +1436,7 @@ demoRerunBtn.addEventListener('click', () => { if (!_opBusy) runOperation(); });
 async function runOperation() {
   if (!_op || _opBusy) return;
   _opBusy = true;
+  loaderInc();
   demoSummaryEl.style.display = 'none';
   demoRerunBtn.style.display = 'none';
   setSelectorEnabled(false);
@@ -1406,6 +1476,7 @@ async function runOperation() {
   spinner.remove();
   if (_op.allowRerun) demoRerunBtn.style.display = '';
   _opBusy = false;
+  loaderDec();
   setSelectorEnabled(true);
   loadWhoami();  // reabilita controles conforme estado
 }

@@ -29,6 +29,34 @@ PATCH em correções pontuais.
 | 0.13.0 | 2026-06-20 | Redesenho do painel: menu superior único (projeto ativo, seletor, ferramentas, telemetria) + sidebar lateral colapsável (hover-expand) por lab |
 | 0.14.0 | 2026-06-20 | Fix v2 do ativar/desligar (P2) + reorganização: projetos+servidores no topo, ferramentas POR PROJETO na lateral, guarda de dependência (RAN só com Core) |
 | 0.15.0 | 2026-06-20 | Testes do roteiro do professor (NG Setup/Registro/Coerência no P1 + KPM com tráfego no P2) + topologia POR PROJETO (cria a do P1 Open5GS) |
+| 0.15.1 | 2026-06-20 | Guardrails de CPU (cgroup v2): lab limitado a 90% dos 2 vcores + ssh/docker/painel/caddy com prioridade máxima — o SSH não cai mais sob carga |
+
+---
+
+## [0.15.1] — 2026-06-20
+
+**Guardrails de CPU** para o box de 2 vCPUs nunca mais ficar inacessível quando
+o lab E2 satura (problema visto ao validar a 0.15.0: o `KPM_TRAFFIC=1` sobe o
+nrUE, leva o load a ~30 e o SSH cai).
+
+### Defesa em profundidade (cgroup v2, em `infra/server-bootstrap.sh` passo 6/6)
+1. **`oai-lab.slice`** com `CPUQuota=180%` (= 90% dos 2 vcores) e `MemoryHigh=2.5G`:
+   teto **agregado** do lab. Os lançadores pesados entram nela via
+   `--slice=oai-lab.slice` (`up_gnb_oai.sh` → gNB e nrUE; `run_xapp.sh` → xApp).
+   Garante ≥10% (~0.2 core) sempre livre para o sistema.
+2. **`CPUWeight=10000`** em `ssh`/`docker`/`core5g-panel`/`caddy`: vencem a disputa
+   de CPU, então o SSH e o painel continuam respondendo mesmo no pico.
+
+### Prova
+- Sob a MESMA carga que antes derrubava a sessão (lab + nrUE, load ~29), o
+  **SSH respondeu 18/18** (zero quedas). Antes: quedas repetidas (exit 255).
+- `cpu.max = 180000 100000` (180%) e `CPUWeight=10000` confirmados ao vivo no
+  cgroup. O `load` alto é o sinal de *throttling*, não de saturação real (uso de
+  CPU do lab fica em ≤1.8 cores).
+- Idempotente; recuperação: remover `oai-lab.slice` + os drop-ins
+  `*.service.d/cpu-guardrail.conf` e `systemctl daemon-reload`.
+- Dica: sob pico, **derrube pelo painel** (serviço com prioridade alta responde
+  mesmo quando o SSH está lento).
 
 ---
 

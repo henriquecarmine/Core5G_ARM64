@@ -33,7 +33,7 @@ trap 'sudo pkill -9 -f "$BIN" 2>/dev/null || true; rm -f "$OUT"' EXIT
 
 echo "=== xApp $BIN — encerra no 1º evento de sucesso (CPUQuota=$CPU_QUOTA) ==="
 if command -v systemd-run >/dev/null 2>&1; then
-    sudo systemd-run --scope -q --unit="oai-xapp-$$" \
+    sudo systemd-run --scope -q --unit="oai-xapp-$$" --slice=oai-lab.slice \
         -p "CPUQuota=${CPU_QUOTA}" -p "CPUWeight=10" "${SETENV[@]}" \
         nice -n 15 stdbuf -oL "$MON/$BIN" >"$OUT" 2>&1 &
 else

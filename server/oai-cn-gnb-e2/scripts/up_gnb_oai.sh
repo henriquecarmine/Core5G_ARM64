@@ -35,8 +35,11 @@ RAN_NICE="${RAN_NICE:-10}"
 # CPUQuota (teto rígido) + CPUWeight (prioridade cgroup, default 100) e aplicamos
 # a prioridade do escalonador via o comando 'nice' como prefixo do processo.
 if command -v systemd-run >/dev/null 2>&1; then
-    CAP_GNB=(systemd-run --scope -q --unit=oai-gnb -p "CPUQuota=${GNB_CPUQUOTA}" -p "CPUWeight=20" nice -n "${RAN_NICE}")
-    CAP_UE=(systemd-run --scope -q --unit=oai-nrue -p "CPUQuota=${UE_CPUQUOTA}" -p "CPUWeight=20" nice -n "${RAN_NICE}")
+    # --slice=oai-lab.slice: teto AGREGADO de 180% (90% dos 2 vcores) p/ todo o lab;
+    # mesmo que gNB+UE+xApp queiram mais, a slice os limita JUNTOS, deixando CPU
+    # livre p/ o sistema (ver guardrails em infra/server-bootstrap.sh).
+    CAP_GNB=(systemd-run --scope -q --unit=oai-gnb --slice=oai-lab.slice -p "CPUQuota=${GNB_CPUQUOTA}" -p "CPUWeight=20" nice -n "${RAN_NICE}")
+    CAP_UE=(systemd-run --scope -q --unit=oai-nrue --slice=oai-lab.slice -p "CPUQuota=${UE_CPUQUOTA}" -p "CPUWeight=20" nice -n "${RAN_NICE}")
 else
     CAP_GNB=(nice -n "${RAN_NICE}")
     CAP_UE=(nice -n "${RAN_NICE}")

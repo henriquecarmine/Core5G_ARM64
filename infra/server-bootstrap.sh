@@ -186,5 +186,46 @@ fi
 
 echo ""
 echo "=========================================="
+echo "6/6 - Guardrails de CPU (protege o box de 2 vCPUs)"
+echo "=========================================="
+# Defesa em profundidade (cgroup v2), para o lab E2 nunca derrubar o sistema:
+#  - oai-lab.slice: teto AGREGADO de 180% (= 90% dos 2 vcores) para gNB+UE+xApp,
+#    garantindo >=10% (~0.2 core) sempre livre para o sistema.
+#  - ssh/docker/painel/caddy com CPUWeight máximo: vencem a disputa de CPU, então
+#    o SSH não cai mesmo se o lab tentar estourar.
+# Recuperação: remova /etc/systemd/system/oai-lab.slice e os
+#   /etc/systemd/system/<svc>.service.d/cpu-guardrail.conf e rode daemon-reload.
+sudo tee /etc/systemd/system/oai-lab.slice >/dev/null <<'SLICE'
+[Unit]
+Description=OAI E2 lab (gNB/UE/xApp) - CPU/mem limitados p/ proteger o box de 2 vCPUs
+Before=slices.target
+
+[Slice]
+CPUAccounting=yes
+CPUQuota=180%
+CPUWeight=15
+MemoryAccounting=yes
+MemoryHigh=2.5G
+SLICE
+for svc in ssh docker core5g-panel caddy; do
+    if systemctl list-unit-files "${svc}.service" >/dev/null 2>&1; then
+        sudo mkdir -p "/etc/systemd/system/${svc}.service.d"
+        sudo tee "/etc/systemd/system/${svc}.service.d/cpu-guardrail.conf" >/dev/null <<'GUARD'
+[Service]
+CPUAccounting=yes
+CPUWeight=10000
+GUARD
+    fi
+done
+sudo systemctl daemon-reload
+# Aplica ao vivo (sem reiniciar — não derruba a sessão SSH atual) via --runtime;
+# o drop-in acima garante a persistência através de reboots.
+for svc in ssh docker core5g-panel caddy; do
+    sudo systemctl set-property --runtime "${svc}.service" CPUWeight=10000 2>/dev/null || true
+done
+echo "Guardrails: oai-lab.slice (CPUQuota=180%) + ssh/docker/painel/caddy CPUWeight=10000."
+
+echo ""
+echo "=========================================="
 echo "Bootstrap concluído."
 echo "=========================================="

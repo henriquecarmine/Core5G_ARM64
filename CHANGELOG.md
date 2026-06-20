@@ -27,6 +27,39 @@ PATCH em correções pontuais.
 | 0.12.3 | 2026-06-20 | Trava de auth: guest vira opt-in (`.env` em branco ⇒ só admin/hcarmine entra) |
 | 0.12.4 | 2026-06-20 | xApps validados (cust/kpm 7/7, rc 5/7): fix plugins arch-aware + falso-negativo do run_xapp |
 | 0.13.0 | 2026-06-20 | Redesenho do painel: menu superior único (projeto ativo, seletor, ferramentas, telemetria) + sidebar lateral colapsável (hover-expand) por lab |
+| 0.14.0 | 2026-06-20 | Fix v2 do ativar/desligar (P2) + reorganização: projetos+servidores no topo, ferramentas POR PROJETO na lateral, guarda de dependência (RAN só com Core) |
+
+---
+
+## [0.14.0] — 2026-06-20
+
+Reorganização guiada pelo uso real + **correção do bug de ativação**.
+
+### Fix — ativar/desligar do Projeto 2 (fundação)
+- O painel chamava os scripts **v1** do OAI (`oai-cn5g-fed`), mas o servidor roda
+  o core **v2** (`oai-cn5g-v2`, v2.2.1). O `down_core.sh` v1 não parava os
+  containers v2 → "desligar não obedecia".
+- Remapeado `COMMANDS` (`p2-up/down-core`, `p2-up-e2-lab`) e `switch_project.sh`
+  para os scripts v2 (`up_core_v2`/`down_core_v2`/`up_e2_lab_v2`).
+- **Validado no servidor:** down para os 9 containers; up sobe todos *healthy*.
+
+### Reorganização da UI (por projeto)
+- **Topo:** 2 cards de projeto lado a lado, cada um com seus **servidores
+  (toggle = comando)** + "ativar" (troca exclusiva via `switch_project.sh`).
+  O card ativo é realçado; telemetria continua no cabeçalho.
+- **Lateral:** rail de **ferramentas do projeto ativo** (ícone + rótulo),
+  trocando conforme `_activeProj`:
+  - **P1:** Topologia · UE Lab · Demonstração E2E · Testes P1
+  - **P2:** Topologia · Testes P2
+  - **Logs** comum (oculto quando nada está no ar).
+- **Guarda de dependência:** RAN (P1) só habilita com o Core (P1) no ar.
+- Links de topologia já apontam para `/topology?proj=p1|p2` (visão por projeto
+  vem na próxima etapa).
+
+### Base para os testes do professor (PDFs)
+- Plano em `docs/plano-painel-redesign.md`: a demo guiada do professor já bate
+  com ~70% dos testes; faltam 3 no P1 (NG Setup, Registro, Coerência) e a
+  variante KPM com tráfego no P2 — entram incrementalmente.
 
 ---
 

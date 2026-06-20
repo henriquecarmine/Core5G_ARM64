@@ -161,7 +161,7 @@
       <button type="submit" id="btn-login">Entrar</button>
     </form>
 
-    <div class="divider">ou</div>
+    <div class="divider" id="guest-divider">ou</div>
 
     <button id="btn-guest" type="button">Entrar como convidado</button>
 
@@ -207,9 +207,16 @@ document.getElementById("login-form").addEventListener("submit", (ev) => {
   tryLogin("/api/login", { user, pass });
 });
 
-document.getElementById("btn-guest").addEventListener("click", () => {
-  tryLogin("/api/login/guest", null);
-});
+// Guest é opt-in: se desabilitado no servidor, esconde o botão e o divisor.
+const guestEnabled = (__GUEST_ENABLED__);
+if (!guestEnabled) {
+  document.getElementById("btn-guest").style.display = "none";
+  document.getElementById("guest-divider").style.display = "none";
+} else {
+  document.getElementById("btn-guest").addEventListener("click", () => {
+    tryLogin("/api/login/guest", null);
+  });
+}
 </script>
 </body>
 </html>

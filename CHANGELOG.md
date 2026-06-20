@@ -24,6 +24,26 @@ PATCH em correções pontuais.
 | 0.12.0 | 2026-06-19 | Colorimetria ISO/ANSI + resumo didático em TODOS os testes; fixes (canal, failover, anti-freeze KPM/RC) |
 | 0.12.1 | 2026-06-19 | Testes agrupados por projeto no menu + bloqueio mútuo (só o projeto ativo testa) |
 | 0.12.2 | 2026-06-20 | Plano de usuário arm64 (OAI v2.2.1) + xApps event-driven (run_xapp/e2_verify/up_e2_lab_v2) |
+| 0.12.3 | 2026-06-20 | Trava de auth: guest vira opt-in (`.env` em branco ⇒ só admin/hcarmine entra) |
+
+---
+
+## [0.12.3] — 2026-06-20
+
+### Auth — guest opt-in (trava "só hcarmine")
+
+O acesso de convidado passou a ser **opt-in**: só existe quando
+`PANEL_GUEST_USER`/`PANEL_GUEST_PASSWORD` vêm preenchidos no `.env`. Em branco,
+o convidado fica **desabilitado** e só os admins (`PANEL_USER` +
+`PANEL_EXTRA_USERS`) entram.
+
+- `server.py`: flag `GUEST_ENABLED`; `POST /api/login/guest` responde **403**
+  quando desabilitado (era a porta aberta — concedia sessão guest sem senha);
+  `do_login` também só aceita o ramo guest se habilitado.
+- `login.html`: botão "Entrar como convidado" e o divisor somem quando o guest
+  está desabilitado (flag `__GUEST_ENABLED__` injetada no `/login`).
+- `server-bootstrap.sh`: guard exige só `PANEL_USER`/`PANEL_PASSWORD`; guest
+  opcional, sed robusto a valor vazio.
 
 ---
 

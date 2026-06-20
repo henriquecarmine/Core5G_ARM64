@@ -8,7 +8,8 @@
 #   SWAPPINESS                      - default 10
 #   AWS_SERVER_HOST                 - domínio público (Caddyfile); sem ele, pula Caddy/painel
 #   PANEL_USER, PANEL_PASSWORD      - credenciais admin do painel (acesso total)
-#   PANEL_GUEST_USER, PANEL_GUEST_PASSWORD - credenciais guest (só leitura)
+#   PANEL_GUEST_USER, PANEL_GUEST_PASSWORD - credenciais guest (só leitura, OPCIONAL:
+#       em branco => acesso de convidado desabilitado, só os admins entram)
 #   Espera ~/core5g-panel.service.template enviado pelo deploy.sh (unit do systemd)
 
 set -euo pipefail
@@ -124,8 +125,8 @@ echo "5/5 - Caddy (HTTPS, TLS-only) + serviço do painel (autentica via cookie)"
 echo "=========================================="
 if [ -z "${AWS_SERVER_HOST:-}" ]; then
     echo "AWS_SERVER_HOST não fornecido, pulando Caddy/painel."
-elif [ -z "${PANEL_USER:-}" ] || [ -z "${PANEL_PASSWORD:-}" ] || [ -z "${PANEL_GUEST_USER:-}" ] || [ -z "${PANEL_GUEST_PASSWORD:-}" ]; then
-    echo "PANEL_USER/PANEL_PASSWORD/PANEL_GUEST_USER/PANEL_GUEST_PASSWORD não fornecidos, pulando Caddy/painel."
+elif [ -z "${PANEL_USER:-}" ] || [ -z "${PANEL_PASSWORD:-}" ]; then
+    echo "PANEL_USER/PANEL_PASSWORD não fornecidos, pulando Caddy/painel."
 else
     if ! command -v caddy &> /dev/null; then
         sudo apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
@@ -168,8 +169,8 @@ CADDYFILE
     if [ -f ~/core5g-panel.service.template ] && [ -d ~/server/panel/.venv ]; then
         sed -e "s/__PANEL_USER__/${PANEL_USER}/" \
             -e "s/__PANEL_PASSWORD__/${PANEL_PASSWORD}/" \
-            -e "s/__PANEL_GUEST_USER__/${PANEL_GUEST_USER}/" \
-            -e "s/__PANEL_GUEST_PASSWORD__/${PANEL_GUEST_PASSWORD}/" \
+            -e "s/__PANEL_GUEST_USER__/${PANEL_GUEST_USER:-}/" \
+            -e "s/__PANEL_GUEST_PASSWORD__/${PANEL_GUEST_PASSWORD:-}/" \
             -e "s|__PANEL_EXTRA_USERS__|${PANEL_EXTRA_USERS:-}|" \
             -e "s/__PANEL_SECRET__/${PANEL_SECRET}/" \
             ~/core5g-panel.service.template \

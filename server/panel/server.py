@@ -51,6 +51,10 @@ ADMIN_USER = os.environ.get("PANEL_USER", "admin")
 ADMIN_PASSWORD = os.environ.get("PANEL_PASSWORD", "admin")
 GUEST_USER = os.environ.get("PANEL_GUEST_USER", "guest")
 GUEST_PASSWORD = os.environ.get("PANEL_GUEST_PASSWORD", "guest")
+# Guest é OPT-IN: só existe se PANEL_GUEST_USER vier preenchido (.env). Com as
+# variáveis em branco, o acesso de convidado fica desabilitado e só os admins
+# (PANEL_USER + PANEL_EXTRA_USERS) entram. Trava "só hcarmine".
+GUEST_ENABLED = bool(GUEST_USER.strip())
 
 # Usuários admin (acesso total). Inclui o admin do ambiente e usuários extras
 # do laboratório vindos do .env via PANEL_EXTRA_USERS="user1:pass1,user2:pass2".
@@ -376,6 +380,7 @@ def login(request: Request):
         return RedirectResponse("/")
     html = (STATIC_DIR / "login.html").read_text()
     html = html.replace("__VERSION__", _VERSION)
+    html = html.replace("__GUEST_ENABLED__", "true" if GUEST_ENABLED else "false")
     return HTMLResponse(html)
 
 
@@ -396,16 +401,18 @@ def do_login(payload: dict) -> JSONResponse:
     user = str(payload.get("user", ""))
     password = str(payload.get("pass", ""))
     valid = (user in ADMIN_USERS and password == ADMIN_USERS[user]) or (
-        user == GUEST_USER and password == GUEST_PASSWORD
+        GUEST_ENABLED and user == GUEST_USER and password == GUEST_PASSWORD
     )
     if not valid:
         raise HTTPException(401, "Usuário ou senha inválidos.")
-    role = "guest" if user == GUEST_USER else "admin"
+    role = "guest" if (GUEST_ENABLED and user == GUEST_USER) else "admin"
     return _set_session(JSONResponse({"user": user, "role": role}), user)
 
 
 @app.post("/api/login/guest")
 def do_login_guest() -> JSONResponse:
+    if not GUEST_ENABLED:
+        raise HTTPException(403, "Acesso de convidado desabilitado neste servidor.")
     return _set_session(JSONResponse({"user": GUEST_USER, "role": "guest"}), GUEST_USER)
 
 

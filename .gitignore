@@ -17,3 +17,7 @@ client/__pycache__/
 # NÃO versionar (o repo carregava x86-64 e o sync-oai quebrava o RIC arm64).
 # up_flexric.sh popula flexric-lib/ do build tree por arquitetura do host.
 server/oai-cn-gnb-e2/flexric-lib/*.so
+
+# Teste visual do painel (deps locais + artefatos)
+server/panel/test/node_modules/
+server/panel/test/screenshots/

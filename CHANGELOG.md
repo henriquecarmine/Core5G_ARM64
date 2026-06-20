@@ -23,6 +23,46 @@ PATCH em correções pontuais.
 | 0.11.1 | 2026-06-19 | Fix: interferência/distância (P1) agora afetam a medição + resumo no throughput |
 | 0.12.0 | 2026-06-19 | Colorimetria ISO/ANSI + resumo didático em TODOS os testes; fixes (canal, failover, anti-freeze KPM/RC) |
 | 0.12.1 | 2026-06-19 | Testes agrupados por projeto no menu + bloqueio mútuo (só o projeto ativo testa) |
+| 0.12.2 | 2026-06-20 | Plano de usuário arm64 (OAI v2.2.1) + xApps event-driven (run_xapp/e2_verify/up_e2_lab_v2) |
+
+---
+
+## [0.12.2] — 2026-06-20
+
+Traz o **plano de usuário real no arm64** (Projeto 2) e os testes de xApp
+**event-driven**. Integrado sobre a 0.12.1 mantendo todo o trabalho de painel/
+testes já existente — só adiciona arquivos novos, sem conflito.
+
+### Projeto 2 — user plane no arm64 (OAI v2.2.1)
+
+O core v1.5.1 (§7.b) só tinha plano de controle: o `oai-upf-vpp` é Intel-only
+(`libhyperscan`), então o UE nunca pegava IP. Adicionado deployment **paralelo**
+em `server/oai-cn-gnb-e2/oai-cn5g-v2/` com as imagens **multi-arch oficiais
+v2.2.1** (7/7 NFs com arm64, incl. `oai-upf` datapath `simple_switch`).
+
+- Config casa com o gNB atual: PLMN 208/95, TAC `0xa000`, slice SST 222 / SD 123,
+  DNN `default` (`12.1.1.0/26`), AMF fixo `192.168.70.132`, SNAT no UPF.
+- `up_core_v2.sh` / `down_core_v2.sh` (sobe/derruba v2.2.1, exclusão mútua com P1).
+- Validado fim a fim: UE ganha `oaitun_ue1` com IP `12.1.1.x`, tráfego real (GTP-U).
+
+### xApps e E2 lab — event-driven
+
+- `run_xapp.sh <cust|kpm|rc>`: roda o xApp e **encerra no 1º evento de sucesso**,
+  nunca por duração. Pré-requisito por **estado** (`pgrep -x`), cgroup com
+  `CPUQuota` (`XAPP_CPU_QUOTA`, default 50%) + `nice`.
+- `up_e2_lab_v2.sh`: sobe o lab sobre o core v2.2.1; checa `oai-amf` por
+  `.State.Running` (não `Health.Status`). Compatível com o `up_gnb_oai.sh` atual
+  (GNB_NRB=51 → `-C 3469440000`).
+- `e2_verify.sh`: orquestra tudo e roda os 3 xApps 7× cada, esperando o **evento**
+  `E2 SETUP RESPONSE` no log do gNB (poll de condição, sem race de PID).
+- **Achado:** o binário FlexRIC tem timeout interno compilado; com gNB+nrUE
+  saturando os 2 vCPUs o xApp aborta ("Timeout waiting for Report"). Não é bug
+  nosso — é limite de hardware. Mitigação: derrubar o nrUE (libera 1 vCPU; E2 é
+  gNB↔RIC). Documentado no bible §7.c.
+
+> Nota: este bloco foi feito em paralelo à linha que chegou à 0.12.1 (login/
+> topologia/testes coloridos). Reconciliado mantendo ambos; a UI de menu superior
+> proposta na linha paralela foi **descartada** em favor da UI 0.12.x existente.
 
 ---
 

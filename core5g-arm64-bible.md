@@ -835,6 +835,54 @@ server/oai-cn-gnb-e2/oai-cn5g-fed/component/oai-<comp>/src/*/CMakeLists.txt
 
 ---
 
+### 7.c Plano de usuário no arm64 (OAI v2.2.1) + xApps event-driven
+
+> **Por que esta seção existe.** O core v1.5.1 que buildamos (§7.b) **não tinha UPF
+> em arm64** (o `oai-upf-vpp` é Intel-only, depende de `libhyperscan`). Na prática o
+> Projeto 2 só tinha plano de **controle** — o UE nunca pegava IP. A OAI passou a
+> publicar imagens **multi-arch oficiais** a partir do `v2.1.10`; o **`v2.2.1`** tem
+> **7/7 NFs com arm64**, incluindo `oai-upf` (datapath `simple_switch`). Migramos para
+> ele e o **user plane passou a funcionar** (UE ganha IP `12.1.1.x`, tráfego real).
+
+**Onde mora:** `server/oai-cn-gnb-e2/oai-cn5g-v2/` (paralelo ao v1.5.1, não o substitui).
+Detalhes de config em [`oai-cn5g-v2/README.md`](server/oai-cn-gnb-e2/oai-cn5g-v2/README.md).
+Casa com o gNB atual: PLMN **208/95**, TAC `0xa000`, slice **SST 222 / SD 123**,
+DNN **default** (pool `12.1.1.0/26`), AMF fixo `192.168.70.132`, SNAT no UPF (UE → internet).
+
+**Subir o Projeto 2 completo (por SSH):**
+```bash
+cd server/oai-cn-gnb-e2
+./oai-cn5g-v2/up_core_v2.sh    # para o Projeto 1, sobe o core v2.2.1, espera oai-amf RUNNING
+./scripts/up_e2_lab_v2.sh      # near-RT RIC + gNB (RFSIM, 24 PRBs / 51 NRB) + nrUE
+```
+
+**Rodar xApps — event-driven, sem timeout cego:**
+```bash
+./scripts/run_xapp.sh cust    # xApp MAC/RLC/PDCP/GTP (SM custom)
+./scripts/run_xapp.sh kpm     # E2SM-KPM (métricas DRB/PRB)
+./scripts/run_xapp.sh rc      # E2SM-RC (controle)
+./scripts/e2_verify.sh        # sobe o lab + valida E2 SETUP + roda os 3 xApps 7x cada
+```
+Cada `run_xapp.sh` **encerra no 1º evento de sucesso** (E2 conectado + subscrito/indicação),
+nunca por duração fixa — determinístico. Pré-requisito checado por **estado** (`pgrep -x
+nearRT-RIC` + `nr-softmodem`), não por `sleep`. CPU sob controle: cgroup com `CPUQuota`
+(`XAPP_CPU_QUOTA`, default `50%`) + `nice`.
+
+#### Restrição operacional do box (2 vCPUs) — achado importante
+
+O `nr-softmodem` e o `nr-uesoftmodem` em RFSIM fazem **busy-poll** (cada um satura ~1 vCPU
+→ load > 20). O binário do FlexRIC tem um **timeout interno compilado** ("Timeout waiting
+for Report. Connection lost with the RIC?"): com gNB+nrUE saturando os 2 vCPUs, o caminho
+INDICATION→Report fica faminto e o xApp **aborta** — **não é bug do nosso código**, é limite
+de hardware. Para validar os xApps de forma limpa, **derrube o nrUE** (libera 1 vCPU; o E2 é
+gNB↔RIC e não depende do UE): `sudo pkill -x nr-uesoftmodem` e rode `run_xapp.sh`.
+
+> **Princípio do projeto: ZERO tempo, tudo sob controle.** Nada de `sleep`/timeout cego —
+> os scripts terminam por **evento/estado** (`grep -m1` em stream, `tail -F --pid`, poll de
+> condição). Ver memória `feedback-event-driven-nao-tempo`.
+
+---
+
 ## 8. Bugs reais encontrados e corrigidos
 
 Estes problemas existiam no material original do curso e foram descobertos

@@ -11,6 +11,8 @@ Roteiros para execução em sala ou de forma autônoma e para elaboração do **
 | [02 — UERANSIM: N2/N3 e teste E2E](02-ueransim-n2-n3-e2e.md) | gNB + UE em container, NGAP, GTP-U, testes e capturas N3/N6 |
 | [03 — Relatório, entrega e avaliação](03-relatorio-entrega-avaliacao.md) | O que entregar, evidências obrigatórias, rubrica |
 | [OAI Core arm64 — Build manual](../../server/oai-cn-gnb-e2/docs/OAI-CORE-ARM64.md) | Compilar imagens OAI para arm64: pré-requisitos, passo a passo, 5 bugs resolvidos |
+| [OAI Core v2.2.1 — user plane arm64](../../server/oai-cn-gnb-e2/oai-cn5g-v2/README.md) | Plano de usuário real no arm64 (`oai-upf` simple_switch): subir, validar, rollback |
+| [Bíblia §7.c — user plane v2.2.1 + xApps event-driven](../../core5g-arm64-bible.md) | Subir core v2 + RIC + gNB, rodar xApps determinísticos, restrição de 2 vCPUs |
 
 **Pré-requisitos:** Linux com Docker e Docker Compose v2, usuário com permissão para `docker` (e eventualmente `sudo` para `sysctl` na inicialização do core e para `tcpdump` no *host*, se fizer capturas avançadas).
 

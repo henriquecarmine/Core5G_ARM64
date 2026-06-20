@@ -41,8 +41,19 @@ fi
 
 mkdir -p "$LOG_DIR"
 
-if [ ! -f "$FLEXRIC_LIB/libkpm_sm.so" ]; then
-    echo "SMs FlexRIC ausentes; sincronizando..."
+# Garante plugins SM (.so) do MESMO arch do host. Os .so são artefatos de build
+# específicos de arquitetura e NÃO são versionados; aqui sincronizamos do build
+# tree (sync_flexric_lib.sh). Se já existirem mas forem de outra arquitetura
+# (ex.: x86-64 num host arm64), o dlopen do nearRT-RIC falha com
+# "load_plugin_ric: Assertion handle != NULL" — então re-sincronizamos.
+case "$(uname -m)" in
+    aarch64|arm64) WANT_ARCH='aarch64' ;;
+    x86_64|amd64)  WANT_ARCH='x86-64' ;;
+    *)             WANT_ARCH="$(uname -m)" ;;
+esac
+if [ ! -f "$FLEXRIC_LIB/libkpm_sm.so" ] || \
+   ! file -b "$FLEXRIC_LIB/libkpm_sm.so" 2>/dev/null | grep -q "$WANT_ARCH"; then
+    echo "SMs FlexRIC ausentes ou de outra arquitetura (host=$WANT_ARCH); sincronizando do build..."
     "$SCRIPT_DIR/sync_flexric_lib.sh" 2>/dev/null || "$SCRIPT_DIR/build_flexric_tools.sh"
 fi
 

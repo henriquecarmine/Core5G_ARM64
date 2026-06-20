@@ -25,6 +25,44 @@ PATCH em correções pontuais.
 | 0.12.1 | 2026-06-19 | Testes agrupados por projeto no menu + bloqueio mútuo (só o projeto ativo testa) |
 | 0.12.2 | 2026-06-20 | Plano de usuário arm64 (OAI v2.2.1) + xApps event-driven (run_xapp/e2_verify/up_e2_lab_v2) |
 | 0.12.3 | 2026-06-20 | Trava de auth: guest vira opt-in (`.env` em branco ⇒ só admin/hcarmine entra) |
+| 0.12.4 | 2026-06-20 | xApps validados (cust/kpm 7/7, rc 5/7): fix plugins arch-aware + falso-negativo do run_xapp |
+
+---
+
+## [0.12.4] — 2026-06-20
+
+xApps do Projeto 2 **validados de ponta a ponta**: `e2_verify.sh` →
+**cust 7/7, kpm 7/7, rc 5/7** (load < 2). No caminho, dois bugs — que NÃO eram
+"falta de CPU", como parecia no início:
+
+### 1. Plugins SM de arquitetura errada (crash do nearRT-RIC)
+
+O repo versionava `server/oai-cn-gnb-e2/flexric-lib/*.so` compilados para
+**x86-64**; num host **arm64** o `dlopen` do RIC falha
+(`load_plugin_ric: Assertion handle != NULL`). E `sync-oai` espalhava esses
+x86-64 por cima dos arm64 que o servidor havia buildado.
+
+- Os `.so` saíram do versionamento (`git rm --cached` + `.gitignore`) — são
+  artefatos de build, específicos de arquitetura.
+- `up_flexric.sh` agora **detecta a arquitetura** do `.so` e repovoa
+  `flexric-lib/` do build tree (`sync_flexric_lib.sh`) quando falta OU é de outro
+  arch. Auto-curável em qualquer host.
+
+### 2. Falso-negativo no `run_xapp.sh`
+
+Usava `tail -F --pid | grep -m1` com `set -o pipefail`: ao casar o evento de
+sucesso, o `grep -m1` fecha o pipe, o `tail` morre com SIGPIPE e o `pipefail`
+marcava o pipeline inteiro como falha — reportava `❌ FALHA` mesmo com o xApp
+subscrito (`Successfully subscribed to RAN_FUNC_ID …`). Trocado por **poll no
+arquivo** (`grep -q` em laço até o evento OU o processo morrer): sem pipe, sem
+SIGPIPE, 100% event-driven.
+
+### Validação sem UE (SKIP_UE)
+
+`up_e2_lab_v2.sh` passou a repassar `SKIP_UE`; `e2_verify.sh` sobe com
+`SKIP_UE=1` por padrão. Sem o nrUE sobra 1 vCPU inteiro pro RIC+xApp (load < 2,
+SSH estável) — o E2 é gNB↔RIC e independe do UE. Para o lab COM user plane:
+`SKIP_UE=0` (mas sem rodar os 7× de xApp junto).
 
 ---
 

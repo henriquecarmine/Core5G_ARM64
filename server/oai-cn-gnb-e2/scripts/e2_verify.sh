@@ -14,7 +14,12 @@ log(){ echo "[$(date +%H:%M:%S)] $*" >> "$R"; }
 # Trunca o log do gNB pra só observar os eventos DESTE bring-up (evita match antigo)
 : > "$PROJECT_DIR/logs/gnb_oai.log" 2>/dev/null || true
 
-log "Subindo E2 lab (core v2 + RIC + gNB + nrUE)..."
+# Validação de xApp = sobe SEM nrUE (SKIP_UE=1) por padrão: no box de 2 vCPUs,
+# rodar gNB+nrUE em RFSIM satura os núcleos e o xApp estoura o timeout interno
+# do FlexRIC. Sem o UE sobra 1 vCPU p/ RIC+xApp e a validação fica determinística.
+# (E2 é gNB↔RIC, independe do UE.) Override: SKIP_UE=0 ./e2_verify.sh
+export SKIP_UE="${SKIP_UE:-1}"
+log "Subindo E2 lab (core v2 + RIC + gNB; SKIP_UE=$SKIP_UE)..."
 "$SCRIPT_DIR/up_e2_lab_v2.sh" >> "$R" 2>&1
 
 log "Aguardando EVENTO 'E2 SETUP RESPONSE' (condição, sem captura de PID)..."

@@ -868,14 +868,34 @@ nunca por duração fixa — determinístico. Pré-requisito checado por **estad
 nearRT-RIC` + `nr-softmodem`), não por `sleep`. CPU sob controle: cgroup com `CPUQuota`
 (`XAPP_CPU_QUOTA`, default `50%`) + `nice`.
 
-#### Restrição operacional do box (2 vCPUs) — achado importante
+#### Validação dos xApps (resultado real) e os 2 bugs que estavam no caminho
 
-O `nr-softmodem` e o `nr-uesoftmodem` em RFSIM fazem **busy-poll** (cada um satura ~1 vCPU
-→ load > 20). O binário do FlexRIC tem um **timeout interno compilado** ("Timeout waiting
-for Report. Connection lost with the RIC?"): com gNB+nrUE saturando os 2 vCPUs, o caminho
-INDICATION→Report fica faminto e o xApp **aborta** — **não é bug do nosso código**, é limite
-de hardware. Para validar os xApps de forma limpa, **derrube o nrUE** (libera 1 vCPU; o E2 é
-gNB↔RIC e não depende do UE): `sudo pkill -x nr-uesoftmodem` e rode `run_xapp.sh`.
+Rodando `e2_verify.sh` (sobe lab sem UE + 3 xApps 7× cada): **cust 7/7, kpm 7/7, rc 5/7**
+— os xApps conectam ao RIC e **subscrevem** as RAN functions (`Successfully subscribed to
+RAN_FUNC_ID …`). Até chegar nesse resultado, dois bugs (que NÃO eram "falta de CPU", como
+parecia no começo) precisaram ser corrigidos:
+
+1. **Plugins SM de arquitetura errada (crash do RIC).** O repo versionava
+   `flexric-lib/*.so` compilados para **x86-64**; num host **arm64** o `dlopen` do
+   `nearRT-RIC` falha (`load_plugin_ric: Assertion handle != NULL`). Pior: `sync-oai`
+   espalhava esses x86-64 por cima dos arm64 que o servidor tinha buildado. **Correção:**
+   os `.so` saíram do git (são artefatos de build, arch-específicos; ver `.gitignore`) e o
+   `up_flexric.sh` agora **detecta a arquitetura** e repovoa `flexric-lib/` do build tree
+   (`sync_flexric_lib.sh`) quando falta OU é de outro arch. Auto-curável.
+
+2. **Falso-negativo no `run_xapp.sh`.** Usava `tail -F --pid | grep -m1` com
+   `set -o pipefail`: quando o `grep -m1` casa o evento de sucesso e fecha o pipe, o `tail`
+   morre com SIGPIPE e o `pipefail` marcava o pipeline inteiro como falha — reportando
+   `❌ FALHA` mesmo com o xApp subscrito. **Correção:** trocado por **poll no arquivo**
+   (`grep -q` em laço até o evento OU o processo morrer), sem pipe, sem SIGPIPE.
+
+#### Restrição operacional do box (2 vCPUs)
+
+O `nr-softmodem` e o `nr-uesoftmodem` em RFSIM fazem **busy-poll** (cada um satura ~1 vCPU →
+load > 20), e aí o caminho INDICATION→Report do RIC pode estourar o timeout interno do
+FlexRIC. Por isso a validação sobe **sem o nrUE** (`SKIP_UE=1`, default no `e2_verify.sh`):
+o E2 é gNB↔RIC e não depende do UE, e sobra 1 vCPU inteiro pro RIC+xApp (load < 2). Para o
+lab completo COM user plane, suba normal (`SKIP_UE=0`) — mas não rode os 7× de xApp junto.
 
 > **Princípio do projeto: ZERO tempo, tudo sob controle.** Nada de `sleep`/timeout cego —
 > os scripts terminam por **evento/estado** (`grep -m1` em stream, `tail -F --pid`, poll de

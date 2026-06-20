@@ -42,10 +42,17 @@ else
 fi
 RUNPID=$!
 
-# Bloqueia ATÉ o evento de sucesso aparecer OU o xApp morrer (tail --pid encerra
-# junto com o processo). Sem sleep, sem timeout — puro evento.
-if tail -F --pid="$RUNPID" -n +1 "$OUT" 2>/dev/null | grep -m1 -E "$SUCCESS_RE"; then
+# Bloqueia ATÉ o evento de sucesso aparecer no arquivo OU o xApp morrer.
+# Poll no ARQUIVO (não via `tail|grep`): com `set -o pipefail`, o grep -m1 ao
+# casar fecha o pipe e o tail morre com SIGPIPE (141), o que o pipefail trataria
+# como FALHA mesmo tendo casado o evento — falso-negativo. O poll evita isso.
+while ! grep -qE "$SUCCESS_RE" "$OUT" 2>/dev/null; do
+    kill -0 "$RUNPID" 2>/dev/null || break   # xApp morreu antes do evento
+    sleep 0.3
+done
+if grep -qE "$SUCCESS_RE" "$OUT" 2>/dev/null; then
     echo ""
+    grep -m1 -E "$SUCCESS_RE" "$OUT" | sed 's/^/  → /'
     echo "✅ SUCESSO — evento de E2 confirmado (xApp encerrado imediatamente)."
     exit 0
 else

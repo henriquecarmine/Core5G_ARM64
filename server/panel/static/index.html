@@ -626,21 +626,60 @@ const ANSI_COLORS = {
   '90': 'var(--muted)', '37': 'var(--text)',
 };
 
-// Renderiza uma linha: se tiver ANSI, converte em <span> coloridos (HTML-escapado);
-// senão, cai no colorizador por conteúdo (lineColor) — mantém o comportamento antigo.
+// Colorimetria ISO por TOKEN: destaca métricas (throughput, latência, %),
+// estados (REGISTERED/CONNECTED/ATIVA…), severidades (ERROR/WARN/INFO/DEBUG) e
+// vocabulário 5G/O-RAN (NGAP, PFCP, GTP, PDU, E2, KPM…). Atua sobre texto JÁ
+// escapado; passada única (não aninha spans). Garante que nenhuma linha fique
+// "em branco" — sempre há valor/estado destacado.
+const TOKEN_RE = new RegExp([
+  '\\b\\d+(?:\\.\\d+)?\\s?(?:Mbits\\/sec|Gbits\\/sec|Kbits\\/sec|Mbps|Gbps|ms|dBm|MHz|GHz)\\b', // métricas c/ unidade
+  '\\d+(?:\\.\\d+)?%',                                                                          // percentuais
+  '(?:REGISTERED|CONNECTED|ATIVA|ATIVO|SUCCESS(?:FULLY)?|successful|established|HEALTHY|\\bUP\\b|\\bOK\\b|PASS|Aplicado|✓|✅)', // bom
+  '(?:ERROR|ERRO|FAIL(?:ED|OU)?|FALHA|FATAL|CRITICAL|EMERG|ALERT|REJECT|refused|denied|✗|❌)',  // ruim
+  '(?:WARN(?:ING)?|AVISO|degrad\\w*|jitter|retransmiss\\w*|packet loss|\\bloss\\b|\\bdelay\\b|Latência|\\bRTT\\b|netem|timeout)', // atenção
+  '(?:DEBUG|TRACE)\\b',                                                                          // ruído
+  '\\b(?:INFO|NOTICE)\\b',                                                                        // info
+  '(?:NGAP|PFCP|GTP-?U?|SCTP|NAS|SBI|PDU\\s?Session|Registration|Handover|Subscribed|SETUP|S-NSSAI|slice|IMSI|SUPI|\\bTAC\\b|PLMN|RAN_FUNC_ID|E2SM-\\w+|\\bE2\\b|\\bKPM\\b|\\bRC\\b|RRC|gNB|nearRT-RIC)', // protocolo/O-RAN
+].join('|'), 'gi');
+
+function tokenColor(t) {
+  if (/^0(?:\.0+)?%$/.test(t)) return 'var(--green)';                       // 0% (ex.: packet loss) = ótimo
+  if (/%$/.test(t)) return 'var(--yellow)';                                 // demais percentuais
+  if (/(?:Mbits|Gbits|Mbps|Gbps)/i.test(t)) return 'var(--green)';          // throughput
+  if (/(?:Kbits|ms|dBm)\b/i.test(t)) return 'var(--yellow)';                // latência/baixo
+  if (/(?:MHz|GHz)/i.test(t)) return 'var(--info)';                         // banda
+  if (/^(?:ERROR|ERRO|FAIL|FALHA|FATAL|CRITICAL|EMERG|ALERT|REJECT|refused|denied|✗|❌)/i.test(t)) return 'var(--red)';
+  if (/^(?:WARN|AVISO|degrad|jitter|retransmiss|packet|loss|delay|Latência|RTT|netem|timeout)/i.test(t)) return 'var(--yellow)';
+  if (/^(?:REGISTERED|CONNECTED|ATIV|SUCCESS|successful|established|HEALTHY|UP|OK|PASS|Aplicado|✓|✅)/i.test(t)) return 'var(--green)';
+  if (/^(?:DEBUG|TRACE)/i.test(t)) return '#5a6170';
+  if (/^(?:INFO|NOTICE)/i.test(t)) return 'var(--info)';
+  return 'var(--info)';                                                     // vocabulário de protocolo
+}
+function colorizeTokens(escaped) {
+  return escaped.replace(TOKEN_RE, t => `<span style="color:${tokenColor(t)}">${t}</span>`);
+}
+
+// Renderiza uma linha: aplica ANSI (cores explícitas dos scripts) E, nos trechos
+// sem cor ANSI, a colorimetria por token acima — então valores e estados sempre
+// se destacam, mesmo em logs crus de serviço.
 function renderLogLine(line) {
   const raw = line.replace(/\r/g, '');
   if (!/\x1b\[/.test(raw)) {
-    return { html: escHtml(raw), color: lineColor(raw) };
+    return { html: colorizeTokens(escHtml(raw)), color: lineColor(raw) };
   }
   let html = '', cur = null, bold = false, last = 0, m;
   const re = /\x1b\[([0-9;]*)m/g;
   const emit = (txt) => {
     if (!txt) return;
-    let style = '';
-    if (cur) style += 'color:' + cur + ';';
-    if (bold) style += 'font-weight:600;';
-    html += style ? '<span style="' + style + '">' + escHtml(txt) + '</span>' : escHtml(txt);
+    const esc = escHtml(txt);
+    if (cur) {
+      let style = 'color:' + cur + ';';
+      if (bold) style += 'font-weight:600;';
+      html += '<span style="' + style + '">' + esc + '</span>';
+    } else {
+      // sem cor ANSI no trecho → colore por token (ex.: o VALOR após um rótulo dim)
+      html += bold ? '<span style="font-weight:600">' + colorizeTokens(esc) + '</span>' : colorizeTokens(esc);
+    }
   };
   while ((m = re.exec(raw))) {
     emit(raw.slice(last, m.index));
@@ -866,6 +905,61 @@ function appendExplain(cmd) {
   output.scrollTop = output.scrollHeight;
 }
 
+// ===== Explicação didática NO FIM de cada log de serviço =====
+// Indexado pelo "papel" da NF (P1 e P2 compartilham); cada um: t=título,
+// d=o que é/o que o log mostra, w=o que observar.
+const LOG_INFO = {
+  amf: { t: 'AMF — Access & Mobility Management', d: 'Primeiro contato do UE com o core (N1/N2). O log mostra a sinalização <b>NGAP</b> com o gNB: NG Setup, Initial UE Message, autenticação e registro.', w: '“NG Setup … successful” e o registro do UE (Registration accept).' },
+  smf: { t: 'SMF — Session Management', d: 'Cria/gerencia a sessão PDU do UE e programa o UPF via <b>N4/PFCP</b>; atribui o IP do UE.', w: '“PFCP association” com o UPF e “PDU session established”.' },
+  upf: { t: 'UPF — User Plane Function', d: 'Encaminha o tráfego de dados do UE (<b>N3 GTP-U</b> ↔ <b>N6</b> internet). Programado pelo SMF via PFCP.', w: 'Associação PFCP e o caminho de dados (GTP-U) ativo.' },
+  ausf: { t: 'AUSF — Authentication Server', d: 'Valida as credenciais do UE no <b>5G-AKA</b>, a pedido do AMF, usando vetores do UDM.', w: 'Sucesso da autenticação (auth vector / confirmation).' },
+  udm: { t: 'UDM — Unified Data Management', d: 'Lógica de assinante (perfil, autenticação, slice) sobre o UDR. Consultado por AUSF/SMF.', w: 'Consultas de perfil/autenticação do AUSF e SMF.' },
+  udr: { t: 'UDR — Unified Data Repository', d: 'Camada de acesso aos dados do assinante no banco (MongoDB/MySQL).', w: 'Leituras/escritas de perfil do assinante.' },
+  nrf: { t: 'NRF — NF Repository Function', d: 'Catálogo central onde toda função de rede se <b>registra</b> e <b>descobre</b> as outras (SBI).', w: 'Os registros das NFs no boot e as descobertas (discovery).' },
+  scp: { t: 'SCP — Service Communication Proxy', d: 'Roteia as chamadas <b>SBI</b> (HTTP/2) entre as NFs sem cada uma saber o endereço da outra.', w: 'Roteamento de requisições entre NFs.' },
+  pcf: { t: 'PCF — Policy Control Function', d: 'Decide políticas de <b>QoS</b> e cobrança aplicadas às sessões.', w: 'Decisões de política para as sessões do UE.' },
+  bsf: { t: 'BSF — Binding Support Function', d: 'Ajuda o PCF a localizar qual sessão pertence a qual UE/endereço IP.', w: 'Bindings de sessão registrados.' },
+  nssf: { t: 'NSSF — Network Slice Selection', d: 'Escolhe a <b>network slice</b> (S-NSSAI) adequada para o UE no registro.', w: 'Seleção de slice solicitada pelo AMF.' },
+  mongodb: { t: 'MongoDB — banco de assinantes', d: 'Backend de dados do UDR/WebUI (Open5GS): IMSI, chaves, perfil, slice.', w: 'Conexões e queries do UDR.' },
+  mysql: { t: 'MySQL — banco de assinantes (OAI)', d: 'Backend de dados do UDR do OAI Core: assinantes e perfis.', w: 'Conexões do UDR (oai-udr).' },
+  dn: { t: 'DN — Data Network (internet simulada)', d: 'Destino N6 do UPF; roda o servidor <b>iperf3</b> usado nos testes de throughput.', w: 'O servidor iperf3 e o tráfego do UE saindo para a “internet”.' },
+  webui: { t: 'WebUI — admin de assinantes (Open5GS)', d: 'Interface web oficial do Open5GS para cadastrar/editar assinantes.', w: 'Acessos à UI e gravações no banco.' },
+  ueransim: { t: 'UERANSIM — gNB + UE simulados', d: 'Simula a estação rádio-base (gNB) e o celular (UE). Faz NG Setup (N2), registra o UE e abre a sessão PDU (uesimtun0).', w: '“NG Setup procedure is successful”, “Registration accept” e o IP em uesimtun0.' },
+  gnb: { t: 'gNB OAI (RFSIM, E2 agent)', d: 'gNB do OAI em modo RFSIM, com agente <b>E2</b>. Conecta ao near-RT RIC e expõe RAN Functions (KPM, RC, SMs).', w: '“E2 SETUP RESPONSE rx” e as RAN Functions registradas.' },
+  ric: { t: 'near-RT RIC (FlexRIC)', d: 'Controlador near-real-time O-RAN. Faz a terminação <b>E2</b>, lista os nós E2 conectados e recebe as assinaturas dos xApps (KPM/RC).', w: '“Connected E2 nodes = 1” e as assinaturas dos xApps.' },
+};
+function roleOfService(key) {
+  const k = key.toLowerCase();
+  if (k.includes('amf')) return 'amf';
+  if (k.includes('smf')) return 'smf';
+  if (k.includes('upf')) return 'upf';
+  if (k.includes('ausf')) return 'ausf';
+  if (k.includes('udm')) return 'udm';
+  if (k.includes('udr')) return 'udr';
+  if (k.includes('nrf')) return 'nrf';
+  if (k.includes('scp')) return 'scp';
+  if (k.includes('pcf')) return 'pcf';
+  if (k.includes('bsf')) return 'bsf';
+  if (k.includes('nssf')) return 'nssf';
+  if (k.includes('mongo')) return 'mongodb';
+  if (k.includes('mysql')) return 'mysql';
+  if (k.includes('dn')) return 'dn';
+  if (k.includes('webui')) return 'webui';
+  if (k.includes('ueransim')) return 'ueransim';
+  if (k.includes('gnb')) return 'gnb';
+  if (k.includes('ric')) return 'ric';
+  return null;
+}
+function appendLogExplain(svc) {
+  const e = LOG_INFO[roleOfService(svc)];
+  if (!e) return;
+  const div = document.createElement('div');
+  div.className = 'explain';
+  div.innerHTML = `<div class="ex-title">ℹ O que é este log — ${e.t}</div><ul><li>${e.d}</li></ul><div class="ex-concl">👀 Observe: ${e.w}</div>`;
+  output.appendChild(div);
+  output.scrollTop = output.scrollHeight;
+}
+
 // ===== Loader: nenhuma ação deixa a tela "morta" =====
 const topLoader = document.getElementById('top-loader');
 let _loaderN = 0;
@@ -962,12 +1056,16 @@ async function loadServices() {
     const d = await (await fetch('/api/services')).json();
     const sel = document.getElementById('log-service');
     sel.innerHTML = '';
+    if (!d.services || d.services.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = ''; opt.textContent = 'nenhum serviço no ar — ative um projeto';
+      sel.appendChild(opt);
+      return;
+    }
     d.services.forEach(s => {
       const opt = document.createElement('option');
-      opt.value = s;
-      const role = containerRole(s).short;
-      opt.textContent = role !== '—' ? (s + ' — ' + role) : s;
-      opt.title = containerRole(s).full;
+      opt.value = s.key;
+      opt.textContent = s.label;
       sel.appendChild(opt);
     });
   } catch {}
@@ -985,8 +1083,11 @@ async function startLogs() {
   const logsBtn = document.getElementById('logs-btn');
   loaderInc(); btnLoading(logsBtn, true);
   try {
+    const before = output.childElementCount;
     const resp = await fetch('/api/logs/' + encodeURIComponent(svc), { signal: logsAbort.signal });
     await streamToConsole(resp);
+    if (output.childElementCount === before) appendLine('(sem saída no momento para ' + svc + ')');
+    appendLogExplain(svc);          // explicação didática no FIM dos logs
     setStatus('ok', 'logs: ' + svc);
   } catch (e) {
     if (e.name !== 'AbortError') { appendLine('[erro: ' + e + ']'); setStatus('error', 'erro nos logs'); }

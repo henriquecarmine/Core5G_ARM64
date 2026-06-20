@@ -34,6 +34,7 @@ PATCH em correções pontuais.
 | 0.16.0 | 2026-06-20 | Loader em toda ação (barra global no topo + spinner por botão) + teste de fumaça visual headless |
 | 0.16.1 | 2026-06-20 | Topo mais compacto: "Containers" inline antes dos monitores; cards de projeto mais baixos; "Desligar tudo" virou o botão do card ativo (≈3 linhas ganhas) |
 | 0.16.2 | 2026-06-20 | Descrição curta de cada projeto ao lado do nome (P1: rede 5G fim-a-fim; P2: O-RAN RIC+xApps) |
+| 0.17.0 | 2026-06-20 | Logs coloridos ISO (por token, nada em branco) + explicação didática no fim de cada log; fix v1→v2 (logs do P2 saíam vazios); snapshot finito por container |
 
 ---
 

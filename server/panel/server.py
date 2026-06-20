@@ -671,9 +671,66 @@ def demo_e2e(request: Request) -> StreamingResponse:
     )
 
 
+# Fontes de log dos DOIS projetos, por NOME DE CONTAINER (estável, à prova do
+# descompasso v1/v2 que deixava o log do P2 em branco) + processos nativos por
+# arquivo. A aba de Logs lista só as fontes ATIVAS no momento.
+LOG_SOURCES: list[dict] = [
+    # Projeto 1 — Open5GS (5GC) + UERANSIM
+    {"key": "amf",     "label": "AMF · mobilidade (N1/N2 · NGAP)",   "container": "open5gs-amf-containerized"},
+    {"key": "smf",     "label": "SMF · sessão PDU (N4 · PFCP)",      "container": "open5gs-smf-containerized"},
+    {"key": "upf-a",   "label": "UPF-A · plano de dados (N3/N6)",    "container": "open5gs-upf-containerized-a"},
+    {"key": "upf-b",   "label": "UPF-B · plano de dados (backup)",   "container": "open5gs-upf-containerized-b"},
+    {"key": "ausf",    "label": "AUSF · autenticação (5G-AKA)",      "container": "open5gs-ausf-containerized"},
+    {"key": "udm",     "label": "UDM · perfil do assinante",        "container": "open5gs-udm-containerized"},
+    {"key": "udr",     "label": "UDR · repositório de dados",       "container": "open5gs-udr-containerized"},
+    {"key": "pcf",     "label": "PCF · política/QoS",               "container": "open5gs-pcf-containerized"},
+    {"key": "bsf",     "label": "BSF · binding de sessão",          "container": "open5gs-bsf-containerized"},
+    {"key": "nssf",    "label": "NSSF · seleção de slice",          "container": "open5gs-nssf-containerized"},
+    {"key": "nrf",     "label": "NRF · registro de NFs (SBI)",      "container": "open5gs-nrf-containerized"},
+    {"key": "scp",     "label": "SCP · proxy SBI",                  "container": "open5gs-scp-containerized"},
+    {"key": "mongodb", "label": "MongoDB · banco de assinantes",    "container": "open5gs-mongodb-containerized"},
+    {"key": "dn",      "label": "DN · internet/iperf3 (N6)",        "container": "open5gs-dn-containerized"},
+    {"key": "webui",   "label": "WebUI · admin de assinantes",      "container": "open5gs-webui-containerized"},
+    {"key": "ueransim","label": "UERANSIM · gNB + UE (RAN)",        "container": "ueransim"},
+    # Projeto 2 — OAI 5GC v2 (oai-cn5g-v2)
+    {"key": "oai-amf",   "label": "AMF (OAI) · mobilidade",         "container": "oai-amf"},
+    {"key": "oai-smf",   "label": "SMF (OAI) · sessão PDU",         "container": "oai-smf"},
+    {"key": "oai-upf",   "label": "UPF (OAI) · plano de dados",     "container": "oai-upf"},
+    {"key": "oai-ausf",  "label": "AUSF (OAI) · autenticação",      "container": "oai-ausf"},
+    {"key": "oai-udm",   "label": "UDM (OAI)",                      "container": "oai-udm"},
+    {"key": "oai-udr",   "label": "UDR (OAI)",                      "container": "oai-udr"},
+    {"key": "oai-nrf",   "label": "NRF (OAI) · registro de NFs",    "container": "oai-nrf"},
+    {"key": "oai-ext-dn","label": "DN externo (OAI) · iperf3",      "container": "oai-ext-dn"},
+    {"key": "mysql",     "label": "MySQL · assinantes (OAI)",       "container": "mysql"},
+    # Projeto 2 — processos nativos (host), por arquivo de log
+    {"key": "gnb", "label": "gNB (OAI RFSIM · E2 agent)", "file": "oai-cn-gnb-e2/logs/gnb_oai.log"},
+    {"key": "ric", "label": "near-RT RIC (FlexRIC)",      "file": "oai-cn-gnb-e2/logs/nearRT-RIC.log"},
+]
+
+
+def available_log_sources() -> list[dict]:
+    """Só as fontes que existem AGORA: container rodando ou arquivo não-vazio."""
+    running = running_container_names()
+    out = []
+    for s in LOG_SOURCES:
+        if "container" in s:
+            if s["container"] in running:
+                out.append(s)
+        else:
+            p = SERVER_DIR / s["file"]
+            try:
+                if p.exists() and p.stat().st_size > 0:
+                    out.append(s)
+            except OSError:
+                pass
+    return out
+
+
 @app.get("/api/services")
 def services_endpoint() -> JSONResponse:
-    return JSONResponse({"services": sorted(list_services().keys())})
+    return JSONResponse({"services": [
+        {"key": s["key"], "label": s["label"]} for s in available_log_sources()
+    ]})
 
 
 @app.get("/api/telemetry")
@@ -683,13 +740,22 @@ def telemetry() -> StreamingResponse:
 
 @app.get("/api/logs/{service}")
 def logs(service: str) -> StreamingResponse:
-    cwd = list_services().get(service)
-    if cwd is None:
-        return StreamingResponse(
-            iter([f"Serviço desconhecido: {service}\n"]), media_type="text/plain"
-        )
-    cmd = ["docker", "compose", "logs", "-f", "--timestamps", "--tail", "200", service]
-    return StreamingResponse(stream_command(cmd, cwd), media_type="text/plain")
+    """Snapshot (finito) das últimas linhas — encerra para o painel exibir a
+    explicação didática no fim. Container via `docker logs`; nativo via arquivo."""
+    src = next((s for s in LOG_SOURCES if s["key"] == service), None)
+    if src is None:
+        return StreamingResponse(iter([f"Serviço desconhecido: {service}\n"]), media_type="text/plain")
+    if "container" in src:
+        if src["container"] not in running_container_names():
+            return StreamingResponse(
+                iter([f"(container {src['container']} não está rodando — sem logs)\n"]),
+                media_type="text/plain",
+            )
+        cmd = ["docker", "logs", "--timestamps", "--tail", "300", src["container"]]
+        return StreamingResponse(stream_command(cmd, SERVER_DIR), media_type="text/plain")
+    lines = _tail_file(SERVER_DIR / src["file"], tail=300)
+    body = ("\n".join(lines) + "\n") if lines else f"(sem logs em {src['file']})\n"
+    return StreamingResponse(iter([body]), media_type="text/plain")
 
 
 @app.post("/api/subscriber")

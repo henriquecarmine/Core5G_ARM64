@@ -74,8 +74,9 @@
   .proj-card[data-proj-card="p2"] { --pc-color:var(--accent); }
   .proj-card.active { box-shadow:0 0 0 1px var(--green), 0 6px 18px rgba(0,0,0,.35); }
   .pc-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
-  .pc-title { display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; white-space:nowrap; }
-  .pc-title .pc-dot { width:9px; height:9px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:.2s; }
+  .pc-title { display:flex; align-items:baseline; gap:8px; font-size:12.5px; font-weight:600; white-space:nowrap; min-width:0; }
+  .pc-title .pc-dot { width:9px; height:9px; border-radius:50%; background:var(--muted); flex-shrink:0; align-self:center; transition:.2s; }
+  .pc-title .pc-desc { font-weight:normal; font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; }
   .proj-card.active .pc-dot { background:var(--green); box-shadow:0 0 6px var(--green); }
   .pc-activate { width:auto; margin:0; padding:3px 13px; font-size:11.5px; border-radius:20px; background:#262a32; color:var(--muted); border:1px solid var(--border); }
   .pc-activate:hover:not(:disabled) { border-color:var(--green); color:var(--text); }
@@ -322,7 +323,7 @@
 <div id="projects-bar">
   <div class="proj-card" data-proj-card="p1">
     <div class="pc-head">
-      <div class="pc-title"><span class="pc-dot"></span>Projeto 1 · Open5GS</div>
+      <div class="pc-title"><span class="pc-dot"></span>Projeto 1 · Open5GS<span class="pc-desc">rede 5G fim-a-fim (Core + RAN)</span></div>
       <button class="pc-activate" data-proj="p1" title="Sobe Open5GS + UERANSIM (desliga o Projeto 2)">ativar</button>
     </div>
     <div class="pc-servers">
@@ -338,7 +339,7 @@
   </div>
   <div class="proj-card" data-proj-card="p2">
     <div class="pc-head">
-      <div class="pc-title"><span class="pc-dot"></span>Projeto 2 · OAI/RIC</div>
+      <div class="pc-title"><span class="pc-dot"></span>Projeto 2 · OAI/RIC<span class="pc-desc">O-RAN · near-RT RIC + xApps (E2)</span></div>
       <button class="pc-activate" data-proj="p2" title="Sobe OAI 5GC + gNB + FlexRIC (desliga o Projeto 1)">ativar</button>
     </div>
     <div class="pc-servers">

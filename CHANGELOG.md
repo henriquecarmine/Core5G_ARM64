@@ -33,6 +33,7 @@ PATCH em correções pontuais.
 | 0.15.2 | 2026-06-20 | Guardrail definitivo via **cpuset**: lab fixado fora do CPU 0 (reservado p/ sistema). Painel ~600ms e SSH ~2.5s mesmo com gNB+nrUE no talo |
 | 0.16.0 | 2026-06-20 | Loader em toda ação (barra global no topo + spinner por botão) + teste de fumaça visual headless |
 | 0.16.1 | 2026-06-20 | Topo mais compacto: "Containers" inline antes dos monitores; cards de projeto mais baixos; "Desligar tudo" virou o botão do card ativo (≈3 linhas ganhas) |
+| 0.16.2 | 2026-06-20 | Descrição curta de cada projeto ao lado do nome (P1: rede 5G fim-a-fim; P2: O-RAN RIC+xApps) |
 
 ---
 

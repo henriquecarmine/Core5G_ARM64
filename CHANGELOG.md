@@ -26,6 +26,38 @@ PATCH em correções pontuais.
 | 0.12.2 | 2026-06-20 | Plano de usuário arm64 (OAI v2.2.1) + xApps event-driven (run_xapp/e2_verify/up_e2_lab_v2) |
 | 0.12.3 | 2026-06-20 | Trava de auth: guest vira opt-in (`.env` em branco ⇒ só admin/hcarmine entra) |
 | 0.12.4 | 2026-06-20 | xApps validados (cust/kpm 7/7, rc 5/7): fix plugins arch-aware + falso-negativo do run_xapp |
+| 0.13.0 | 2026-06-20 | Redesenho do painel: menu superior único (projeto ativo, seletor, ferramentas, telemetria) + sidebar lateral colapsável (hover-expand) por lab |
+
+---
+
+## [0.13.0] — 2026-06-20
+
+**Redesenho da navegação do painel** (`server/panel/static/index.html`),
+mantendo 100% da fiação de eventos/IDs — só mudou a estrutura visual.
+
+### Menu superior (top bar)
+- Tudo que é global subiu para um cabeçalho único, em duas faixas:
+  - **Faixa 1:** marca + **indicador de projeto ativo** (`#active-proj`, pílula
+    que mostra qual lab está no ar e acende em verde) + seletor de projeto
+    (P1/P2/Desligar) + ferramentas (UE Lab, Demonstração E2E, Topologia) + whoami.
+  - **Faixa 2:** telemetria (CPU/RAM/Swap/Disk) + `details` de containers.
+- Removida a antiga `action-bar` (ferramentas e seletor migraram pro topo).
+
+### Sidebar lateral colapsável
+- O antigo painel esquerdo (260px fixos) virou um **rail de 64px** que
+  **expande no hover** (288px) — "ao passar o mouse mostra tudo". Colapsado
+  mostra só ícones; expandido mostra rótulos, toggles e testes.
+- Conteúdo organizado **por lab**, com o grupo do projeto ativo realçado:
+  - **Projeto 1 · Open5GS** — toggles Core/RAN + testes do P1.
+  - **Projeto 2 · OAI/RIC** — toggles Core (OAI)/E2 lab + testes E2 do P2.
+  - **Logs & Diagnóstico** (comum) — filtro de logs do projeto ativo + visão O-RAN.
+- A sidebar expande **sobreposta** (não empurra o console, sem reflow).
+
+### Notas
+- `updateProjSelector` ganhou 2 efeitos de UI (badge do cabeçalho + highlight do
+  grupo na sidebar); a lógica de estado/telemetria é a mesma.
+- A UI de "menu superior" original (commit `adf8ad12`, de outra máquina) não
+  existe neste clone — esta é uma **reconstrução do zero**.
 
 ---
 

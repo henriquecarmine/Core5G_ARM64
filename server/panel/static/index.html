@@ -53,35 +53,39 @@
   #guest-banner { display:none; background:#4a2f0c; color:#ffb84d; padding:7px 24px; font-size:13px; }
 
   /* Telemetria — 2ª faixa do top bar */
-  #topbar-telemetry { padding:6px 24px; border-top:1px solid var(--border); background:#1a1d23; }
+  /* Containers vira um toggle inline ANTES dos monitores; a tabela abre em dropdown. */
+  #topbar-telemetry { display:flex; align-items:center; gap:22px; flex-wrap:wrap; padding:5px 24px; border-top:1px solid var(--border); background:#1a1d23; }
   #telemetry { display:flex; gap:20px; flex-wrap:wrap; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px; color:var(--muted); white-space:pre; }
   #telemetry span { color:var(--text); }
-  #tm-containers-wrap { margin-top:2px; }
-  #tm-containers-wrap summary { cursor:pointer; color:var(--muted); font-size:12px; padding:6px 0; }
-  #tm-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:8px; }
+  #tm-containers-wrap { order:-1; position:relative; }
+  #tm-containers-wrap summary { cursor:pointer; color:var(--muted); font-size:12px; padding:2px 0; white-space:nowrap; }
+  #tm-containers-wrap[open] > summary { color:var(--accent); }
+  #tm-table { position:absolute; top:100%; left:0; margin-top:5px; z-index:60; min-width:540px;
+              background:var(--panel); border:1px solid var(--border); border-radius:8px;
+              box-shadow:0 14px 34px rgba(0,0,0,.55); padding:6px 10px; max-height:60vh; overflow:auto;
+              border-collapse:collapse; font-size:12px; }
   #tm-table th { text-align:left; color:var(--muted); padding:4px 8px; border-bottom:1px solid var(--border); }
   #tm-table td { padding:4px 8px; border-bottom:1px solid var(--border); }
 
   /* ===== Faixa de projetos + servidores (topo) ===== */
   #projects-bar { display:flex; gap:14px; align-items:stretch; padding:12px 24px; background:#1a1d23; border-bottom:1px solid var(--border); }
-  .proj-card { flex:1; min-width:0; background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--pc-color,var(--border)); border-radius:10px; padding:10px 14px; transition:box-shadow .18s; }
+  .proj-card { flex:1; min-width:0; background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--pc-color,var(--border)); border-radius:10px; padding:7px 12px; transition:box-shadow .18s; }
   .proj-card[data-proj-card="p1"] { --pc-color:var(--info); }
   .proj-card[data-proj-card="p2"] { --pc-color:var(--accent); }
   .proj-card.active { box-shadow:0 0 0 1px var(--green), 0 6px 18px rgba(0,0,0,.35); }
-  .pc-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px; }
-  .pc-title { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; white-space:nowrap; }
+  .pc-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
+  .pc-title { display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; white-space:nowrap; }
   .pc-title .pc-dot { width:9px; height:9px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:.2s; }
   .proj-card.active .pc-dot { background:var(--green); box-shadow:0 0 6px var(--green); }
-  .pc-activate { width:auto; margin:0; padding:4px 13px; font-size:11.5px; border-radius:20px; background:#262a32; color:var(--muted); border:1px solid var(--border); }
+  .pc-activate { width:auto; margin:0; padding:3px 13px; font-size:11.5px; border-radius:20px; background:#262a32; color:var(--muted); border:1px solid var(--border); }
   .pc-activate:hover:not(:disabled) { border-color:var(--green); color:var(--text); }
-  .proj-card.active .pc-activate { background:var(--green); border-color:var(--green); color:#fff; }
+  /* No card ATIVO o botão vira "desligar" (some o "Desligar tudo" separado). */
+  .proj-card.active .pc-activate { background:transparent; border-color:var(--red); color:#ff8787; }
+  .proj-card.active .pc-activate:hover:not(:disabled) { background:var(--red); color:#fff; }
   .pc-servers { display:flex; gap:8px; }
-  /* Servidor = chip de comando (reaproveita .toggle-btn) */
-  .pc-servers .toggle-btn { flex:1; width:auto; margin:0; padding:7px 11px; border-width:1.5px; gap:2px; }
-  .pc-servers .toggle-sub { font-size:9.5px; }
-  #proj-off-btn { width:auto; margin:0; align-self:center; padding:8px 14px; font-size:12px; color:var(--muted); border:1px solid var(--border); background:#1b1e24; border-radius:8px; white-space:nowrap; }
-  #proj-off-btn:hover:not(:disabled) { border-color:var(--red); color:var(--red); }
-  #proj-off-btn.active { border-color:var(--red); color:var(--red); }
+  /* Servidor = chip de comando (reaproveita .toggle-btn), 1 linha (descrição vai no title) */
+  .pc-servers .toggle-btn { flex:1; width:auto; margin:0; padding:6px 11px; border-width:1.5px; }
+  .pc-servers .toggle-sub { display:none; }
 
   /* Layout — rail de ferramentas (do projeto ativo) + console */
   main { display:grid; grid-template-columns:230px 1fr; gap:16px; padding:16px 24px; flex:1; min-height:0; }
@@ -322,11 +326,11 @@
       <button class="pc-activate" data-proj="p1" title="Sobe Open5GS + UERANSIM (desliga o Projeto 2)">ativar</button>
     </div>
     <div class="pc-servers">
-      <button class="toggle-btn" data-toggle="p1-core" data-up="up-core" data-down="down-core" data-label="Core">
+      <button class="toggle-btn" data-toggle="p1-core" data-up="up-core" data-down="down-core" data-label="Core" title="Core Open5GS — AMF · SMF · UPF · AUSF · UDM/UDR · NRF">
         <div class="toggle-main"><span>Core</span><span class="toggle-dot"></span></div>
         <div class="toggle-sub">AMF·SMF·UPF·AUSF·UDM·NRF</div>
       </button>
-      <button class="toggle-btn" data-toggle="p1-ran" data-up="up-ran" data-down="down-ran" data-label="RAN">
+      <button class="toggle-btn" data-toggle="p1-ran" data-up="up-ran" data-down="down-ran" data-label="RAN" title="RAN — UERANSIM gNB + UE simulados (N2/N3)">
         <div class="toggle-main"><span>RAN</span><span class="toggle-dot"></span></div>
         <div class="toggle-sub">UERANSIM gNB+UE (N2/N3)</div>
       </button>
@@ -338,17 +342,16 @@
       <button class="pc-activate" data-proj="p2" title="Sobe OAI 5GC + gNB + FlexRIC (desliga o Projeto 1)">ativar</button>
     </div>
     <div class="pc-servers">
-      <button class="toggle-btn" data-toggle="p2-core" data-up="p2-up-core" data-down="p2-down-core" data-label="Core (OAI)">
+      <button class="toggle-btn" data-toggle="p2-core" data-up="p2-up-core" data-down="p2-down-core" data-label="Core (OAI)" title="Core OAI 5GC v2 — AMF/SMF/UPF (oai-cn5g-v2)">
         <div class="toggle-main"><span>Core (OAI)</span><span class="toggle-dot"></span></div>
         <div class="toggle-sub">OAI 5GC v2 (AMF/SMF/UPF)</div>
       </button>
-      <button class="toggle-btn" data-toggle="p2-e2lab" data-up="p2-up-e2-lab" data-down="p2-down-e2-lab" data-label="E2 lab">
+      <button class="toggle-btn" data-toggle="p2-e2lab" data-up="p2-up-e2-lab" data-down="p2-down-e2-lab" data-label="E2 lab" title="E2 lab — gNB RFSIM + E2 agent + FlexRIC near-RT RIC + xApps">
         <div class="toggle-main"><span>E2 lab</span><span class="toggle-dot"></span></div>
         <div class="toggle-sub">gNB RFSIM + FlexRIC + xApps</div>
       </button>
     </div>
   </div>
-  <button id="proj-off-btn" data-proj="off" title="Desliga os dois projetos">⏻ Desligar tudo</button>
 </div>
 
 <div id="info-modal-overlay">
@@ -1509,15 +1512,19 @@ const PROJ_INFO = {
          doneOk: '✓ Tudo desligado.', },
 };
 projButtons.forEach(b => b.addEventListener('click', () => {
-  if (isGuest || _opBusy || b.classList.contains('active')) return;
-  const proj = b.dataset.proj, info = PROJ_INFO[proj];
+  if (isGuest || _opBusy) return;
+  // Card ATIVO → desliga; card inativo → ativa aquele projeto (exclusivo).
+  const proj = b.classList.contains('active') ? 'off' : b.dataset.proj;
+  const info = PROJ_INFO[proj];
   openOperation({
     endpoint: '/api/switch/' + proj,
     title: info.title, sub: info.sub,
-    spinnerLabel: 'Alternando…',
-    confirm: true, confirmLabel: 'Confirmar troca de projeto?', confirmDetail: info.confirmDetail,
+    spinnerLabel: proj === 'off' ? 'Desligando…' : 'Alternando…',
+    confirm: true,
+    confirmLabel: proj === 'off' ? 'Confirmar desligar?' : 'Confirmar troca de projeto?',
+    confirmDetail: info.confirmDetail,
     doneOk: info.doneOk,
-    doneFail: '✕ A troca não concluiu — veja o passo que falhou acima.',
+    doneFail: '✕ A operação não concluiu — veja o passo que falhou acima.',
   });
 }));
 function setSelectorEnabled(on) {
@@ -1531,7 +1538,11 @@ function updateProjSelector(groups) {
   const p1 = groups['p1-core'] !== 'off' || groups['p1-ran'] !== 'off';
   const p2 = groups['p2-core'] !== 'off' || groups['p2-e2lab'] !== 'off';
   const active = p2 ? 'p2' : p1 ? 'p1' : 'off';
-  projButtons.forEach(b => b.classList.toggle('active', b.dataset.proj === active && !_opBusy));
+  projButtons.forEach(b => {
+    const on = b.dataset.proj === active && !_opBusy;
+    b.classList.toggle('active', on);
+    b.textContent = on ? 'desligar' : 'ativar';   // card ativo: botão vira "desligar"
+  });
   // Topo: realça o card do projeto ativo.
   document.querySelectorAll('.proj-card[data-proj-card]').forEach(c => c.classList.toggle('active', c.dataset.projCard === active));
   _activeProj = active;

@@ -31,6 +31,8 @@ PATCH em correções pontuais.
 | 0.15.0 | 2026-06-20 | Testes do roteiro do professor (NG Setup/Registro/Coerência no P1 + KPM com tráfego no P2) + topologia POR PROJETO (cria a do P1 Open5GS) |
 | 0.15.1 | 2026-06-20 | Guardrails de CPU (cgroup v2): lab limitado a 90% dos 2 vcores + ssh/docker/painel/caddy com prioridade máxima — o SSH não cai mais sob carga |
 | 0.15.2 | 2026-06-20 | Guardrail definitivo via **cpuset**: lab fixado fora do CPU 0 (reservado p/ sistema). Painel ~600ms e SSH ~2.5s mesmo com gNB+nrUE no talo |
+| 0.16.0 | 2026-06-20 | Loader em toda ação (barra global no topo + spinner por botão) + teste de fumaça visual headless |
+| 0.16.1 | 2026-06-20 | Topo mais compacto: "Containers" inline antes dos monitores; cards de projeto mais baixos; "Desligar tudo" virou o botão do card ativo (≈3 linhas ganhas) |
 
 ---
 

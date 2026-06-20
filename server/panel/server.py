@@ -128,6 +128,10 @@ COMMANDS: dict[str, dict] = {
     "test-system-status": {"cmd": ["./scripts/test-system-status.sh"], "cwd": SERVER_DIR},
     "test-ue-connection": {"cmd": ["./scripts/test_ue_connection.sh"], "cwd": SERVER_DIR},
     "test-upf-failover": {"cmd": ["./scripts/test_upf_failover.sh"], "cwd": SERVER_DIR},
+    # Testes do roteiro do professor (aula01 — fluxo de registro / checklist):
+    "test-ng-setup": {"cmd": ["./scripts/test_ng_setup.sh"], "cwd": SERVER_DIR},
+    "test-registration": {"cmd": ["./scripts/test_registration.sh"], "cwd": SERVER_DIR},
+    "test-config-coherence": {"cmd": ["./scripts/test_config_coherence.sh"], "cwd": SERVER_DIR},
     # Projeto 2 usa o core OAI v2 (oai-cn5g-v2, v2.2.1). Os scripts v1
     # (up_core.sh/down_core.sh → oai-cn5g-fed) NÃO mexem nos containers v2 que
     # de fato rodam, por isso o "desligar" não obedecia. Apontar para o v2:
@@ -138,6 +142,9 @@ COMMANDS: dict[str, dict] = {
     "p2-test-e2-sm": {"cmd": ["./scripts/test_e2_sm.sh", "all"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-test-e2-kpm": {"cmd": ["./scripts/test_e2_kpm.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-test-e2-rc": {"cmd": ["./scripts/test_e2_rc_attach.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    # Variante KPM com tráfego (aula04, slide 43): ping ao DN sobe o throughput
+    # medido nas indicações E2SM-KPM.
+    "p2-test-e2-kpm-traffic": {"cmd": ["bash", "-c", "KPM_TRAFFIC=1 ./scripts/test_e2_kpm.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
 }
 
 _VALID_DISTANCES = {"none", "100m", "500m", "1km", "3km", "off"}
@@ -548,11 +555,13 @@ def topology_gnb_stats() -> JSONResponse:
 
 
 @app.get("/api/topology")
-def topology_endpoint() -> JSONResponse:
-    """Devolve a topologia (openran-topology.json) enriquecida com o status
-    ao vivo de cada nó — base dos modos visual e de troubleshooting."""
+def topology_endpoint(proj: str = "p2") -> JSONResponse:
+    """Devolve a topologia do projeto pedido (?proj=p1|p2) enriquecida com o
+    status ao vivo de cada nó. Padrão p2 (compat: openran-topology.json é a do
+    Projeto 2)."""
+    fname = "openran-topology-p1.json" if proj == "p1" else "openran-topology.json"
     try:
-        data = json.loads((STATIC_DIR / "openran-topology.json").read_text())
+        data = json.loads((STATIC_DIR / fname).read_text())
     except (OSError, json.JSONDecodeError) as e:
         raise HTTPException(500, f"Falha ao ler topologia: {e}")
     data["live_status"] = topology_status(data.get("nodes", []))

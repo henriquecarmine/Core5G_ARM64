@@ -28,6 +28,33 @@ PATCH em correções pontuais.
 | 0.12.4 | 2026-06-20 | xApps validados (cust/kpm 7/7, rc 5/7): fix plugins arch-aware + falso-negativo do run_xapp |
 | 0.13.0 | 2026-06-20 | Redesenho do painel: menu superior único (projeto ativo, seletor, ferramentas, telemetria) + sidebar lateral colapsável (hover-expand) por lab |
 | 0.14.0 | 2026-06-20 | Fix v2 do ativar/desligar (P2) + reorganização: projetos+servidores no topo, ferramentas POR PROJETO na lateral, guarda de dependência (RAN só com Core) |
+| 0.15.0 | 2026-06-20 | Testes do roteiro do professor (NG Setup/Registro/Coerência no P1 + KPM com tráfego no P2) + topologia POR PROJETO (cria a do P1 Open5GS) |
+
+---
+
+## [0.15.0] — 2026-06-20
+
+Conteúdo dos labs alinhado aos **PDFs do professor** + topologia por projeto.
+
+### Testes novos (a partir dos exercícios das aulas)
+- **Projeto 1** (aula01 — "fluxo de registro" / checklist), em `server/scripts/`:
+  - `test_ng_setup.sh` — confirma o NG Setup (N2): `NG Setup procedure is
+    successful` no gNB + atividade NGAP no AMF.
+  - `test_registration.sh` — Registration accept, estado `REGISTERED`, sessão
+    PDU (IP em `uesimtun0`) e sinalização NAS no AMF.
+  - `test_config_coherence.sh` — compara PLMN/SST/APN entre `gnb.yaml` e
+    `ue.yaml` (divergência = causa comum de "N2 OK mas UE não conecta").
+  - Entram no seletor "Testes do Projeto 1".
+- **Projeto 2** (aula04, slide 43): botão **E2SM-KPM (com tráfego)**
+  (`KPM_TRAFFIC=1`, ping ao DN sobe o throughput medido).
+
+### Topologia por projeto
+- `/api/topology?proj=p1|p2` serve a topologia certa (status ao vivo por nó).
+- Criada `openran-topology-p1.json` (Open5GS 5GC + UERANSIM, 19 nós: AMF, SMF,
+  UPF-A/B, AUSF, UDM/UDR, PCF, BSF, NSSF, NRF, SCP, Mongo, DN, WebUI + gNB/UE).
+  A `openran-topology.json` permanece como a do Projeto 2.
+- `topology.html` lê `?proj`, ajusta título e atualiza o status ao vivo do
+  projeto certo. Os links da lateral já apontam para `/topology?proj=…`.
 
 ---
 

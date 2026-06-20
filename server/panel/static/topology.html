@@ -134,7 +134,7 @@
 </head>
 <body class="mode-tecnico">
 <header>
-  <h1>Core5G<b>_ARM64</b> · Topologia</h1>
+  <h1>Core5G<b>_ARM64</b> · Topologia <span id="topo-proj" style="color:var(--muted);font-weight:400;font-size:14px"></span></h1>
   <a class="btn" href="/" title="Voltar ao painel">
     <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> Painel
   </a>
@@ -215,6 +215,10 @@
 // ============================================================================
 const NODE_W = 184, NODE_H = 66, SVGNS = "http://www.w3.org/2000/svg";
 let TOPO = null, currentMode = "tecnico", logsTimer = null, gnbStats = null, tourLayer = null;
+// Projeto selecionado via ?proj=p1|p2 (padrão p2).
+const PROJ = (new URLSearchParams(location.search).get("proj") === "p1") ? "p1" : "p2";
+const PROJ_TITLE = PROJ === "p1" ? "Projeto 1 · Open5GS + UERANSIM" : "Projeto 2 · OAI + gNB + FlexRIC";
+document.getElementById("topo-proj").textContent = PROJ_TITLE;
 const svg = document.getElementById("diagram");
 const FLOW_IFACES = new Set(["RF","N2","E2","E42","N3","N4","N6"]);
 const SECONDARY = new Set(["SBI","Nausf","Nsmf","Nudm","Nudr","SQL","Telemetria"]);
@@ -417,13 +421,13 @@ async function loadGnbStats(){
 }
 
 async function load(){
-  const res=await fetch("/api/topology",{cache:"no-store"});
+  const res=await fetch("/api/topology?proj="+PROJ,{cache:"no-store"});
   if(res.status===401){ window.location.href="/login"; return; }
   TOPO=await res.json(); await loadGnbStats(); fit(); render(); renderLegend();
 }
 load();
 // status vivo + métrica do gNB a cada 10s
-setInterval(async()=>{ try{ const r=await fetch("/api/topology",{cache:"no-store"});
+setInterval(async()=>{ try{ const r=await fetch("/api/topology?proj="+PROJ,{cache:"no-store"});
   if(r.ok){ const d=await r.json(); TOPO.live_status=d.live_status; await loadGnbStats(); render(); } }catch(e){} },10000);
 </script>
 </body>

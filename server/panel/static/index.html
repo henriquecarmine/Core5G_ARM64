@@ -392,6 +392,9 @@
           <button class="test-p1" data-cmd="status">Status / Healthcheck</button>
           <select id="diag-test-select" class="test-p1">
             <option value="test-system-status">Status detalhado de todos os NFs</option>
+            <option value="test-ng-setup">NG Setup (N2 · gNB ↔ AMF)</option>
+            <option value="test-registration">Registro do UE (N1/NAS)</option>
+            <option value="test-config-coherence">Coerência de config (gNB ↔ UE)</option>
             <option value="test-ue-connection">Conectividade do UE (E2E)</option>
             <option value="test-upf-failover">Failover UPF-A / UPF-B</option>
           </select>
@@ -410,6 +413,7 @@
           <div class="rail-group-label">Testes · Projeto 2</div>
           <button class="test-p2" data-cmd="p2-test-e2-sm">Testar E2 SM (all)</button>
           <button class="test-p2" data-cmd="p2-test-e2-kpm">Testar E2SM-KPM</button>
+          <button class="test-p2" data-cmd="p2-test-e2-kpm-traffic">Testar E2SM-KPM (com tráfego)</button>
           <button class="test-p2" data-cmd="p2-test-e2-rc">Testar E2SM-RC (attach)</button>
           <div class="lock-note">Ative o Projeto 2 no topo para rodar estes testes.</div>
         </div>

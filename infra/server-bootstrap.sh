@@ -189,20 +189,27 @@ echo "=========================================="
 echo "6/6 - Guardrails de CPU (protege o box de 2 vCPUs)"
 echo "=========================================="
 # Defesa em profundidade (cgroup v2), para o lab E2 nunca derrubar o sistema:
-#  - oai-lab.slice: teto AGREGADO de 180% (= 90% dos 2 vcores) para gNB+UE+xApp,
-#    garantindo >=10% (~0.2 core) sempre livre para o sistema.
-#  - ssh/docker/painel/caddy com CPUWeight máximo: vencem a disputa de CPU, então
-#    o SSH não cai mesmo se o lab tentar estourar.
+#  - oai-lab.slice com AllowedCPUs: FIXA o lab (gNB+UE+xApp) nos cores >= 1,
+#    RESERVANDO o CPU 0 inteiro para o sistema. Partição DURA (cpuset) — é o que
+#    funciona neste kernel, onde CPUQuota/CFS-bandwidth NÃO é enforçado (cpu.max
+#    aceito mas ignorado). Resultado medido: painel ~600ms e SSH ~2.5s mesmo com
+#    gNB+nrUE no talo (antes: SSH caía / 8s+).
+#  - ssh/docker/painel/caddy com CPUWeight máximo: prioridade no CPU 0.
+#  - CPUQuota/MemoryHigh ficam como rede de segurança (atuam em kernels com CFS
+#    bandwidth; aqui são inócuos, mas não atrapalham).
 # Recuperação: remova /etc/systemd/system/oai-lab.slice e os
 #   /etc/systemd/system/<svc>.service.d/cpu-guardrail.conf e rode daemon-reload.
-sudo tee /etc/systemd/system/oai-lab.slice >/dev/null <<'SLICE'
+# Reserva o CPU 0 p/ o sistema; lab vai p/ os demais (em 2 vCPUs = só o CPU 1).
+LAB_CPUS="1"; [ "$(nproc)" -ge 3 ] && LAB_CPUS="1-$(($(nproc)-1))"
+sudo tee /etc/systemd/system/oai-lab.slice >/dev/null <<SLICE
 [Unit]
-Description=OAI E2 lab (gNB/UE/xApp) - CPU/mem limitados p/ proteger o box de 2 vCPUs
+Description=OAI E2 lab (gNB/UE/xApp) - fixado fora do CPU 0 p/ proteger o box
 Before=slices.target
 
 [Slice]
 CPUAccounting=yes
-CPUQuota=180%
+AllowedCPUs=${LAB_CPUS}
+CPUQuota=150%
 CPUWeight=15
 MemoryAccounting=yes
 MemoryHigh=2.5G
@@ -219,11 +226,12 @@ GUARD
 done
 sudo systemctl daemon-reload
 # Aplica ao vivo (sem reiniciar — não derruba a sessão SSH atual) via --runtime;
-# o drop-in acima garante a persistência através de reboots.
+# os drop-ins/unit acima garantem a persistência através de reboots.
+sudo systemctl set-property --runtime oai-lab.slice "AllowedCPUs=${LAB_CPUS}" 2>/dev/null || true
 for svc in ssh docker core5g-panel caddy; do
     sudo systemctl set-property --runtime "${svc}.service" CPUWeight=10000 2>/dev/null || true
 done
-echo "Guardrails: oai-lab.slice (CPUQuota=180%) + ssh/docker/painel/caddy CPUWeight=10000."
+echo "Guardrails: oai-lab.slice fixada nos CPUs ${LAB_CPUS} (CPU 0 reservado p/ sistema) + ssh/docker/painel/caddy CPUWeight=10000."
 
 echo ""
 echo "=========================================="

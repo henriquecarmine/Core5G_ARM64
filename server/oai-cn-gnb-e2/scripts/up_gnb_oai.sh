@@ -38,7 +38,10 @@ if command -v systemd-run >/dev/null 2>&1; then
     # --slice=oai-lab.slice: teto AGREGADO de 180% (90% dos 2 vcores) p/ todo o lab;
     # mesmo que gNB+UE+xApp queiram mais, a slice os limita JUNTOS, deixando CPU
     # livre p/ o sistema (ver guardrails em infra/server-bootstrap.sh).
-    CAP_GNB=(systemd-run --scope -q --unit=oai-gnb --slice=oai-lab.slice -p "CPUQuota=${GNB_CPUQUOTA}" -p "CPUWeight=20" nice -n "${RAN_NICE}")
+    # Dentro do teto da slice, o gNB tem peso MAIOR (60) que o nrUE (20): o gNB
+    # RFSIM precisa de ~1 core p/ não quebrar o timing do E2; o UE fica com a
+    # sobra. Assim o lab cabe em 150% sem estrangular o gNB.
+    CAP_GNB=(systemd-run --scope -q --unit=oai-gnb --slice=oai-lab.slice -p "CPUQuota=${GNB_CPUQUOTA}" -p "CPUWeight=60" nice -n "${RAN_NICE}")
     CAP_UE=(systemd-run --scope -q --unit=oai-nrue --slice=oai-lab.slice -p "CPUQuota=${UE_CPUQUOTA}" -p "CPUWeight=20" nice -n "${RAN_NICE}")
 else
     CAP_GNB=(nice -n "${RAN_NICE}")

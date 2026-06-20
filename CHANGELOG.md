@@ -30,6 +30,39 @@ PATCH em correções pontuais.
 | 0.14.0 | 2026-06-20 | Fix v2 do ativar/desligar (P2) + reorganização: projetos+servidores no topo, ferramentas POR PROJETO na lateral, guarda de dependência (RAN só com Core) |
 | 0.15.0 | 2026-06-20 | Testes do roteiro do professor (NG Setup/Registro/Coerência no P1 + KPM com tráfego no P2) + topologia POR PROJETO (cria a do P1 Open5GS) |
 | 0.15.1 | 2026-06-20 | Guardrails de CPU (cgroup v2): lab limitado a 90% dos 2 vcores + ssh/docker/painel/caddy com prioridade máxima — o SSH não cai mais sob carga |
+| 0.15.2 | 2026-06-20 | Guardrail definitivo via **cpuset**: lab fixado fora do CPU 0 (reservado p/ sistema). Painel ~600ms e SSH ~2.5s mesmo com gNB+nrUE no talo |
+
+---
+
+## [0.15.2] — 2026-06-20
+
+**Correção do mecanismo do guardrail — agora a perfeição é medida.**
+
+Ao medir a 0.15.1 sob carga, descobri que **`CPUQuota`/`cpu.max` (CFS bandwidth)
+NÃO é enforçado neste kernel** (ARM/Graviton): forçar `cpu.max=100%` na slice
+deixava o uso em >200% com `nr_throttled=0`. O teto nunca "mordia" — só o
+`CPUWeight` funcionava (por isso o SSH sobrevivia, mas lento ~8s).
+
+### Solução que funciona: cpuset (partição dura de núcleo)
+- `oai-lab.slice` agora usa **`AllowedCPUs`** (cgroup v2 cpuset) para **fixar o
+  lab fora do CPU 0** — em 2 vCPUs, o lab roda só no CPU 1 e o **CPU 0 fica
+  inteiro reservado para o sistema** (ssh, docker, painel, Caddy). Independe de
+  CFS bandwidth → funciona neste kernel.
+- `CPUQuota=150%`/`MemoryHigh` ficam como rede de segurança (atuam onde CFS
+  bandwidth existe; aqui são inócuos).
+- `CPUWeight=10000` em ssh/docker/painel/caddy mantido (prioridade no CPU 0).
+
+### Resultado medido (com gNB + nrUE no talo, o caso que travava tudo)
+| Métrica | 0.15.1 (CPUQuota) | 0.15.2 (cpuset) |
+|---|---|---|
+| Painel (curl HTTPS) | lento/instável | **~600 ms** |
+| SSH (conexão nova) | 6–9 s | **~2.5 s** |
+| E2 SETUP do gNB | ok | **ok** (lab cabe em 1 core) |
+
+- Aplicado por `infra/server-bootstrap.sh` (idempotente; reserva o CPU 0 mesmo
+  se a instância tiver mais cores: `AllowedCPUs=1-(N-1)`).
+- Recuperação: remover `oai-lab.slice` + drop-ins `*.service.d/cpu-guardrail.conf`
+  + `systemctl daemon-reload`.
 
 ---
 

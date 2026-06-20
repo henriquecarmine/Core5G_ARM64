@@ -29,7 +29,8 @@ down_p1() {
 down_p2() {
     phase "Desligando Projeto 2 (gNB/RIC + OAI Core)…"
     ( cd "$P2_DIR" && ./scripts/down_e2_lab.sh ) 2>&1 || true
-    ( cd "$P2_DIR" && ./scripts/down_core.sh ) 2>&1 || true
+    # Core OAI é o v2 (oai-cn5g-v2); down_core.sh v1 não para os containers v2.
+    ( cd "$P2_DIR/oai-cn5g-v2" && ./down_core_v2.sh ) 2>&1 || true
     emit ok "Projeto 2 desligado" "gNB, near-RT RIC e OAI Core parados."
 }
 
@@ -53,7 +54,8 @@ case "$TARGET" in
     p2)
         down_p1
         phase "Subindo OAI Core + near-RT RIC + gNB (Projeto 2)…"
-        if ( cd "$P2_DIR" && ./scripts/up_e2_lab.sh ) 2>&1; then
+        # up_e2_lab_v2.sh garante o core v2 (up_core_v2.sh) e sobe RIC+gNB.
+        if ( cd "$P2_DIR" && ./scripts/up_e2_lab_v2.sh ) 2>&1; then
             emit ok "Projeto 2 no ar" "OAI 5GC + gNB (E2 agent) + FlexRIC near-RT RIC prontos."
         else
             emit fail "Projeto 2" "Falha ao subir o lab E2 do Projeto 2."; echo "DONE|fail"; exit 0

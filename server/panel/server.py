@@ -128,9 +128,12 @@ COMMANDS: dict[str, dict] = {
     "test-system-status": {"cmd": ["./scripts/test-system-status.sh"], "cwd": SERVER_DIR},
     "test-ue-connection": {"cmd": ["./scripts/test_ue_connection.sh"], "cwd": SERVER_DIR},
     "test-upf-failover": {"cmd": ["./scripts/test_upf_failover.sh"], "cwd": SERVER_DIR},
-    "p2-up-core": {"cmd": ["./scripts/up_core.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
-    "p2-down-core": {"cmd": ["./scripts/down_core.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
-    "p2-up-e2-lab": {"cmd": ["./scripts/up_e2_lab.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    # Projeto 2 usa o core OAI v2 (oai-cn5g-v2, v2.2.1). Os scripts v1
+    # (up_core.sh/down_core.sh → oai-cn5g-fed) NÃO mexem nos containers v2 que
+    # de fato rodam, por isso o "desligar" não obedecia. Apontar para o v2:
+    "p2-up-core": {"cmd": ["./up_core_v2.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2" / "oai-cn5g-v2"},
+    "p2-down-core": {"cmd": ["./down_core_v2.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2" / "oai-cn5g-v2"},
+    "p2-up-e2-lab": {"cmd": ["./scripts/up_e2_lab_v2.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-down-e2-lab": {"cmd": ["./scripts/down_e2_lab.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-test-e2-sm": {"cmd": ["./scripts/test_e2_sm.sh", "all"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-test-e2-kpm": {"cmd": ["./scripts/test_e2_kpm.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},

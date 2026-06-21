@@ -232,6 +232,6 @@ tem um custo mensal real, e hoje sai inteiro por minha conta.
 
 Se o projeto te foi útil, **qualquer valor ajuda a manter o servidor ligado** 🙏
 
-> **PIX:** `henrique@titnnium.us` (chave e-mail)
+> **PIX:** `henrique@titannium.us` (chave e-mail)
 
 Obrigado de coração — cada ajuda mantém o lab disponível para a próxima pessoa.

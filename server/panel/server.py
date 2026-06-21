@@ -199,17 +199,51 @@ class LiveBuffer:
 
 LIVE = LiveBuffer()
 
+# Arquivo persistente de Resultados (Fase 2): cada execução do Professor é
+# salva em disco e pode ser revista/reproduzida depois (sobrevive a restart).
+# Fica FORA da árvore sincronizada pelo deploy (server/panel/) — não é
+# sobrescrito por `deploy.sh panel`.
+RESULTS_DIR = SERVER_DIR / "panel_results"
+MAX_RESULTS = 120           # mantém os N mais recentes
+MAX_RESULT_LINES = 6000     # teto de linhas por resultado (evita arquivo gigante)
 
-def tee_to_live(it: Iterator[str], label: str, by: str | None) -> Iterator[str]:
+
+def _result_id(started: float) -> str:
+    return time.strftime("%Y%m%d-%H%M%S", time.localtime(started)) + "-" + secrets.token_hex(2)
+
+
+def _prune_results() -> None:
+    files = sorted(RESULTS_DIR.glob("*.json"))
+    for f in files[: max(0, len(files) - MAX_RESULTS)]:
+        f.unlink(missing_ok=True)
+
+
+def _save_result(rec: dict) -> None:
+    try:
+        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        (RESULTS_DIR / f"{rec['id']}.json").write_text(json.dumps(rec, ensure_ascii=False))
+        _prune_results()
+    except OSError:
+        pass
+
+
+def tee_to_live(
+    it: Iterator[str], label: str, by: str | None, persist: bool = True, cmd: str | None = None
+) -> Iterator[str]:
     """Encaminha a saída ao requisitante E publica no buffer ao vivo (begin/line/
-    end), para os Alunos espelharem em tempo real."""
+    end), para os Alunos espelharem em tempo real. Se persist=True, grava a
+    execução inteira no arquivo de Resultados ao terminar."""
+    started = time.time()
     with LIVE.lock:
-        LIVE.session.update(active=True, label=label, by=by, started=time.time())
+        LIVE.session.update(active=True, label=label, by=by, started=started)
     LIVE.push("begin", label=label, by=by)
     status = "ok"
+    lines: list[str] = []
     try:
         for chunk in it:
             LIVE.push("line", text=chunk)
+            if persist and len(lines) < MAX_RESULT_LINES:
+                lines.append(chunk)
             yield chunk
     except BaseException:
         status = "error"
@@ -218,6 +252,13 @@ def tee_to_live(it: Iterator[str], label: str, by: str | None) -> Iterator[str]:
         LIVE.push("end", label=label, status=status)
         with LIVE.lock:
             LIVE.session.update(active=False)
+        if persist:
+            ended = time.time()
+            _save_result({
+                "id": _result_id(started), "label": label, "cmd": cmd or label, "by": by,
+                "started": round(started, 3), "ended": round(ended, 3),
+                "duration": round(ended - started, 1), "status": status, "lines": lines,
+            })
 
 
 def ensure_can_run(request: Request) -> str:
@@ -626,6 +667,48 @@ def nav(payload: dict, request: Request) -> JSONResponse:
     return JSONResponse({"ok": True})
 
 
+@app.get("/api/results")
+def list_results() -> JSONResponse:
+    """Resultados salvos (mais recentes primeiro). Aberto a Professor e Aluno."""
+    out: list[dict] = []
+    if RESULTS_DIR.exists():
+        for f in sorted(RESULTS_DIR.glob("*.json"), reverse=True):
+            try:
+                d = json.loads(f.read_text())
+            except (OSError, json.JSONDecodeError):
+                continue
+            out.append({
+                "id": d.get("id"), "label": d.get("label"), "cmd": d.get("cmd"),
+                "by": d.get("by"), "started": d.get("started"), "duration": d.get("duration"),
+                "status": d.get("status"), "lines": len(d.get("lines", [])),
+            })
+    return JSONResponse({"results": out})
+
+
+@app.get("/api/results/{rid}")
+def get_result(rid: str) -> JSONResponse:
+    if not re.fullmatch(r"[0-9A-Za-z\-]{1,40}", rid):
+        raise HTTPException(400, "id inválido")
+    f = RESULTS_DIR / f"{rid}.json"
+    if not f.exists():
+        raise HTTPException(404, "resultado não encontrado")
+    try:
+        return JSONResponse(json.loads(f.read_text()))
+    except (OSError, json.JSONDecodeError):
+        raise HTTPException(500, "falha ao ler resultado")
+
+
+@app.delete("/api/results/{rid}")
+def delete_result(rid: str, request: Request) -> JSONResponse:
+    user, _ = current_session(request)
+    if user is None or user == GUEST_USER:
+        raise HTTPException(403, "Aluno não pode apagar resultados.")
+    if not re.fullmatch(r"[0-9A-Za-z\-]{1,40}", rid):
+        raise HTTPException(400, "id inválido")
+    (RESULTS_DIR / f"{rid}.json").unlink(missing_ok=True)
+    return JSONResponse({"ok": True})
+
+
 @app.get("/topology")
 def topology_page() -> FileResponse:
     return FileResponse(STATIC_DIR / "topology.html")
@@ -948,7 +1031,8 @@ def logs(service: str, request: Request) -> StreamingResponse:
         gen = iter([body])
     user, sid = current_session(request)
     if is_active_admin(user, sid):
-        gen = tee_to_live(gen, f"ver logs · {src['label']}", user)
+        # logs vão pro ao vivo (Alunos veem), mas NÃO pro arquivo (são efêmeros).
+        gen = tee_to_live(gen, f"ver logs · {src['label']}", user, persist=False)
     return StreamingResponse(gen, media_type="text/plain")
 
 
@@ -994,5 +1078,6 @@ def run_command(command: str, request: Request) -> StreamingResponse:
             iter([f"Comando desconhecido: {command}\n"]), media_type="text/plain"
         )
     return StreamingResponse(
-        tee_to_live(stream_command(spec["cmd"], spec["cwd"]), command, by), media_type="text/plain"
+        tee_to_live(stream_command(spec["cmd"], spec["cwd"]), command, by, cmd=command),
+        media_type="text/plain",
     )

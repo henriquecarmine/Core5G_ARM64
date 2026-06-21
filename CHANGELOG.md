@@ -38,6 +38,28 @@ PATCH em correções pontuais.
 | 0.17.1 | 2026-06-20 | Link "Ver logs do resultado" no fim dos testes que produzem logs (KPM/RC/conexão/registro): atalho clicável abre o log relevante (gNB/RIC/AMF/SMF/UPF/UERANSIM) |
 | 0.18.0 | 2026-06-20 | Topologia revalidada: rótulos de interface na camada de topo (nunca mais atrás dos cards) + layout do P1 reorganizado sem sobreposição + legenda virou badge minimalista recolhível no canto inferior esquerdo (P1 e P2) |
 | 0.19.0 | 2026-06-20 | Modo sala de aula: 1 Professor por vez (bloqueia 2º admin, libera após 30s idle) + Alunos acompanham AO VIVO o console do Professor (espelho por ring-buffer/polling) + banner "🔴 AO VIVO" + contagem de espectadores + papéis Professor/Aluno |
+| 0.20.0 | 2026-06-20 | Resultados persistentes + Replay: cada execução do Professor é salva em disco (`server/panel_results/`) e some no restart nunca mais; aba "Resultados salvos" (Professor e Aluno) lista tudo e **reproduz** a execução com timing. Fase 2 do modo sala de aula |
+
+---
+
+## [0.20.0] — 2026-06-20
+
+**Resultados persistentes + Replay (Fase 2 do modo sala de aula).**
+
+- **Arquivo de Resultados.** Toda execução do Professor (testes, demos,
+  throughput, troca de projeto, assinantes) é gravada em disco em
+  `server/panel_results/<id>.json` (id por timestamp), com label, autor, duração,
+  status e as linhas. Fica FORA da árvore sincronizada por `deploy.sh panel`, então
+  **sobrevive a restart e a deploy**. Retenção: últimos 120, teto de 6000 linhas
+  por resultado. Logs ao vivo NÃO são persistidos (são efêmeros por natureza).
+- **Endpoints:** `GET /api/results` (lista, aberto a Professor e Aluno),
+  `GET /api/results/{id}` (íntegra), `DELETE /api/results/{id}` (só Professor).
+- **UI "Resultados salvos"** (rail · Histórico, sempre visível): lista com status,
+  autor, data, duração e nº de linhas. Abrir mostra a saída na hora (colorida ISO);
+  **▶ Reproduzir** reexibe linha a linha com timing — o professor reapresenta uma
+  coleta KPM sem subir nada. Disponível também pro Aluno (só-leitura).
+- Validado: persistência + prune (130→120), render + replay headless, e ao vivo
+  (Professor roda → aparece em /api/results → Aluno lê a íntegra).
 
 ---
 

@@ -276,6 +276,44 @@
   .condition-block label { display:flex; align-items:center; }
 
   /* ---- Modal de demonstração E2E ---- */
+  /* ===== Modal de Resultados salvos ===== */
+  #results-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:215; align-items:center; justify-content:center; }
+  #results-overlay.open { display:flex; }
+  #results-modal { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:920px; height:82vh; display:flex; flex-direction:column; overflow:hidden; }
+  #results-head { display:flex; align-items:center; gap:10px; padding:13px 18px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  #results-head h3 { font-size:14px; margin:0; }
+  #results-head #results-count { color:var(--muted); font-weight:400; font-size:12px; }
+  #results-head button { width:auto; margin:0; background:none; border:1px solid var(--border); color:var(--muted); font-size:15px; cursor:pointer; border-radius:7px; padding:2px 9px; }
+  #results-head #results-refresh { margin-left:auto; }
+  #results-head button:hover { color:var(--text); border-color:var(--accent); }
+  #results-body { flex:1; min-height:0; display:flex; flex-direction:column; }
+  #results-body.detail #results-list { display:none; }
+  /* Lista */
+  #results-list { flex:1; overflow-y:auto; padding:10px 14px; display:flex; flex-direction:column; gap:7px; }
+  .res-item { display:flex; align-items:center; gap:12px; padding:10px 13px; border:1px solid var(--border); border-radius:9px; background:#21242b; cursor:pointer; transition:border-color .15s, background .15s; }
+  .res-item:hover { border-color:var(--accent); background:#262a32; }
+  .res-item .ri-status { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .res-item.ok .ri-status { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .res-item.error .ri-status { background:var(--red); box-shadow:0 0 6px var(--red); }
+  .res-item .ri-main { flex:1; min-width:0; }
+  .res-item .ri-label { font-size:13px; font-weight:600; color:var(--text); }
+  .res-item .ri-meta { font-size:11px; color:var(--muted); margin-top:2px; font-family:"SF Mono",Menlo,Consolas,monospace; }
+  .res-item .ri-go { color:var(--muted); font-size:12px; white-space:nowrap; }
+  .res-item:hover .ri-go { color:var(--accent); }
+  #results-empty { color:var(--muted); text-align:center; padding:40px 16px; font-size:13px; }
+  /* Detalhe + console de replay */
+  #results-detail { display:none; flex:1; min-height:0; flex-direction:column; }
+  #results-detail.show { display:flex; }
+  #results-detail-head { display:flex; align-items:center; gap:10px; padding:9px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  #results-detail-head button { width:auto; margin:0; font-size:12px; padding:5px 11px; }
+  #results-back { background:#21242b; border:1px solid var(--border); color:var(--text); border-radius:7px; cursor:pointer; }
+  #results-detail-title { font-size:12.5px; color:var(--text); font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #results-detail-actions { display:flex; gap:7px; flex-shrink:0; }
+  #results-replay-btn { background:rgba(47,158,68,.14); border:1px solid rgba(47,158,68,.5); color:#69db7c; border-radius:7px; cursor:pointer; }
+  #results-replay-btn:hover { background:rgba(47,158,68,.26); }
+  #results-console { flex:1; min-height:0; overflow-y:auto; padding:10px 16px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px; line-height:1.5; background:var(--bg); }
+  #results-console .run-header { margin:2px 0 8px; }
+
   #demo-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:210; align-items:center; justify-content:center; }
   #demo-overlay.open { display:flex; }
   #demo-modal { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:940px; max-height:84vh; display:flex; flex-direction:column; overflow:hidden; }
@@ -408,6 +446,31 @@
     </div>
   </div>
 </div>
+
+<!-- ===== Resultados salvos (arquivo persistente + replay) ===== -->
+<div id="results-overlay">
+  <div id="results-modal">
+    <div id="results-head">
+      <h3>📊 Resultados salvos <span id="results-count"></span></h3>
+      <button id="results-refresh" title="Atualizar">↻</button>
+      <button id="results-close" title="Fechar">×</button>
+    </div>
+    <div id="results-body">
+      <div id="results-list"></div>
+      <div id="results-detail">
+        <div id="results-detail-head">
+          <button id="results-back">← Lista</button>
+          <span id="results-detail-title"></span>
+          <span id="results-detail-actions">
+            <button id="results-replay-btn">▶ Reproduzir</button>
+            <button id="results-stop-btn" class="danger" style="display:none">■ Parar</button>
+          </span>
+        </div>
+        <div id="results-console"></div>
+      </div>
+    </div>
+  </div>
+</div>
 <main>
   <aside id="sidebar">
     <div id="sidebar-inner">
@@ -468,6 +531,15 @@
         <button id="logs-btn">Ver logs</button>
         <button id="logs-stop-btn" class="danger">Parar logs</button>
         <button type="button" class="info-link-btn" style="margin-top:6px;color:var(--muted);border:1px solid var(--border)" onclick="openInfoModal('oranArch')">ℹ Arquitetura O-RAN</button>
+      </div>
+
+      <!-- ===== Resultados salvos (sempre visível; Professor e Aluno) ===== -->
+      <div class="rail-group" id="results-group">
+        <div class="rail-group-label">Histórico</div>
+        <button class="rail-item" id="results-open-btn">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/><circle cx="19" cy="19" r="2.2"/></svg>
+          Resultados salvos
+        </button>
       </div>
     </div>
   </aside>
@@ -1817,6 +1889,107 @@ function updateProjSelector(groups) {
   }
   refreshTestLocks();
 }
+
+// ===== Resultados salvos (arquivo persistente) + Replay =====
+const resOverlay = document.getElementById('results-overlay');
+const resList = document.getElementById('results-list');
+const resDetail = document.getElementById('results-detail');
+const resConsole = document.getElementById('results-console');
+const resDetailTitle = document.getElementById('results-detail-title');
+const resReplayBtn = document.getElementById('results-replay-btn');
+const resStopBtn = document.getElementById('results-stop-btn');
+let _resCurrent = null;     // resultado aberto no momento {label, lines, ...}
+let _replayTimer = null;
+
+function fmtWhen(ts) {
+  if (!ts) return '';
+  try { return new Date(ts * 1000).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+  catch { return ''; }
+}
+function renderResLine(line) {
+  const { html, color } = renderLogLine(line);
+  const div = document.createElement('div');
+  if (color) div.style.color = color;
+  div.innerHTML = html;
+  resConsole.appendChild(div);
+  resConsole.scrollTop = resConsole.scrollHeight;
+}
+function resHeader(r) {
+  const div = document.createElement('div');
+  div.className = 'run-header';
+  const cls = r.status === 'ok' ? 'ok' : 'error';
+  div.innerHTML = `<span class="run-badge ${cls}">${r.status === 'ok' ? 'concluído' : 'erro'}</span>` +
+    `<span class="run-cmd">${prettyCmd(r.label)}</span><span class="run-time">${r.by || ''} · ${fmtWhen(r.started)} · ${r.duration || 0}s</span>`;
+  resConsole.appendChild(div);
+}
+function linesOf(r) {
+  const out = [];
+  (r.lines || []).forEach(chunk => String(chunk).split('\n').forEach((seg, i, a) => { if (!(i === a.length - 1 && seg === '')) out.push(seg); }));
+  return out;
+}
+
+async function loadResultsList() {
+  try {
+    const d = await (await fetch('/api/results')).json();
+    const rs = d.results || [];
+    document.getElementById('results-count').textContent = rs.length ? `(${rs.length})` : '';
+    if (!rs.length) { resList.innerHTML = '<div id="results-empty">Nenhum resultado salvo ainda.<br>Quando o professor rodar um teste/operação, ele aparece aqui — e dá pra reproduzir.</div>'; return; }
+    resList.innerHTML = '';
+    rs.forEach(r => {
+      const it = document.createElement('div');
+      it.className = 'res-item ' + (r.status === 'ok' ? 'ok' : 'error');
+      it.innerHTML = `<span class="ri-status"></span><div class="ri-main"><div class="ri-label"></div>` +
+        `<div class="ri-meta"></div></div><span class="ri-go">▶ abrir</span>`;
+      it.querySelector('.ri-label').textContent = prettyCmd(r.label);
+      it.querySelector('.ri-meta').textContent = `${r.by || '—'} · ${fmtWhen(r.started)} · ${r.duration || 0}s · ${r.lines} linhas`;
+      it.addEventListener('click', () => openResult(r.id));
+      resList.appendChild(it);
+    });
+  } catch { resList.innerHTML = '<div id="results-empty">Falha ao carregar resultados.</div>'; }
+}
+async function openResult(id) {
+  stopReplay();
+  try {
+    _resCurrent = await (await fetch('/api/results/' + encodeURIComponent(id))).json();
+  } catch { return; }
+  resDetailTitle.textContent = prettyCmd(_resCurrent.label);
+  resDetail.classList.add('show');
+  document.getElementById('results-body').classList.add('detail');
+  resConsole.innerHTML = '';
+  resHeader(_resCurrent);                       // abre instantâneo (Ver)
+  linesOf(_resCurrent).forEach(renderResLine);
+}
+function replayResult() {
+  if (!_resCurrent) return;
+  stopReplay();
+  resConsole.innerHTML = '';
+  resHeader(_resCurrent);
+  const lines = linesOf(_resCurrent);
+  const delay = Math.max(8, Math.min(45, Math.floor(4500 / Math.max(1, lines.length))));
+  resReplayBtn.style.display = 'none'; resStopBtn.style.display = '';
+  let i = 0;
+  _replayTimer = setInterval(() => {
+    if (i >= lines.length) { stopReplay(); return; }
+    renderResLine(lines[i++]);
+  }, delay);
+}
+function stopReplay() {
+  if (_replayTimer) { clearInterval(_replayTimer); _replayTimer = null; }
+  resReplayBtn.style.display = ''; resStopBtn.style.display = 'none';
+}
+function showResultsList() { stopReplay(); resDetail.classList.remove('show'); document.getElementById('results-body').classList.remove('detail'); _resCurrent = null; }
+function openResults() {
+  if (!isGuest) postNav('results', 'Resultados salvos');
+  resOverlay.classList.add('open'); showResultsList(); loadResultsList();
+}
+function closeResults() { stopReplay(); resOverlay.classList.remove('open'); }
+document.getElementById('results-open-btn').addEventListener('click', openResults);
+document.getElementById('results-close').addEventListener('click', closeResults);
+document.getElementById('results-refresh').addEventListener('click', loadResultsList);
+document.getElementById('results-back').addEventListener('click', showResultsList);
+resReplayBtn.addEventListener('click', replayResult);
+resStopBtn.addEventListener('click', stopReplay);
+resOverlay.addEventListener('click', e => { if (e.target === resOverlay) closeResults(); });
 
 // ===== Boot =====
 loadWhoami();

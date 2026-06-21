@@ -830,6 +830,7 @@ def list_results() -> JSONResponse:
                 "id": d.get("id"), "label": d.get("label"), "cmd": d.get("cmd"),
                 "by": d.get("by"), "started": d.get("started"), "duration": d.get("duration"),
                 "status": d.get("status"), "lines": len(d.get("lines", [])),
+                "note": d.get("note", ""),
             })
     return JSONResponse({"results": out})
 
@@ -856,6 +857,48 @@ def delete_result(rid: str, request: Request) -> JSONResponse:
         raise HTTPException(400, "id inválido")
     (RESULTS_DIR / f"{rid}.json").unlink(missing_ok=True)
     return JSONResponse({"ok": True})
+
+
+@app.post("/api/results/delete")
+def delete_results_bulk(payload: dict, request: Request) -> JSONResponse:
+    """Exclui vários resultados de uma vez (Professor-only). payload: {ids:[...]}.
+    Usado pelo modo 'Selecionar' e pelo 'Limpar tudo' do modal de Resultados."""
+    user, _ = current_session(request)
+    if user is None or user == GUEST_USER:
+        raise HTTPException(403, "Aluno não pode apagar resultados.")
+    ids = payload.get("ids")
+    if not isinstance(ids, list):
+        raise HTTPException(400, "ids inválido")
+    removed = 0
+    for rid in ids:
+        if isinstance(rid, str) and re.fullmatch(r"[0-9A-Za-z\-]{1,40}", rid):
+            f = RESULTS_DIR / f"{rid}.json"
+            if f.exists():
+                f.unlink(missing_ok=True)
+                removed += 1
+    return JSONResponse({"ok": True, "removed": removed})
+
+
+@app.post("/api/results/{rid}/note")
+def set_result_note(rid: str, payload: dict, request: Request) -> JSONResponse:
+    """Salva uma observação livre no resultado (Professor-only), pra lembrar
+    do que era aquele relatório. Limite de 200 caracteres."""
+    user, _ = current_session(request)
+    if user is None or user == GUEST_USER:
+        raise HTTPException(403, "Aluno não pode editar resultados.")
+    if not re.fullmatch(r"[0-9A-Za-z\-]{1,40}", rid):
+        raise HTTPException(400, "id inválido")
+    f = RESULTS_DIR / f"{rid}.json"
+    if not f.exists():
+        raise HTTPException(404, "resultado não encontrado")
+    note = str(payload.get("note", ""))[:200].strip()
+    try:
+        d = json.loads(f.read_text())
+        d["note"] = note
+        f.write_text(json.dumps(d))
+    except (OSError, json.JSONDecodeError):
+        raise HTTPException(500, "falha ao salvar a observação")
+    return JSONResponse({"ok": True, "note": note})
 
 
 @app.get("/topology")

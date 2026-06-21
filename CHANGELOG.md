@@ -58,6 +58,27 @@ PATCH em correções pontuais.
 | 0.25.3 | 2026-06-21 | **Documentação para colaboradores**: novo guia [`docs/relatorios-didaticos.md`](docs/relatorios-didaticos.md) — como o sistema de relatórios funciona (lib `testlog.sh`, protocolo da Demo E2E, como adicionar um relatório, gotchas verificados ao vivo, inventário P1/P2). Ligado no README (mapa) e no CONTRIBUTING (validação) |
 | 0.25.4 | 2026-06-21 | **Bible atualizado** com a sessão 0.25.x: §8.5 (relatórios com falso-negativo — container ≠ serviço Compose, HTML como IP, veredito desonesto) e §8.6 (Demo E2E media a bridge Docker, não o túnel 5G); §9 com a verificação ao vivo de todos os relatórios; §10 e §11 com o item da auditoria e o link do guia |
 | 0.25.5 | 2026-06-21 | **Modo projeção** agora mantém a **régua lateral de ações** visível (o professor opera testes/demo enquanto projeta). Antes o kiosk escondia o `#sidebar` inteiro; agora só esconde o que polui o datashow (barra de projetos, telemetria pesada, copiar/limpar) e restaura o grid de 2 colunas |
+| 0.26.0 | 2026-06-21 | **Gerenciar Resultados salvos**: excluir **um** (✕ por item) ou **vários** (modo "Selecionar" com checkboxes + "Excluir selecionados" + "Tudo"), e **anotar uma observação** (✎) no relatório pra lembrar do que era. Tudo só para Professor (Aluno 403), com confirmação nas exclusões |
+
+---
+
+## [0.26.0] — 2026-06-21
+
+**Gerenciamento dos Resultados salvos: excluir e anotar.** O modal de Resultados
+só listava/abria/reproduzia — não dava para limpar nem identificar relatórios
+antigos. Agora o Professor pode organizar o histórico (Aluno segue só leitura).
+
+- **Excluir um:** botão **✕** em cada item da lista (com confirmação).
+- **Excluir vários:** botão **☑ Selecionar** entra no modo seleção (checkboxes);
+  **Tudo** marca/desmarca todos; **🗑 Excluir (N)** apaga os marcados de uma vez
+  (novo endpoint `POST /api/results/delete` com lista de ids). Selecionar tudo +
+  excluir = limpar o histórico inteiro.
+- **Anotar observação:** botão **✎** em cada item abre um campo para uma nota
+  livre (até 200 caracteres) — ex.: *"antes de corrigir o AMF"*. A nota aparece
+  na lista (em itálico, sob o título) e no cabeçalho ao abrir o relatório.
+  Persistida no JSON do resultado via `POST /api/results/{id}/note`.
+- **Permissão:** todas as ações são **Professor-only** (backend responde 403 a
+  Aluno); a UI esconde os botões para quem é Aluno.
 
 ---
 

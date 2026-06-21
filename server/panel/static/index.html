@@ -365,6 +365,18 @@
   .res-item .ri-meta { font-size:11px; color:var(--muted); margin-top:2px; font-family:"SF Mono",Menlo,Consolas,monospace; }
   .res-item .ri-go { color:var(--muted); font-size:12px; white-space:nowrap; }
   .res-item:hover .ri-go { color:var(--accent); }
+  /* Exclusão de resultados */
+  .res-item .ri-del { width:auto; margin:0; flex-shrink:0; background:none; border:1px solid var(--border); color:var(--muted); font-size:13px; line-height:1; cursor:pointer; border-radius:6px; padding:4px 8px; }
+  .res-item .ri-del:hover { color:var(--red); border-color:var(--red); background:rgba(224,49,49,.10); }
+  .res-item .ri-note-btn { width:auto; margin:0; flex-shrink:0; background:none; border:1px solid var(--border); color:var(--muted); font-size:13px; line-height:1; cursor:pointer; border-radius:6px; padding:4px 8px; }
+  .res-item .ri-note-btn:hover { color:var(--accent); border-color:var(--accent); }
+  .res-item .ri-note { font-size:11.5px; color:var(--accent); margin-top:2px; font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .res-item .ri-check { width:16px; height:16px; flex-shrink:0; accent-color:var(--accent); cursor:pointer; margin:0; }
+  .res-item.sel { border-color:var(--accent); background:#262a32; }
+  #results-head-actions { margin-left:auto; display:flex; align-items:center; gap:8px; }
+  #results-head-actions #results-refresh { margin-left:0; }
+  #results-head #results-del-sel { color:#ff8787; border-color:rgba(224,49,49,.5); }
+  #results-head #results-del-sel:hover { color:#fff; background:var(--red); border-color:var(--red); }
   #results-empty { color:var(--muted); text-align:center; padding:40px 16px; font-size:13px; }
   /* Detalhe + console de replay */
   #results-detail { display:none; flex:1; min-height:0; flex-direction:column; }
@@ -556,8 +568,14 @@
   <div id="results-modal">
     <div id="results-head">
       <h3>📊 Resultados salvos <span id="results-count"></span></h3>
-      <button id="results-refresh" title="Atualizar">↻</button>
-      <button id="results-close" title="Fechar">×</button>
+      <div id="results-head-actions">
+        <button id="results-select" title="Selecionar vários para excluir" style="display:none">☑ Selecionar</button>
+        <button id="results-sel-all" title="Selecionar todos" style="display:none">Tudo</button>
+        <button id="results-del-sel" title="Excluir selecionados" style="display:none">🗑 Excluir (0)</button>
+        <button id="results-sel-cancel" title="Sair do modo seleção" style="display:none">Cancelar</button>
+        <button id="results-refresh" title="Atualizar">↻</button>
+        <button id="results-close" title="Fechar">×</button>
+      </div>
     </div>
     <div id="results-body">
       <div id="results-list"></div>
@@ -2052,23 +2070,110 @@ function linesOf(r) {
   return out;
 }
 
+let _resAll = [];               // último snapshot da lista
+let _resSelectMode = false;     // modo "Selecionar para excluir"
+const _resSel = new Set();      // ids marcados
+
+function updateResultsHeadButtons() {
+  const sel = document.getElementById('results-select');
+  const all = document.getElementById('results-sel-all');
+  const del = document.getElementById('results-del-sel');
+  const cancel = document.getElementById('results-sel-cancel');
+  const canDelete = !isGuest && _resAll.length > 0;
+  if (_resSelectMode) {
+    sel.style.display = 'none';
+    all.style.display = del.style.display = cancel.style.display = '';
+    del.textContent = `🗑 Excluir (${_resSel.size})`;
+    del.disabled = _resSel.size === 0;
+    all.textContent = (_resSel.size === _resAll.length && _resAll.length) ? 'Nenhum' : 'Tudo';
+  } else {
+    sel.style.display = canDelete ? '' : 'none';
+    all.style.display = del.style.display = cancel.style.display = 'none';
+  }
+}
+function renderResultsList(rs) {
+  resList.innerHTML = '';
+  rs.forEach(r => {
+    const it = document.createElement('div');
+    it.className = 'res-item ' + (r.status === 'ok' ? 'ok' : 'error') + (_resSel.has(r.id) ? ' sel' : '');
+    const lead = _resSelectMode
+      ? `<input type="checkbox" class="ri-check"${_resSel.has(r.id) ? ' checked' : ''}>`
+      : '<span class="ri-status"></span>';
+    const tail = _resSelectMode ? ''
+      : (isGuest ? '<span class="ri-go">▶ abrir</span>'
+                 : '<span class="ri-go">▶ abrir</span><button class="ri-note-btn" title="Anotar observação (lembrete)">✎</button><button class="ri-del" title="Excluir este resultado">✕</button>');
+    it.innerHTML = lead + '<div class="ri-main"><div class="ri-label"></div><div class="ri-note"></div><div class="ri-meta"></div></div>' + tail;
+    it.querySelector('.ri-label').textContent = prettyCmd(r.label);
+    const noteEl = it.querySelector('.ri-note');
+    if (r.note) { noteEl.textContent = '✎ ' + r.note; } else { noteEl.style.display = 'none'; }
+    it.querySelector('.ri-meta').textContent = `${r.by || '—'} · ${fmtWhen(r.started)} · ${r.duration || 0}s · ${r.lines} linhas`;
+    if (_resSelectMode) {
+      it.addEventListener('click', () => toggleResSel(r.id));
+    } else {
+      it.addEventListener('click', () => openResult(r.id));
+      const del = it.querySelector('.ri-del');
+      if (del) del.addEventListener('click', e => { e.stopPropagation(); deleteOneResult(r.id, r.label); });
+      const noteBtn = it.querySelector('.ri-note-btn');
+      if (noteBtn) noteBtn.addEventListener('click', e => { e.stopPropagation(); editResultNote(r.id, r.label, r.note); });
+    }
+    resList.appendChild(it);
+  });
+}
+async function editResultNote(id, label, current) {
+  const note = prompt(`Observação para lembrar deste relatório\n(${prettyCmd(label)}):`, current || '');
+  if (note === null) return;            // cancelou
+  try {
+    await fetch('/api/results/' + encodeURIComponent(id) + '/note', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: note.slice(0, 200) }),
+    });
+  } catch {}
+  loadResultsList();
+}
+function toggleResSel(id) {
+  if (_resSel.has(id)) _resSel.delete(id); else _resSel.add(id);
+  renderResultsList(_resAll); updateResultsHeadButtons();
+}
+function enterResSelect() { _resSelectMode = true; _resSel.clear(); renderResultsList(_resAll); updateResultsHeadButtons(); }
+function exitResSelect()  { _resSelectMode = false; _resSel.clear(); renderResultsList(_resAll); updateResultsHeadButtons(); }
+function selectAllResults() {
+  if (_resSel.size === _resAll.length) _resSel.clear();
+  else _resAll.forEach(r => _resSel.add(r.id));
+  renderResultsList(_resAll); updateResultsHeadButtons();
+}
+async function deleteOneResult(id, label) {
+  if (!confirm(`Excluir este resultado?\n\n${prettyCmd(label)}\n\nNão pode ser desfeito.`)) return;
+  try { await fetch('/api/results/' + encodeURIComponent(id), { method: 'DELETE' }); } catch {}
+  _resSel.delete(id);
+  loadResultsList();
+}
+async function deleteSelectedResults() {
+  if (!_resSel.size) return;
+  if (!confirm(`Excluir ${_resSel.size} resultado(s) selecionado(s)?\n\nNão pode ser desfeito.`)) return;
+  try {
+    await fetch('/api/results/delete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: [..._resSel] }),
+    });
+  } catch {}
+  _resSel.clear(); _resSelectMode = false;
+  loadResultsList();
+}
+
 async function loadResultsList() {
   try {
     const d = await (await fetch('/api/results')).json();
-    const rs = d.results || [];
-    document.getElementById('results-count').textContent = rs.length ? `(${rs.length})` : '';
-    if (!rs.length) { resList.innerHTML = '<div id="results-empty">Nenhum resultado salvo ainda.<br>Quando o professor rodar um teste/operação, ele aparece aqui — e dá pra reproduzir.</div>'; return; }
-    resList.innerHTML = '';
-    rs.forEach(r => {
-      const it = document.createElement('div');
-      it.className = 'res-item ' + (r.status === 'ok' ? 'ok' : 'error');
-      it.innerHTML = `<span class="ri-status"></span><div class="ri-main"><div class="ri-label"></div>` +
-        `<div class="ri-meta"></div></div><span class="ri-go">▶ abrir</span>`;
-      it.querySelector('.ri-label').textContent = prettyCmd(r.label);
-      it.querySelector('.ri-meta').textContent = `${r.by || '—'} · ${fmtWhen(r.started)} · ${r.duration || 0}s · ${r.lines} linhas`;
-      it.addEventListener('click', () => openResult(r.id));
-      resList.appendChild(it);
-    });
+    _resAll = d.results || [];
+    [..._resSel].forEach(id => { if (!_resAll.some(r => r.id === id)) _resSel.delete(id); });
+    document.getElementById('results-count').textContent = _resAll.length ? `(${_resAll.length})` : '';
+    if (!_resAll.length) {
+      _resSelectMode = false;
+      resList.innerHTML = '<div id="results-empty">Nenhum resultado salvo ainda.<br>Quando o professor rodar um teste/operação, ele aparece aqui — e dá pra reproduzir.</div>';
+      updateResultsHeadButtons();
+      return;
+    }
+    renderResultsList(_resAll);
+    updateResultsHeadButtons();
   } catch { resList.innerHTML = '<div id="results-empty">Falha ao carregar resultados.</div>'; }
 }
 async function openResult(id) {
@@ -2076,7 +2181,7 @@ async function openResult(id) {
   try {
     _resCurrent = await (await fetch('/api/results/' + encodeURIComponent(id))).json();
   } catch { return; }
-  resDetailTitle.textContent = prettyCmd(_resCurrent.label);
+  resDetailTitle.textContent = prettyCmd(_resCurrent.label) + (_resCurrent.note ? '  ·  ✎ ' + _resCurrent.note : '');
   resDetail.classList.add('show');
   document.getElementById('results-body').classList.add('detail');
   resConsole.innerHTML = '';
@@ -2104,6 +2209,7 @@ function stopReplay() {
 function showResultsList() { stopReplay(); resDetail.classList.remove('show'); document.getElementById('results-body').classList.remove('detail'); _resCurrent = null; }
 function openResults() {
   if (!isGuest) postNav('results', 'Resultados salvos');
+  _resSelectMode = false; _resSel.clear();
   resOverlay.classList.add('open'); showResultsList(); loadResultsList();
 }
 function closeResults() { stopReplay(); resOverlay.classList.remove('open'); }
@@ -2111,6 +2217,10 @@ document.getElementById('results-open-btn').addEventListener('click', openResult
 document.getElementById('results-close').addEventListener('click', closeResults);
 document.getElementById('results-refresh').addEventListener('click', loadResultsList);
 document.getElementById('results-back').addEventListener('click', showResultsList);
+document.getElementById('results-select').addEventListener('click', enterResSelect);
+document.getElementById('results-sel-cancel').addEventListener('click', exitResSelect);
+document.getElementById('results-sel-all').addEventListener('click', selectAllResults);
+document.getElementById('results-del-sel').addEventListener('click', deleteSelectedResults);
 resReplayBtn.addEventListener('click', replayResult);
 resStopBtn.addEventListener('click', stopReplay);
 resOverlay.addEventListener('click', e => { if (e.target === resOverlay) closeResults(); });

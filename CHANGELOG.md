@@ -53,6 +53,30 @@ PATCH em correções pontuais.
 | 0.24.7 | 2026-06-21 | Créditos: projeto **coordenado pelo Prof. Dr. Jonas Augusto Kunzler** e **mantido por Henrique Carmine** (README + rodapés). Adicionada seção **"Apoie este projeto"** (PIX) + `FUNDING.yml` (botão Sponsor). Licença já com copyright de Henrique Carmine |
 | 0.24.8 | 2026-06-21 | Vaga de Professor reassume sozinha quando está LIVRE (após restart do painel/deploy ou abandono): a aba recupera no próximo heartbeat, sem relogar. Aviso de "sessão não ativa" se auto-limpa e diferencia "vaga livre (reassumindo…)" de "outro professor com o controle" |
 | 0.25.0 | 2026-06-21 | Demonstração E2E **didática**: o console agora mostra o **comando real e a saída real** de cada passo, com narração "por quê". **Fix do throughput**: o iperf3 agora atravessa de fato o núcleo 5G (rota pelo `uesimtun0` + bind à origem do túnel) em vez de sair pela bridge docker |
+| 0.25.1 | 2026-06-21 | Auditoria didática de **todos os relatórios**: padrão lib (cor + "Resumo") confirmado em P1 e P2. Único fora do padrão (`test_ue_connection`) reescrito — usa a lib no corpo, guardas de erro com Resumo + `exit 0`, e **veredito honesto** (ok/atenção/falha em vez de sempre "ok") |
+
+---
+
+## [0.25.1] — 2026-06-21
+
+**Auditoria de indicadores didáticos em todos os relatórios.** Varredura de
+todos os testes acionáveis pelo painel (P1 e P2) para garantir saída didática
+consistente: cabeçalho de seção, checagens coloridas (✓/!/✗) e bloco **"Resumo"**
+(*O que fez* / *Resultado*) padronizado pela `lib/testlog.sh`.
+
+- **Resultado da auditoria:** a suíte já estava majoritariamente padronizada —
+  todos os testes do menu P1 (`status`, `system-status`, `ng-setup`,
+  `registration`, `config-coherence`, `upf-failover`) e P2 (`e2-sm`, `e2-kpm`,
+  `e2-rc`), além de `throughput` e `channel`, usam a lib + Resumo.
+- **Único fora do padrão — `test_ue_connection.sh`:** usava `echo "❌"` cru e
+  saía com `exit 1` sem Resumo nos caminhos de erro, e o veredito final dizia
+  sempre "ok". Reescrito: usa a lib no corpo inteiro (cor consistente), guardas
+  de pré-condição com **Resumo + `exit 0`**, contadores de falha/atenção e
+  **veredito honesto** (✗ crítico / ! ressalva / ✓ tudo passou). Cada um dos 6
+  blocos ganhou a linha *"Por quê"* explicando o que prova.
+- **`test_distance.sh` / `test_interference.sh`:** confirmados como utilitários
+  de CLI legados, **não acionáveis pelo painel** (o painel usa `test_channel.sh`,
+  que já é didático) — fora do escopo de relatório.
 
 ---
 

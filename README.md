@@ -2,7 +2,7 @@
 
 Laboratório 5G completo rodando em **AWS Graviton (ARM64)**, com painel web de
 controle próprio. Reúne **dois projetos** independentes da disciplina
-*RAN Intelligent Controller (RIC)* — CESAR School, Grupo 6 (tema **UE-TP-rApp**):
+*RAN Intelligent Controller (RIC)* — CESAR School (tema **UE-TP-rApp**):
 
 | Projeto | Stack | Pasta | Status |
 |---|---|---|---|
@@ -195,6 +195,7 @@ do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
 ```
 .
 ├── README.md                  ← você está aqui (porta de entrada)
+├── LICENSE                     ← licença MIT
 ├── CONTRIBUTING.md            ← como colaborar (Issues/Discussions/PR, testes, versão)
 ├── core5g-arm64-bible.md      ← referência conceitual completa
 ├── CHANGELOG.md               ← diário de bordo cronológico
@@ -210,5 +211,14 @@ do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
     └── oai-cn-gnb-e2/         ← Projeto 2 (OAI + FlexRIC + xApps)
 ```
 
-Projeto mantido por [@henriquecarmine](https://github.com/henriquecarmine) ·
-CESAR School · Grupo 6 — UE-TP-rApp.
+---
+
+## 5. Equipe
+
+- **Professor (orientador):** Jonas
+- **Autor / mantenedor:** Henrique Carmine — [hc@cesar.school](mailto:hc@cesar.school) · [@henriquecarmine](https://github.com/henriquecarmine)
+- **Colaboradores:** Klinger · Kelvin
+
+CESAR School · disciplina *RAN Intelligent Controller (RIC)* · tema **UE-TP-rApp**.
+
+Licença **[MIT](LICENSE)**.

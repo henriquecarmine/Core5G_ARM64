@@ -45,6 +45,20 @@ PATCH em correções pontuais.
 | 0.23.0 | 2026-06-20 | Aluno identificado: entra com Nome + E-mail (1 passo, sem senha). Identidade assinada no cookie + roster de presença persistente; Professor vê "Alunos conectados" (nome+email) e a presença acumulada clicando no badge 👁 |
 | 0.24.0 | 2026-06-20 | Modo projeção (kiosk): botão "⛶ Projeção" abre uma tela limpa em fullscreen pro datashow — RAN ao vivo grande, console em fonte grande, header enxuto (projeto + nº de alunos), sem sidebar/controles. Esc sai |
 | 0.24.1 | 2026-06-20 | Onboarding de colaboradores: README atualizado (modo sala de aula, guardrail cpuset, usuários), `CONTRIBUTING.md`, modelos de Issue/PR (`.github/`), e **tags git** de toda a história do painel (v0.12.2 → v0.24.x). Issues + Discussions habilitados no GitHub |
+| 0.24.2 | 2026-06-20 | Créditos/Equipe (Prof. Jonas · Henrique · Klinger · Kelvin) no README e nos rodapés do painel; remove o rótulo "Grupo 6"; adiciona a **licença MIT** |
+
+---
+
+## [0.24.2] — 2026-06-20
+
+**Equipe + licença.**
+
+- **Créditos:** seção "Equipe" no README e rodapés do painel (login + principal)
+  passam a creditar **Prof. Jonas** (orientador), **Henrique Carmine** (autor/
+  mantenedor) e os colaboradores **Klinger** e **Kelvin**. Removido o rótulo
+  genérico "Grupo 6".
+- **Licença:** adicionada a **MIT** (`LICENSE`), com copyright dos autores e
+  menção à orientação. Referenciada no README.
 
 ---
 

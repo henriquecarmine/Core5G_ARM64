@@ -35,6 +35,26 @@ PATCH em correções pontuais.
 | 0.16.1 | 2026-06-20 | Topo mais compacto: "Containers" inline antes dos monitores; cards de projeto mais baixos; "Desligar tudo" virou o botão do card ativo (≈3 linhas ganhas) |
 | 0.16.2 | 2026-06-20 | Descrição curta de cada projeto ao lado do nome (P1: rede 5G fim-a-fim; P2: O-RAN RIC+xApps) |
 | 0.17.0 | 2026-06-20 | Logs coloridos ISO (por token, nada em branco) + explicação didática no fim de cada log; fix v1→v2 (logs do P2 saíam vazios); snapshot finito por container |
+| 0.17.1 | 2026-06-20 | Link "Ver logs do resultado" no fim dos testes que produzem logs (KPM/RC/conexão/registro): atalho clicável abre o log relevante (gNB/RIC/AMF/SMF/UPF/UERANSIM) |
+
+---
+
+## [0.17.1] — 2026-06-20
+
+**Atalho "Ver logs" no resultado dos testes.** Quando um teste produz logs
+(coletas E2SM-KPM/RC, conexão E2E do UE, NG Setup, registro, failover de UPF),
+o painel agora exibe — logo após a explicação didática — uma faixa
+**"📄 Ver logs do resultado:"** com botões-chip clicáveis para as fontes de log
+relevantes (ex.: KPM → gNB e near-RT RIC; conexão do UE → AMF, SMF, UPF-A,
+UERANSIM). Clicar carrega o log daquele serviço direto no console.
+
+- `TEST_LOGS` (mapa cmd → fontes) + `appendLogLinks(cmd)`, chamado após
+  `appendExplain(cmd)` no fim de `runCommand`.
+- `startLogs(forceSvc)` aceita serviço explícito (string) vindo do chip e ainda
+  funciona pelo botão "Ver logs" (que passa um Event); reflete a escolha no
+  seletor quando a fonte está disponível.
+- Validado headless (puppeteer): chips renderizam, clique dispara
+  `startLogs('gnb')`, comandos sem logs (ex.: `status`) não geram faixa.
 
 ---
 

@@ -148,6 +148,14 @@
   .explain li { font-size:12.5px; line-height:1.55; color:var(--text); margin-bottom:4px; }
   .explain li b { color:var(--info); }
   .explain .ex-concl { font-size:12.5px; line-height:1.5; color:#69db7c; margin-top:8px; padding-top:8px; border-top:1px solid rgba(77,171,247,.25); }
+  /* Atalhos "ver logs" no fim de testes que produzem logs */
+  .log-links { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin:8px 0 4px; padding:8px 11px;
+               background:rgba(77,171,247,.06); border:1px dashed rgba(77,171,247,.38); border-radius:8px; }
+  .log-links .ll-label { font-size:12.5px; font-weight:600; color:var(--info); margin-right:2px; }
+  .ll-btn { display:inline-block; width:auto; margin:0; font:inherit; font-size:12px; cursor:pointer;
+            padding:3px 10px; border-radius:5px; text-align:left;
+            background:rgba(77,171,247,.12); color:#cfe8ff; border:1px solid rgba(77,171,247,.45); transition:background .15s; }
+  .ll-btn:hover { background:rgba(77,171,247,.26); }
 
   /* Console */
   #console-wrap { display:flex; flex-direction:column; min-height:0; }
@@ -960,6 +968,31 @@ function appendLogExplain(svc) {
   output.scrollTop = output.scrollHeight;
 }
 
+// ===== Link "ver logs" no fim de testes que produzem logs (KPM/RC/conexão) =====
+// cmd → fontes de log onde se vê o resultado do teste. svc casa com /api/services.
+const TEST_LOGS = {
+  'p2-test-e2-sm':          [{ svc: 'gnb', label: 'gNB (E2/SMs)' }, { svc: 'ric', label: 'near-RT RIC' }],
+  'p2-test-e2-kpm':         [{ svc: 'gnb', label: 'gNB (E2/KPM)' }, { svc: 'ric', label: 'near-RT RIC' }],
+  'p2-test-e2-kpm-traffic': [{ svc: 'gnb', label: 'gNB (E2/KPM)' }, { svc: 'ric', label: 'near-RT RIC' }],
+  'p2-test-e2-rc':          [{ svc: 'gnb', label: 'gNB (E2/RC)' },  { svc: 'ric', label: 'near-RT RIC' }],
+  'test-ue-connection':     [{ svc: 'amf', label: 'AMF (NGAP)' }, { svc: 'smf', label: 'SMF (PFCP)' }, { svc: 'upf-a', label: 'UPF-A (GTP-U)' }, { svc: 'ueransim', label: 'UERANSIM (UE)' }],
+  'test-ng-setup':          [{ svc: 'amf', label: 'AMF (NG Setup)' }, { svc: 'ueransim', label: 'UERANSIM (gNB)' }],
+  'test-registration':      [{ svc: 'amf', label: 'AMF (registro)' }, { svc: 'smf', label: 'SMF (sessão)' }, { svc: 'ueransim', label: 'UERANSIM (UE)' }],
+  'test-upf-failover':      [{ svc: 'upf-a', label: 'UPF-A' }, { svc: 'upf-b', label: 'UPF-B' }],
+  'test-config-coherence':  [{ svc: 'ueransim', label: 'UERANSIM (gNB/UE)' }],
+};
+function appendLogLinks(cmd) {
+  const links = TEST_LOGS[cmd];
+  if (!links || !links.length) return;
+  const div = document.createElement('div');
+  div.className = 'log-links';
+  div.innerHTML = '<span class="ll-label">📄 Ver logs do resultado:</span>' +
+    links.map(l => `<button class="ll-btn" data-svc="${l.svc}">${l.label}</button>`).join('');
+  div.querySelectorAll('.ll-btn').forEach(b => b.addEventListener('click', () => startLogs(b.dataset.svc)));
+  output.appendChild(div);
+  output.scrollTop = output.scrollHeight;
+}
+
 // ===== Loader: nenhuma ação deixa a tela "morta" =====
 const topLoader = document.getElementById('top-loader');
 let _loaderN = 0;
@@ -1005,6 +1038,7 @@ async function runCommand(cmd, srcBtn) {
     setStatus('ok', 'concluído: ' + cmd);
     setRunBadge(badge, 'ok', 'concluído');
     appendExplain(cmd);
+    appendLogLinks(cmd);   // atalho "ver logs" p/ testes que produzem logs
   } catch (e) {
     appendLine('[erro: ' + e + ']'); setStatus('error', 'erro');
     setRunBadge(badge, 'error', 'erro');
@@ -1073,9 +1107,14 @@ async function loadServices() {
 
 function stopLogs() { if (logsAbort) { logsAbort.abort(); logsAbort = null; } }
 
-async function startLogs() {
-  const svc = document.getElementById('log-service').value;
+async function startLogs(forceSvc) {
+  const sel = document.getElementById('log-service');
+  // forceSvc é string quando vem de um link "ver logs"; o botão "Ver logs"
+  // dispara via addEventListener e passa um Event — aí caímos no seletor.
+  const svc = (typeof forceSvc === 'string' && forceSvc) ? forceSvc : sel.value;
   if (!svc) return;
+  // reflete a escolha no seletor, se a fonte estiver disponível
+  if (svc !== sel.value && [...sel.options].some(o => o.value === svc)) sel.value = svc;
   stopLogs();
   logsAbort = new AbortController();
   output.innerHTML = '';

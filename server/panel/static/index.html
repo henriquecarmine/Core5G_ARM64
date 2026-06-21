@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Core5G_ARM64 — Painel</title>
 <style>
   :root {
@@ -317,6 +318,25 @@
   .condition-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   @media (max-width: 760px) { .condition-grid { grid-template-columns:1fr; } }
   .condition-block label { display:flex; align-items:center; }
+
+  /* ===== Responsivo (alunos no celular) ===== */
+  @media (max-width: 720px) {
+    #topbar-main { flex-wrap:wrap; gap:8px; padding:9px 14px; }
+    #topbar-main h1 { font-size:15px; }
+    .tb-right { gap:8px; }
+    #kiosk-btn { display:none; }                 /* projeção é coisa de operador, não de celular */
+    #topbar-telemetry { padding:5px 14px; gap:10px; }
+    #telemetry { font-size:10.5px; gap:9px; }
+    #projects-bar { flex-direction:column; gap:9px; padding:10px 14px; }
+    #ran-live { margin:0 14px; }
+    #ran-live .rl-metrics { grid-template-columns:repeat(2,1fr); }
+    #guest-banner { flex-wrap:wrap; padding:8px 14px; font-size:12.5px; }
+    #guest-banner .lv-sub { margin-left:0; width:100%; }
+    main { grid-template-columns:1fr; padding:12px 14px; gap:12px; }
+    #sidebar { overflow-y:visible; }
+    #output { font-size:12px; }
+    footer { flex-direction:column; gap:2px; text-align:center; padding:8px 14px; }
+  }
 
   /* ---- Modal de demonstração E2E ---- */
   /* ===== Modal de Resultados salvos ===== */
@@ -2113,7 +2133,9 @@ async function pollRan() {
   if (_activeProj !== 'p2') { el.classList.remove('on'); ranReset(); return; }
   try {
     const d = await (await fetch('/api/topology/gnb-stats', { cache: 'no-store' })).json();
-    if (!d.up) { el.classList.remove('on'); document.getElementById('rl-sub').textContent = 'gNB no ar — aguardando o UE conectar…'; return; }
+    // Só mostra a faixa quando há medição PHY real (SNR) — evita um card vazio "—"
+    // enquanto o UE não anexa (no P2, o anexo NAS depende do UE conectado).
+    if (!d.up || d.snr == null) { el.classList.remove('on'); ranReset(); return; }
     el.classList.add('on');
     document.getElementById('rl-sub').textContent = 'métricas PHY/MAC reais do UE simulado · atualiza a cada 1,5s';
     const set = (id, v, fix) => { const e = document.getElementById(id); if (e) e.textContent = (v == null ? '—' : (fix != null ? Number(v).toFixed(fix) : v)); };

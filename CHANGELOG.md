@@ -48,6 +48,38 @@ PATCH em correções pontuais.
 | 0.24.2 | 2026-06-20 | Créditos/Equipe (Prof. Jonas · Henrique · Klinger · Kelvin) no README e nos rodapés do painel; remove o rótulo "Grupo 6"; adiciona a **licença MIT** |
 | 0.24.3 | 2026-06-20 | Nome completo do professor confirmado nos PDFs da disciplina: **Prof. Dr. Jonas Augusto Kunzler** (jak@cesar.school) — atualizado no README e nos rodapés |
 | 0.24.4 | 2026-06-20 | Crédito do autor: contato via henriquecarmine@gmail.com + breve perfil (perito forense digital; mestrando em Open RAN com o Prof. Jonas) no README/CONTRIBUTING. Equipe final: Prof. Jonas · Henrique · Klinger · Kelvin (Gilberto não participou) |
+| 0.24.5 | 2026-06-20 | Mobile: faltava o `<meta viewport>` no painel (renderizava a 980px no celular, ignorando o CSS) — corrigido + bloco responsivo (header/banner/projetos/RAN se adaptam). Aluno no celular agora vê o espelho ao vivo direito |
+| 0.24.6 | 2026-06-21 | RAN ao vivo só aparece com SNR real (não mostra card vazio "—" enquanto o UE não anexa). Ajuste vindo do ensaio de pré-flight: E2/xApps OK; UE do P2 não anexa (bug AUSF↔UDM conhecido) ⇒ sem fonte PHY viva |
+
+---
+
+## [0.24.6] — 2026-06-21
+
+**Ajuste do RAN ao vivo (achado do ensaio de pré-flight).** No ensaio com o
+Projeto 2 real: o E2 conecta e os xApps rodam ("Connected E2 nodes = 1", "Test
+xApp run SUCCESSFULLY"), mas o **UE não anexa** (bug conhecido AUSF↔UDM HTTP/2 do
+P2, no roadmap) — logo o gNB não emite SNR e a faixa RAN ao vivo não tem dados.
+
+- A faixa **só aparece quando há SNR real** (`d.up && d.snr != null`); antes
+  poderia mostrar um card vazio com "—" durante o demo. Agora fica oculta até
+  haver medição PHY de um UE conectado.
+- Suíte de features validada **7×** (trava de admin, identidade por e-mail,
+  espelho ao vivo, Resultados+Replay, viewers/roster, telemetria) — todas
+  passaram. Mobile (espelho do aluno no celular) validado.
+
+---
+
+## [0.24.5] — 2026-06-20
+
+**Responsividade mobile (alunos no celular).** Numa turma, os alunos entram pelo
+telefone — e o painel renderizava a 980px (sem `<meta viewport>`), forçando zoom.
+
+- Adicionado `<meta name="viewport" content="width=device-width, initial-scale=1">`
+  ao painel (o login já tinha) — agora o CSS responsivo realmente aplica no celular.
+- Bloco `@media (max-width:720px)`: top bar e banner **AO VIVO** quebram linha,
+  cards de projeto empilham, RAN ao vivo vira 2 colunas, console com fonte
+  legível, rodapé centralizado. O botão de projeção some no celular (é de operador).
+- Validado headless a 390px: viewport correto, banner ao vivo e sparklines OK.
 
 ---
 

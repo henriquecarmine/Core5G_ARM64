@@ -185,7 +185,7 @@ do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
 
 **Acesso de colaborador, ou as imagens OAI arm64 do Drive?** Fale comigo:
 
-- **Henrique Carmine** — [hc@cesar.school](mailto:hc@cesar.school) ·
+- **Henrique Carmine** — [henriquecarmine@gmail.com](mailto:henriquecarmine@gmail.com) ·
   [@henriquecarmine](https://github.com/henriquecarmine)
 
 ---
@@ -216,7 +216,7 @@ do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
 ## 5. Equipe
 
 - **Professor (orientador):** Prof. Dr. Jonas Augusto Kunzler — [jak@cesar.school](mailto:jak@cesar.school)
-- **Autor / mantenedor:** Henrique Carmine — [hc@cesar.school](mailto:hc@cesar.school) · [@henriquecarmine](https://github.com/henriquecarmine)
+- **Autor / mantenedor:** Henrique Carmine — Perito Forense Digital (Governança de TI e Telecomunicações), mestrando em Open RAN sob orientação do Prof. Jonas Kunzler — [henriquecarmine@gmail.com](mailto:henriquecarmine@gmail.com) · [@henriquecarmine](https://github.com/henriquecarmine)
 - **Colaboradores:** Klinger · Kelvin
 
 CESAR School · disciplina *RAN Intelligent Controller (RIC)* · tema **UE-TP-rApp**.

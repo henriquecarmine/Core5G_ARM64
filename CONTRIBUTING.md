@@ -124,7 +124,7 @@ A cada release:
 
 Dúvidas, acesso de colaborador, ou as imagens OAI arm64 do Drive do grupo:
 
-- **Henrique Carmine** — [hc@cesar.school](mailto:hc@cesar.school) ·
+- **Henrique Carmine** — [henriquecarmine@gmail.com](mailto:henriquecarmine@gmail.com) ·
   [@henriquecarmine](https://github.com/henriquecarmine)
 
 Obrigado por contribuir! 🚀

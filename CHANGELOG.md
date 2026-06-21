@@ -47,6 +47,18 @@ PATCH em correções pontuais.
 | 0.24.1 | 2026-06-20 | Onboarding de colaboradores: README atualizado (modo sala de aula, guardrail cpuset, usuários), `CONTRIBUTING.md`, modelos de Issue/PR (`.github/`), e **tags git** de toda a história do painel (v0.12.2 → v0.24.x). Issues + Discussions habilitados no GitHub |
 | 0.24.2 | 2026-06-20 | Créditos/Equipe (Prof. Jonas · Henrique · Klinger · Kelvin) no README e nos rodapés do painel; remove o rótulo "Grupo 6"; adiciona a **licença MIT** |
 | 0.24.3 | 2026-06-20 | Nome completo do professor confirmado nos PDFs da disciplina: **Prof. Dr. Jonas Augusto Kunzler** (jak@cesar.school) — atualizado no README e nos rodapés |
+| 0.24.4 | 2026-06-20 | Crédito do autor: contato via henriquecarmine@gmail.com + breve perfil (perito forense digital; mestrando em Open RAN com o Prof. Jonas) no README/CONTRIBUTING. Equipe final: Prof. Jonas · Henrique · Klinger · Kelvin (Gilberto não participou) |
+
+---
+
+## [0.24.4] — 2026-06-20
+
+**Crédito do autor + equipe final.** Contato do mantenedor passou a ser
+[henriquecarmine@gmail.com](mailto:henriquecarmine@gmail.com) (README e
+CONTRIBUTING), com um breve perfil — Perito Forense Digital (Governança de TI e
+Telecomunicações), mestrando em Open RAN sob orientação do Prof. Jonas Kunzler.
+Equipe final confirmada: **Prof. Dr. Jonas Augusto Kunzler · Henrique Carmine ·
+Klinger · Kelvin** (Gilberto não participou do projeto).
 
 ---
 

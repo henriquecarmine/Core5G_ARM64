@@ -41,6 +41,30 @@ PATCH em correções pontuais.
 | 0.20.0 | 2026-06-20 | Resultados persistentes + Replay: cada execução do Professor é salva em disco (`server/panel_results/`) e some no restart nunca mais; aba "Resultados salvos" (Professor e Aluno) lista tudo e **reproduz** a execução com timing. Fase 2 do modo sala de aula |
 | 0.21.0 | 2026-06-20 | RAN ao vivo (P2): faixa de sparklines com SNR/MCS/PRB/BLER reais do gNB OAI (PHY/MAC do UE), atualizando a cada 1,5s; aparece só com o Projeto 2 no ar e é espelhada pros Alunos (ambos consultam `/api/topology/gnb-stats`) |
 | 0.21.1 | 2026-06-20 | Hardening da vaga de Professor: posse "pegajosa" — só libera por logout (ou após 10min de abandono, válvula de segurança); posse por sid, não cai por soluço de rede. Protege a aula de um aluno assumir numa janela curta |
+| 0.22.0 | 2026-06-20 | Telemetria escala p/ a sala de aula: coletor ÚNICO em background + cache (antes cada aluno abria um stream e rodava `docker stats` a cada 2s — 30 alunos derrubariam o box de 2 vCPU). Agora N alunos custam o mesmo que 1. gnb-stats também cacheado |
+
+---
+
+## [0.22.0] — 2026-06-20
+
+**Telemetria que escala para a turma (não derruba o box de 2 vCPU).**
+
+Resposta à pergunta "tem limite quando os alunos entram?": antes **não tinha**, e
+era perigoso. O `/api/telemetry` era um **stream infinito por cliente** e, a cada
+2s, **cada aluno** rodava `docker stats` (pesado) + `docker ps -a` no servidor e
+**prendia uma thread** do pool (~40). Com 30 alunos: ~15 `docker stats`/s e ~30
+conexões presas — saturava o box e matava o lab.
+
+- **Coletor único em background:** uma thread (daemon) coleta host + containers +
+  grupos a cada 2s e guarda em cache. `/api/telemetry` virou um **GET barato** que
+  só devolve o último snapshot — **sem subprocess por cliente, sem thread presa**.
+  Custo no servidor: **O(1), independente do nº de alunos**.
+- **`/api/topology/gnb-stats` cacheado** (janela de 1,4s): N alunos pedindo o RAN
+  ao vivo na mesma janela fazem **1 leitura de log** compartilhada, não N.
+- Front: `startTelemetry` virou polling do GET cacheado (2,5s) em vez de ler um
+  stream preso. `/api/live` já era O(1) (buffer em memória).
+- Resultado: a sala de aula inteira só adiciona requisições leves (nível de ms);
+  o trabalho pesado roda 1× a cada 2s, não 1× por aluno.
 
 ---
 

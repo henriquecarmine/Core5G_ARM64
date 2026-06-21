@@ -530,33 +530,58 @@ def read_group_status(states: dict[str, dict]) -> dict[str, str]:
     }
 
 
-def stream_telemetry() -> Iterator[str]:
-    prev_idle, prev_total = read_cpu_times()
-    while True:
-        time.sleep(2)
-        idle, total = read_cpu_times()
-        d_idle, d_total = idle - prev_idle, total - prev_total
-        cpu_pct = round(100 * (1 - d_idle / d_total), 1) if d_total else 0.0
-        prev_idle, prev_total = idle, total
+# ===========================================================================
+# Telemetria com COLETOR ÚNICO em background (escala p/ a sala de aula).
+# Antes era um stream infinito POR CLIENTE, e cada aluno rodava `docker stats`
+# (pesado) a cada 2s + prendia uma thread do pool — 30 alunos derrubariam o box
+# de 2 vCPU. Agora UMA thread coleta a cada 2s, guarda em cache, e todos os
+# clientes (Professor + N Alunos) leem o mesmo snapshot via GET barato.
+# Custo no servidor: O(1), independente do nº de alunos.
+# ===========================================================================
+_TELE: dict = {"data": None, "ts": 0.0}
+_tele_lock = threading.Lock()
+_tele_prev = {"idle": 0, "total": 0}
 
-        host = read_host_metrics()
-        host["cpu_pct"] = cpu_pct
-        # Junta o status estável (docker ps -a) com CPU/RAM (docker stats só
-        # tem dos que estão rodando). Lista todos os containers, marcando o
-        # estado visual de cada um.
-        states = read_container_states()
-        stats = {c["name"]: c for c in read_container_stats()}
-        containers = []
-        for name in sorted(states):
-            s = stats.get(name, {})
-            containers.append({
-                "name": name,
-                "cpu_pct": s.get("cpu_pct", ""),
-                "mem_usage": s.get("mem_usage", ""),
-                "status": container_status(states[name]["state"], states[name]["health"]),
-            })
-        payload = {"host": host, "containers": containers, "groups": read_group_status(states)}
-        yield json.dumps(payload) + "\n"
+
+def collect_telemetry() -> dict:
+    idle, total = read_cpu_times()
+    d_idle, d_total = idle - _tele_prev["idle"], total - _tele_prev["total"]
+    cpu_pct = round(100 * (1 - d_idle / d_total), 1) if d_total else 0.0
+    _tele_prev["idle"], _tele_prev["total"] = idle, total
+    host = read_host_metrics()
+    host["cpu_pct"] = cpu_pct
+    # Junta o status estável (docker ps -a) com CPU/RAM (docker stats só tem dos
+    # que estão rodando). Lista todos os containers com o estado visual de cada.
+    states = read_container_states()
+    stats = {c["name"]: c for c in read_container_stats()}
+    containers = []
+    for name in sorted(states):
+        s = stats.get(name, {})
+        containers.append({
+            "name": name,
+            "cpu_pct": s.get("cpu_pct", ""),
+            "mem_usage": s.get("mem_usage", ""),
+            "status": container_status(states[name]["state"], states[name]["health"]),
+        })
+    return {"host": host, "containers": containers, "groups": read_group_status(states)}
+
+
+def _telemetry_loop() -> None:
+    _tele_prev["idle"], _tele_prev["total"] = read_cpu_times()
+    time.sleep(2)  # 1ª janela p/ o delta de CPU
+    while True:
+        try:
+            data = collect_telemetry()
+            with _tele_lock:
+                _TELE["data"] = data
+                _TELE["ts"] = time.time()
+        except Exception:
+            pass
+        time.sleep(2)
+
+
+# Sobe o coletor único (daemon) uma vez, no import do módulo.
+threading.Thread(target=_telemetry_loop, daemon=True, name="telemetry-collector").start()
 
 
 @app.get("/")
@@ -811,18 +836,15 @@ def topology_logs() -> JSONResponse:
     return JSONResponse({"sections": [s for s in sections if s["lines"]]})
 
 
-@app.get("/api/topology/gnb-stats")
-def topology_gnb_stats() -> JSONResponse:
-    """Métricas de RAN ao vivo extraídas do log do gNB (PHY/MAC reais do UE
-    simulado): SNR, MCS, PRBs, BLER. Alimenta o card do gNB na topologia."""
+def _compute_gnb_stats() -> dict:
     import re as _re
     log = SERVER_DIR / "oai-cn-gnb-e2" / "logs" / "gnb_oai.log"
     if not process_running("nr-softmodem") or not log.exists():
-        return JSONResponse({"up": False})
+        return {"up": False}
     try:
         lines = log.read_text(errors="replace").splitlines()
     except OSError:
-        return JSONResponse({"up": False})
+        return {"up": False}
     stats: dict = {"up": True}
     for line in reversed(lines[-400:]):
         if "SNR" not in line:
@@ -837,7 +859,27 @@ def topology_gnb_stats() -> JSONResponse:
             if m_prb: stats["prb"] = int(m_prb.group(1))
             if m_bler: stats["bler"] = float(m_bler.group(1))
             break
-    return JSONResponse(stats)
+    return stats
+
+
+_GNB: dict = {"data": {"up": False}, "ts": 0.0}
+_gnb_lock = threading.Lock()
+GNB_MIN_INTERVAL = 1.4  # 1 leitura de log compartilhada por janela (sala de aula)
+
+
+@app.get("/api/topology/gnb-stats")
+def topology_gnb_stats() -> JSONResponse:
+    """Métricas de RAN ao vivo do log do gNB (SNR/MCS/PRB/BLER). Cacheada: se N
+    alunos pedem na mesma janela, faz UMA leitura de log e serve todos do cache."""
+    now = time.time()
+    with _gnb_lock:
+        if now - _GNB["ts"] < GNB_MIN_INTERVAL and _GNB["ts"] > 0:
+            return JSONResponse(_GNB["data"])
+    data = _compute_gnb_stats()
+    with _gnb_lock:
+        _GNB["data"] = data
+        _GNB["ts"] = now
+    return JSONResponse(data)
 
 
 @app.get("/api/topology")
@@ -1017,8 +1059,16 @@ def services_endpoint() -> JSONResponse:
 
 
 @app.get("/api/telemetry")
-def telemetry() -> StreamingResponse:
-    return StreamingResponse(stream_telemetry(), media_type="text/plain")
+def telemetry() -> JSONResponse:
+    """GET barato: devolve o último snapshot do coletor único (sem subprocess por
+    cliente, sem prender thread). N alunos custam o mesmo que 1."""
+    with _tele_lock:
+        data = _TELE["data"]
+    if data is None:  # antes da 1ª coleta (≤2s no boot): host parcial, sem travar
+        host = read_host_metrics()
+        host.setdefault("cpu_pct", 0.0)
+        data = {"host": host, "containers": [], "groups": {}}
+    return JSONResponse(data)
 
 
 @app.get("/api/logs/{service}")

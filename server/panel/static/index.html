@@ -1468,16 +1468,13 @@ function containerRole(name) {
 }
 
 async function startTelemetry() {
+  // Polling de um GET cacheado (coletor único no servidor): N alunos custam o
+  // mesmo que 1, sem docker stats por cliente nem conexão presa.
   try {
-    const resp = await fetch('/api/telemetry');
-    const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf='';
-    while(true) {
-      const {done,value}=await reader.read(); if(done)break;
-      buf+=dec.decode(value,{stream:true}); let idx;
-      while((idx=buf.indexOf('\n'))>=0){const l=buf.slice(0,idx);buf=buf.slice(idx+1);if(l.trim())renderTelemetry(JSON.parse(l));}
-    }
+    const d = await (await fetch('/api/telemetry', { cache: 'no-store' })).json();
+    if (d && d.host) renderTelemetry(d);
   } catch {}
-  setTimeout(startTelemetry, 3000);
+  setTimeout(startTelemetry, 2500);
 }
 
 // ===== Info modal (popovers de explicação) =====

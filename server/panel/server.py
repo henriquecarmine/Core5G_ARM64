@@ -954,6 +954,8 @@ def _docker_logs(container: str, tail: int = 12) -> list[str]:
             ["docker", "logs", "--tail", str(tail), container],
             capture_output=True, text=True, timeout=5,
         )
+        if out.returncode != 0:
+            return []  # container inexistente/parado: sem logs (não vaza erro do daemon)
         lines = (out.stdout + out.stderr).splitlines()
         return [l for l in lines if l.strip()][-tail:]
     except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -976,20 +978,36 @@ def _tail_file(path: Path, tail: int = 14, grep: str | None = None) -> list[str]
 
 
 @app.get("/api/topology/logs")
-def topology_logs() -> JSONResponse:
-    """Logs recentes organizados por componente para a tela de topologia.
-    Containers via `docker logs`; gNB/RIC (nativos) via arquivos de log."""
-    oai_logs = SERVER_DIR / "oai-cn-gnb-e2" / "logs"
-    sections = [
-        {"title": "gNB (E2 Agent)", "comp": "gnb",
-         "lines": _tail_file(oai_logs / "gnb_oai.log", 16, r"E2|RIC|SETUP|NGAP|registr|error|PDU")},
-        {"title": "near-RT RIC", "comp": "ric",
-         "lines": _tail_file(oai_logs / "nearRT-RIC.log", 14)},
-        {"title": "AMF (Mobilidade)", "comp": "amf", "lines": _docker_logs("oai-amf", 10)},
-        {"title": "SMF (Sessão)", "comp": "smf", "lines": _docker_logs("oai-smf", 8)},
-        {"title": "AUSF (Autenticação)", "comp": "ausf", "lines": _docker_logs("oai-ausf", 8)},
-        {"title": "NRF (Descoberta)", "comp": "nrf", "lines": _docker_logs("oai-nrf", 6)},
-    ]
+def topology_logs(proj: str = "p2") -> JSONResponse:
+    """Logs recentes por componente para a tela de topologia, conforme o projeto
+    ativo (?proj=p1|p2). Containers via `docker logs`; gNB/RIC nativos do P2 via
+    arquivos de log. Só volta seções com conteúdo (componente parado some)."""
+    if proj == "p1":
+        # Projeto 1 — Open5GS (5GC) + UERANSIM (RAN)
+        sections = [
+            {"title": "UERANSIM (gNB + UE)", "comp": "ran", "lines": _docker_logs("ueransim", 16)},
+            {"title": "AMF (Mobilidade)", "comp": "amf", "lines": _docker_logs("open5gs-amf-containerized", 10)},
+            {"title": "SMF (Sessão)", "comp": "smf", "lines": _docker_logs("open5gs-smf-containerized", 8)},
+            {"title": "AUSF (Autenticação)", "comp": "ausf", "lines": _docker_logs("open5gs-ausf-containerized", 8)},
+            {"title": "NRF (Descoberta)", "comp": "nrf", "lines": _docker_logs("open5gs-nrf-containerized", 6)},
+        ]
+    else:
+        # Projeto 2 — OAI 5GC v2 + gNB/RIC nativos (host)
+        oai_logs = SERVER_DIR / "oai-cn-gnb-e2" / "logs"
+        # gNB/RIC são nativos no host: só mostra se o processo está vivo, senão
+        # o _tail_file devolveria conteúdo velho da última sessão (log no disco).
+        gnb_lines = _tail_file(oai_logs / "gnb_oai.log", 16, r"E2|RIC|SETUP|NGAP|registr|error|PDU") \
+            if process_running("nr-softmodem") else []
+        ric_lines = _tail_file(oai_logs / "nearRT-RIC.log", 14) \
+            if process_running("nearRT-RIC") else []
+        sections = [
+            {"title": "gNB (E2 Agent)", "comp": "gnb", "lines": gnb_lines},
+            {"title": "near-RT RIC", "comp": "ric", "lines": ric_lines},
+            {"title": "AMF (Mobilidade)", "comp": "amf", "lines": _docker_logs("oai-amf", 10)},
+            {"title": "SMF (Sessão)", "comp": "smf", "lines": _docker_logs("oai-smf", 8)},
+            {"title": "AUSF (Autenticação)", "comp": "ausf", "lines": _docker_logs("oai-ausf", 8)},
+            {"title": "NRF (Descoberta)", "comp": "nrf", "lines": _docker_logs("oai-nrf", 6)},
+        ]
     return JSONResponse({"sections": [s for s in sections if s["lines"]]})
 
 

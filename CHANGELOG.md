@@ -39,6 +39,24 @@ PATCH em correções pontuais.
 | 0.18.0 | 2026-06-20 | Topologia revalidada: rótulos de interface na camada de topo (nunca mais atrás dos cards) + layout do P1 reorganizado sem sobreposição + legenda virou badge minimalista recolhível no canto inferior esquerdo (P1 e P2) |
 | 0.19.0 | 2026-06-20 | Modo sala de aula: 1 Professor por vez (bloqueia 2º admin, libera após 30s idle) + Alunos acompanham AO VIVO o console do Professor (espelho por ring-buffer/polling) + banner "🔴 AO VIVO" + contagem de espectadores + papéis Professor/Aluno |
 | 0.20.0 | 2026-06-20 | Resultados persistentes + Replay: cada execução do Professor é salva em disco (`server/panel_results/`) e some no restart nunca mais; aba "Resultados salvos" (Professor e Aluno) lista tudo e **reproduz** a execução com timing. Fase 2 do modo sala de aula |
+| 0.21.0 | 2026-06-20 | RAN ao vivo (P2): faixa de sparklines com SNR/MCS/PRB/BLER reais do gNB OAI (PHY/MAC do UE), atualizando a cada 1,5s; aparece só com o Projeto 2 no ar e é espelhada pros Alunos (ambos consultam `/api/topology/gnb-stats`) |
+
+---
+
+## [0.21.0] — 2026-06-20
+
+**RAN ao vivo — métricas PHY/MAC do gNB em sparklines.** Faixa nova abaixo dos
+cards de projeto, visível **só quando o Projeto 2 está no ar** (gNB OAI ligado):
+mostra **SNR, MCS, PRB e BLER** reais do UE simulado, em mini-gráficos coloridos
+(ISO) que atualizam a cada 1,5s — a coleta sobe na tela em vez de só texto.
+
+- Fonte: `/api/topology/gnb-stats` (já extraía PHY/MAC do log do gNB p/ a
+  topologia); agora alimenta também a faixa do painel. Sparkline em SVG inline
+  (sem libs), janela rolante de 40 amostras, área + linha por métrica.
+- Auto-mirror: Professor e Aluno consultam o mesmo endpoint, então o aluno vê o
+  mesmo gráfico ao vivo sem plumbing extra. Self-gating: só faz polling com
+  `_activeProj === 'p2'`; some quando o gNB cai ou o UE ainda não conectou.
+- Validado headless (faixa liga com P2 ativo, valores e sparklines renderizam).
 
 ---
 

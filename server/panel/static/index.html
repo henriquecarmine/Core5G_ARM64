@@ -63,6 +63,22 @@
   #guest-banner .lv-sub { color:inherit; opacity:.8; margin-left:auto; font-size:12px; }
   @keyframes lvpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 
+  /* ===== RAN ao vivo (sparklines do gNB) ===== */
+  #ran-live { display:none; margin:0 14px 0; padding:9px 14px; background:linear-gradient(180deg,#1b1e24,#181a1f);
+              border:1px solid var(--border); border-left:3px solid var(--green); border-radius:10px; }
+  #ran-live.on { display:block; }
+  #ran-live .rl-head { display:flex; align-items:center; gap:9px; margin-bottom:8px; }
+  #ran-live .rl-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 7px var(--green); animation:lvpulse 1.3s ease-in-out infinite; }
+  #ran-live .rl-title { font-size:12.5px; font-weight:600; color:var(--text); }
+  #ran-live .rl-sub { font-size:11px; color:var(--muted); margin-left:auto; }
+  #ran-live .rl-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  #ran-live .rl-metric { background:#15171c; border:1px solid var(--border); border-radius:8px; padding:7px 10px 4px; min-width:0; }
+  #ran-live .rl-k { font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  #ran-live .rl-v { font-size:18px; font-weight:600; color:var(--text); font-family:"SF Mono",Menlo,Consolas,monospace; line-height:1.2; }
+  #ran-live .rl-v i { font-size:11px; font-weight:400; color:var(--muted); font-style:normal; }
+  #ran-live .rl-spark { width:100%; height:30px; display:block; margin-top:2px; }
+  @media (max-width:760px) { #ran-live .rl-metrics { grid-template-columns:repeat(2,1fr); } }
+
   /* Telemetria — 2ª faixa do top bar */
   /* Containers vira um toggle inline ANTES dos monitores; a tabela abre em dropdown. */
   #topbar-telemetry { display:flex; align-items:center; gap:22px; flex-wrap:wrap; padding:5px 24px; border-top:1px solid var(--border); background:#1a1d23; }
@@ -412,6 +428,21 @@
     </div>
   </div>
 </div>
+
+<!-- ===== RAN ao vivo (P2): PHY/MAC reais do gNB em sparklines ===== -->
+<section id="ran-live">
+  <div class="rl-head">
+    <span class="rl-dot"></span>
+    <span class="rl-title">RAN ao vivo · gNB OAI (E2)</span>
+    <span class="rl-sub" id="rl-sub">métricas PHY/MAC reais do UE simulado</span>
+  </div>
+  <div class="rl-metrics">
+    <div class="rl-metric" data-k="snr"><div class="rl-k">SNR</div><div class="rl-v"><span id="rl-snr">—</span> <i>dB</i></div><svg class="rl-spark" id="spark-snr" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
+    <div class="rl-metric" data-k="mcs"><div class="rl-k">MCS</div><div class="rl-v"><span id="rl-mcs">—</span></div><svg class="rl-spark" id="spark-mcs" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
+    <div class="rl-metric" data-k="prb"><div class="rl-k">PRB</div><div class="rl-v"><span id="rl-prb">—</span> <i>/ 51</i></div><svg class="rl-spark" id="spark-prb" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
+    <div class="rl-metric" data-k="bler"><div class="rl-k">BLER</div><div class="rl-v"><span id="rl-bler">—</span> <i>%</i></div><svg class="rl-spark" id="spark-bler" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
+  </div>
+</section>
 
 <div id="info-modal-overlay">
   <div id="info-modal">
@@ -1991,11 +2022,53 @@ resReplayBtn.addEventListener('click', replayResult);
 resStopBtn.addEventListener('click', stopReplay);
 resOverlay.addEventListener('click', e => { if (e.target === resOverlay) closeResults(); });
 
+// ===== RAN ao vivo (P2): sparklines de SNR/MCS/PRB/BLER do gNB =====
+const RAN = { snr: [], mcs: [], prb: [], bler: [], max: 40, timer: null,
+  color: { snr: '#4dabf7', mcs: '#e8590c', prb: '#2f9e44', bler: '#e03131' } };
+function ranSparkPath(vals, w = 160, h = 36, pad = 4) {
+  if (!vals.length) return '';
+  const min = Math.min(...vals), max = Math.max(...vals), rng = (max - min) || 1;
+  const dx = vals.length > 1 ? w / (vals.length - 1) : 0;
+  return vals.map((v, i) => {
+    const x = i * dx, y = h - pad - ((v - min) / rng) * (h - 2 * pad);
+    return (i ? 'L' : 'M') + x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+}
+function renderSpark(id, vals, color) {
+  const svg = document.getElementById(id);
+  if (!svg) return;
+  if (!vals.length) { svg.innerHTML = ''; return; }
+  const d = ranSparkPath(vals);
+  svg.innerHTML = `<path d="${d} L160,36 L0,36 Z" fill="${color}" opacity="0.10"/>` +
+    `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>`;
+}
+function pushRan(arr, v) { if (v == null || isNaN(v)) return; arr.push(v); if (arr.length > RAN.max) arr.shift(); }
+function ranReset() { RAN.snr = []; RAN.mcs = []; RAN.prb = []; RAN.bler = []; }
+async function pollRan() {
+  const el = document.getElementById('ran-live');
+  if (_activeProj !== 'p2') { el.classList.remove('on'); ranReset(); return; }
+  try {
+    const d = await (await fetch('/api/topology/gnb-stats', { cache: 'no-store' })).json();
+    if (!d.up) { el.classList.remove('on'); document.getElementById('rl-sub').textContent = 'gNB no ar — aguardando o UE conectar…'; return; }
+    el.classList.add('on');
+    document.getElementById('rl-sub').textContent = 'métricas PHY/MAC reais do UE simulado · atualiza a cada 1,5s';
+    const set = (id, v, fix) => { const e = document.getElementById(id); if (e) e.textContent = (v == null ? '—' : (fix != null ? Number(v).toFixed(fix) : v)); };
+    set('rl-snr', d.snr, 1); set('rl-mcs', d.mcs, 0); set('rl-prb', d.prb, 0); set('rl-bler', d.bler, 1);
+    pushRan(RAN.snr, d.snr); pushRan(RAN.mcs, d.mcs); pushRan(RAN.prb, d.prb); pushRan(RAN.bler, d.bler);
+    renderSpark('spark-snr', RAN.snr, RAN.color.snr);
+    renderSpark('spark-mcs', RAN.mcs, RAN.color.mcs);
+    renderSpark('spark-prb', RAN.prb, RAN.color.prb);
+    renderSpark('spark-bler', RAN.bler, RAN.color.bler);
+  } catch {}
+}
+function startRanLive() { if (RAN.timer) clearInterval(RAN.timer); pollRan(); RAN.timer = setInterval(pollRan, 1500); }
+
 // ===== Boot =====
 loadWhoami();
 loadServices();
 loadVersion();
 startTelemetry();
+startRanLive();
 </script>
 </body>
 </html>

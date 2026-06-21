@@ -59,10 +59,22 @@ PATCH em correções pontuais.
 | 0.25.4 | 2026-06-21 | **Bible atualizado** com a sessão 0.25.x: §8.5 (relatórios com falso-negativo — container ≠ serviço Compose, HTML como IP, veredito desonesto) e §8.6 (Demo E2E media a bridge Docker, não o túnel 5G); §9 com a verificação ao vivo de todos os relatórios; §10 e §11 com o item da auditoria e o link do guia |
 | 0.25.5 | 2026-06-21 | **Modo projeção** agora mantém a **régua lateral de ações** visível (o professor opera testes/demo enquanto projeta). Antes o kiosk escondia o `#sidebar` inteiro; agora só esconde o que polui o datashow (barra de projetos, telemetria pesada, copiar/limpar) e restaura o grid de 2 colunas |
 | 0.26.0 | 2026-06-21 | **Gerenciar Resultados salvos**: excluir **um** (✕ por item) ou **vários** (modo "Selecionar" com checkboxes + "Excluir selecionados" + "Tudo"), e **anotar uma observação** (✎) no relatório pra lembrar do que era. Tudo só para Professor (Aluno 403), com confirmação nas exclusões |
+| 0.26.1 | 2026-06-21 | **Botão "⎋ Sair" (logout)** no topo do painel. Faltava UI para o `/api/logout` que já existia — sem ele, a vaga única de Professor só liberava após 10 min de carência. Agora o professor sai com 1 clique (com confirmação) e **libera a vaga na hora** para outro entrar |
 
 ---
 
-## [0.26.0] — 2026-06-21
+## [0.26.1] — 2026-06-21
+
+**Botão de logout no painel.** O endpoint `/api/logout` (que limpa a vaga de
+Professor e o cookie) existia, mas **não tinha botão** — o professor não
+conseguia sair, e a vaga única só liberava após `ADMIN_TAKEOVER_GRACE` (10 min).
+
+- **Novo botão "⎋ Sair"** na barra do topo (`#logout-btn`), ao lado do "quem sou".
+  Pede confirmação e, ao confirmar, chama `POST /api/logout` e volta para
+  `/login`. Para Professor, o aviso explica que **libera a vaga** para outro
+  entrar; para Aluno, é só "Sair do painel?".
+- Resolve na prática a trava "um Professor por vez": agora dá para trocar de
+  professor (ex.: do `hcarmine` para o `jonas`) na hora, sem esperar a carência.
 
 **Gerenciamento dos Resultados salvos: excluir e anotar.** O modal de Resultados
 só listava/abria/reproduzia — não dava para limpar nem identificar relatórios

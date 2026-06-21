@@ -51,6 +51,8 @@
   .tb-right { display:flex; align-items:center; gap:14px; margin-left:auto; }
   #whoami { color:var(--muted); font-size:13px; white-space:nowrap; }
   #whoami.guest { color:#ffb84d; }
+  #logout-btn { width:auto; margin:0; padding:4px 11px; font-size:12.5px; border-radius:7px; cursor:pointer; background:none; border:1px solid var(--border); color:var(--muted); white-space:nowrap; }
+  #logout-btn:hover { color:#ff8787; border-color:var(--red); }
   /* Badge de espectadores (visível só pro Professor) */
   #viewer-badge { display:none; align-items:center; gap:6px; font-size:12.5px; color:#74c0fc; white-space:nowrap; cursor:pointer;
                   background:rgba(77,171,247,.12); border:1px solid rgba(77,171,247,.4); border-radius:20px; padding:3px 11px; transition:background .15s; }
@@ -459,6 +461,7 @@
       <span id="viewer-badge"><span class="vb-dot"></span><span id="viewer-count">0 alunos</span></span>
       <button id="kiosk-btn" title="Modo projeção — tela limpa para o datashow (Esc para sair)">⛶ Projeção</button>
       <div id="whoami">carregando...</div>
+      <button id="logout-btn" title="Sair (logout) — libera a vaga de professor para outro entrar">⎋ Sair</button>
     </div>
   </div>
   <div id="topbar-telemetry">
@@ -1040,11 +1043,22 @@ async function loadWhoami() {
     isGuest = data.role === 'guest';
     whoamiEl.textContent = (data.user || '?') + ' · ' + (ROLE_LABEL[data.role] || data.role);
     whoamiEl.className = isGuest ? 'guest' : '';
+    logoutBtn.title = isGuest ? 'Sair (logout) do painel' : 'Sair (logout) — libera a vaga de professor para outro entrar';
     setRunning(false);
     if (isGuest) startAlunoMode();
     else startProfessorMode();
   } catch { whoamiEl.textContent = 'erro'; }
 }
+const logoutBtn = document.getElementById('logout-btn');
+async function doLogout() {
+  const msg = isGuest
+    ? 'Sair do painel?'
+    : 'Sair do painel?\n\nIsso libera a vaga de professor para outro entrar.';
+  if (!confirm(msg)) return;
+  try { await fetch('/api/logout', { method: 'POST' }); } catch {}
+  window.location.href = '/login';
+}
+logoutBtn.addEventListener('click', doLogout);
 
 // ===== Sala de aula: espelho ao vivo (Aluno) + heartbeat/nav (Professor) =====
 const viewerBadge = document.getElementById('viewer-badge');

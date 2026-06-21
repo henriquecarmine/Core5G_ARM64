@@ -64,10 +64,12 @@
   #kiosk-exit:hover { color:var(--text); border-color:var(--red); }
 
   /* ===== Modo projeção (kiosk) — tela limpa e grande pro datashow ===== */
-  body.kiosk #projects-bar, body.kiosk #sidebar, body.kiosk #kiosk-btn,
+  /* A régua lateral de ações (#sidebar) permanece para o professor operar
+     durante a projeção; só escondemos o que polui o datashow. */
+  body.kiosk #projects-bar, body.kiosk #kiosk-btn,
   body.kiosk #tm-containers-wrap, body.kiosk #copy-btn, body.kiosk #clear-btn { display:none !important; }
   body.kiosk #kiosk-exit { display:block; }
-  body.kiosk main { grid-template-columns:1fr; padding:14px 28px 22px; }
+  body.kiosk main { grid-template-columns:230px 1fr; padding:14px 28px 22px; }
   body.kiosk #topbar-main { padding:14px 28px; }
   body.kiosk #topbar-main h1 { font-size:19px; }
   body.kiosk #active-proj { font-size:14px; padding:5px 12px; }

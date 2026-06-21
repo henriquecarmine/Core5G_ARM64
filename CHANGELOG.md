@@ -57,6 +57,20 @@ PATCH em correções pontuais.
 | 0.25.2 | 2026-06-21 | **Verificação ao vivo dos relatórios P1** revelou 3 bugs de precisão (que a auditoria estática não pegava) — todos corrigidos: (1) `ue_connection` mostrava `<!DOCTYPE html>` como "IP público" (ifconfig.me via wget) → usa `/ip` + valida IP; (2) `ng_setup` e (3) `registration` davam falso-negativo "AMF não está rodando" (nome de container errado: `amf` vs `open5gs-amf-containerized`), fazendo `ng_setup` dizer "N2 não confirmada" mesmo com NGSetupResponse OK |
 | 0.25.3 | 2026-06-21 | **Documentação para colaboradores**: novo guia [`docs/relatorios-didaticos.md`](docs/relatorios-didaticos.md) — como o sistema de relatórios funciona (lib `testlog.sh`, protocolo da Demo E2E, como adicionar um relatório, gotchas verificados ao vivo, inventário P1/P2). Ligado no README (mapa) e no CONTRIBUTING (validação) |
 | 0.25.4 | 2026-06-21 | **Bible atualizado** com a sessão 0.25.x: §8.5 (relatórios com falso-negativo — container ≠ serviço Compose, HTML como IP, veredito desonesto) e §8.6 (Demo E2E media a bridge Docker, não o túnel 5G); §9 com a verificação ao vivo de todos os relatórios; §10 e §11 com o item da auditoria e o link do guia |
+| 0.25.5 | 2026-06-21 | **Modo projeção** agora mantém a **régua lateral de ações** visível (o professor opera testes/demo enquanto projeta). Antes o kiosk escondia o `#sidebar` inteiro; agora só esconde o que polui o datashow (barra de projetos, telemetria pesada, copiar/limpar) e restaura o grid de 2 colunas |
+
+---
+
+## [0.25.5] — 2026-06-21
+
+**Modo projeção operável.** O modo projeção (kiosk) escondia a régua lateral
+inteira (`#sidebar`), deixando o professor sem os botões de ação durante a
+projeção — para rodar um teste era preciso sair da projeção.
+
+- **Correção:** o kiosk mantém o `#sidebar` (botões de ação) visível e restaura o
+  grid de 2 colunas (`230px 1fr`). Continuam escondidos só os elementos que
+  poluem o datashow: barra de projetos, painel de containers/telemetria pesada e
+  os botões copiar/limpar do console. Console segue em fonte grande.
 
 ---
 

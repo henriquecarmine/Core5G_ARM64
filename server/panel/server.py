@@ -85,14 +85,17 @@ def _sign(value: str) -> str:
     return hmac.new(SECRET_KEY.encode(), value.encode(), hashlib.sha256).hexdigest()
 
 
-# O token carrega usuário + um id de sessão (sid) único por login. O sid permite
-# distinguir sessões (necessário pra trava de "um Professor por vez" e pra contar
-# espectadores) sem manter estado de cookie no servidor.
+# O token carrega: usuário + sid (id de sessão único por login) + a IDENTIDADE do
+# Aluno (e-mail e nome). O sid distingue sessões (trava de Professor único e
+# contagem de espectadores); a identidade dá o "controle unitário" da turma
+# (quem é quem) sem manter estado no servidor — vai assinada no cookie.
 _SID_SEP = "\x1f"
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-def make_session_token(user: str, sid: str) -> str:
-    payload = base64.urlsafe_b64encode(f"{user}{_SID_SEP}{sid}".encode()).decode()
+def make_session_token(user: str, sid: str, email: str = "", name: str = "") -> str:
+    raw = _SID_SEP.join([user, sid, email or "", name or ""])
+    payload = base64.urlsafe_b64encode(raw.encode()).decode()
     return f"{payload}.{_sign(payload)}"
 
 
@@ -108,19 +111,33 @@ def _read_session_raw(token: str | None) -> str | None:
         return None
 
 
-def current_session(request: Request) -> tuple[str | None, str | None]:
-    """(usuário, sid). Tolera tokens legados (sem sid)."""
+def _parse_session(request: Request) -> tuple[str | None, str | None, str, str]:
+    """(usuário, sid, email, nome). Tolera tokens legados (sem sid/identidade)."""
     raw = _read_session_raw(request.cookies.get(SESSION_COOKIE))
     if raw is None:
-        return (None, None)
-    if _SID_SEP in raw:
-        user, sid = raw.split(_SID_SEP, 1)
-        return (user, sid)
-    return (raw, None)
+        return (None, None, "", "")
+    parts = raw.split(_SID_SEP)
+    user = parts[0] if parts else None
+    sid = parts[1] if len(parts) > 1 else None
+    email = parts[2] if len(parts) > 2 else ""
+    name = parts[3] if len(parts) > 3 else ""
+    return (user, sid, email, name)
+
+
+def current_session(request: Request) -> tuple[str | None, str | None]:
+    """(usuário, sid) — compat com o resto do código."""
+    user, sid, _, _ = _parse_session(request)
+    return (user, sid)
+
+
+def current_ident(request: Request) -> tuple[str, str]:
+    """(email, nome) do Aluno, se houver."""
+    _, _, email, name = _parse_session(request)
+    return (email, name)
 
 
 def current_user(request: Request) -> str | None:
-    return current_session(request)[0]
+    return _parse_session(request)[0]
 
 
 # ===========================================================================
@@ -164,11 +181,13 @@ def _touch_admin(sid: str | None) -> None:
             ACTIVE_ADMIN["ts"] = time.time()
 
 
-def _touch_viewer(user: str | None, sid: str | None) -> None:
+def _touch_viewer(user: str | None, sid: str | None, email: str = "", name: str = "") -> None:
     if not sid:
         return
     with _state_lock:
-        _VIEWERS[sid] = {"user": user, "ts": time.time()}
+        v = _VIEWERS.get(sid) or {"first": time.time()}
+        v.update(user=user, email=email or v.get("email", ""), name=name or v.get("name", ""), ts=time.time())
+        _VIEWERS[sid] = v
 
 
 def viewer_count() -> int:
@@ -177,6 +196,19 @@ def viewer_count() -> int:
         for k in [k for k, v in _VIEWERS.items() if now - v["ts"] > VIEWER_TIMEOUT]:
             _VIEWERS.pop(k, None)
         return len(_VIEWERS)
+
+
+def live_viewers() -> list[dict]:
+    """Alunos conectados agora (nome + e-mail), para o Professor ver quem é quem."""
+    now = time.time()
+    out = []
+    with _state_lock:
+        for v in _VIEWERS.values():
+            if now - v["ts"] <= VIEWER_TIMEOUT:
+                out.append({"name": v.get("name") or "—", "email": v.get("email") or "—",
+                            "since": round(v.get("first", v["ts"]), 1)})
+    out.sort(key=lambda x: (x["name"].lower(), x["email"]))
+    return out
 
 
 class LiveBuffer:
@@ -599,16 +631,31 @@ def login(request: Request):
     return HTMLResponse(html)
 
 
-def _set_session(response: JSONResponse, user: str, sid: str) -> JSONResponse:
+def _set_session(response: JSONResponse, user: str, sid: str, email: str = "", name: str = "") -> JSONResponse:
     response.set_cookie(
         SESSION_COOKIE,
-        make_session_token(user, sid),
+        make_session_token(user, sid, email, name),
         max_age=SESSION_MAX_AGE,
         httponly=True,
         samesite="lax",
         secure=True,
     )
     return response
+
+
+# Roster de presença: cada entrada de Aluno é registrada (append) num arquivo
+# fora da árvore do deploy — o "controle unitário" da turma (quem é quem),
+# disponível para atividades futuras. É dado pessoal: fica só no servidor.
+ROSTER_FILE = RESULTS_DIR / "_roster.jsonl"
+
+
+def _record_attendance(name: str, email: str) -> None:
+    try:
+        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        with ROSTER_FILE.open("a", encoding="utf-8") as f:
+            f.write(json.dumps({"ts": round(time.time(), 1), "name": name, "email": email}, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
 
 
 @app.post("/api/login")
@@ -641,11 +688,22 @@ def do_login(payload: dict) -> JSONResponse:
 
 
 @app.post("/api/login/guest")
-def do_login_guest() -> JSONResponse:
+def do_login_guest(payload: dict | None = None) -> JSONResponse:
     if not GUEST_ENABLED:
         raise HTTPException(403, "Acesso de aluno desabilitado neste servidor.")
+    payload = payload or {}
+    name = str(payload.get("name", "")).strip()[:80]
+    email = str(payload.get("email", "")).strip().lower()[:120]
+    if len(name) < 2:
+        raise HTTPException(400, "Informe seu nome completo para entrar como aluno.")
+    if not EMAIL_RE.match(email):
+        raise HTTPException(400, "Informe um e-mail válido para entrar como aluno.")
     sid = secrets.token_hex(8)
-    return _set_session(JSONResponse({"user": GUEST_USER, "role": "guest"}), GUEST_USER, sid)
+    _record_attendance(name, email)   # presença persistida (controle unitário)
+    return _set_session(
+        JSONResponse({"user": GUEST_USER, "role": "guest", "name": name, "email": email}),
+        GUEST_USER, sid, email=email, name=name,
+    )
 
 
 @app.post("/api/logout")
@@ -681,10 +739,59 @@ def heartbeat(request: Request) -> JSONResponse:
 def live(request: Request, since: int = 0) -> JSONResponse:
     """Aluno: puxa os eventos novos (>since) do buffer ao vivo + estado da sessão
     e da navegação do Professor. Também registra presença (contagem)."""
-    user, sid = current_session(request)
-    _touch_viewer(user, sid)
+    user, sid, email, name = _parse_session(request)
+    _touch_viewer(user, sid, email, name)
     evs, seq, session, nav = LIVE.snapshot(since)
     return JSONResponse({"events": evs, "seq": seq, "session": session, "nav": nav, "viewers": viewer_count()})
+
+
+def _require_admin(request: Request) -> str:
+    user, _ = current_session(request)
+    if user is None or user == GUEST_USER:
+        raise HTTPException(403, "Apenas o professor pode ver esta informação.")
+    return user
+
+
+@app.get("/api/viewers")
+def viewers(request: Request) -> JSONResponse:
+    """Professor: quem está assistindo AGORA (nome + e-mail). Só o professor vê."""
+    _require_admin(request)
+    vs = live_viewers()
+    return JSONResponse({"viewers": vs, "count": len(vs)})
+
+
+@app.get("/api/roster")
+def roster(request: Request) -> JSONResponse:
+    """Professor: lista de presença acumulada (controle unitário da turma),
+    agregada por e-mail — quem entrou, quantas vezes e quando foi visto pela 1ª/
+    última vez. Base para atividades futuras."""
+    _require_admin(request)
+    agg: dict[str, dict] = {}
+    if ROSTER_FILE.exists():
+        try:
+            for line in ROSTER_FILE.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    r = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                email = r.get("email", "")
+                if not email:
+                    continue
+                a = agg.get(email)
+                if a is None:
+                    agg[email] = {"email": email, "name": r.get("name", ""), "entries": 1,
+                                  "first": r.get("ts"), "last": r.get("ts")}
+                else:
+                    a["entries"] += 1
+                    a["name"] = r.get("name", "") or a["name"]
+                    a["last"] = r.get("ts")
+        except OSError:
+            pass
+    out = sorted(agg.values(), key=lambda x: (x["name"].lower(), x["email"]))
+    return JSONResponse({"roster": out, "count": len(out)})
 
 
 @app.post("/api/nav")

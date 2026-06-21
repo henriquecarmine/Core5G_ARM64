@@ -63,7 +63,7 @@
     letter-spacing: .05em;
     margin-bottom: 6px;
   }
-  input[type="text"], input[type="password"] {
+  input[type="text"], input[type="password"], input[type="email"] {
     width: 100%;
     padding: 10px 12px;
     margin-bottom: 16px;
@@ -75,9 +75,11 @@
     outline: none;
     transition: border-color .15s;
   }
-  input[type="text"]:focus, input[type="password"]:focus {
+  input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
     border-color: var(--accent);
   }
+  #guest-form input { margin-bottom: 10px; }
+  #guest-hint { font-size: 11px; color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
   button {
     width: 100%;
     padding: 11px;
@@ -161,9 +163,14 @@
       <button type="submit" id="btn-login">Entrar</button>
     </form>
 
-    <div class="divider" id="guest-divider">ou</div>
+    <div class="divider" id="guest-divider">ou entre como aluno</div>
 
-    <button id="btn-guest" type="button">Entrar como aluno (acompanhar ao vivo)</button>
+    <div id="guest-form">
+      <p id="guest-hint">Acompanhe a aula ao vivo (somente leitura). Informe seu nome e e-mail para entrar — é o registro de presença da turma.</p>
+      <input type="text" id="g-name" placeholder="Seu nome completo" autocomplete="name">
+      <input type="email" id="g-email" placeholder="Seu e-mail" autocomplete="email">
+      <button id="btn-guest" type="button">Entrar como aluno (acompanhar ao vivo)</button>
+    </div>
 
     <footer>
       <a href="https://github.com/henriquecarmine/Core5G_ARM64" target="_blank" rel="noopener">github.com/henriquecarmine/Core5G_ARM64</a><br>
@@ -211,15 +218,23 @@ document.getElementById("login-form").addEventListener("submit", (ev) => {
   tryLogin("/api/login", { user, pass });
 });
 
-// Guest é opt-in: se desabilitado no servidor, esconde o botão e o divisor.
+// Aluno é opt-in: se desabilitado no servidor, esconde o formulário e o divisor.
 const guestEnabled = (__GUEST_ENABLED__);
 if (!guestEnabled) {
-  document.getElementById("btn-guest").style.display = "none";
+  document.getElementById("guest-form").style.display = "none";
   document.getElementById("guest-divider").style.display = "none";
 } else {
-  document.getElementById("btn-guest").addEventListener("click", () => {
-    tryLogin("/api/login/guest", null);
-  });
+  const gName = document.getElementById("g-name");
+  const gEmail = document.getElementById("g-email");
+  const enterAluno = () => {
+    const name = gName.value.trim();
+    const email = gEmail.value.trim();
+    if (name.length < 2) { errorBox.textContent = "Informe seu nome completo."; errorBox.style.display = "block"; gName.focus(); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errorBox.textContent = "Informe um e-mail válido."; errorBox.style.display = "block"; gEmail.focus(); return; }
+    tryLogin("/api/login/guest", { name, email });
+  };
+  document.getElementById("btn-guest").addEventListener("click", enterAluno);
+  gEmail.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); enterAluno(); } });
 }
 </script>
 </body>

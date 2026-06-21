@@ -42,6 +42,31 @@ PATCH em correções pontuais.
 | 0.21.0 | 2026-06-20 | RAN ao vivo (P2): faixa de sparklines com SNR/MCS/PRB/BLER reais do gNB OAI (PHY/MAC do UE), atualizando a cada 1,5s; aparece só com o Projeto 2 no ar e é espelhada pros Alunos (ambos consultam `/api/topology/gnb-stats`) |
 | 0.21.1 | 2026-06-20 | Hardening da vaga de Professor: posse "pegajosa" — só libera por logout (ou após 10min de abandono, válvula de segurança); posse por sid, não cai por soluço de rede. Protege a aula de um aluno assumir numa janela curta |
 | 0.22.0 | 2026-06-20 | Telemetria escala p/ a sala de aula: coletor ÚNICO em background + cache (antes cada aluno abria um stream e rodava `docker stats` a cada 2s — 30 alunos derrubariam o box de 2 vCPU). Agora N alunos custam o mesmo que 1. gnb-stats também cacheado |
+| 0.23.0 | 2026-06-20 | Aluno identificado: entra com Nome + E-mail (1 passo, sem senha). Identidade assinada no cookie + roster de presença persistente; Professor vê "Alunos conectados" (nome+email) e a presença acumulada clicando no badge 👁 |
+
+---
+
+## [0.23.0] — 2026-06-20
+
+**Aluno identificado (controle unitário da turma).** O acesso de aluno deixou de
+ser anônimo: agora pede **Nome + E-mail** (1 passo, sem senha) — o e-mail é a
+chave única que filtra os curiosos e identifica quem é quem para atividades
+futuras.
+
+- **Login:** `/api/login/guest` recebe `{name, email}`, valida formato de e-mail
+  (qualquer e-mail válido) e nome; a identidade vai **assinada no cookie**
+  (sobrevive a restart). Papel continua Aluno (só-leitura).
+- **Roster persistente:** cada entrada grava `{quando, nome, email}` em
+  `panel_results/_roster.jsonl` (fora do git; é dado pessoal, fica só no
+  servidor). `GET /api/roster` (só Professor) agrega por e-mail: quem entrou,
+  quantas vezes, 1ª/última vez.
+- **Lista ao vivo:** `GET /api/viewers` (só Professor) lista quem está assistindo
+  agora (nome + e-mail). No painel, o badge **👁 N alunos** virou clicável e abre
+  o modal "Alunos" com abas **Conectados agora** / **Presença (todos)**.
+- Privacidade: e-mail nunca é exposto a outros alunos nem vai pro git — só o
+  Professor vê.
+- Validado: token com identidade (round-trip), regex de e-mail, viewers ao vivo
+  e agregação do roster.
 
 ---
 

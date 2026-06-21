@@ -51,8 +51,9 @@
   #whoami { color:var(--muted); font-size:13px; white-space:nowrap; }
   #whoami.guest { color:#ffb84d; }
   /* Badge de espectadores (visível só pro Professor) */
-  #viewer-badge { display:none; align-items:center; gap:6px; font-size:12.5px; color:#74c0fc; white-space:nowrap;
-                  background:rgba(77,171,247,.12); border:1px solid rgba(77,171,247,.4); border-radius:20px; padding:3px 11px; }
+  #viewer-badge { display:none; align-items:center; gap:6px; font-size:12.5px; color:#74c0fc; white-space:nowrap; cursor:pointer;
+                  background:rgba(77,171,247,.12); border:1px solid rgba(77,171,247,.4); border-radius:20px; padding:3px 11px; transition:background .15s; }
+  #viewer-badge:hover { background:rgba(77,171,247,.24); }
   #viewer-badge .vb-dot { width:7px; height:7px; border-radius:50%; background:#4dabf7; box-shadow:0 0 6px #4dabf7; }
   /* Banner do topo — modo aluno (ao vivo) e aviso de professor */
   #guest-banner { display:none; padding:7px 24px; font-size:13px; background:#4a2f0c; color:#ffb84d; }
@@ -330,6 +331,28 @@
   #results-console { flex:1; min-height:0; overflow-y:auto; padding:10px 16px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px; line-height:1.5; background:var(--bg); }
   #results-console .run-header { margin:2px 0 8px; }
 
+  /* ===== Modal de Alunos (conectados + presença) ===== */
+  #alunos-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:216; align-items:center; justify-content:center; }
+  #alunos-overlay.open { display:flex; }
+  #alunos-modal { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:560px; height:74vh; display:flex; flex-direction:column; overflow:hidden; }
+  #alunos-head { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap; }
+  #alunos-head h3 { font-size:14px; margin:0; }
+  #alunos-head #alunos-count { color:var(--muted); font-weight:400; font-size:12px; }
+  #alunos-tabs { display:flex; gap:5px; }
+  .al-tab { width:auto; margin:0; font-size:12px; padding:4px 11px; border-radius:7px; background:#21242b; border:1px solid var(--border); color:var(--muted); cursor:pointer; }
+  .al-tab.active { color:#cfe8ff; border-color:rgba(77,171,247,.5); background:rgba(77,171,247,.12); }
+  #alunos-head #alunos-refresh, #alunos-head #alunos-close { width:auto; margin:0; background:none; border:1px solid var(--border); color:var(--muted); font-size:15px; cursor:pointer; border-radius:7px; padding:2px 9px; }
+  #alunos-head #alunos-refresh { margin-left:auto; }
+  #alunos-head #alunos-refresh:hover, #alunos-head #alunos-close:hover { color:var(--text); border-color:var(--accent); }
+  #alunos-body { flex:1; overflow-y:auto; padding:8px 14px; }
+  .al-item { display:flex; align-items:center; gap:11px; padding:9px 4px; border-bottom:1px solid var(--border); }
+  .al-item .al-av { width:30px; height:30px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#0b1622; background:#74c0fc; }
+  .al-item .al-main { flex:1; min-width:0; }
+  .al-item .al-name { font-size:13px; font-weight:600; color:var(--text); }
+  .al-item .al-email { font-size:11.5px; color:var(--muted); font-family:"SF Mono",Menlo,Consolas,monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .al-item .al-meta { font-size:10.5px; color:var(--muted); white-space:nowrap; text-align:right; }
+  #alunos-empty { color:var(--muted); text-align:center; padding:34px 16px; font-size:13px; }
+
   #demo-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:210; align-items:center; justify-content:center; }
   #demo-overlay.open { display:flex; }
   #demo-modal { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:940px; max-height:84vh; display:flex; flex-direction:column; overflow:hidden; }
@@ -500,6 +523,22 @@
         <div id="results-console"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ===== Alunos: conectados agora + presença (só Professor) ===== -->
+<div id="alunos-overlay">
+  <div id="alunos-modal">
+    <div id="alunos-head">
+      <h3>👁 Alunos <span id="alunos-count"></span></h3>
+      <div id="alunos-tabs">
+        <button class="al-tab active" data-tab="live">Conectados agora</button>
+        <button class="al-tab" data-tab="roster">Presença (todos)</button>
+      </div>
+      <button id="alunos-refresh" title="Atualizar">↻</button>
+      <button id="alunos-close" title="Fechar">×</button>
+    </div>
+    <div id="alunos-body"></div>
   </div>
 </div>
 <main>
@@ -2059,6 +2098,47 @@ async function pollRan() {
   } catch {}
 }
 function startRanLive() { if (RAN.timer) clearInterval(RAN.timer); pollRan(); RAN.timer = setInterval(pollRan, 1500); }
+
+// ===== Alunos: conectados agora + presença (só Professor) =====
+const alunosOverlay = document.getElementById('alunos-overlay');
+const alunosBody = document.getElementById('alunos-body');
+let _alunosTab = 'live', _alunosTimer = null;
+function initials(name) { const p = (name || '?').trim().split(/\s+/); return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase(); }
+function fmtSince(ts) { if (!ts) return ''; try { return new Date(ts * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch { return ''; } }
+function renderAlunos(items, tab) {
+  document.getElementById('alunos-count').textContent = items.length ? '· ' + items.length : '';
+  if (!items.length) { alunosBody.innerHTML = '<div id="alunos-empty">' + (tab === 'live' ? 'Nenhum aluno conectado agora.' : 'Ninguém entrou ainda.') + '</div>'; return; }
+  alunosBody.innerHTML = '';
+  items.forEach(a => {
+    const div = document.createElement('div'); div.className = 'al-item';
+    const meta = tab === 'live' ? 'desde ' + fmtSince(a.since) : (a.entries || 1) + '× · últ. ' + fmtSince(a.last);
+    div.innerHTML = '<div class="al-av"></div><div class="al-main"><div class="al-name"></div><div class="al-email"></div></div><div class="al-meta"></div>';
+    div.querySelector('.al-av').textContent = initials(a.name);
+    div.querySelector('.al-name').textContent = a.name || '—';
+    div.querySelector('.al-email').textContent = a.email || '—';
+    div.querySelector('.al-meta').textContent = meta;
+    alunosBody.appendChild(div);
+  });
+}
+async function loadAlunos() {
+  try {
+    const url = _alunosTab === 'live' ? '/api/viewers' : '/api/roster';
+    const d = await (await fetch(url)).json();
+    renderAlunos((_alunosTab === 'live' ? d.viewers : d.roster) || [], _alunosTab);
+  } catch { alunosBody.innerHTML = '<div id="alunos-empty">Falha ao carregar.</div>'; }
+}
+function alunosPoll(on) { if (_alunosTimer) { clearInterval(_alunosTimer); _alunosTimer = null; } if (on && _alunosTab === 'live') _alunosTimer = setInterval(loadAlunos, 3000); }
+function openAlunos() { if (isGuest) return; alunosOverlay.classList.add('open'); loadAlunos(); alunosPoll(true); }
+function closeAlunos() { alunosOverlay.classList.remove('open'); alunosPoll(false); }
+viewerBadge.addEventListener('click', openAlunos);
+document.getElementById('alunos-close').addEventListener('click', closeAlunos);
+document.getElementById('alunos-refresh').addEventListener('click', loadAlunos);
+document.querySelectorAll('.al-tab').forEach(b => b.addEventListener('click', () => {
+  _alunosTab = b.dataset.tab;
+  document.querySelectorAll('.al-tab').forEach(x => x.classList.toggle('active', x === b));
+  loadAlunos(); alunosPoll(_alunosTab === 'live');
+}));
+alunosOverlay.addEventListener('click', e => { if (e.target === alunosOverlay) closeAlunos(); });
 
 // ===== Boot =====
 loadWhoami();

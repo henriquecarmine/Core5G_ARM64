@@ -62,18 +62,27 @@
   .link.flow.planned { stroke-width:2.4; }
   @keyframes flowmove { from { stroke-dashoffset:0; } to { stroke-dashoffset:-16; } }
   .link-label { font-size:10px; fill:var(--text); font-family:"SF Mono",Menlo,Consolas,monospace; }
-  .link-label-bg { fill:var(--bg); opacity:.9; }
+  .link-label-bg { fill:#1b1e24; stroke:var(--border); stroke-width:1; }
 
-  /* ---- Rodapé: legenda sempre visível ---- */
-  footer { flex-shrink:0; border-top:1px solid var(--border); background:var(--panel);
-           padding:8px 16px; display:flex; align-items:center; gap:18px; overflow-x:auto; font-size:11.5px; }
-  footer .grp { display:flex; align-items:center; gap:12px; }
-  footer .sep { width:1px; height:22px; background:var(--border); flex-shrink:0; }
-  .lyk { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; color:var(--muted); }
-  .lyk .sw { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
-  .ifk { display:inline-flex; gap:5px; white-space:nowrap; }
-  .ifk .k { font-family:"SF Mono",Menlo,Consolas,monospace; color:var(--info); }
-  .ifk .v { color:var(--muted); }
+  /* ---- Legenda: badge minimalista no canto inferior esquerdo ---- */
+  #legend { position:absolute; bottom:14px; left:14px; z-index:40; max-width:300px;
+            background:rgba(24,26,31,.82); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
+            border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.35);
+            font-size:11.5px; overflow:hidden; transition:max-width .2s; }
+  #legend .lg-head { display:flex; align-items:center; gap:7px; padding:8px 11px; cursor:pointer; user-select:none; color:var(--muted); }
+  #legend .lg-head svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:1.8; flex-shrink:0; }
+  #legend .lg-head .lg-t { font-weight:600; color:var(--text); }
+  #legend .lg-head .chev { margin-left:auto; transition:transform .2s; }
+  #legend.collapsed .lg-head .chev { transform:rotate(-90deg); }
+  #legend.collapsed .lg-body { display:none; }
+  #legend .lg-body { padding:2px 11px 11px; max-height:46vh; overflow-y:auto; }
+  #legend .lg-sec { font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:8px 0 5px; }
+  #legend .lg-sec:first-child { margin-top:2px; }
+  .lyk { display:flex; align-items:center; gap:7px; white-space:nowrap; color:var(--text); margin:3px 0; }
+  .lyk .sw { width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+  .ifk { display:flex; gap:8px; align-items:baseline; margin:3px 0; }
+  .ifk .k { font-family:"SF Mono",Menlo,Consolas,monospace; color:var(--info); flex-shrink:0; min-width:54px; }
+  .ifk .v { color:var(--muted); line-height:1.35; }
 
   /* ---- Modal (clique no nó) ---- */
   .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:200; align-items:center; justify-content:center; }
@@ -168,9 +177,9 @@
       <button id="tour-exit">Sair</button>
     </div>
   </div>
+  <!-- Legenda minimalista, ancorada no canto inferior esquerdo (não ocupa linha) -->
+  <div id="legend"></div>
 </div>
-
-<footer id="legend"></footer>
 
 <!-- Modal de detalhe do nó -->
 <div class="overlay" id="node-overlay">
@@ -246,7 +255,9 @@ function render(){
     const m=el("marker",{id,markerWidth:9,markerHeight:9,refX:7,refY:3,orient:"auto",markerUnits:"strokeWidth"},defs);
     el("path",{d:"M0,0 L7,3 L0,6 Z",fill:col},m);
   });
-  const gL=el("g",{},svg), gN=el("g",{},svg);
+  // 3 camadas em ordem de z: links (fundo) → nós → rótulos de interface (topo).
+  // Os rótulos no topo garantem que nenhum card "engole" o badge da interface.
+  const gL=el("g",{},svg), gN=el("g",{},svg), gT=el("g",{},svg);
 
   TOPO.links.forEach(lk=>{
     const a=nodeById(lk.from), b=nodeById(lk.to); if(!a||!b)return;
@@ -271,10 +282,10 @@ function render(){
       el("animate",{attributeName:"cx",from:ca.x,to:cb.x,dur,repeatCount:"indefinite"},dot);
       el("animate",{attributeName:"cy",from:ca.y,to:cb.y,dur,repeatCount:"indefinite"},dot);
     }
-    // rótulo SEMPRE visível
-    const mx=(ca.x+cb.x)/2, my=(ca.y+cb.y)/2, tw=lk.iface.length*6.4+10;
-    el("rect",{x:mx-tw/2,y:my-8,width:tw,height:15,rx:3,class:"link-label-bg"+(tourDim?" tour-dim":"")},gL);
-    const t=el("text",{x:mx,y:my+3,"text-anchor":"middle",class:"link-label"+(tourDim?" tour-dim":"")},gL); t.textContent=lk.iface;
+    // rótulo SEMPRE visível — desenhado na camada de topo (gT), nunca atrás de um card
+    const mx=(ca.x+cb.x)/2, my=(ca.y+cb.y)/2, tw=lk.iface.length*6.6+14;
+    el("rect",{x:mx-tw/2,y:my-9,width:tw,height:18,rx:9,class:"link-label-bg"+(tourDim?" tour-dim":"")},gT);
+    const t=el("text",{x:mx,y:my+3.5,"text-anchor":"middle",class:"link-label"+(tourDim?" tour-dim":"")},gT); t.textContent=lk.iface;
   });
 
   TOPO.nodes.forEach(n=>{
@@ -330,15 +341,23 @@ function openNode(id){
 document.getElementById("nm-close").onclick=()=>document.getElementById("node-overlay").classList.remove("open");
 document.getElementById("node-overlay").addEventListener("click",e=>{ if(e.target.id==="node-overlay")e.currentTarget.classList.remove("open"); });
 
-// ---- legenda no rodapé (sempre visível) ----
+// ---- legenda: badge minimalista no canto inferior esquerdo (recolhível) ----
 function renderLegend(){
   const f=document.getElementById("legend");
-  let h='<div class="grp">';
-  for(const k in TOPO.layers) h+=`<span class="lyk"><span class="sw" style="background:${TOPO.layers[k].color}"></span>${TOPO.layers[k].label}</span>`;
-  h+='</div><div class="sep"></div><div class="grp">';
-  TOPO.interfaces_legend.forEach(i=>{ h+=`<span class="ifk"><span class="k">${i.iface}</span><span class="v">${i.desc}</span></span>`; });
-  h+='</div>';
-  f.innerHTML=h;
+  let body='<div class="lg-sec">Camadas</div>';
+  for(const k in TOPO.layers) body+=`<div class="lyk"><span class="sw" style="background:${TOPO.layers[k].color}"></span>${TOPO.layers[k].label}</div>`;
+  body+='<div class="lg-sec">Interfaces</div>';
+  TOPO.interfaces_legend.forEach(i=>{ body+=`<div class="ifk"><span class="k">${i.iface}</span><span class="v">${i.desc}</span></div>`; });
+  f.innerHTML=
+    '<div class="lg-head" id="lg-toggle">'+
+      '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>'+
+      '<span class="lg-t">Legenda</span>'+
+      '<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>'+
+    '</div>'+
+    '<div class="lg-body">'+body+'</div>';
+  // começa recolhida (minimalista, não atrapalha a navegação); 1 clique abre.
+  f.classList.add("collapsed");
+  document.getElementById("lg-toggle").onclick=()=>f.classList.toggle("collapsed");
 }
 
 // ---- logs ao vivo ----

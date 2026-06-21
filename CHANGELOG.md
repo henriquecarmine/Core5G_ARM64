@@ -36,6 +36,28 @@ PATCH em correções pontuais.
 | 0.16.2 | 2026-06-20 | Descrição curta de cada projeto ao lado do nome (P1: rede 5G fim-a-fim; P2: O-RAN RIC+xApps) |
 | 0.17.0 | 2026-06-20 | Logs coloridos ISO (por token, nada em branco) + explicação didática no fim de cada log; fix v1→v2 (logs do P2 saíam vazios); snapshot finito por container |
 | 0.17.1 | 2026-06-20 | Link "Ver logs do resultado" no fim dos testes que produzem logs (KPM/RC/conexão/registro): atalho clicável abre o log relevante (gNB/RIC/AMF/SMF/UPF/UERANSIM) |
+| 0.18.0 | 2026-06-20 | Topologia revalidada: rótulos de interface na camada de topo (nunca mais atrás dos cards) + layout do P1 reorganizado sem sobreposição + legenda virou badge minimalista recolhível no canto inferior esquerdo (P1 e P2) |
+
+---
+
+## [0.18.0] — 2026-06-20
+
+**Revalidação da topologia — minimalismo e zero sobreposição.**
+
+- **Badges de interface nunca mais atrás dos cards.** Os rótulos (N2, SBI,
+  Nausf, N4…) passaram a ser desenhados numa camada de topo (`gT`), acima dos
+  nós; antes ficavam no grupo de links e eram cobertos por qualquer card que
+  caísse sobre o ponto médio da seta. Pílula com fundo sólido + borda fina para
+  leitura limpa sobre linhas e fundo.
+- **Layout do Projeto 1 reorganizado** (`openran-topology-p1.json`): grade
+  arejada, faixa de administração no topo, RAN à esquerda, malha do Core
+  organizada e plano de usuário embaixo. Corrige a sobreposição real
+  MongoDB×UDR e o estouro do canvas. Validado headless: **0 cards sobrepostos**
+  (P1: 19 nós; P2: 16 nós).
+- **Legenda virou badge minimalista** no canto inferior esquerdo, **recolhível**
+  (começa fechada como "ⓘ Legenda" e não atrapalha a navegação; 1 clique abre
+  Camadas + Interfaces). Saiu do rodapé — ganhamos a faixa inteira de baixo.
+  Vale para os dois projetos.
 
 ---
 

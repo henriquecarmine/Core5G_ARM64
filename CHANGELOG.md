@@ -52,6 +52,34 @@ PATCH em correções pontuais.
 | 0.24.6 | 2026-06-21 | RAN ao vivo só aparece com SNR real (não mostra card vazio "—" enquanto o UE não anexa). Ajuste vindo do ensaio de pré-flight: E2/xApps OK; UE do P2 não anexa (bug AUSF↔UDM conhecido) ⇒ sem fonte PHY viva |
 | 0.24.7 | 2026-06-21 | Créditos: projeto **coordenado pelo Prof. Dr. Jonas Augusto Kunzler** e **mantido por Henrique Carmine** (README + rodapés). Adicionada seção **"Apoie este projeto"** (PIX) + `FUNDING.yml` (botão Sponsor). Licença já com copyright de Henrique Carmine |
 | 0.24.8 | 2026-06-21 | Vaga de Professor reassume sozinha quando está LIVRE (após restart do painel/deploy ou abandono): a aba recupera no próximo heartbeat, sem relogar. Aviso de "sessão não ativa" se auto-limpa e diferencia "vaga livre (reassumindo…)" de "outro professor com o controle" |
+| 0.25.0 | 2026-06-21 | Demonstração E2E **didática**: o console agora mostra o **comando real e a saída real** de cada passo, com narração "por quê". **Fix do throughput**: o iperf3 agora atravessa de fato o núcleo 5G (rota pelo `uesimtun0` + bind à origem do túnel) em vez de sair pela bridge docker |
+
+---
+
+## [0.25.0] — 2026-06-21
+
+**Demonstração E2E didática + medição de banda corrigida.** O modal da
+Demonstração E2E (Projeto 1) tinha o console praticamente vazio — o aluno via o
+resumo (passos ✓) mas *"não via nada"* do que foi feito. E o passo de throughput
+contra o DN não retornava banda.
+
+- **Logs didáticos:** o script agora envia ao console, em cada passo, o
+  **comando exato** executado (`$ docker exec …`, destaque azul) seguido da
+  **saída real** (ping, `ip addr`, `ifconfig.me`, iperf3) e uma linha *"Por quê"*
+  explicando o que aquilo prova. O aluno acompanha a operação fim-a-fim na ordem
+  real: RAN no ar → sessão PDU/IP → ping pela internet → IP público → banda.
+- **Fix do throughput (iperf3):** o DN (`10.50.0.100`) fica na **mesma rede
+  docker** do container do UE, então o iperf "solto" saía pela **bridge `eth0` e
+  não pelo túnel 5G** — não media o núcleo e ainda falhava por timing. Agora o
+  script cria uma **rota temporária para o DN via `uesimtun0`** e **amarra a
+  origem ao IP do túnel** (`-B <IP do UE>`), forçando o caminho real
+  UE → gNB → UPF (NAT na N6) → DN; a rota é removida ao final (sem rastro).
+- **Diagnóstico honesto:** se o iperf ainda não retornar banda, a saída completa
+  do comando vai pro console para diagnóstico, e o resumo deixa claro que a
+  egressão para a internet (Passos 3-4) já comprova a operação fim-a-fim.
+
+> Pendente de validação ao vivo: o fix do iperf foi escrito offline (servidor
+> desligado). Rodar a Demonstração E2E com o Projeto 1 no ar confirma a banda.
 
 ---
 

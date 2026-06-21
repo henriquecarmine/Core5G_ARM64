@@ -53,12 +53,15 @@ AWS_SSH_KEY_PATH=ssl/core5g_openran_arm64.pem   # sua chave SSH (.pem), NUNCA co
 DUCKDNS_DOMAIN=core5g-arm64                 # opcional: IP dinâmico automático
 DUCKDNS_TOKEN=<seu-token>
 
-PANEL_USER=<seu-admin>                      # login do painel (acesso total)
+PANEL_USER=professor                        # Professor (admin) — acesso total
 PANEL_PASSWORD=<senha-forte>
-PANEL_GUEST_USER=guest                      # login só-leitura (demonstração)
-PANEL_GUEST_PASSWORD=<senha-guest>
-PANEL_EXTRA_USERS=grupo6:grupo6             # admins extras: user:senha,user2:senha2
+PANEL_GUEST_USER=guest                      # habilita o acesso de Aluno (só-leitura)
+PANEL_GUEST_PASSWORD=<senha-guest>          # opcional (alunos entram só com nome+e-mail)
+PANEL_EXTRA_USERS=professor2:senha2         # admins extras: user:senha,user2:senha2
 ```
+
+> **Papéis (modo sala de aula):** *Professor* opera (só **um por vez**); *Aluno*
+> acompanha ao vivo, entra com **nome + e-mail** (sem senha). Detalhes em §1.6.
 
 ### 1.3 Provisionar o servidor (uma vez)
 
@@ -106,20 +109,43 @@ cd ~/server/oai-cn-gnb-e2
 ```
 
 > **Por que `t4g.medium`?** O gNB/nrUE RFSIM são CPU-intensivos. Em 2 vCPUs eles
-> podem saturar e **congelar a instância**. Os processos nativos rodam dentro de
-> *scopes* do systemd com teto rígido de CPU (`CPUQuota` 120%/60% + `CPUWeight`
-> + `nice`), o que **reserva CPU para o sistema e impede o freeze** sem quebrar o
-> E2. Detalhe em [`up_gnb_oai.sh`](server/oai-cn-gnb-e2/scripts/up_gnb_oai.sh).
+> podem saturar e **congelar a instância**. O guardrail é via **cgroup v2 cpuset**:
+> o `bootstrap` cria a slice `oai-lab.slice` fixada **fora da CPU 0** (`AllowedCPUs=1`),
+> reservando um núcleo para o sistema (SSH/Docker/painel/Caddy com `CPUWeight` máximo).
+> Assim o lab nunca derruba o box — painel ~600 ms e SSH ~2,5 s mesmo com gNB+nrUE no
+> talo. (Neste kernel ARM o `CPUQuota`/CFS não é aplicado; por isso usamos cpuset.)
+> Detalhe em [`infra/server-bootstrap.sh`](infra/server-bootstrap.sh).
 
-### 1.6 Painel web
+### 1.6 Painel web — modo sala de aula
 
-`https://<seu-host>/` — login (admin tem acesso total; guest é só-leitura).
-Recursos: telemetria ao vivo, logs filtrados/coloridos, UE Lab, Demonstração
-E2E, **seletor de projeto** (liga um e desliga o outro), **topologia interativa**
-(containers/portas/redes reais, clicáveis) e os testes de Service Model E2 com
-explicação didática de cada resultado. **Todos os testes** saem com colorimetria
-consistente (ANSI/ISO) e um **resumo final** explicando o que o teste fez e o
-resultado.
+`https://<seu-host>/` — o painel é uma SPA (FastAPI + HTML/CSS/JS, sem build).
+Recursos base: telemetria ao vivo, logs filtrados/coloridos (ANSI/ISO) com
+**explicação didática** no fim, UE Lab, Demonstração E2E, **seletor de projeto**
+(liga um e desliga o outro), **topologia interativa** (containers/portas/redes
+reais, clicáveis) e os testes de Service Model E2 — cada um com **resumo final**
+do que fez e o resultado.
+
+Sobre isso, um **modo sala de aula** pensado para apresentar a um auditório:
+
+- **Papéis Professor / Aluno.** O *Professor* (admin) opera; o *Aluno* (guest)
+  acompanha em modo só-leitura. Aluno entra com **nome + e-mail** (1 clique, sem
+  senha) — o e-mail é o **registro de presença** da turma.
+- **Um Professor por vez.** A vaga é "pegajosa": um 2º admin diferente é bloqueado
+  até o atual sair (logout) ou abandonar por 10 min. Protege a aula de alguém
+  assumir o controle no meio.
+- **Espelho AO VIVO.** Tudo que o Professor executa é transmitido em tempo real
+  para os Alunos (console + qual tela ele abriu), via um *ring-buffer* + *polling* —
+  escala para a turma inteira (N alunos custam ~o mesmo que 1) sem derrubar o box.
+- **Resultados + Replay.** Cada execução é salva em disco (sobrevive a restart) e
+  pode ser **reproduzida** depois, linha a linha — o professor reapresenta uma
+  coleta sem subir nada. Aba "Resultados salvos" (Professor e Aluno).
+- **RAN ao vivo (P2).** Faixa de *sparklines* com SNR/MCS/PRB/BLER reais do gNB
+  OAI, atualizando ao vivo durante o E2SM-KPM.
+- **Modo projeção (kiosk).** Botão "⛶ Projeção" → tela limpa em fullscreen pro
+  datashow (RAN grande + console grande, sem controles).
+- **Quem está assistindo.** O Professor clica no badge "👁 N alunos" e vê os
+  conectados agora (nome + e-mail) e a presença acumulada. Dados pessoais ficam
+  **só no servidor** — nunca no git.
 
 > **Acesse sempre pelo domínio**, nunca pelo IP — o certificado é do domínio.
 > Se o IP mudou e o navegador não abre, limpe o cache DNS local
@@ -144,22 +170,20 @@ A lista canônica e detalhada vive na [bible §10](core5g-arm64-bible.md#10-pend
 
 ## 3. Como colaborar
 
-Contribuições do grupo (e de quem mais quiser estudar o lab) são bem-vindas.
+Contribuições do grupo (e de quem mais quiser estudar o lab) são bem-vindas. O
+guia completo, passo a passo (inclusive pra quem nunca colaborou no GitHub), está
+em **[`CONTRIBUTING.md`](CONTRIBUTING.md)**. Em resumo, há três espaços:
 
-1. **Fork / branch** a partir de `main`. Nunca trabalhe direto na `main` remota.
-2. **Edite sempre local**, em `server/` — o `deploy.sh` é o único caminho até o
-   servidor. Não edite arquivos no servidor por SSH (some no próximo deploy).
-3. **Segredos nunca entram no git**: `.env` e a chave SSH (`ssl/*.pem`) estão no
-   `.gitignore` — mantenha assim. Novos segredos vão em variáveis do `.env`.
-4. **Documente o que mudou**: toda mudança visível entra no
-   [`CHANGELOG.md`](CHANGELOG.md) e, se for conceitual, na
-   [bible](core5g-arm64-bible.md). Versão em `server/panel/VERSION`
-   (`MAJOR.MINOR.PATCH`).
-5. **Teste antes de abrir PR**: `./deploy.sh status` (Projeto 1) e
-   `./scripts/test_e2_sm.sh all` (Projeto 2) devem passar.
-6. Abra o PR descrevendo **o que mudou e por quê** (mesmo espírito do CHANGELOG).
+- **[Issues](../../issues)** — relatar bug, propor ideia ou tirar dúvida.
+- **[Discussions](../../discussions)** — conversar / perguntar "como funciona X".
+- **Pull Request** — *fork* → branch → PR descrevendo *o que mudou e por quê*.
 
-**Dúvidas, acesso ao lab ou às imagens OAI do Drive?** Fale comigo:
+Regras de ouro: edite **sempre local** (o `deploy.sh` é o único caminho até o
+servidor); **segredos nunca entram no git** (`.env`, `ssl/*.pem`); **dados de
+aluno** (e-mail/roster) ficam só no servidor. Versionamento e como validar antes
+do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
+
+**Acesso de colaborador, ou as imagens OAI arm64 do Drive?** Fale comigo:
 
 - **Henrique Carmine** — [hc@cesar.school](mailto:hc@cesar.school) ·
   [@henriquecarmine](https://github.com/henriquecarmine)
@@ -170,11 +194,13 @@ Contribuições do grupo (e de quem mais quiser estudar o lab) são bem-vindas.
 
 ```
 .
-├── README.md                  ← você está aqui
+├── README.md                  ← você está aqui (porta de entrada)
+├── CONTRIBUTING.md            ← como colaborar (Issues/Discussions/PR, testes, versão)
 ├── core5g-arm64-bible.md      ← referência conceitual completa
 ├── CHANGELOG.md               ← diário de bordo cronológico
 ├── deploy.sh                  ← entrypoint único de deploy (local → servidor)
 ├── .env.example               ← modelo de configuração (copie para .env)
+├── .github/                   ← modelos de Issue e de Pull Request
 ├── docs/                      ← blueprint do painel + roteiros de laboratório
 ├── infra/                     ← bootstrap do servidor + unit systemd do painel
 └── server/                    ← tudo que roda no servidor

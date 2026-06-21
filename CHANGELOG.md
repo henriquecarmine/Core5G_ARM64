@@ -44,6 +44,26 @@ PATCH em correções pontuais.
 | 0.22.0 | 2026-06-20 | Telemetria escala p/ a sala de aula: coletor ÚNICO em background + cache (antes cada aluno abria um stream e rodava `docker stats` a cada 2s — 30 alunos derrubariam o box de 2 vCPU). Agora N alunos custam o mesmo que 1. gnb-stats também cacheado |
 | 0.23.0 | 2026-06-20 | Aluno identificado: entra com Nome + E-mail (1 passo, sem senha). Identidade assinada no cookie + roster de presença persistente; Professor vê "Alunos conectados" (nome+email) e a presença acumulada clicando no badge 👁 |
 | 0.24.0 | 2026-06-20 | Modo projeção (kiosk): botão "⛶ Projeção" abre uma tela limpa em fullscreen pro datashow — RAN ao vivo grande, console em fonte grande, header enxuto (projeto + nº de alunos), sem sidebar/controles. Esc sai |
+| 0.24.1 | 2026-06-20 | Onboarding de colaboradores: README atualizado (modo sala de aula, guardrail cpuset, usuários), `CONTRIBUTING.md`, modelos de Issue/PR (`.github/`), e **tags git** de toda a história do painel (v0.12.2 → v0.24.x). Issues + Discussions habilitados no GitHub |
+
+---
+
+## [0.24.1] — 2026-06-20
+
+**Documentação de onboarding + espaço de colaboração + versionamento.**
+
+- **README** atualizado para o estado atual: seção "modo sala de aula"
+  (Professor/Aluno, um por vez, espelho ao vivo, Resultados+Replay, RAN ao vivo,
+  projeção), correção do guardrail de CPU (é **cpuset**, não CPUQuota) e dos
+  usuários (`professor`, sem `grupo6`).
+- **`CONTRIBUTING.md`** — guia passo a passo de como colaborar (Issues /
+  Discussions / Pull Request), como validar antes do PR, convenção de commit,
+  versionamento (SemVer) e regras de ouro (segredos, dados de aluno, box 2 vCPU).
+- **`.github/`** — modelos de Issue (bug / ideia) e de Pull Request.
+- **Versionamento:** criadas **tags git anotadas** de toda a era do painel
+  (`v0.12.2` … `v0.24.x`) — agora cada release tem seu ponto no histórico.
+- **GitHub:** abas **Issues** e **Discussions** habilitadas como espaço de
+  colaboração; contato em `hc@cesar.school`.
 
 ---
 

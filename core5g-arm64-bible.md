@@ -984,6 +984,45 @@ o `pip install` falhar com "No such file or directory".
 install`, que já é idempotente por natureza) antes de checar/recriar o venv,
 em vez de tentar inferir se o pacote já está instalado.
 
+### 8.5 — Relatórios com falso-negativo (nome de container ≠ serviço Compose)
+
+Descobertos **rodando os relatórios ao vivo** (não no `bash -n`), v0.25.2. São
+bugs da nossa camada de diagnóstico, não do material original — mas enganariam o
+professor, então valem o registro:
+
+- **`test_ng_setup` / `test_registration` diziam "AMF não está rodando"** com o
+  AMF perfeitamente no ar. Causa: os scripts faziam `docker inspect amf`, mas
+  `amf` é o nome do **serviço Compose** — o **container** se chama
+  `open5gs-amf-containerized`. `docker inspect`/`exec`/`logs` exigem o nome do
+  **container**; só `docker compose logs` aceita o nome do **serviço**. O
+  `inspect` falhava → o cruzamento com o AMF virava aviso → `test_ng_setup`
+  concluía *"N2 não confirmada"* **mesmo com `NGSetupResponse` recebido**.
+- **`test_ue_connection` mostrava `IP público <!DOCTYPE html>`.** `wget
+  http://ifconfig.me` devolve a **página HTML**, não o IP. Corrigido para
+  `http://ifconfig.me/ip` (texto puro) + extração/validação do IP por regex.
+- **Veredito final sempre "ok".** `test_ue_connection` terminava em `summary ...
+  ok` independentemente das checagens. Reescrito com contadores `fails`/`warns`
+  e veredito honesto (✗ crítico / ! ressalva / ✓ tudo passou).
+
+**Lição:** `bash -n` valida sintaxe, não semântica. Relatório novo/alterado tem
+de **rodar ao vivo** antes do merge. Detalhes em
+[`docs/relatorios-didaticos.md`](docs/relatorios-didaticos.md) §5.
+
+### 8.6 — Demo E2E media a bridge Docker, não o túnel 5G
+
+O passo de throughput da Demonstração E2E (`demo_e2e.sh`) fazia
+`iperf3 -c 10.50.0.100` de dentro do container do UE. Mas o DN
+(`open5gs-dn-containerized`, `10.50.0.100`) está na **mesma rede Docker** onde o
+container do UE tem a `eth0` — então o iperf saía **direto pela bridge Docker, não
+pelo túnel 5G** (`uesimtun0`, pool `10.60.0.0/16`). Resultado: não media o núcleo
+e ainda falhava por *timing* do servidor `iperf3 -s -1`.
+
+**Correção (v0.25.0):** criar uma **rota temporária para o DN via `uesimtun0`** e
+**amarrar a origem ao IP do túnel** (`iperf3 -B 10.60.0.x`), forçando o caminho
+real `UE → gNB → UPF (NAT na N6) → DN`; a rota é removida ao final. Validado ao
+vivo: **149 Mbit/s** atravessando o núcleo 5G (antes: sem medição). De quebra, a
+Demo E2E passou a ecoar o **comando real + saída real + "Por quê"** de cada passo.
+
 ---
 
 ## 9. Validação fim a fim (estado atual confirmado)
@@ -1005,6 +1044,16 @@ completo com folga.**
 
 O risco de RAM real fica para o Projeto 2 (build do OAI a partir do source é
 CPU/RAM-intensivo) — ainda não medido, testar com cautela.
+
+**Verificação ao vivo de todos os relatórios (2026-06-21, v0.25.0–0.25.3):**
+rodados de verdade, não só `bash -n`. **Projeto 1** — `status`,
+`system-status`, `ng-setup`, `registration`, `config-coherence`,
+`ue-connection` e `upf-failover` (failover mantendo conectividade) passam, todos
+com cabeçalho de seção, checagens coloridas e bloco "Resumo"; 3 bugs de precisão
+encontrados e corrigidos (§8.5). **Projeto 2** — `e2-sm` (cadeia O-RAN fim-a-fim,
+7 assinaturas), `e2-kpm` (assinatura OK, veredito honesto "sem tráfego no
+período") e `e2-rc` (eventos RRC do attach capturados) passam, sem bugs. A
+Demonstração E2E mede **149 Mbit/s** reais pelo túnel 5G (§8.6).
 
 ---
 
@@ -1058,6 +1107,11 @@ CPU/RAM-intensivo) — ainda não medido, testar com cautela.
 - [x] **Colorimetria ISO/ANSI + resumo didático em todos os testes**
       (v0.12.0): lib `scripts/lib/testlog.sh` + render ANSI no painel; cada
       teste termina com "O que fez" + "Resultado" colorido. Ver `CHANGELOG.md`.
+- [x] **Auditoria didática + verificação ao vivo de todos os relatórios**
+      (v0.25.0–0.25.3): Demo E2E com comando/saída real + "Por quê" e
+      throughput corrigido (149 Mbit/s pelo túnel 5G, §8.6); P1 e P2 rodados ao
+      vivo, 3 bugs de precisão corrigidos (§8.5); guia dev em
+      [`docs/relatorios-didaticos.md`](docs/relatorios-didaticos.md).
 - [x] **Anti-freeze**: gNB/nrUE RFSIM rodam sob `systemd-run --scope` com
       `CPUQuota`/`CPUWeight`/`nice` em `up_gnb_oai.sh`, `test_e2_kpm.sh` e
       `test_e2_rc_attach.sh` — a instância de 2 vCPUs não congela mais.
@@ -1076,6 +1130,8 @@ CPU/RAM-intensivo) — ainda não medido, testar com cautela.
   atual do zero, roadmap com datas e **como colaborar** (contato:
   [hc@cesar.school](mailto:hc@cesar.school) · [@henriquecarmine](https://github.com/henriquecarmine)).
 - [`CHANGELOG.md`](CHANGELOG.md) — histórico cronológico detalhado de cada ação.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — como colaborar (Issues/Discussions/PR, validação, versão).
+- [`docs/relatorios-didaticos.md`](docs/relatorios-didaticos.md) — **guia dev do sistema de relatórios**: lib `testlog.sh`, protocolo da Demo E2E, como adicionar um relatório, gotchas (§8.5–8.6) e inventário P1/P2.
 - [`docs/blueprint-painel-observabilidade.md`](docs/blueprint-painel-observabilidade.md) — desenho do painel.
 - [`docs/labs/`](docs/labs/) — guias originais do curso (instalação Docker, pré-lab GCP/VM, core Open5GS, UERANSIM, relatório de entrega).
 - [`server/oai-cn-gnb-e2/docs/E2_FLEXRIC.md`](server/oai-cn-gnb-e2/docs/E2_FLEXRIC.md) — roteiro oficial do Projeto 2.

@@ -56,6 +56,27 @@ PATCH em correções pontuais.
 | 0.25.1 | 2026-06-21 | Auditoria didática de **todos os relatórios**: padrão lib (cor + "Resumo") confirmado em P1 e P2. Único fora do padrão (`test_ue_connection`) reescrito — usa a lib no corpo, guardas de erro com Resumo + `exit 0`, e **veredito honesto** (ok/atenção/falha em vez de sempre "ok") |
 | 0.25.2 | 2026-06-21 | **Verificação ao vivo dos relatórios P1** revelou 3 bugs de precisão (que a auditoria estática não pegava) — todos corrigidos: (1) `ue_connection` mostrava `<!DOCTYPE html>` como "IP público" (ifconfig.me via wget) → usa `/ip` + valida IP; (2) `ng_setup` e (3) `registration` davam falso-negativo "AMF não está rodando" (nome de container errado: `amf` vs `open5gs-amf-containerized`), fazendo `ng_setup` dizer "N2 não confirmada" mesmo com NGSetupResponse OK |
 | 0.25.3 | 2026-06-21 | **Documentação para colaboradores**: novo guia [`docs/relatorios-didaticos.md`](docs/relatorios-didaticos.md) — como o sistema de relatórios funciona (lib `testlog.sh`, protocolo da Demo E2E, como adicionar um relatório, gotchas verificados ao vivo, inventário P1/P2). Ligado no README (mapa) e no CONTRIBUTING (validação) |
+| 0.25.4 | 2026-06-21 | **Bible atualizado** com a sessão 0.25.x: §8.5 (relatórios com falso-negativo — container ≠ serviço Compose, HTML como IP, veredito desonesto) e §8.6 (Demo E2E media a bridge Docker, não o túnel 5G); §9 com a verificação ao vivo de todos os relatórios; §10 e §11 com o item da auditoria e o link do guia |
+
+---
+
+## [0.25.4] — 2026-06-21
+
+**Bible consolida a sessão de relatórios didáticos.** A referência conceitual
+([`core5g-arm64-bible.md`](core5g-arm64-bible.md)) passou a registrar o que foi
+feito e aprendido nas versões 0.25.0–0.25.3, para não se perder:
+
+- **§8.5 (novo):** relatórios com falso-negativo — nome de **container** vs nome
+  de **serviço Compose** (`open5gs-amf-containerized` × `amf`), `ifconfig.me`
+  devolvendo HTML em vez de IP, e veredito final sempre "ok". A lição: `bash -n`
+  não pega bug semântico, relatório roda ao vivo antes do merge.
+- **§8.6 (novo):** a Demo E2E media a **bridge Docker** em vez do túnel 5G
+  (iperf saindo pela `eth0` porque o DN está na mesma rede do container do UE);
+  corrigido com rota via `uesimtun0` + bind à origem (149 Mbit/s reais).
+- **§9:** acrescentada a **verificação ao vivo de todos os relatórios** (P1 e P2)
+  ao "estado atual confirmado".
+- **§10 / §11:** item da auditoria no roadmap e link para o
+  [guia de relatórios](docs/relatorios-didaticos.md) nas referências.
 
 ---
 

@@ -43,6 +43,27 @@ PATCH em correções pontuais.
 | 0.21.1 | 2026-06-20 | Hardening da vaga de Professor: posse "pegajosa" — só libera por logout (ou após 10min de abandono, válvula de segurança); posse por sid, não cai por soluço de rede. Protege a aula de um aluno assumir numa janela curta |
 | 0.22.0 | 2026-06-20 | Telemetria escala p/ a sala de aula: coletor ÚNICO em background + cache (antes cada aluno abria um stream e rodava `docker stats` a cada 2s — 30 alunos derrubariam o box de 2 vCPU). Agora N alunos custam o mesmo que 1. gnb-stats também cacheado |
 | 0.23.0 | 2026-06-20 | Aluno identificado: entra com Nome + E-mail (1 passo, sem senha). Identidade assinada no cookie + roster de presença persistente; Professor vê "Alunos conectados" (nome+email) e a presença acumulada clicando no badge 👁 |
+| 0.24.0 | 2026-06-20 | Modo projeção (kiosk): botão "⛶ Projeção" abre uma tela limpa em fullscreen pro datashow — RAN ao vivo grande, console em fonte grande, header enxuto (projeto + nº de alunos), sem sidebar/controles. Esc sai |
+
+---
+
+## [0.24.0] — 2026-06-20
+
+**Modo projeção (kiosk) — tela limpa pro datashow.** Botão **"⛶ Projeção"** no
+topo entra em **fullscreen** com uma vista de apresentação, legível do fundo da
+sala:
+
+- Esconde sidebar, cards de projeto e controles; mantém só o essencial — header
+  enxuto (título + projeto ativo + **nº de alunos**), linha de saúde do box
+  (CPU/RAM/Swap/Disk), a faixa **RAN ao vivo** ampliada (valores grandes +
+  sparklines maiores) e o **console em fonte grande** (17px).
+- Usa `requestFullscreen`; sai por **Esc**, pelo botão flutuante "✕ Sair da
+  projeção" ou ao sair do fullscreen pelo navegador (sincronizado).
+- É só uma camada de CSS sobre o painel — continua tudo ao vivo (console
+  espelhado, RAN, telemetria); ideal para projetar a aula.
+
+Fecha a sequência de melhorias do modo sala de aula (Resultados+Replay, RAN ao
+vivo, hardening da vaga, telemetria escalável, aluno identificado, projeção).
 
 ---
 

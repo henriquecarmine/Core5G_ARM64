@@ -54,6 +54,32 @@
   #viewer-badge { display:none; align-items:center; gap:6px; font-size:12.5px; color:#74c0fc; white-space:nowrap; cursor:pointer;
                   background:rgba(77,171,247,.12); border:1px solid rgba(77,171,247,.4); border-radius:20px; padding:3px 11px; transition:background .15s; }
   #viewer-badge:hover { background:rgba(77,171,247,.24); }
+  #kiosk-btn { width:auto; margin:0; padding:4px 11px; font-size:12.5px; border-radius:7px; cursor:pointer;
+               background:#21242b; border:1px solid var(--border); color:var(--muted); }
+  #kiosk-btn:hover { color:var(--text); border-color:var(--accent); }
+  #kiosk-exit { display:none; position:fixed; top:14px; right:16px; z-index:300; width:auto; margin:0; padding:7px 14px;
+                font-size:13px; border-radius:8px; cursor:pointer; background:rgba(30,33,40,.9); border:1px solid var(--border);
+                color:var(--muted); backdrop-filter:blur(6px); }
+  #kiosk-exit:hover { color:var(--text); border-color:var(--red); }
+
+  /* ===== Modo projeção (kiosk) — tela limpa e grande pro datashow ===== */
+  body.kiosk #projects-bar, body.kiosk #sidebar, body.kiosk #kiosk-btn,
+  body.kiosk #tm-containers-wrap, body.kiosk #copy-btn, body.kiosk #clear-btn { display:none !important; }
+  body.kiosk #kiosk-exit { display:block; }
+  body.kiosk main { grid-template-columns:1fr; padding:14px 28px 22px; }
+  body.kiosk #topbar-main { padding:14px 28px; }
+  body.kiosk #topbar-main h1 { font-size:19px; }
+  body.kiosk #active-proj { font-size:14px; padding:5px 12px; }
+  body.kiosk #viewer-badge { font-size:15px; padding:5px 14px; }
+  body.kiosk #telemetry { font-size:14px; }
+  body.kiosk #ran-live { margin:0 28px; padding:13px 20px; }
+  body.kiosk #ran-live .rl-title { font-size:15px; }
+  body.kiosk #ran-live .rl-v { font-size:26px; }
+  body.kiosk #ran-live .rl-spark { height:42px; }
+  body.kiosk #guest-banner { font-size:16px; padding:11px 28px; }
+  body.kiosk #output { font-size:17px; line-height:1.6; padding:18px 22px; }
+  body.kiosk #console-actions { font-size:14px; }
+  body.kiosk #status-pill { font-size:14px; }
   #viewer-badge .vb-dot { width:7px; height:7px; border-radius:50%; background:#4dabf7; box-shadow:0 0 6px #4dabf7; }
   /* Banner do topo — modo aluno (ao vivo) e aviso de professor */
   #guest-banner { display:none; padding:7px 24px; font-size:13px; background:#4a2f0c; color:#ffb84d; }
@@ -388,6 +414,7 @@
 </head>
 <body>
 <div id="top-loader"></div>
+<button id="kiosk-exit" title="Sair do modo projeção (Esc)">✕ Sair da projeção</button>
 <header id="topbar">
   <div id="topbar-main">
     <div class="tb-left">
@@ -396,6 +423,7 @@
     </div>
     <div class="tb-right">
       <span id="viewer-badge"><span class="vb-dot"></span><span id="viewer-count">0 alunos</span></span>
+      <button id="kiosk-btn" title="Modo projeção — tela limpa para o datashow (Esc para sair)">⛶ Projeção</button>
       <div id="whoami">carregando...</div>
     </div>
   </div>
@@ -2139,6 +2167,23 @@ document.querySelectorAll('.al-tab').forEach(b => b.addEventListener('click', ()
   loadAlunos(); alunosPoll(_alunosTab === 'live');
 }));
 alunosOverlay.addEventListener('click', e => { if (e.target === alunosOverlay) closeAlunos(); });
+
+// ===== Modo projeção (kiosk) — tela limpa pro datashow =====
+function enterKiosk() {
+  document.body.classList.add('kiosk');
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+}
+function exitKiosk() {
+  document.body.classList.remove('kiosk');
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+}
+function toggleKiosk() { document.body.classList.contains('kiosk') ? exitKiosk() : enterKiosk(); }
+document.getElementById('kiosk-btn').addEventListener('click', toggleKiosk);
+document.getElementById('kiosk-exit').addEventListener('click', exitKiosk);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('kiosk')) exitKiosk(); });
+// Saiu do fullscreen pelo navegador (F11/Esc nativo) ⇒ sai do modo projeção também.
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) document.body.classList.remove('kiosk'); });
 
 // ===== Boot =====
 loadWhoami();

@@ -37,6 +37,38 @@ PATCH em correções pontuais.
 | 0.17.0 | 2026-06-20 | Logs coloridos ISO (por token, nada em branco) + explicação didática no fim de cada log; fix v1→v2 (logs do P2 saíam vazios); snapshot finito por container |
 | 0.17.1 | 2026-06-20 | Link "Ver logs do resultado" no fim dos testes que produzem logs (KPM/RC/conexão/registro): atalho clicável abre o log relevante (gNB/RIC/AMF/SMF/UPF/UERANSIM) |
 | 0.18.0 | 2026-06-20 | Topologia revalidada: rótulos de interface na camada de topo (nunca mais atrás dos cards) + layout do P1 reorganizado sem sobreposição + legenda virou badge minimalista recolhível no canto inferior esquerdo (P1 e P2) |
+| 0.19.0 | 2026-06-20 | Modo sala de aula: 1 Professor por vez (bloqueia 2º admin, libera após 30s idle) + Alunos acompanham AO VIVO o console do Professor (espelho por ring-buffer/polling) + banner "🔴 AO VIVO" + contagem de espectadores + papéis Professor/Aluno |
+
+---
+
+## [0.19.0] — 2026-06-20
+
+**Modo sala de aula — 1 Professor, N Alunos ao vivo.** Todos abrem o mesmo link:
+o professor entra com login e opera; os alunos entram com 1 clique ("Entrar como
+aluno") e veem, em tempo real, tudo que o professor executa.
+
+- **Trava de Professor único.** Estado em memória (`ACTIVE_ADMIN`) + `sid` no
+  cookie de sessão. Um SEGUNDO admin diferente é barrado com **409** ("Já há um
+  professor conectado"); o MESMO usuário pode reassumir (reconexão de outro
+  dispositivo). A vaga libera sozinha após 30s sem heartbeat. Só o Professor
+  ATIVO executa (`ensure_can_run` em todos os endpoints de execução; admin sem a
+  vaga → 409).
+- **Espelho ao vivo (Aluno).** A saída dos comandos do Professor é publicada num
+  **ring-buffer compartilhado** com nº de sequência (`LiveBuffer` + `tee_to_live`);
+  os alunos fazem **polling** de `/api/live?since=N` (escala pra turma inteira sem
+  prender conexão/thread, ao contrário de SSE). Quem entra atrasado puxa o
+  histórico recente. Eventos `begin`/`line`/`end`/`nav` espelham console + qual
+  tela o professor abriu. O estado do projeto/ferramentas já era espelhado via
+  telemetria.
+- **UX.** Banner **🔴 AO VIVO** (com o que o professor faz) para o aluno; badge
+  **👁 N alunos** para o professor (heartbeat 5s); papéis renomeados para
+  **Professor/Aluno**; botão de login "Entrar como aluno (acompanhar ao vivo)".
+- Aluno é estritamente só-leitura (nunca executa). Validado ao vivo: espelho
+  begin→76×line→end, lock 409 (admin diferente) / 200 (reconexão), aluno 403 ao
+  executar, nav propagado, contagem de espectadores.
+
+> Fase 2 (depois): arquivo persistente de Resultados ("puxar do banco" coletas
+> KPM/testes que sobrevivem a restart, navegável pelo aluno a qualquer momento).
 
 ---
 

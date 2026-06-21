@@ -19,6 +19,7 @@ servidor. Para isso, use `./deploy.sh` na sua máquina local.
 from __future__ import annotations
 
 import base64
+import collections
 import hashlib
 import hmac
 import json
@@ -27,6 +28,7 @@ import re
 import secrets
 import shutil
 import subprocess
+import threading
 import time
 from pathlib import Path
 from typing import Iterator
@@ -83,12 +85,18 @@ def _sign(value: str) -> str:
     return hmac.new(SECRET_KEY.encode(), value.encode(), hashlib.sha256).hexdigest()
 
 
-def make_session_token(user: str) -> str:
-    payload = base64.urlsafe_b64encode(user.encode()).decode()
+# O token carrega usuário + um id de sessão (sid) único por login. O sid permite
+# distinguir sessões (necessário pra trava de "um Professor por vez" e pra contar
+# espectadores) sem manter estado de cookie no servidor.
+_SID_SEP = "\x1f"
+
+
+def make_session_token(user: str, sid: str) -> str:
+    payload = base64.urlsafe_b64encode(f"{user}{_SID_SEP}{sid}".encode()).decode()
     return f"{payload}.{_sign(payload)}"
 
 
-def read_session_token(token: str | None) -> str | None:
+def _read_session_raw(token: str | None) -> str | None:
     if not token or "." not in token:
         return None
     payload, sig = token.rsplit(".", 1)
@@ -100,8 +108,131 @@ def read_session_token(token: str | None) -> str | None:
         return None
 
 
+def current_session(request: Request) -> tuple[str | None, str | None]:
+    """(usuário, sid). Tolera tokens legados (sem sid)."""
+    raw = _read_session_raw(request.cookies.get(SESSION_COOKIE))
+    if raw is None:
+        return (None, None)
+    if _SID_SEP in raw:
+        user, sid = raw.split(_SID_SEP, 1)
+        return (user, sid)
+    return (raw, None)
+
+
 def current_user(request: Request) -> str | None:
-    return read_session_token(request.cookies.get(SESSION_COOKIE))
+    return current_session(request)[0]
+
+
+# ===========================================================================
+# Sala de aula: 1 Professor (admin) ativo por vez + espectadores (Alunos) que
+# acompanham ao vivo. Estado em memória do processo (cai em restart, ok no lab).
+# ===========================================================================
+_state_lock = threading.RLock()
+ADMIN_IDLE_TIMEOUT = 30.0          # s sem heartbeat ⇒ a vaga de Professor libera
+VIEWER_TIMEOUT = 12.0              # s sem polling ⇒ o Aluno deixa de contar
+# Professor ativo no momento (quem pode executar e cuja saída é transmitida).
+ACTIVE_ADMIN: dict = {"user": None, "sid": None, "ts": 0.0}
+_VIEWERS: dict[str, dict] = {}     # sid -> {"user", "ts"} (alunos acompanhando)
+
+
+def _seat_free(now: float) -> bool:
+    return ACTIVE_ADMIN["sid"] is None or (now - ACTIVE_ADMIN["ts"]) > ADMIN_IDLE_TIMEOUT
+
+
+def is_active_admin(user: str | None, sid: str | None, now: float | None = None) -> bool:
+    now = time.time() if now is None else now
+    return (
+        user is not None and user != GUEST_USER and sid is not None
+        and ACTIVE_ADMIN["sid"] == sid
+        and (now - ACTIVE_ADMIN["ts"]) <= ADMIN_IDLE_TIMEOUT
+    )
+
+
+def _touch_admin(sid: str | None) -> None:
+    if not sid:
+        return
+    with _state_lock:
+        if ACTIVE_ADMIN["sid"] == sid:
+            ACTIVE_ADMIN["ts"] = time.time()
+
+
+def _touch_viewer(user: str | None, sid: str | None) -> None:
+    if not sid:
+        return
+    with _state_lock:
+        _VIEWERS[sid] = {"user": user, "ts": time.time()}
+
+
+def viewer_count() -> int:
+    now = time.time()
+    with _state_lock:
+        for k in [k for k, v in _VIEWERS.items() if now - v["ts"] > VIEWER_TIMEOUT]:
+            _VIEWERS.pop(k, None)
+        return len(_VIEWERS)
+
+
+class LiveBuffer:
+    """Ring-buffer compartilhado: a saída dos comandos do Professor é publicada
+    aqui com nº de sequência; os Alunos fazem polling de /api/live?since=N. Quem
+    entra atrasado puxa o histórico recente sem o Professor refazer nada."""
+
+    def __init__(self, maxlen: int = 2000) -> None:
+        self.events: collections.deque = collections.deque(maxlen=maxlen)
+        self.seq = 0
+        self.lock = threading.Lock()
+        self.session = {"active": False, "label": None, "by": None, "started": 0.0}
+        self.nav = {"screen": None, "label": None, "by": None, "ts": 0.0}
+
+    def push(self, typ: str, **kw) -> int:
+        with self.lock:
+            self.seq += 1
+            ev = {"seq": self.seq, "type": typ, "ts": round(time.time(), 3)}
+            ev.update(kw)
+            self.events.append(ev)
+            return self.seq
+
+    def snapshot(self, since: int) -> tuple[list, int, dict, dict]:
+        with self.lock:
+            evs = [e for e in self.events if e["seq"] > since]
+            return evs, self.seq, dict(self.session), dict(self.nav)
+
+
+LIVE = LiveBuffer()
+
+
+def tee_to_live(it: Iterator[str], label: str, by: str | None) -> Iterator[str]:
+    """Encaminha a saída ao requisitante E publica no buffer ao vivo (begin/line/
+    end), para os Alunos espelharem em tempo real."""
+    with LIVE.lock:
+        LIVE.session.update(active=True, label=label, by=by, started=time.time())
+    LIVE.push("begin", label=label, by=by)
+    status = "ok"
+    try:
+        for chunk in it:
+            LIVE.push("line", text=chunk)
+            yield chunk
+    except BaseException:
+        status = "error"
+        raise
+    finally:
+        LIVE.push("end", label=label, status=status)
+        with LIVE.lock:
+            LIVE.session.update(active=False)
+
+
+def ensure_can_run(request: Request) -> str:
+    """Só o Professor ATIVO executa. Aluno: 403. Admin sem a vaga (assumida por
+    outro / expirada): 409. Retorna o usuário ao chamador."""
+    user, sid = current_session(request)
+    if user is None or user == GUEST_USER:
+        raise HTTPException(status_code=403, detail="Aluno só pode visualizar, não executar comandos.")
+    if not is_active_admin(user, sid):
+        raise HTTPException(
+            status_code=409,
+            detail="Sua sessão de professor não está ativa (outro professor assumiu ou ela expirou). Recarregue e entre de novo.",
+        )
+    _touch_admin(sid)
+    return user
 
 
 @app.middleware("http")
@@ -394,10 +525,10 @@ def login(request: Request):
     return HTMLResponse(html)
 
 
-def _set_session(response: JSONResponse, user: str) -> JSONResponse:
+def _set_session(response: JSONResponse, user: str, sid: str) -> JSONResponse:
     response.set_cookie(
         SESSION_COOKIE,
-        make_session_token(user),
+        make_session_token(user, sid),
         max_age=SESSION_MAX_AGE,
         httponly=True,
         samesite="lax",
@@ -410,27 +541,89 @@ def _set_session(response: JSONResponse, user: str) -> JSONResponse:
 def do_login(payload: dict) -> JSONResponse:
     user = str(payload.get("user", ""))
     password = str(payload.get("pass", ""))
-    valid = (user in ADMIN_USERS and password == ADMIN_USERS[user]) or (
-        GUEST_ENABLED and user == GUEST_USER and password == GUEST_PASSWORD
-    )
-    if not valid:
+    is_guest = GUEST_ENABLED and user == GUEST_USER and password == GUEST_PASSWORD
+    is_admin = user in ADMIN_USERS and password == ADMIN_USERS[user]
+    if not (is_guest or is_admin):
         raise HTTPException(401, "Usuário ou senha inválidos.")
-    role = "guest" if (GUEST_ENABLED and user == GUEST_USER) else "admin"
-    return _set_session(JSONResponse({"user": user, "role": role}), user)
+    if is_admin:
+        now = time.time()
+        with _state_lock:
+            # Trava de "um Professor por vez": bloqueia um SEGUNDO usuário enquanto
+            # houver um professor ativo. O MESMO usuário pode reassumir (reconexão
+            # de outra aba/dispositivo). A vaga libera sozinha após ADMIN_IDLE_TIMEOUT.
+            if not _seat_free(now) and ACTIVE_ADMIN["user"] != user:
+                raise HTTPException(
+                    409,
+                    f"Já há um professor conectado ({ACTIVE_ADMIN['user']}). "
+                    f"Entre como aluno para acompanhar a aula ao vivo.",
+                )
+            sid = secrets.token_hex(8)
+            ACTIVE_ADMIN.update(user=user, sid=sid, ts=now)
+        return _set_session(JSONResponse({"user": user, "role": "admin"}), user, sid)
+    sid = secrets.token_hex(8)
+    return _set_session(JSONResponse({"user": user, "role": "guest"}), user, sid)
 
 
 @app.post("/api/login/guest")
 def do_login_guest() -> JSONResponse:
     if not GUEST_ENABLED:
-        raise HTTPException(403, "Acesso de convidado desabilitado neste servidor.")
-    return _set_session(JSONResponse({"user": GUEST_USER, "role": "guest"}), GUEST_USER)
+        raise HTTPException(403, "Acesso de aluno desabilitado neste servidor.")
+    sid = secrets.token_hex(8)
+    return _set_session(JSONResponse({"user": GUEST_USER, "role": "guest"}), GUEST_USER, sid)
 
 
 @app.post("/api/logout")
-def do_logout() -> JSONResponse:
+def do_logout(request: Request) -> JSONResponse:
+    _, sid = current_session(request)
+    if sid:
+        with _state_lock:
+            if ACTIVE_ADMIN["sid"] == sid:
+                ACTIVE_ADMIN.update(user=None, sid=None, ts=0.0)
+            _VIEWERS.pop(sid, None)
     response = JSONResponse({"ok": True})
     response.delete_cookie(SESSION_COOKIE)
     return response
+
+
+@app.post("/api/heartbeat")
+def heartbeat(request: Request) -> JSONResponse:
+    """Professor: mantém a vaga viva. Front chama a cada ~5s."""
+    user, sid = current_session(request)
+    now = time.time()
+    active = False
+    if user is not None and user != GUEST_USER and sid:
+        with _state_lock:
+            if ACTIVE_ADMIN["sid"] == sid:
+                ACTIVE_ADMIN["ts"] = now
+                active = True
+    with _state_lock:
+        holder = None if _seat_free(now) else ACTIVE_ADMIN["user"]
+    return JSONResponse({"active_admin": holder, "is_active": active, "viewers": viewer_count()})
+
+
+@app.get("/api/live")
+def live(request: Request, since: int = 0) -> JSONResponse:
+    """Aluno: puxa os eventos novos (>since) do buffer ao vivo + estado da sessão
+    e da navegação do Professor. Também registra presença (contagem)."""
+    user, sid = current_session(request)
+    _touch_viewer(user, sid)
+    evs, seq, session, nav = LIVE.snapshot(since)
+    return JSONResponse({"events": evs, "seq": seq, "session": session, "nav": nav, "viewers": viewer_count()})
+
+
+@app.post("/api/nav")
+def nav(payload: dict, request: Request) -> JSONResponse:
+    """Professor avisa qual tela/ação abriu, para os Alunos verem no banner."""
+    user, sid = current_session(request)
+    if not is_active_admin(user, sid):
+        return JSONResponse({"ok": False})
+    screen = str(payload.get("screen", ""))[:60]
+    label = str(payload.get("label", ""))[:90]
+    with LIVE.lock:
+        LIVE.nav.update(screen=screen, label=label, by=user, ts=time.time())
+    LIVE.push("nav", screen=screen, label=label, by=user)
+    _touch_admin(sid)
+    return JSONResponse({"ok": True})
 
 
 @app.get("/topology")
@@ -575,9 +768,10 @@ def version_endpoint() -> JSONResponse:
 
 @app.get("/api/whoami")
 def whoami(request: Request) -> JSONResponse:
-    user = current_user(request)
+    user, sid = current_session(request)
     role = "guest" if user == GUEST_USER else "admin"
-    return JSONResponse({"user": user, "role": role})
+    active = is_active_admin(user, sid) if role == "admin" else False
+    return JSONResponse({"user": user, "role": role, "is_active": active})
 
 
 @app.get("/api/subscribers")
@@ -597,28 +791,26 @@ def list_subscribers_endpoint() -> JSONResponse:
 
 @app.delete("/api/subscriber/{imsi}")
 def delete_subscriber(imsi: str, request: Request) -> StreamingResponse:
-    if current_user(request) == GUEST_USER:
-        raise HTTPException(status_code=403, detail="Usuário guest não pode executar comandos.")
+    by = ensure_can_run(request)
     if not re.fullmatch(r"\d{6,15}", imsi):
         return StreamingResponse(iter(["IMSI inválido\n"]), media_type="text/plain")
     env = os.environ.copy()
     env["SUB_IMSI"] = imsi
     return StreamingResponse(
-        stream_command(["./scripts/remove-subscriber.sh"], SERVER_DIR, env=env),
+        tee_to_live(stream_command(["./scripts/remove-subscriber.sh"], SERVER_DIR, env=env), f"remover assinante {imsi}", by),
         media_type="text/plain",
     )
 
 
 @app.post("/api/channel")
 def configure_channel(payload: dict, request: Request) -> StreamingResponse:
-    if current_user(request) == GUEST_USER:
-        raise HTTPException(status_code=403, detail="Usuário guest não pode executar comandos.")
+    by = ensure_can_run(request)
     distance = str(payload.get("distance", "none"))
     interference = str(payload.get("interference", "none"))
     if distance not in _VALID_DISTANCES or interference not in _VALID_INTERFERENCES:
         return StreamingResponse(iter(["Parâmetros de canal inválidos\n"]), media_type="text/plain")
     return StreamingResponse(
-        stream_command(["./scripts/test_channel.sh", distance, interference], SERVER_DIR),
+        tee_to_live(stream_command(["./scripts/test_channel.sh", distance, interference], SERVER_DIR), "configurar canal de rádio", by),
         media_type="text/plain",
     )
 
@@ -628,8 +820,7 @@ _VALID_DURATIONS = {5, 10, 30, 60}
 
 @app.post("/api/throughput")
 def run_throughput(payload: dict, request: Request) -> StreamingResponse:
-    if current_user(request) == GUEST_USER:
-        raise HTTPException(status_code=403, detail="Usuário guest não pode executar comandos.")
+    by = ensure_can_run(request)
     try:
         duration = int(payload.get("duration", 10))
     except (TypeError, ValueError):
@@ -639,7 +830,7 @@ def run_throughput(payload: dict, request: Request) -> StreamingResponse:
     env = os.environ.copy()
     env["IPERF_DURATION"] = str(duration)
     return StreamingResponse(
-        stream_command(["./scripts/test_throughput.sh"], SERVER_DIR, env=env),
+        tee_to_live(stream_command(["./scripts/test_throughput.sh"], SERVER_DIR, env=env), f"teste de throughput ({duration}s)", by),
         media_type="text/plain",
     )
 
@@ -649,12 +840,12 @@ def switch_project(target: str, request: Request) -> StreamingResponse:
     """Alterna entre os projetos de forma exclusiva (p1 | p2 | off): desliga o
     que estiver no ar e sobe só o escolhido. Emite PHASE|/STEP|/DONE| para o
     painel mostrar progresso."""
-    if current_user(request) == GUEST_USER:
-        raise HTTPException(status_code=403, detail="Usuário guest não pode executar comandos.")
+    by = ensure_can_run(request)
     if target not in ("p1", "p2", "off"):
         raise HTTPException(status_code=400, detail="Alvo inválido (use p1, p2 ou off).")
+    _LABEL = {"p1": "alternar para o Projeto 1", "p2": "alternar para o Projeto 2", "off": "desligar tudo"}
     return StreamingResponse(
-        stream_command(["./scripts/switch_project.sh", target], SERVER_DIR),
+        tee_to_live(stream_command(["./scripts/switch_project.sh", target], SERVER_DIR), _LABEL[target], by),
         media_type="text/plain",
     )
 
@@ -663,10 +854,9 @@ def switch_project(target: str, request: Request) -> StreamingResponse:
 def demo_e2e(request: Request) -> StreamingResponse:
     """Demonstração E2E (Projeto 1): UE → sessão PDU → internet → throughput.
     Emite linhas STEP|status|título|detalhe que o painel monta como relatório."""
-    if current_user(request) == GUEST_USER:
-        raise HTTPException(status_code=403, detail="Usuário guest não pode executar comandos.")
+    by = ensure_can_run(request)
     return StreamingResponse(
-        stream_command(["./scripts/demo_e2e.sh"], SERVER_DIR),
+        tee_to_live(stream_command(["./scripts/demo_e2e.sh"], SERVER_DIR), "Demonstração E2E (Projeto 1)", by),
         media_type="text/plain",
     )
 
@@ -739,29 +929,32 @@ def telemetry() -> StreamingResponse:
 
 
 @app.get("/api/logs/{service}")
-def logs(service: str) -> StreamingResponse:
+def logs(service: str, request: Request) -> StreamingResponse:
     """Snapshot (finito) das últimas linhas — encerra para o painel exibir a
-    explicação didática no fim. Container via `docker logs`; nativo via arquivo."""
+    explicação didática no fim. Container via `docker logs`; nativo via arquivo.
+    Se quem abre é o Professor ativo, o log também vai pro buffer ao vivo (Alunos)."""
     src = next((s for s in LOG_SOURCES if s["key"] == service), None)
     if src is None:
         return StreamingResponse(iter([f"Serviço desconhecido: {service}\n"]), media_type="text/plain")
     if "container" in src:
         if src["container"] not in running_container_names():
-            return StreamingResponse(
-                iter([f"(container {src['container']} não está rodando — sem logs)\n"]),
-                media_type="text/plain",
-            )
-        cmd = ["docker", "logs", "--timestamps", "--tail", "300", src["container"]]
-        return StreamingResponse(stream_command(cmd, SERVER_DIR), media_type="text/plain")
-    lines = _tail_file(SERVER_DIR / src["file"], tail=300)
-    body = ("\n".join(lines) + "\n") if lines else f"(sem logs em {src['file']})\n"
-    return StreamingResponse(iter([body]), media_type="text/plain")
+            gen: Iterator[str] = iter([f"(container {src['container']} não está rodando — sem logs)\n"])
+        else:
+            cmd = ["docker", "logs", "--timestamps", "--tail", "300", src["container"]]
+            gen = stream_command(cmd, SERVER_DIR)
+    else:
+        lines = _tail_file(SERVER_DIR / src["file"], tail=300)
+        body = ("\n".join(lines) + "\n") if lines else f"(sem logs em {src['file']})\n"
+        gen = iter([body])
+    user, sid = current_session(request)
+    if is_active_admin(user, sid):
+        gen = tee_to_live(gen, f"ver logs · {src['label']}", user)
+    return StreamingResponse(gen, media_type="text/plain")
 
 
 @app.post("/api/subscriber")
 def add_subscriber(payload: dict, request: Request) -> StreamingResponse:
-    if current_user(request) == GUEST_USER:
-        raise HTTPException(status_code=403, detail="Usuário guest só pode visualizar, não pode executar comandos.")
+    by = ensure_can_run(request)
 
     imsi = str(payload.get("imsi", "")).strip()
     if not re.fullmatch(r"\d{6,15}", imsi):
@@ -787,19 +980,19 @@ def add_subscriber(payload: dict, request: Request) -> StreamingResponse:
             env[env_key] = value
 
     return StreamingResponse(
-        stream_command(["./scripts/add-subscriber.sh"], SERVER_DIR, env=env), media_type="text/plain"
+        tee_to_live(stream_command(["./scripts/add-subscriber.sh"], SERVER_DIR, env=env), f"cadastrar assinante {imsi}", by),
+        media_type="text/plain",
     )
 
 
 @app.post("/api/run/{command}")
 def run_command(command: str, request: Request) -> StreamingResponse:
-    if current_user(request) == GUEST_USER:
-        raise HTTPException(status_code=403, detail="Usuário guest só pode visualizar, não pode executar comandos.")
+    by = ensure_can_run(request)
     spec = COMMANDS.get(command)
     if spec is None:
         return StreamingResponse(
             iter([f"Comando desconhecido: {command}\n"]), media_type="text/plain"
         )
     return StreamingResponse(
-        stream_command(spec["cmd"], spec["cwd"]), media_type="text/plain"
+        tee_to_live(stream_command(spec["cmd"], spec["cwd"]), command, by), media_type="text/plain"
     )

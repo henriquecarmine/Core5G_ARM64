@@ -50,7 +50,18 @@
   .tb-right { display:flex; align-items:center; gap:14px; margin-left:auto; }
   #whoami { color:var(--muted); font-size:13px; white-space:nowrap; }
   #whoami.guest { color:#ffb84d; }
-  #guest-banner { display:none; background:#4a2f0c; color:#ffb84d; padding:7px 24px; font-size:13px; }
+  /* Badge de espectadores (visível só pro Professor) */
+  #viewer-badge { display:none; align-items:center; gap:6px; font-size:12.5px; color:#74c0fc; white-space:nowrap;
+                  background:rgba(77,171,247,.12); border:1px solid rgba(77,171,247,.4); border-radius:20px; padding:3px 11px; }
+  #viewer-badge .vb-dot { width:7px; height:7px; border-radius:50%; background:#4dabf7; box-shadow:0 0 6px #4dabf7; }
+  /* Banner do topo — modo aluno (ao vivo) e aviso de professor */
+  #guest-banner { display:none; padding:7px 24px; font-size:13px; background:#4a2f0c; color:#ffb84d; }
+  #guest-banner.live { background:#3a1620; color:#ffa8c0; display:flex; align-items:center; gap:10px; }
+  #guest-banner.live .lv-dot { width:9px; height:9px; border-radius:50%; background:#ff4d6d; box-shadow:0 0 8px #ff4d6d; animation:lvpulse 1.1s ease-in-out infinite; flex-shrink:0; }
+  #guest-banner.watch { background:#102a3a; color:#74c0fc; }
+  #guest-banner.warn { background:#3a1616; color:#ff8787; }
+  #guest-banner .lv-sub { color:inherit; opacity:.8; margin-left:auto; font-size:12px; }
+  @keyframes lvpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 
   /* Telemetria — 2ª faixa do top bar */
   /* Containers vira um toggle inline ANTES dos monitores; a tabela abre em dropdown. */
@@ -307,6 +318,7 @@
       <div id="active-proj"><span class="ap-dot"></span><span id="active-proj-label">Nenhum projeto no ar</span></div>
     </div>
     <div class="tb-right">
+      <span id="viewer-badge"><span class="vb-dot"></span><span id="viewer-count">0 alunos</span></span>
       <div id="whoami">carregando...</div>
     </div>
   </div>
@@ -810,16 +822,107 @@ function setToggleState(btn, state) {
   btn.dataset.state = state;
 }
 
-// ===== Auth =====
+// ===== Auth + papéis (Professor / Aluno) =====
+const ROLE_LABEL = { admin: 'Professor', guest: 'Aluno' };
 async function loadWhoami() {
   try {
     const data = await (await fetch('/api/whoami')).json();
     isGuest = data.role === 'guest';
-    whoamiEl.textContent = (data.user || '?') + ' (' + data.role + ')';
+    whoamiEl.textContent = (data.user || '?') + ' · ' + (ROLE_LABEL[data.role] || data.role);
     whoamiEl.className = isGuest ? 'guest' : '';
-    guestBanner.style.display = isGuest ? 'block' : 'none';
     setRunning(false);
+    if (isGuest) startAlunoMode();
+    else startProfessorMode();
   } catch { whoamiEl.textContent = 'erro'; }
+}
+
+// ===== Sala de aula: espelho ao vivo (Aluno) + heartbeat/nav (Professor) =====
+const viewerBadge = document.getElementById('viewer-badge');
+const viewerCount = document.getElementById('viewer-count');
+// Rótulos amigáveis dos comandos (pro cabeçalho do espelho do Aluno).
+const CMD_LABEL = {};
+document.querySelectorAll('[data-cmd]').forEach(b => { if (b.dataset.cmd) CMD_LABEL[b.dataset.cmd] = b.textContent.trim(); });
+document.querySelectorAll('#diag-test-select option').forEach(o => { if (o.value) CMD_LABEL[o.value] = o.textContent.trim(); });
+function prettyCmd(label) { return CMD_LABEL[label] || label || 'operação'; }
+
+let _seatLost = false;
+function plural(n, s) { return n + ' ' + s + (n === 1 ? '' : 's'); }
+
+// ---- Professor: mantém a vaga viva + mostra quantos alunos assistem ----
+let _hbTimer = null;
+async function professorBeat() {
+  try {
+    const d = await (await fetch('/api/heartbeat', { method: 'POST' })).json();
+    if (viewerBadge) {
+      viewerBadge.style.display = 'inline-flex';
+      viewerCount.textContent = plural(d.viewers || 0, 'aluno');
+    }
+    if (d.is_active === false && !_seatLost) {
+      _seatLost = true;
+      guestBanner.className = 'warn';
+      guestBanner.textContent = '⚠ Sua sessão de professor não está mais ativa (outro professor assumiu ou ela expirou). Recarregue a página para reassumir.';
+      guestBanner.style.display = 'block';
+      setRunning(false);
+    }
+  } catch {}
+}
+function startProfessorMode() {
+  guestBanner.style.display = 'none';
+  if (_hbTimer) clearInterval(_hbTimer);
+  professorBeat();
+  _hbTimer = setInterval(professorBeat, 5000);
+}
+// Professor avisa qual tela/ação abriu (aparece no banner dos Alunos).
+function postNav(screen, label) {
+  if (isGuest) return;
+  fetch('/api/nav', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ screen, label }),
+  }).catch(() => {});
+}
+
+// ---- Aluno: espelha o console do Professor em tempo real (polling) ----
+let _liveSeq = 0, _liveTimer = null;
+function applyLiveEvent(ev) {
+  if (ev.type === 'begin') {
+    pushRunHeader('👁 ' + prettyCmd(ev.label) + (ev.by ? '  ·  ' + ev.by : ''));
+  } else if (ev.type === 'line') {
+    const parts = String(ev.text == null ? '' : ev.text).split('\n');
+    parts.forEach((seg, i) => { if (i === parts.length - 1 && seg === '') return; appendLine(seg); });
+  } else if (ev.type === 'end') {
+    const badge = output.querySelector('.run-header:last-of-type .run-badge');
+    if (badge) setRunBadge(badge, ev.status === 'ok' ? 'ok' : 'error', ev.status === 'ok' ? 'concluído' : 'erro');
+  }
+  // 'nav' é refletido pelo snapshot da sessão (updateAlunoBanner).
+}
+function updateAlunoBanner(session, nav, viewers) {
+  const watching = viewers ? `  ·  ${plural(viewers, 'aluno')} assistindo` : '';
+  if (session && session.active) {
+    guestBanner.className = 'live';
+    guestBanner.innerHTML = `<span class="lv-dot"></span><b>AO VIVO</b> — ${session.by || 'professor'}: ${prettyCmd(session.label)}` +
+      `<span class="lv-sub">acompanhando ao vivo${watching}</span>`;
+  } else {
+    guestBanner.className = 'watch';
+    const tela = (nav && nav.label) ? `  ·  Professor está em: ${nav.label}` : '';
+    guestBanner.innerHTML = `👁 <b>Modo aluno</b> — você acompanha o professor ao vivo (somente leitura)${tela}` +
+      `<span class="lv-sub">${watching || 'aguardando o professor'}</span>`;
+  }
+  guestBanner.style.display = 'flex';
+}
+async function pollLive() {
+  try {
+    const d = await (await fetch('/api/live?since=' + _liveSeq)).json();
+    if (typeof d.seq === 'number' && d.seq < _liveSeq) { _liveSeq = 0; output.innerHTML = ''; outputBootstrapped = false; }
+    (d.events || []).forEach(applyLiveEvent);
+    if (typeof d.seq === 'number') _liveSeq = d.seq;
+    updateAlunoBanner(d.session, d.nav, d.viewers);
+  } catch {}
+}
+function startAlunoMode() {
+  if (_liveTimer) clearInterval(_liveTimer);
+  updateAlunoBanner(null, null, 0);
+  pollLive();                         // since=0 ⇒ já puxa o histórico recente
+  _liveTimer = setInterval(pollLive, 1000);
 }
 
 // ===== Versão =====
@@ -1337,11 +1440,16 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInfoMod
 
 // ===== UE Lab =====
 document.getElementById('uelab-open-btn').addEventListener('click', openUeLab);
+// Professor abrindo a Topologia → avisa os Alunos no banner (link abre outra página).
+['topology-btn-p1', 'topology-btn-p2'].forEach(id => {
+  const a = document.getElementById(id);
+  if (a) a.addEventListener('click', () => postNav('topology', 'Topologia · ' + (id.endsWith('p1') ? 'Projeto 1' : 'Projeto 2')));
+});
 document.getElementById('uelab-close').addEventListener('click', closeUeLab);
 document.getElementById('uelab-overlay').addEventListener('click', e => { if(e.target===document.getElementById('uelab-overlay'))closeUeLab(); });
 document.addEventListener('keydown', e => { if(e.key==='Escape')closeUeLab(); });
 
-function openUeLab() { if(isGuest)return; document.getElementById('uelab-overlay').classList.add('open'); loadUeList(); }
+function openUeLab() { if(isGuest)return; postNav('uelab', 'UE Lab (cadastro e teste de UE)'); document.getElementById('uelab-overlay').classList.add('open'); loadUeList(); }
 function closeUeLab() { document.getElementById('uelab-overlay').classList.remove('open'); }
 
 // --- UE list ---

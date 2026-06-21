@@ -163,7 +163,7 @@
 
     <div class="divider" id="guest-divider">ou</div>
 
-    <button id="btn-guest" type="button">Entrar como convidado</button>
+    <button id="btn-guest" type="button">Entrar como aluno (acompanhar ao vivo)</button>
 
     <footer>
       <a href="https://github.com/henriquecarmine/Core5G_ARM64" target="_blank" rel="noopener">github.com/henriquecarmine/Core5G_ARM64</a><br>
@@ -188,9 +188,13 @@ async function tryLogin(url, body) {
     });
     if (res.ok) {
       window.location.href = "/";
-    } else {
-      errorBox.style.display = "block";
+      return;
     }
+    // 409 = já há um professor conectado (trava de professor único).
+    let detail = "Usuário ou senha inválidos.";
+    try { const d = await res.json(); if (d && d.detail) detail = d.detail; } catch {}
+    errorBox.textContent = detail;
+    errorBox.style.display = "block";
   } catch (e) {
     errorBox.textContent = "Falha de conexão. Tente novamente.";
     errorBox.style.display = "block";

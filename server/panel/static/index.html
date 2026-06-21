@@ -1050,8 +1050,15 @@ async function professorBeat() {
     if (d.is_active === false && !_seatLost) {
       _seatLost = true;
       guestBanner.className = 'warn';
-      guestBanner.textContent = '⚠ Sua sessão de professor não está mais ativa (outro professor assumiu ou ela expirou). Recarregue a página para reassumir.';
+      guestBanner.textContent = d.active_admin
+        ? `⚠ Outro professor (${d.active_admin}) está com o controle. Você pode acompanhar; para reassumir, peça o logout dele ou aguarde liberar.`
+        : '⏳ Reassumindo o controle…';
       guestBanner.style.display = 'block';
+      setRunning(false);
+    } else if (d.is_active === true && _seatLost) {
+      // Reassumiu (vaga estava livre e o heartbeat recuperou): limpa o aviso.
+      _seatLost = false;
+      guestBanner.style.display = 'none';
       setRunning(false);
     }
   } catch {}

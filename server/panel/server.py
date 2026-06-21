@@ -730,6 +730,13 @@ def heartbeat(request: Request) -> JSONResponse:
             if ACTIVE_ADMIN["sid"] == sid:
                 ACTIVE_ADMIN["ts"] = now
                 active = True
+            elif _seat_free(now):
+                # Vaga livre (ninguém a tem, ou o dono sumiu / o painel reiniciou):
+                # a aba do professor REASSUME sozinha no próximo heartbeat — sem
+                # precisar relogar. Não rouba de um professor ativo (só pega o que
+                # já está livre), então a trava de "um por vez" segue valendo.
+                ACTIVE_ADMIN.update(user=user, sid=sid, ts=now)
+                active = True
     with _state_lock:
         holder = None if _seat_free(now) else ACTIVE_ADMIN["user"]
     return JSONResponse({"active_admin": holder, "is_active": active, "viewers": viewer_count()})

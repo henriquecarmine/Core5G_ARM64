@@ -51,6 +51,24 @@ PATCH em correções pontuais.
 | 0.24.5 | 2026-06-20 | Mobile: faltava o `<meta viewport>` no painel (renderizava a 980px no celular, ignorando o CSS) — corrigido + bloco responsivo (header/banner/projetos/RAN se adaptam). Aluno no celular agora vê o espelho ao vivo direito |
 | 0.24.6 | 2026-06-21 | RAN ao vivo só aparece com SNR real (não mostra card vazio "—" enquanto o UE não anexa). Ajuste vindo do ensaio de pré-flight: E2/xApps OK; UE do P2 não anexa (bug AUSF↔UDM conhecido) ⇒ sem fonte PHY viva |
 | 0.24.7 | 2026-06-21 | Créditos: projeto **coordenado pelo Prof. Dr. Jonas Augusto Kunzler** e **mantido por Henrique Carmine** (README + rodapés). Adicionada seção **"Apoie este projeto"** (PIX) + `FUNDING.yml` (botão Sponsor). Licença já com copyright de Henrique Carmine |
+| 0.24.8 | 2026-06-21 | Vaga de Professor reassume sozinha quando está LIVRE (após restart do painel/deploy ou abandono): a aba recupera no próximo heartbeat, sem relogar. Aviso de "sessão não ativa" se auto-limpa e diferencia "vaga livre (reassumindo…)" de "outro professor com o controle" |
+
+---
+
+## [0.24.8] — 2026-06-21
+
+**Reassunção automática da vaga de Professor.** Depois de um `deploy` (que
+reinicia o painel e zera o estado em memória) ou de um abandono, a aba do
+professor ficava "órfã" e mostrava *"sua sessão não está mais ativa"* — e só
+recarregar não resolvia (a sessão antiga não reassumia).
+
+- **Backend:** o `/api/heartbeat` agora **reassume a vaga automaticamente quando
+  ela está LIVRE** — a aba do professor recupera no próximo heartbeat (≤5s), sem
+  relogar. Não rouba de um professor ativo (só pega o que já está livre), então a
+  trava de "um por vez" continua valendo.
+- **Frontend:** o aviso **se auto-limpa** quando a vaga é reassumida; e passou a
+  diferenciar *"⏳ Reassumindo o controle…"* (vaga livre) de *"outro professor
+  está com o controle"* (vaga realmente tomada).
 
 ---
 

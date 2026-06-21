@@ -55,6 +55,27 @@ PATCH em correções pontuais.
 | 0.25.0 | 2026-06-21 | Demonstração E2E **didática**: o console agora mostra o **comando real e a saída real** de cada passo, com narração "por quê". **Fix do throughput**: o iperf3 agora atravessa de fato o núcleo 5G (rota pelo `uesimtun0` + bind à origem do túnel) em vez de sair pela bridge docker |
 | 0.25.1 | 2026-06-21 | Auditoria didática de **todos os relatórios**: padrão lib (cor + "Resumo") confirmado em P1 e P2. Único fora do padrão (`test_ue_connection`) reescrito — usa a lib no corpo, guardas de erro com Resumo + `exit 0`, e **veredito honesto** (ok/atenção/falha em vez de sempre "ok") |
 | 0.25.2 | 2026-06-21 | **Verificação ao vivo dos relatórios P1** revelou 3 bugs de precisão (que a auditoria estática não pegava) — todos corrigidos: (1) `ue_connection` mostrava `<!DOCTYPE html>` como "IP público" (ifconfig.me via wget) → usa `/ip` + valida IP; (2) `ng_setup` e (3) `registration` davam falso-negativo "AMF não está rodando" (nome de container errado: `amf` vs `open5gs-amf-containerized`), fazendo `ng_setup` dizer "N2 não confirmada" mesmo com NGSetupResponse OK |
+| 0.25.3 | 2026-06-21 | **Documentação para colaboradores**: novo guia [`docs/relatorios-didaticos.md`](docs/relatorios-didaticos.md) — como o sistema de relatórios funciona (lib `testlog.sh`, protocolo da Demo E2E, como adicionar um relatório, gotchas verificados ao vivo, inventário P1/P2). Ligado no README (mapa) e no CONTRIBUTING (validação) |
+
+---
+
+## [0.25.3] — 2026-06-21
+
+**Guia de desenvolvedor do sistema de relatórios didáticos.** Documentação
+minuciosa para um colaborador entender, manter e estender os testes/relatórios
+do painel — consolidando o conhecimento das versões 0.25.0–0.25.2.
+
+- **Novo:** [`docs/relatorios-didaticos.md`](docs/relatorios-didaticos.md) cobre:
+  os dois tipos de relatório (testes do menu via `lib/testlog.sh` × Demo E2E via
+  protocolo `STEP|`/`DONE|`/`PHASE|`); a API da lib (`section`/`ok`/`warn`/`err`/
+  `summary`); o padrão didático ("Por quê" + veredito honesto); o passo a passo
+  para **adicionar um relatório** (script → `COMMANDS` → botão); os **gotchas**
+  reais (nome de container ≠ serviço compose, `exit 0` em pré-condição, rodar ao
+  vivo porque `bash -n` não pega bug semântico); como **verificar ao vivo**
+  (rsync de um script, subir/baixar lab, tirar ANSI); e o **inventário** de todos
+  os relatórios P1 e P2 com o que cada um prova.
+- **Integração:** linkado no [README](README.md) §4 (mapa do repositório) e no
+  [CONTRIBUTING](CONTRIBUTING.md) §4 (validação antes do PR).
 
 ---
 

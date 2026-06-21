@@ -83,6 +83,13 @@ validar localmente:
 
 Se a sua mudança toca o servidor, descreva no PR o teste ao vivo que você fez.
 
+> **Mexeu num teste/relatório do painel?** Leia o
+> **[guia de relatórios didáticos](docs/relatorios-didaticos.md)** — a lib
+> `testlog.sh`, o protocolo da Demo E2E, como adicionar um relatório e os
+> *gotchas* (nome de container ≠ serviço, `exit 0` em pré-condição, veredito
+> honesto). **Relatório novo ou alterado roda ao vivo antes do PR** — `bash -n`
+> não pega bug semântico.
+
 ---
 
 ## 5. Convenção de commit

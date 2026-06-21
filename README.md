@@ -203,6 +203,7 @@ do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
 ├── .env.example               ← modelo de configuração (copie para .env)
 ├── .github/                   ← modelos de Issue e de Pull Request
 ├── docs/                      ← blueprint do painel + roteiros de laboratório
+│   └── relatorios-didaticos.md ← guia dev: como os testes/relatórios funcionam
 ├── infra/                     ← bootstrap do servidor + unit systemd do painel
 └── server/                    ← tudo que roda no servidor
     ├── panel/                 ← painel web (FastAPI) + estáticos

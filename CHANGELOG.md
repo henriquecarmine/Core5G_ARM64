@@ -50,6 +50,20 @@ PATCH em correções pontuais.
 | 0.24.4 | 2026-06-20 | Crédito do autor: contato via henriquecarmine@gmail.com + breve perfil (perito forense digital; mestrando em Open RAN com o Prof. Jonas) no README/CONTRIBUTING. Equipe final: Prof. Jonas · Henrique · Klinger · Kelvin (Gilberto não participou) |
 | 0.24.5 | 2026-06-20 | Mobile: faltava o `<meta viewport>` no painel (renderizava a 980px no celular, ignorando o CSS) — corrigido + bloco responsivo (header/banner/projetos/RAN se adaptam). Aluno no celular agora vê o espelho ao vivo direito |
 | 0.24.6 | 2026-06-21 | RAN ao vivo só aparece com SNR real (não mostra card vazio "—" enquanto o UE não anexa). Ajuste vindo do ensaio de pré-flight: E2/xApps OK; UE do P2 não anexa (bug AUSF↔UDM conhecido) ⇒ sem fonte PHY viva |
+| 0.24.7 | 2026-06-21 | Créditos: projeto **coordenado pelo Prof. Dr. Jonas Augusto Kunzler** e **mantido por Henrique Carmine** (README + rodapés). Adicionada seção **"Apoie este projeto"** (PIX) + `FUNDING.yml` (botão Sponsor). Licença já com copyright de Henrique Carmine |
+
+---
+
+## [0.24.7] — 2026-06-21
+
+**Créditos + apoio ao projeto.**
+
+- Créditos atualizados: o projeto é **coordenado pelo Prof. Dr. Jonas Augusto
+  Kunzler** e **mantido por Henrique Carmine** — no README (Equipe) e nos rodapés
+  do painel e do login.
+- Nova seção **"Apoie este projeto"** no README: o lab roda 24/7 num servidor ARM
+  custeado do bolso; PIX para quem quiser ajudar com o custo de manter no ar.
+- `.github/FUNDING.yml` aponta o botão **Sponsor** do GitHub para a seção de apoio.
 
 ---
 

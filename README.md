@@ -215,10 +215,23 @@ do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
 
 ## 5. Equipe
 
-- **Professor (orientador):** Prof. Dr. Jonas Augusto Kunzler — [jak@cesar.school](mailto:jak@cesar.school)
-- **Autor / mantenedor:** Henrique Carmine — Perito Forense Digital (Governança de TI e Telecomunicações), mestrando em Open RAN sob orientação do Prof. Jonas Kunzler — [henriquecarmine@gmail.com](mailto:henriquecarmine@gmail.com) · [@henriquecarmine](https://github.com/henriquecarmine)
-- **Colaboradores:** Klinger · Kelvin
+- **Coordenação (orientação):** Prof. Dr. Jonas Augusto Kunzler — [jak@cesar.school](mailto:jak@cesar.school)
+- **Desenvolvimento e manutenção:** Henrique Carmine — Perito Forense Digital (Governança de TI e Telecomunicações), mestrando em Open RAN sob orientação do Prof. Jonas Kunzler — [henriquecarmine@gmail.com](mailto:henriquecarmine@gmail.com) · [@henriquecarmine](https://github.com/henriquecarmine)
 
-CESAR School · disciplina *RAN Intelligent Controller (RIC)* · tema **UE-TP-rApp**.
+Projeto **coordenado pelo Prof. Dr. Jonas Augusto Kunzler** e **mantido por
+Henrique Carmine**. CESAR School · disciplina *RAN Intelligent Controller (RIC)*
+· tema **UE-TP-rApp**. Licença **[MIT](LICENSE)**.
 
-Licença **[MIT](LICENSE)**.
+---
+
+## 6. Apoie este projeto
+
+Este laboratório fica **no ar 24/7** num servidor ARM na AWS, custeado do bolso —
+para qualquer pessoa estudar 5G/O-RAN, usar em aula ou em pesquisa. Manter online
+tem um custo mensal real, e hoje sai inteiro por minha conta.
+
+Se o projeto te foi útil, **qualquer valor ajuda a manter o servidor ligado** 🙏
+
+> **PIX:** `henrique@titnnium.us` (chave e-mail)
+
+Obrigado de coração — cada ajuda mantém o lab disponível para a próxima pessoa.

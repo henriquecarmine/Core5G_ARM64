@@ -11,7 +11,7 @@ cd "$PROJECT_DIR"
 source "$SCRIPT_DIR/lib/testlog.sh"
 
 GNB_CONTAINER="ueransim"
-AMF_CONTAINER="amf"
+AMF_CONTAINER="open5gs-amf-containerized"   # nome real do container (não o serviço compose 'amf')
 fails=0
 
 section "Registro do UE (N1/NAS) — UERANSIM ↔ AMF"

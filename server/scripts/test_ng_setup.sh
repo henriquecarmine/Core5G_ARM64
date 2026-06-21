@@ -11,7 +11,7 @@ cd "$PROJECT_DIR"
 source "$SCRIPT_DIR/lib/testlog.sh"
 
 GNB_CONTAINER="ueransim"
-AMF_CONTAINER="amf"
+AMF_CONTAINER="open5gs-amf-containerized"   # nome real do container (não o serviço compose 'amf')
 fails=0
 
 section "NG Setup (N2) — gNB (UERANSIM) ↔ AMF (Open5GS)"

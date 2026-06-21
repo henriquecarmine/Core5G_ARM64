@@ -13,7 +13,7 @@ source "$SCRIPT_DIR/lib/testlog.sh"
 
 UE_CONTAINER="ueransim"
 TEST_HOSTS=("8.8.8.8" "8.8.4.4" "1.1.1.1")
-TEST_URLS=("http://ifconfig.me" "http://icanhazip.com")
+TEST_URLS=("http://ifconfig.me/ip" "http://icanhazip.com")
 fails=0; warns=0
 
 section "Conectividade fim-a-fim do UE — Projeto 1 (UERANSIM ↔ Open5GS)"
@@ -67,9 +67,12 @@ section "3/6 · Acesso HTTP e IP público"
 step "Por quê: confirma navegação real e mostra com qual IP público o UE aparece na internet."
 http_ok=0
 for url in "${TEST_URLS[@]}"; do
-    PUB=$(docker exec "$UE_CONTAINER" wget -q --timeout=5 -O- "$url" 2>/dev/null | head -1 | tr -d '\r')
+    BODY=$(docker exec "$UE_CONTAINER" wget -q --timeout=5 -O- "$url" 2>/dev/null | tr -d '\r')
+    PUB=$(printf '%s' "$BODY" | grep -oE '([0-9]+\.){3}[0-9]+' | head -1)
     if [ -n "$PUB" ]; then
         ok "$url → IP público $PUB."; http_ok=$((http_ok+1))
+    elif [ -n "$BODY" ]; then
+        ok "$url respondeu (sem IP no corpo)."; http_ok=$((http_ok+1))
     else
         warn "$url não respondeu."
     fi

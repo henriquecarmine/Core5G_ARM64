@@ -54,6 +54,35 @@ PATCH em correções pontuais.
 | 0.24.8 | 2026-06-21 | Vaga de Professor reassume sozinha quando está LIVRE (após restart do painel/deploy ou abandono): a aba recupera no próximo heartbeat, sem relogar. Aviso de "sessão não ativa" se auto-limpa e diferencia "vaga livre (reassumindo…)" de "outro professor com o controle" |
 | 0.25.0 | 2026-06-21 | Demonstração E2E **didática**: o console agora mostra o **comando real e a saída real** de cada passo, com narração "por quê". **Fix do throughput**: o iperf3 agora atravessa de fato o núcleo 5G (rota pelo `uesimtun0` + bind à origem do túnel) em vez de sair pela bridge docker |
 | 0.25.1 | 2026-06-21 | Auditoria didática de **todos os relatórios**: padrão lib (cor + "Resumo") confirmado em P1 e P2. Único fora do padrão (`test_ue_connection`) reescrito — usa a lib no corpo, guardas de erro com Resumo + `exit 0`, e **veredito honesto** (ok/atenção/falha em vez de sempre "ok") |
+| 0.25.2 | 2026-06-21 | **Verificação ao vivo dos relatórios P1** revelou 3 bugs de precisão (que a auditoria estática não pegava) — todos corrigidos: (1) `ue_connection` mostrava `<!DOCTYPE html>` como "IP público" (ifconfig.me via wget) → usa `/ip` + valida IP; (2) `ng_setup` e (3) `registration` davam falso-negativo "AMF não está rodando" (nome de container errado: `amf` vs `open5gs-amf-containerized`), fazendo `ng_setup` dizer "N2 não confirmada" mesmo com NGSetupResponse OK |
+
+---
+
+## [0.25.2] — 2026-06-21
+
+**Verificação ao vivo de todos os relatórios P1 (com o Projeto 1 no ar).**
+Rodar cada relatório de verdade — não só `bash -n` — expôs 3 bugs de precisão
+que enganariam o professor/aluno. Todos corrigidos e re-testados ao vivo:
+
+- **`test_ue_connection` — IP público falso:** o teste de HTTP usava
+  `wget http://ifconfig.me`, que devolve **HTML** (não o IP), então o relatório
+  exibia `IP público <!DOCTYPE html>`. Corrigido: usa `http://ifconfig.me/ip`
+  (texto puro) e **extrai/valida o IP** por regex antes de rotular.
+- **`test_ng_setup` — falso "AMF não está rodando":** o script procurava um
+  container chamado `amf`, mas o nome real é `open5gs-amf-containerized` (o
+  `amf` é só o nome do **serviço** compose). Com o `docker inspect` falhando, o
+  cruzamento com o AMF caía em aviso e o veredito virava *"N2 não confirmada"* —
+  **mesmo com o NGSetupResponse recebido**. Corrigido o nome do container; agora
+  o veredito é *"N2 estabelecida — NG Setup com sucesso"*.
+- **`test_registration` — mesmo bug de nome:** dava *"! Container amf não está
+  rodando"* no cruzamento NAS. Corrigido; agora confirma *"AMF registrou a
+  sinalização NAS do UE"*.
+
+> Verificados ao vivo e aprovados: `status/system-status`, `ng-setup`,
+> `registration`, `config-coherence`, `ue-connection` e `upf-failover` (failover
+> mantendo conectividade). Todos com cabeçalho de seção, checagens coloridas e
+> bloco "Resumo". Relatórios do **P2** (E2 SM/KPM/RC) seguem auditados (lib +
+> Resumo) — validação ao vivo deles exige alternar para o Projeto 2.
 
 ---
 

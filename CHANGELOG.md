@@ -46,6 +46,17 @@ PATCH em correções pontuais.
 | 0.24.0 | 2026-06-20 | Modo projeção (kiosk): botão "⛶ Projeção" abre uma tela limpa em fullscreen pro datashow — RAN ao vivo grande, console em fonte grande, header enxuto (projeto + nº de alunos), sem sidebar/controles. Esc sai |
 | 0.24.1 | 2026-06-20 | Onboarding de colaboradores: README atualizado (modo sala de aula, guardrail cpuset, usuários), `CONTRIBUTING.md`, modelos de Issue/PR (`.github/`), e **tags git** de toda a história do painel (v0.12.2 → v0.24.x). Issues + Discussions habilitados no GitHub |
 | 0.24.2 | 2026-06-20 | Créditos/Equipe (Prof. Jonas · Henrique · Klinger · Kelvin) no README e nos rodapés do painel; remove o rótulo "Grupo 6"; adiciona a **licença MIT** |
+| 0.24.3 | 2026-06-20 | Nome completo do professor confirmado nos PDFs da disciplina: **Prof. Dr. Jonas Augusto Kunzler** (jak@cesar.school) — atualizado no README e nos rodapés |
+
+---
+
+## [0.24.3] — 2026-06-20
+
+**Nome do professor confirmado nos documentos.** Conferindo os PDFs das aulas em
+`pdfs/`, o orientador é **Prof. Dr. Jonas Augusto Kunzler** (jak@cesar.school) —
+atualizado na Equipe (README) e nos rodapés do painel. Os nomes dos alunos nos
+documentos constam só com o primeiro nome (planilha de composição, grupo UE-TP:
+Henrique · Klinger · Kelvin · Gilberto).
 
 ---
 

@@ -215,7 +215,7 @@ do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
 
 ## 5. Equipe
 
-- **Professor (orientador):** Jonas
+- **Professor (orientador):** Prof. Dr. Jonas Augusto Kunzler — [jak@cesar.school](mailto:jak@cesar.school)
 - **Autor / mantenedor:** Henrique Carmine — [hc@cesar.school](mailto:hc@cesar.school) · [@henriquecarmine](https://github.com/henriquecarmine)
 - **Colaboradores:** Klinger · Kelvin
 

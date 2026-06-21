@@ -40,6 +40,28 @@ PATCH em correções pontuais.
 | 0.19.0 | 2026-06-20 | Modo sala de aula: 1 Professor por vez (bloqueia 2º admin, libera após 30s idle) + Alunos acompanham AO VIVO o console do Professor (espelho por ring-buffer/polling) + banner "🔴 AO VIVO" + contagem de espectadores + papéis Professor/Aluno |
 | 0.20.0 | 2026-06-20 | Resultados persistentes + Replay: cada execução do Professor é salva em disco (`server/panel_results/`) e some no restart nunca mais; aba "Resultados salvos" (Professor e Aluno) lista tudo e **reproduz** a execução com timing. Fase 2 do modo sala de aula |
 | 0.21.0 | 2026-06-20 | RAN ao vivo (P2): faixa de sparklines com SNR/MCS/PRB/BLER reais do gNB OAI (PHY/MAC do UE), atualizando a cada 1,5s; aparece só com o Projeto 2 no ar e é espelhada pros Alunos (ambos consultam `/api/topology/gnb-stats`) |
+| 0.21.1 | 2026-06-20 | Hardening da vaga de Professor: posse "pegajosa" — só libera por logout (ou após 10min de abandono, válvula de segurança); posse por sid, não cai por soluço de rede. Protege a aula de um aluno assumir numa janela curta |
+
+---
+
+## [0.21.1] — 2026-06-20
+
+**Hardening da vaga de Professor (segurança da aula).** A vaga de Professor único
+ficou **pegajosa**, fechando a brecha em que um aluno poderia assumir o controle
+numa janela curta de inatividade:
+
+- Antes: a vaga liberava após 30s sem heartbeat — um aluno com senha de admin
+  poderia assumir se o professor desse um soluço de rede. Agora a vaga **só libera
+  por logout explícito**, ou após **10 min** sem heartbeat (válvula de segurança
+  para o caso de o laptop morrer, evitando travar a vaga para sempre).
+- A posse passou a valer por **sid** (não por "heartbeat recente"): o Professor
+  ativo não perde o direito de executar por um soluço de rede no meio da demo.
+  Ele só perde a vaga por logout, por reconexão própria (novo sid) ou por takeover
+  após os 10 min.
+- Mensagem de bloqueio (409) atualizada: sugere entrar como aluno OU pedir o
+  logout do professor atual.
+- Config: usuário `grupo6` removido; criado `professor` (admin). A trava garante
+  hcarmine ⇄ professor: só um por vez.
 
 ---
 

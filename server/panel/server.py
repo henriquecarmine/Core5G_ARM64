@@ -128,7 +128,12 @@ def current_user(request: Request) -> str | None:
 # acompanham ao vivo. Estado em memória do processo (cai em restart, ok no lab).
 # ===========================================================================
 _state_lock = threading.RLock()
-ADMIN_IDLE_TIMEOUT = 30.0          # s sem heartbeat ⇒ a vaga de Professor libera
+# A vaga de Professor é PEGAJOSA: enquanto a aba do Professor estiver aberta, o
+# heartbeat (5s) renova a posse e nenhum outro admin entra. A vaga só libera por
+# LOGOUT explícito — ou, como válvula de segurança caso o Professor suma (laptop
+# desligado / queda de rede prolongada), após ADMIN_TAKEOVER_GRACE sem heartbeat.
+# Isso impede um aluno de "roubar" a vaga numa janela curta no meio da aula.
+ADMIN_TAKEOVER_GRACE = 600.0       # 10 min sem heartbeat ⇒ outro admin pode assumir
 VIEWER_TIMEOUT = 12.0              # s sem polling ⇒ o Aluno deixa de contar
 # Professor ativo no momento (quem pode executar e cuja saída é transmitida).
 ACTIVE_ADMIN: dict = {"user": None, "sid": None, "ts": 0.0}
@@ -136,15 +141,18 @@ _VIEWERS: dict[str, dict] = {}     # sid -> {"user", "ts"} (alunos acompanhando)
 
 
 def _seat_free(now: float) -> bool:
-    return ACTIVE_ADMIN["sid"] is None or (now - ACTIVE_ADMIN["ts"]) > ADMIN_IDLE_TIMEOUT
+    """Vaga disponível para OUTRO usuário assumir? Só se ninguém a tem ou se o
+    dono sumiu por mais que a tolerância (laptop morto). Logout zera na hora."""
+    return ACTIVE_ADMIN["sid"] is None or (now - ACTIVE_ADMIN["ts"]) > ADMIN_TAKEOVER_GRACE
 
 
-def is_active_admin(user: str | None, sid: str | None, now: float | None = None) -> bool:
-    now = time.time() if now is None else now
+def is_active_admin(user: str | None, sid: str | None) -> bool:
+    """É o dono atual da vaga? Posse por sid — NÃO depende de heartbeat recente,
+    pra um soluço de rede não derrubar o Professor no meio da demonstração. Ele
+    só perde a vaga por logout, por reconexão (novo sid) ou por takeover (10min)."""
     return (
         user is not None and user != GUEST_USER and sid is not None
         and ACTIVE_ADMIN["sid"] == sid
-        and (now - ACTIVE_ADMIN["ts"]) <= ADMIN_IDLE_TIMEOUT
     )
 
 
@@ -591,12 +599,14 @@ def do_login(payload: dict) -> JSONResponse:
         with _state_lock:
             # Trava de "um Professor por vez": bloqueia um SEGUNDO usuário enquanto
             # houver um professor ativo. O MESMO usuário pode reassumir (reconexão
-            # de outra aba/dispositivo). A vaga libera sozinha após ADMIN_IDLE_TIMEOUT.
+            # de outra aba/dispositivo). A vaga só libera por logout — ou após
+            # ADMIN_TAKEOVER_GRACE (10min) sem heartbeat, caso o Professor suma.
             if not _seat_free(now) and ACTIVE_ADMIN["user"] != user:
                 raise HTTPException(
                     409,
-                    f"Já há um professor conectado ({ACTIVE_ADMIN['user']}). "
-                    f"Entre como aluno para acompanhar a aula ao vivo.",
+                    f"Já há um professor conectado ({ACTIVE_ADMIN['user']}) e a vaga é única. "
+                    f"Entre como aluno para acompanhar a aula ao vivo — ou peça para o professor "
+                    f"sair (logout) para liberar a vaga.",
                 )
             sid = secrets.token_hex(8)
             ACTIVE_ADMIN.update(user=user, sid=sid, ts=now)

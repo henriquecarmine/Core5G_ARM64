@@ -76,7 +76,8 @@
       "does": "Aplicações de RAN. Inclui o UE-TP-rApp (xapp_ue_tp_moni): estima o throughput por UE (EWMA).",
       "to": "Exibem/relatam as métricas; podem disparar controle (E2SM-RC) pelo RIC.",
       "ports": "E42 → RIC", "network": "loopback", "ip": "127.0.0.1",
-      "statusKey": "proc:xapp_", "planned": false
+      "comment_status": "xApps são sob demanda (encerram no 1º evento, ~2s). O nó reflete a DISPONIBILIDADE da plataforma: verde quando o RIC está no ar — não um xApp persistente (que nunca há).",
+      "statusKey": "proc:nearRT-RIC", "planned": false
     },
 
     {

@@ -60,6 +60,101 @@ PATCH em correções pontuais.
 | 0.25.5 | 2026-06-21 | **Modo projeção** agora mantém a **régua lateral de ações** visível (o professor opera testes/demo enquanto projeta). Antes o kiosk escondia o `#sidebar` inteiro; agora só esconde o que polui o datashow (barra de projetos, telemetria pesada, copiar/limpar) e restaura o grid de 2 colunas |
 | 0.26.0 | 2026-06-21 | **Gerenciar Resultados salvos**: excluir **um** (✕ por item) ou **vários** (modo "Selecionar" com checkboxes + "Excluir selecionados" + "Tudo"), e **anotar uma observação** (✎) no relatório pra lembrar do que era. Tudo só para Professor (Aluno 403), com confirmação nas exclusões |
 | 0.26.1 | 2026-06-21 | **Botão "⎋ Sair" (logout)** no topo do painel. Faltava UI para o `/api/logout` que já existia — sem ele, a vaga única de Professor só liberava após 10 min de carência. Agora o professor sai com 1 clique (com confirmação) e **libera a vaga na hora** para outro entrar |
+| 0.27.0 | 2026-06-21 | **`oai-upf-vpp` portado para arm64** (antes tido como "não portável"): o bloqueio era só o Hyperscan (Intel-only); o **Vectorscan** (fork ARM, drop-in `libhs`) resolve. Novo `Dockerfile.upf-vpp.ubuntu.arm64`, imagem validada (vpp aarch64, GTP UPF habilitado, plugin resolve `libhs.so.5`), `.tar` em `artifacts/oai-images/` |
+| 0.31.0 | 2026-06-22 | **Segurança: coletor KPM nunca mexe no cpuset + dependência de 4 vCPU documentada**. Forçar UE+tráfego nos 2 cores (removendo o guardrail) **congelou o box 2×** (reboots). `kpm_collect_real.sh` reescrito p/ **não tocar no cpuset** — em 2 vCPU detecta que o UE não attacha, **para o UE** e conclui honesto ("use 4 vCPU"); em 4 vCPU attacha sozinho. Heartbeat **dedup** (marcos distintos). **Demonstração segura** validada (análise sobre amostra). Documentado em README (roadmap), `KPM-COLETA-RESILIENTE.md` (⚠️ topo), bible §10: **relatório completo de KPM com throughput real depende de upgrade p/ 4 vCPU** |
+| 0.30.0 | 2026-06-22 | **Coleta KPM resiliente p/ apresentação** (`scripts/kpm_collect_real.sh`): coleta com tráfego real, **100% por evento (zero tempo)** — espera o UE attachar (`ip monitor`), coleta K indicações (`grep -m K`), heartbeat "não travou" por evento de log, **auto-retry** com diagnóstico, **auto-revert** do cpuset (trap) e **watchdog anti-hang** (`tail -f --pid /dev/null`). Botão no painel + guia milimétrico [`KPM-COLETA-RESILIENTE.md`](server/oai-cn-gnb-e2/docs/KPM-COLETA-RESILIENTE.md). Resolve o "0 indicações" (coleta começava antes do attach) e atende o pedido: não trava, não perde o teste, completa sempre |
+| 0.29.0 | 2026-06-22 | **Pipeline de análise KPM (Dados na RAN)**: novo `scripts/kpm_analytics.sh` — implementa o "exportar o lab para análise" da Aula 06 (slide 46): parseia `xapp_kpm_lab.log` (texto bruto E2SM-KPM) → série temporal CSV → KPIs por UE (throughput médio/máx, PRB) → sparkline ASCII, tudo didático (Coleta→ETL→KPI→Viz→Decisão, com o "porquê"). Amostra `scripts/samples/kpm_sample.log` + guia [`KPM-ANALYTICS.md`](server/oai-cn-gnb-e2/docs/KPM-ANALYTICS.md). Ponte p/ o UE-TP-rApp e o Módulo 7 |
+| 0.28.0 | 2026-06-22 | **User plane do P2 validado no servidor + guia de CPU/reprodução**: religado o lab P2 (core v2.2.1 + RIC + gNB), E2 SETUP OK, xApps KPM/cust/RC subscritos. UE attacha e pega IP `12.1.1.2` com **ping 0% perda** — o gargalo era **CPU** (2 vCPU + cpuset = gNB e UE num core → RRC inunda), resolvido liberando os 2 cores (timer-free: `trap EXIT` + `wait -n` + `nice -20`) ou usando **4 vCPU**. Novo guia [`PROJETO2-CPU-E-USERPLANE.md`](server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md); bible §4/§7.c/§10 e README atualizados |
+
+---
+
+## [0.28.0] — 2026-06-22
+
+**User plane do Projeto 2 validado no servidor real + guia de reprodução/CPU.**
+
+Religado o lab P2 no Graviton (core v2.2.1 + near-RT RIC + gNB) e validado fim a
+fim, tudo **event-driven (zero tempo)**:
+- **E2 SETUP** gNB↔RIC: `[E2-AGENT]: E2 SETUP RESPONSE rx`.
+- **xApps**: KPM (RAN_FUNC_ID 2), cust (142), RC (3) — todos subscritos.
+- **User plane**: UE attacha, `oaitun_ue1 = 12.1.1.2`, `ping 8.8.8.8` → **4/4, 0%
+  perda, RTT ~111 ms**.
+
+**Descoberta:** o UE não pegava IP por **CPU**, não pelo bug AUSF↔UDM (esse era do
+core v1.5.1). Em 2 vCPU com o guardrail de cpuset (lab num só core), gNB e UE
+dividem o core e o RRC do UE inunda (`TASK_RRC_NRUE task contains` 71k→112k).
+Liberando os **2 cores** (`AllowedCPUs=0-1`) — ou usando **4 vCPU** — o UE attacha
+normal. Trade-off no box de 2 vCPU: **ou** proteção anti-freeze (1 core, sem UE)
+**ou** user plane (2 cores, box dedicado).
+
+**Procedimento timer-free** (o usuário "não gosta de nada com tempo"): liberar/
+reverter os 2 cores sem cronômetro — `trap revert EXIT`, espera por evento
+(`ip monitor address` p/ o IP, `tail -F --pid | grep -m1` p/ o flood, `wait -n`),
+monitor em `nice -20` (garante o revert mesmo sob saturação).
+
+**Doc:** novo guia [`server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md`](server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md)
+— reprodução completa até o user plane, **4 vCPU (recomendado) vs 2 vCPU
+(alternativo)**, com o script de teste auto-revert. Bible §4 (RAM/instância), §7.c
+(CPU/user plane), §10 (UE resolvido), §11 (referência) e README (roadmap)
+atualizados.
+
+---
+
+## [0.27.0] — 2026-06-21
+
+**`oai-upf-vpp` portado para arm64 — o "não portável" caiu.** Por meses o
+UPF-VPP foi documentado como impossível em ARM. Investigando a fonte, o bloqueio
+real era **uma única dependência**: o **Hyperscan** (`libhyperscan-dev`), regex
+SIMD da Intel (SSE/AVX), inexistente no Ubuntu arm64. O plugin UPF da Travelping
+a busca via `pkg_check_modules(HS libhs)`.
+
+**Solução — Vectorscan.** O [Vectorscan](https://github.com/VectorCamp/vectorscan)
+é o fork portável do Hyperscan (ARM NEON 100% funcional, API/ABI-compatível,
+mesmo SONAME `libhs.so.5`). É **drop-in**: compilado e instalado, o
+`pkg_check_modules(HS libhs)` o encontra e o GTP UPF é habilitado
+(`Found libhs, version 5.4.12`). Os demais "bloqueios" alegados não se
+confirmaram — o VPP 2101 **core não usa hyperscan** e os paths de lib já eram
+`aarch64-linux-gnu`.
+
+**Novo `docker/Dockerfile.upf-vpp.ubuntu.arm64`** — diferenças vs. o x86:
+1. Base `ubuntu:focal` (gcc-9, p/ C++17 do Vectorscan) + `cmake` recente via pip
+   (focal tem 3.16; Vectorscan exige ≥3.18.4).
+2. Compila o Vectorscan removendo `-Werror` (gcc-9 dá falso-positivo em
+   `state_compress.c` + flag `-Wno-stringop-overread` gcc-11-only) e sem extras
+   (`BUILD_UNIT/TOOLS/EXAMPLES/BENCHMARKS/DOC=OFF`).
+3. `sed` tirando `dh-systemd` do `DEB_DEPENDS` do VPP (bionic-only; quebra o
+   `make install-dep` no focal, só serve p/ `.deb`).
+4. `sed` forçando `https://github.com` nos pacotes externos do VPP (o `rdma-core`
+   baixava por `http://github.com:80` → "connection refused").
+5. Copia o `libhs.so.5` do Vectorscan para a imagem final.
+
+**Validação:** imagem `oaisoftwarealliance/oai-upf-vpp:v1.5.1` (~138 MB);
+binário `vpp` ELF **ARM aarch64**; `upf_plugin.so` resolve
+`libhs.so.5 => /lib/aarch64-linux-gnu/libhs.so.5`. **Runtime validado** (docker
+`--privileged` + hugepages): VPP boota completo, `show plugins` lista
+`upf_plugin.so 21.01.1`, `show upf specification release` → `PFCP version: 15`.
+O abort no `flowtable_init` que aparecia antes **não era do porte**: era o
+`main-heap` lastreado por hugepages sem páginas suficientes — com
+`main-heap-page-size 4k` (ou hugepages dimensionadas) sobe normal.
+`.tar` em `artifacts/oai-images/oai-upf-vpp.tar`.
+
+**Validado no Graviton real (servidor AWS, 2026-06-22):** imagem carregada
+(`docker load`, arch=arm64) e rodada standalone com o box ocioso. Teste
+event-driven (readiness por estado, zero timeout) + métricas reais:
+`docker stats` cpu 2,23% / mem 1,41 GiB; `show plugins` → `upf_plugin.so 21.01.1`;
+`show upf specification release` → `PFCP version: 15`; `show memory main-heap` →
+usado **1,08 G** (explica o heap de 2G: o flowtable pré-aloca ~1 GB); `upf_plugin.so`
+liga em `libhs.so.5`. Container autoterminou.
+
+**Lição (correção de processo):** uma 1ª tentativa rodou VPP **com o lab P2 ativo**
+(load ~30) e um harness que **não autoterminava** — sufocou o `sshd` e o box
+precisou de reboot. Regra adotada: teste de VPP no servidor só com o box **ocioso**,
+container `--rm`+autotérmino, espera por **estado/evento** (nunca timeout cego).
+Bible §4 também corrigida (RAM real ~3,8 GB / `t4g.medium`, não 906 MiB). Falta só
+o E2E completo (PFCP do SMF + GTP-U do gNB + tráfego de UE), que exige core+RAN.
+
+**Escopo:** o lab não depende desta imagem (P1 usa o UPF do Open5GS; P2 usa o
+`oai-upf` simple_switch do core v2.2.1). O porte é pelo princípio Open RAN e é
+candidato a report upstream para a OAI. Detalhes na bible §7.b.
 
 ---
 

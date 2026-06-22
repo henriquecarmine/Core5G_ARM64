@@ -357,6 +357,12 @@ COMMANDS: dict[str, dict] = {
     # Variante KPM com tráfego (aula04, slide 43): ping ao DN sobe o throughput
     # medido nas indicações E2SM-KPM.
     "p2-test-e2-kpm-traffic": {"cmd": ["bash", "-c", "KPM_TRAFFIC=1 ./scripts/test_e2_kpm.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    # Análise de dados (aula06, slide 46): parseia o log KPM bruto → série temporal
+    # CSV + KPIs por UE + sparkline (Coleta→ETL→KPI→Viz→Decisão), didático.
+    "p2-kpm-analytics": {"cmd": ["./scripts/kpm_analytics.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    # Coleta KPM com TRÁFEGO REAL: resiliente, 100% por evento (sem tempo), com
+    # heartbeat ("não travou"), auto-retry e auto-revert do cpuset. Conclui sempre.
+    "p2-kpm-real": {"cmd": ["./scripts/kpm_collect_real.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
 }
 
 _VALID_DISTANCES = {"none", "100m", "500m", "1km", "3km", "off"}

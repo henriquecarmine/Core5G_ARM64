@@ -113,11 +113,12 @@ e o container sai com código 255.
 | `oai-udm:v1.5.1` | Unified Data Management | 257 MB |
 | `oai-ausf:v1.5.1` | Authentication Server Function | 255 MB |
 
-> `oai-upf-vpp` **não é compilável para arm64**: depende de `libhyperscan-dev`
-> (biblioteca de regex SIMD da Intel, inexistente no Ubuntu arm64) e de
-> caminhos `/usr/lib/x86_64-linux-gnu/` hardcoded no Dockerfile final.
-> O lab usa o UPF do Open5GS (`open5gs-upfd`) — os 6 componentes acima cobrem
-> todo o Control Plane.
+> `oai-upf-vpp` **agora compila para arm64** (2026-06-21): o único bloqueio era
+> o Hyperscan (`libhyperscan-dev`, Intel-only); o **Vectorscan** (fork ARM,
+> drop-in `libhs`) resolve. Build via `docker/Dockerfile.upf-vpp.ubuntu.arm64`,
+> imagem em `artifacts/oai-images/oai-upf-vpp.tar`. Ver bible §7.b. O lab em si
+> usa o UPF do Open5GS (`open5gs-upfd`) e o `oai-upf` simple_switch (core v2.2.1)
+> — os 6 componentes acima cobrem todo o Control Plane.
 
 ---
 

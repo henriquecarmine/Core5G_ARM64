@@ -1,0 +1,163 @@
+#/*
+# * Dockerfile for the VPP-UPF service — porte linux/arm64 (aarch64).
+# *
+# * Diferenças vs. Dockerfile.upf-vpp.ubuntu (x86):
+# *   1. Compila o VECTORSCAN (fork portável do Intel Hyperscan) e o instala
+# *      como libhs/hs.h. O Hyperscan upstream é Intel-only (SSE/AVX); o plugin
+# *      UPF da Travelping faz `pkg_check_modules(HS libhs)`, então o vectorscan
+# *      é drop-in (mesmo SONAME libhs.so.5, mesma API). Sem ele, o GTP UPF era
+# *      desabilitado ("Hyperscan not found - GTP UPF disabled").
+# *   2. Base = ubuntu:focal (gcc-9) — vectorscan exige C++17/gcc>=9.
+# *   3. Remove `dh-systemd` do DEB_DEPENDS do VPP (pacote só existe no bionic;
+# *      quebra o `make install-dep` no focal — só é usado p/ empacotar .deb).
+# *   4. Caminhos de lib = /usr/lib/aarch64-linux-gnu/ (não x86_64).
+# *
+# * Base do raciocínio e provas em CHANGELOG / bible §7.b.
+# */
+#---------------------------------------------------------------------
+# BUILDER IMAGE
+#---------------------------------------------------------------------
+ARG BASE_IMAGE=ubuntu:focal
+FROM $BASE_IMAGE AS vpp-upf-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV IS_DOCKERFILE=1
+ENV TZ=Europe/Paris
+
+# Dependências de sistema + build do vectorscan
+RUN apt-get update && \
+    apt-get upgrade --yes && \
+    apt-get install --yes \
+        git \
+        sudo \
+        python3 \
+        python3-pip \
+        wget \
+        make \
+        build-essential \
+        ragel \
+        pkg-config \
+        libboost-all-dev \
+        file \
+        ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+# cmake recente: focal tem 3.16; vectorscan exige >= 3.18.4
+RUN pip3 install --no-cache-dir "cmake==3.25.2"
+
+#---------------------------------------------------------------------
+# VECTORSCAN — Hyperscan portado p/ ARM (libhs/hs.h drop-in)
+#---------------------------------------------------------------------
+WORKDIR /opt
+RUN git clone --depth 1 https://github.com/VectorCamp/vectorscan.git && \
+    # gcc-9 do focal: remover -Werror (falso-positivo em state_compress.c +
+    # flag -Wno-stringop-overread que só existe no gcc-11)
+    sed -i 's/ -Werror//g' /opt/vectorscan/cmake/cflags-generic.cmake && \
+    mkdir -p /opt/vectorscan/build && cd /opt/vectorscan/build && \
+    /usr/local/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=ON -DFAT_RUNTIME=OFF \
+        -DBUILD_UNIT=OFF -DBUILD_TOOLS=OFF -DBUILD_EXAMPLES=OFF \
+        -DBUILD_BENCHMARKS=OFF -DBUILD_DOC=OFF .. && \
+    make -j$(nproc) && make install && ldconfig && \
+    echo "vectorscan:" && file -L /usr/lib/aarch64-linux-gnu/libhs.so.5 && \
+    pkg-config --modversion libhs
+
+# Deixar o VPP usar o cmake do apt (ambiente upstream-suportado), não o pip
+RUN pip3 uninstall -y cmake
+
+# Algumas configs de GIT úteis (idênticas ao Dockerfile x86)
+RUN git config --global https.postBuffer 123289600 && \
+    git config --global http.sslverify false
+
+WORKDIR /vpp-upf
+COPY . .
+
+# Aplicando patches do VPP (Travelping upg-vpp + patches locais)
+RUN git clone -b stable/2101 https://github.com/fdio/vpp.git && \
+    git clone -b stable/1.2 https://github.com/travelping/upg-vpp.git && \
+    cd upg-vpp && \
+    cd .. && \
+    mv upg-vpp/upf/ vpp/src/plugins/ && \
+    mv upg-vpp/vpp-patches/* scripts/patches/ && \
+    mv upg-vpp/vpp.spec / && \
+    ./scripts/apply_vpp_patches.sh && \
+    # dh-systemd não existe no focal (foi absorvido pelo debhelper); só é usado
+    # p/ empacotar .deb, não p/ build-release → remover do DEB_DEPENDS
+    sed -i 's/dh-systemd//g' vpp/Makefile && \
+    # rdma-core (e outros pacotes externos) baixam por http://github.com:80 →
+    # "connection refused". Forçar https nas URLs dos pacotes externos.
+    sed -i 's|http://github.com|https://github.com|g' vpp/build/external/packages/*.mk && \
+    touch /etc/apt/apt.conf.d/90forceyes && \
+    echo  "APT::Get::Assume-Yes "true";" >> /etc/apt/apt.conf.d/90forceyes && \
+    echo  "APT::Get::force-yes "true";" >> /etc/apt/apt.conf.d/90forceyes
+
+# Build vpp com o plugin upf da Travelping
+RUN make install-dep -C vpp
+RUN make build-release -C vpp && \
+    ldd /vpp-upf/vpp/build-root/install-vpp-native/vpp/bin/vpp && \
+    ldd /vpp-upf/vpp/build-root/install-vpp-native/vpp/bin/vppctl
+
+#---------------------------------------------------------------------
+# TARGET IMAGE
+#---------------------------------------------------------------------
+FROM $BASE_IMAGE as oai-upf-vpp
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Paris
+
+RUN apt-get update && \
+    apt-get upgrade --yes && \
+    apt-get install --yes \
+        net-tools \
+        tzdata \
+        iproute2 \
+        iputils-ping \
+        curl \
+        libnuma1 \
+        python3 \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /openair-upf/bin
+COPY --from=vpp-upf-builder \
+       /vpp-upf/scripts/entrypoint.sh \
+       /vpp-upf/vpp/build-root/install-vpp-native/vpp/bin/vpp \
+       /vpp-upf/vpp/build-root/install-vpp-native/vpp/bin/vppctl \
+       /vpp-upf/src/nrf_client.sh \
+       ./
+
+COPY --from=vpp-upf-builder \
+       /vpp-upf/scripts/upf_conf/startup_debug.conf \
+       /vpp-upf/scripts/upf_conf/create_configuration.py \
+       /openair-upf/etc/
+
+COPY --from=vpp-upf-builder \
+      /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/vpp_plugins/upf_plugin.so \
+      /usr/lib/aarch64-linux-gnu/vpp_plugins/
+
+COPY --from=vpp-upf-builder \
+     /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/libvppinfra.so.21.01.1 \
+     /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/libvnet.so.21.01.1 \
+     /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/libvlibmemory.so.21.01.1 \
+     /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/libvlib.so.21.01.1 \
+     /vpp-upf/vpp/build-root/install-vpp-native/vpp/lib/libsvm.so.21.01.1 \
+     /usr/lib/aarch64-linux-gnu/
+
+# Vectorscan runtime (libhs) — o upf_plugin liga contra libhs.so.5
+COPY --from=vpp-upf-builder \
+     /usr/lib/aarch64-linux-gnu/libhs.so.5.* \
+     /usr/lib/aarch64-linux-gnu/
+RUN cd /usr/lib/aarch64-linux-gnu && ln -sf libhs.so.5.* libhs.so.5
+
+RUN ldconfig && \
+    ldd /openair-upf/bin/vpp && \
+    ldd /openair-upf/bin/vppctl
+
+RUN groupadd vpp
+
+WORKDIR /openair-upf
+COPY --from=vpp-upf-builder /vpp-upf/scripts/run.sh  .
+
+#expose
+EXPOSE 8085/udp 2152/udp
+
+ENTRYPOINT ["/openair-upf/bin/entrypoint.sh"]
+CMD ["/openair-upf/run.sh"]

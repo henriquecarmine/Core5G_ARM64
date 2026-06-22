@@ -1,0 +1,68 @@
+# AMOSTRA DIDÁTICA (fixture) — NÃO é coleta real.
+# Reproduz o formato exato de logs/xapp_kpm_lab.log (xapp_kpm_moni), com 1 UE e
+# um burst de tráfego UL (sobe e desce) para demonstrar o kpm_analytics.sh sem
+# precisar do lab ao vivo. Para dados reais: ./scripts/test_e2_kpm.sh (KPM_TRAFFIC=1).
+
+      1 KPM ind_msg latency = 1180 [μs]
+UE ID type = gNB, amf_ue_ngap_id = 1
+ran_ue_id = 1
+DRB.UEThpDl = 0.00 kbps
+DRB.UEThpUl = 0.00 kbps
+RRU.PrbTotDl = 0 %
+RRU.PrbTotUl = 0 %
+
+      2 KPM ind_msg latency = 1205 [μs]
+UE ID type = gNB, amf_ue_ngap_id = 1
+ran_ue_id = 1
+DRB.UEThpDl = 312.50 kbps
+DRB.UEThpUl = 980.00 kbps
+RRU.PrbTotDl = 4 %
+RRU.PrbTotUl = 11 %
+
+      3 KPM ind_msg latency = 1190 [μs]
+UE ID type = gNB, amf_ue_ngap_id = 1
+ran_ue_id = 1
+DRB.UEThpDl = 845.00 kbps
+DRB.UEThpUl = 4210.00 kbps
+RRU.PrbTotDl = 9 %
+RRU.PrbTotUl = 38 %
+
+      4 KPM ind_msg latency = 1212 [μs]
+UE ID type = gNB, amf_ue_ngap_id = 1
+ran_ue_id = 1
+DRB.UEThpDl = 1320.00 kbps
+DRB.UEThpUl = 8650.00 kbps
+RRU.PrbTotDl = 14 %
+RRU.PrbTotUl = 61 %
+
+      5 KPM ind_msg latency = 1198 [μs]
+UE ID type = gNB, amf_ue_ngap_id = 1
+ran_ue_id = 1
+DRB.UEThpDl = 1180.00 kbps
+DRB.UEThpUl = 9120.00 kbps
+RRU.PrbTotDl = 12 %
+RRU.PrbTotUl = 66 %
+
+      6 KPM ind_msg latency = 1221 [μs]
+UE ID type = gNB, amf_ue_ngap_id = 1
+ran_ue_id = 1
+DRB.UEThpDl = 760.00 kbps
+DRB.UEThpUl = 5300.00 kbps
+RRU.PrbTotDl = 8 %
+RRU.PrbTotUl = 41 %
+
+      7 KPM ind_msg latency = 1209 [μs]
+UE ID type = gNB, amf_ue_ngap_id = 1
+ran_ue_id = 1
+DRB.UEThpDl = 240.00 kbps
+DRB.UEThpUl = 1450.00 kbps
+RRU.PrbTotDl = 3 %
+RRU.PrbTotUl = 13 %
+
+      8 KPM ind_msg latency = 1187 [μs]
+UE ID type = gNB, amf_ue_ngap_id = 1
+ran_ue_id = 1
+DRB.UEThpDl = 0.00 kbps
+DRB.UEThpUl = 60.00 kbps
+RRU.PrbTotDl = 0 %
+RRU.PrbTotUl = 1 %

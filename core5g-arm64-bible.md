@@ -384,11 +384,11 @@ UE                  gNB              AMF          AUSF    UDM    SMF    UPF
 | IP original (histórico) | `3.145.40.200` — **nunca hardcodar**, sempre usar o hostname |
 | Usuário | `ubuntu` |
 | Chave SSH | `ssl/core5g_openran_arm64.pem` (Ed25519) |
-| Tipo de instância | **AWS EC2 `t4g.micro`** (Graviton2 / Neoverse-N1, `aarch64`) — confirmado via metadata da instância (IMDSv2) |
+| Tipo de instância | **AWS EC2 `t4g.medium`** (Graviton2 / Neoverse-N1, `aarch64`) — 2 vCPU / 4 GB. (Era `t4g.micro` no início do projeto; upgrade confirmado por `free` em 2026-06-22.) |
 | Região AWS | `us-east-2` |
 | SO | Ubuntu 24.04.4 LTS (`noble`), kernel `6.17.0-1017-aws`, `aarch64` |
 | CPU | 2 vCPUs — `Neoverse-N1` (ARM Graviton2) |
-| RAM | 906 MiB |
+| RAM | ~3,8 GiB (3825 MiB medidos — `t4g.medium`) |
 | Swap | 8 GiB em `/swapfile`, `vm.swappiness=10`, persistente via `/etc/fstab` |
 | Disco | ~29 GB total |
 | Docker | `29.6.0` (pacotes `docker-ce`/`docker-ce-cli`/`containerd.io` arquitetura `arm64`, repositório oficial Docker) |
@@ -756,14 +756,77 @@ Correção: remover a linha `libasan2` (e o `libasan` genérico que também não
 
 Arquivo afetado: `server/.../oai-udm/build/scripts/build_helper.udm`
 
-**Limitação conhecida — `oai-upf-vpp` não portável para arm64**
+**`oai-upf-vpp` em arm64 — RESOLVIDO com Vectorscan (2026-06-21)**
 
-O `oai-upf-vpp` depende de:
-- `libhyperscan-dev` — biblioteca de regex SIMD da Intel, inexistente no repositório Ubuntu arm64
-- Caminhos `/usr/lib/x86_64-linux-gnu/` hardcoded no Dockerfile final
-- VPP 21.01 + DPDK com dependências x86-específicas
+Por muito tempo o `oai-upf-vpp` foi tido como "não portável" para arm64. O
+diagnóstico real, ao investigar a fonte: o bloqueio era **uma única dependência**
+— o **Hyperscan** (`libhyperscan-dev`), biblioteca de regex SIMD da Intel
+(SSE/AVX), inexistente no Ubuntu arm64. O plugin UPF da Travelping a exige via
+`pkg_check_modules(HS libhs)` (pkg-config puro).
 
-O lab principal usa o UPF do Open5GS (`open5gs-upfd`), não o `oai-upf-vpp`, portanto o build bem-sucedido dos 6 componentes de Control Plane (AMF, SMF, NRF, UDR, UDM, AUSF) é suficiente para todos os cenários de teste documentados.
+A solução: o **[Vectorscan](https://github.com/VectorCamp/vectorscan)** é um fork
+portável do Hyperscan — ARM NEON 100% funcional, **API/ABI-compatível**, mesmo
+SONAME `libhs.so.5`. É **drop-in**: compilando o Vectorscan e instalando-o, o
+`pkg_check_modules(HS libhs)` o encontra e o GTP UPF é habilitado normalmente
+(`Found libhs, version 5.4.12`). Os outros "bloqueios" citados antes não se
+confirmaram — o VPP 2101 **core não usa hyperscan**, e os caminhos de lib já
+estavam corrigidos para `aarch64-linux-gnu` no Dockerfile.
+
+Passos do porte (em [`docker/Dockerfile.upf-vpp.ubuntu.arm64`](server/oai-cn-gnb-e2/oai-cn5g-fed/component/oai-upf-vpp/docker/Dockerfile.upf-vpp.ubuntu.arm64)):
+1. Base `ubuntu:focal` (gcc-9; Vectorscan exige C++17/gcc≥9) + `cmake` recente
+   via pip (focal tem 3.16; Vectorscan pede ≥3.18.4).
+2. Compilar o Vectorscan removendo `-Werror` (gcc-9 dá falso-positivo em
+   `state_compress.c` + a flag `-Wno-stringop-overread` só existe no gcc-11) e
+   desligando os extras (`BUILD_UNIT/TOOLS/EXAMPLES/BENCHMARKS/DOC=OFF`).
+3. `sed` removendo `dh-systemd` do `DEB_DEPENDS` do VPP (pacote bionic-only que
+   quebra o `make install-dep` no focal; só serve p/ empacotar `.deb`).
+4. `sed` forçando `https://github.com` nas URLs dos pacotes externos do VPP
+   (o `rdma-core` baixava por `http://github.com:80` → "connection refused").
+5. Copiar o `libhs.so.5` (Vectorscan) para a imagem final.
+
+Resultado validado: `vpp` ELF **ARM aarch64**, `upf_plugin.so` resolve
+`libhs.so.5`. **Runtime validado** (docker `--privileged` + hugepages): o VPP
+boota completo e o plugin responde — `show plugins` lista `upf_plugin.so
+21.01.1`, `show upf specification release` → `PFCP version: 15`. O abort que
+aparecia no `flowtable_init` **não era defeito do porte**: era o `main-heap`
+lastreado por hugepages sem páginas suficientes; com `main-heap-page-size 4k`
+(ou hugepages dimensionadas) sobe normal. **Pega operacional p/ quem deployar:**
+não lastreie o main-heap com mais hugepages do que o host tem livre — use 4k ou
+reserve hugepages suficientes (heap + buffers). Imagem em
+`artifacts/oai-images/oai-upf-vpp.tar` (~138 MB).
+
+**Validação no Graviton real (servidor AWS, 2026-06-22).** Imagem carregada no
+servidor (`docker load`, arch=arm64) e rodada standalone com o box **ocioso**
+(`--cpus=1.5`, heap 2G/4k). Teste **event-driven** (readiness por estado: socket
+CLI existe OU processo morre — sem sleep/timeout fixo) com **métricas reais**:
+
+| Check | Valor medido no Graviton |
+|---|---|
+| `docker stats` | cpu 2,23% · mem 1,41 GiB / 3,74 GiB (37,8%) · 1 pid |
+| `show version` | `vpp v21.01.1` (ARM) |
+| `show plugins` | `upf_plugin.so 21.01.1` |
+| `show upf specification release` | `PFCP version: 15` |
+| `show memory main-heap` | total 1,99G · **usado 1,08G** · livre 938M |
+| `show buffers` | pool `default-numa-0` 17.240 buffers |
+| `upf_plugin.so` | liga em `libhs.so.5` (vectorscan) |
+
+O **uso real de heap (1,08 GB)** explica por que 1G falha e 2G basta: o flowtable
+do plugin pré-aloca ~1 GB (default de compilação, sem `init.conf` dimensionando).
+Container **autoterminou** e foi removido; load do host 0,3 → 1,0 (trivial).
+
+> **Lição aprendida (registrada p/ não repetir):** rodar VPP no box **enquanto o
+> lab P2 está ativo** (load ~30 nos 2 vCPUs) com um harness que **não
+> autotermina** sufocou o `sshd` e exigiu reboot. Regra: testes de VPP no servidor
+> só com o box **ocioso**, container **`--rm` + autotérmino**, e espera por
+> **estado/evento** (nunca timeout cego). Ver [[feedback-event-driven-nao-tempo]].
+
+Falta só o **E2E completo** (sessão PFCP do SMF + GTP-U do gNB + tráfego de UE),
+que exige o core+RAN inteiro e uma janela sem aula — e o lab não depende disto.
+
+> O lab principal continua usando o UPF do Open5GS (`open5gs-upfd`, P1) e o
+> `oai-upf` simple_switch (P2, core v2.2.1) — não depende desta imagem. O porte
+> existe pelo princípio Open RAN ("toda tecnologia O-RAN deve ser aberta") e é
+> candidato a report upstream para a OAI.
 
 #### Resultado — builds concluídos em 2026-06-19
 
@@ -896,6 +959,27 @@ load > 20), e aí o caminho INDICATION→Report do RIC pode estourar o timeout i
 FlexRIC. Por isso a validação sobe **sem o nrUE** (`SKIP_UE=1`, default no `e2_verify.sh`):
 o E2 é gNB↔RIC e não depende do UE, e sobra 1 vCPU inteiro pro RIC+xApp (load < 2). Para o
 lab completo COM user plane, suba normal (`SKIP_UE=0`) — mas não rode os 7× de xApp junto.
+
+**Medição no servidor (2026-06-22) — o UE attach é mutuamente exclusivo com o guardrail
+de cpuset.** Com o guardrail ativo (`oai-lab.slice AllowedCPUs=1` = lab inteiro num só
+core), o nrUE **sincroniza** (PHY/RFSIM ok: `Initial sync successful, PCI 0`, RSRP 51 dB)
+mas o **RRC inunda** (`TASK_RRC_NRUE task contains` 71k→112k) e o UE **não pega IP**: o gNB
+(CPUWeight 60) fica com ~40% do core e o nrUE (CPUWeight 20) só ~25% — insuficiente pro RRC
+em tempo real. Liberando os **2 cores** (`AllowedCPUs=0-1`), cada processo RFSIM ganha ~1
+core e o **user plane funciona de fato**: UE attacha, `oaitun_ue1=12.1.1.2`, e
+`ping 8.8.8.8` pela tun dá **4/4, 0% perda, RTT ~111 ms**. Ou seja, o que a §7.c afirma
+(UE ganha IP `12.1.1.x`) **se confirma — mas exige os 2 cores**, o que reabre o risco de
+freeze que o guardrail previne. Trade-off: **ou** proteção anti-freeze (1 core, sem UE),
+**ou** user plane completo (2 cores, box dedicado). O teste foi feito **sem timer**: revert
+do cpuset por `trap EXIT` + espera por evento (`ip monitor` p/ o IP, `tail -F --pid|grep -m1`
+p/ o flood) + monitor em `nice -20` (garante o revert mesmo sob saturação).
+
+> **Recomendação p/ quem for subir uma instância nova:** use **4 vCPU** (ex.: `t4g.xlarge`
+> ou `c7g.xlarge`). Com 4 núcleos — gNB num, UE noutro, RIC+xApp noutro, sistema noutro — o
+> lab completo **com user plane** roda sem cpuset, sem guardrail e sem risco de freeze, e os
+> xApps rodam em paralelo ao UE (essencial p/ o UE-TP-rApp). Os 2 vCPU são o **caminho
+> alternativo** (trade-off acima). Guia completo de reprodução até o user plane, com os dois
+> caminhos: [`server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md`](server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md).
 
 > **Princípio do projeto: ZERO tempo, tudo sob controle.** Nada de `sleep`/timeout cego —
 > os scripts terminam por **evento/estado** (`grep -m1` em stream, `tail -F --pid`, poll de
@@ -1079,10 +1163,22 @@ Demonstração E2E mede **149 Mbit/s** reais pelo túnel 5G (§8.6).
 - [ ] **xApp UE-TP-rApp** (tema do grupo): previsão de throughput por UE a
       partir de RSSI/RSRP/CQI/PRB. Esqueleto em `xapp_ue_tp_moni.c`; falta o
       modelo de previsão. **Próximo grande passo após a apresentação.**
-- [ ] Registro NAS do UE no Projeto 2 bloqueado pelo bug **AUSF↔UDM HTTP/2**
-      (chamada `auth-events` leva ~1,16s e estoura o `CURL_TIMEOUT_MS=1000`
-      hardcoded no AMF). E2/RIC/xApps funcionam; só o anexo do UE falha.
-      Exige recompilar o AMF — documentado, não corrigido.
+- [ ] **🧱 Upgrade para 4 vCPU — bloqueio de HW para o relatório completo de KPM.**
+      Coletar KPM com **throughput real** (dados não-zero p/ a análise e o
+      UE-TP-rApp) exige UE+gNB RFSIM em tempo real, o que **não cabe em 2 vCPU sob
+      o guardrail**. Forçar 2 cores (remover o guardrail) **congelou o box 2×**
+      (reboots). Decisão: o coletor (`kpm_collect_real.sh`) **nunca mexe no cpuset**
+      e conclui honesto em 2 vCPU; **dados reais dependem de instância 4 vCPU**
+      (`t4g.xlarge`). Por ora, demonstração segura = KPM assinado + análise sobre a
+      amostra (`kpm_analytics.sh`). Ver [`docs/KPM-COLETA-RESILIENTE.md`](server/oai-cn-gnb-e2/docs/KPM-COLETA-RESILIENTE.md).
+- [x] **User plane do UE no Projeto 2 — RESOLVIDO no core v2.2.1** (2026-06-22):
+      o UE attacha, pega IP `12.1.1.2` e tem tráfego real (`ping 8.8.8.8` 0% perda
+      pela `oaitun_ue1`). O bloqueio **não era** o AUSF↔UDM HTTP/2 (esse era do
+      core **v1.5.1**); no v2.2.1 o gargalo é **CPU**: em 2 vCPU com o guardrail de
+      cpuset (1 core), gNB e UE dividem o core e o RRC do UE inunda. Com os **2
+      cores** liberados (ou **4 vCPU**, recomendado), o UE attacha normal. Trade-off
+      e procedimento timer-free em [`server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md`](server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md)
+      e §7.c.
 - [ ] Persistir os symlinks do FlexRIC (`/usr/local/lib/flexric` e
       `/usr/local/etc/flexric`) no `infra/server-bootstrap.sh` — hoje são
       criados à mão e se perdem ao trocar de instância.
@@ -1135,4 +1231,7 @@ Demonstração E2E mede **149 Mbit/s** reais pelo túnel 5G (§8.6).
 - [`docs/blueprint-painel-observabilidade.md`](docs/blueprint-painel-observabilidade.md) — desenho do painel.
 - [`docs/labs/`](docs/labs/) — guias originais do curso (instalação Docker, pré-lab GCP/VM, core Open5GS, UERANSIM, relatório de entrega).
 - [`server/oai-cn-gnb-e2/docs/E2_FLEXRIC.md`](server/oai-cn-gnb-e2/docs/E2_FLEXRIC.md) — roteiro oficial do Projeto 2.
+- [`server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md`](server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md) — **guia de reprodução até o user plane** (UE com IP + ping): dimensionamento de CPU (**4 vCPU recomendado vs 2 vCPU alternativo**), subida do core v2.2.1 + E2 + xApps, e o procedimento timer-free de liberar/reverter os 2 cores.
+- [`server/oai-cn-gnb-e2/docs/KPM-ANALYTICS.md`](server/oai-cn-gnb-e2/docs/KPM-ANALYTICS.md) — **Dados na RAN**: pipeline didático `kpm_analytics.sh` (Aula 06, slide 46) que transforma o log KPM bruto em série temporal CSV + KPIs por UE + sparkline; ponte para o UE-TP-rApp e o Módulo 7 (Análise de Dados).
+- [`server/oai-cn-gnb-e2/docs/KPM-COLETA-RESILIENTE.md`](server/oai-cn-gnb-e2/docs/KPM-COLETA-RESILIENTE.md) — **engenharia milimétrica** do `kpm_collect_real.sh`: coleta KPM com tráfego real **resiliente e 100% por evento** (heartbeat "não travou", auto-retry, auto-revert do cpuset, watchdog anti-hang) — o padrão de "zero tempo" aplicado, para a apresentação ao vivo.
 - `pdfs/` — slides das Aulas 01–04 + planilha de composição de grupos (fonte de tudo no §1).

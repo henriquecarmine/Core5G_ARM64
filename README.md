@@ -159,7 +159,8 @@ Sobre isso, um **modo sala de aula** pensado para apresentar a um auditório:
 |---|---|---|
 | **20/06/2026** | Apresentar Projeto 2 (Aula 06, 08:00–11:00, 20 min) | 🎯 Pronto para apresentar |
 | Curto prazo | xApp **UE-TP-rApp** (previsão de throughput por UE: RSSI/RSRP/CQI/PRB) — o tema sorteado do grupo | ⏳ Esqueleto em `xapp_ue_tp_moni.c`; falta o modelo de previsão |
-| Curto prazo | Registro UE no Projeto 2 bloqueado por bug **AUSF↔UDM HTTP/2** (timeout de 1s hardcoded no AMF). E2/RIC/xApps funcionam; só o anexo NAS do UE falha | 🔧 Documentado; exige recompilar o AMF |
+| 🧱 **Bloqueio de HW** | **Relatório completo de KPM com throughput real** (dados não-zero para a análise/UE-TP-rApp) **depende de upgrade para 4 vCPU** (ex.: `t4g.xlarge`). Em 2 vCPU, o UE+gNB RFSIM não coexistem em tempo real sob o guardrail anti-freeze; coletar com tráfego exigiria remover o guardrail, o que **congela o box** (testado: 2 freezes). Por ora: **demonstração segura** = KPM assinado + análise sobre a amostra didática (`kpm_analytics.sh`) | ⚠️ Requer upgrade de CPU |
+| ✅ Resolvido | **User plane do UE no Projeto 2** (core v2.2.1): UE attacha, pega IP `12.1.1.2`, `ping` 0% perda pelo túnel. O gargalo era **CPU** (não o AUSF↔UDM, que era do v1.5.1): em 2 vCPU precisa liberar os 2 cores; em **4 vCPU** roda sem truque. Guia: [`PROJETO2-CPU-E-USERPLANE.md`](server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md) | ✅ Validado 22/06 |
 | Médio prazo | Sensor de protocolo E2/NGAP/GTP-U no painel (blueprint de observabilidade) | 📋 Planejado |
 | Médio prazo | Persistir os symlinks do FlexRIC (`/usr/local/lib/flexric`) no `bootstrap` — hoje se perdem ao trocar de instância | 📋 Planejado |
 | Quando der | Reportar os bugs do §8 da bible ao repositório OAI de origem | 📋 Planejado |

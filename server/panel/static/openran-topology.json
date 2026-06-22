@@ -160,14 +160,14 @@
       "statusKey": "oai-ext-dn", "planned": false
     },
     {
-      "id": "upf", "label": "vpp-upf", "role": "Dados", "sublabel": "UPF (a implementar no ARM64)",
+      "id": "upf", "label": "oai-upf", "role": "Dados", "sublabel": "UPF (simple_switch, v2.2.1)",
       "layer": "core", "kind": "container", "x": 300, "y": 620,
-      "image": "oaisoftwarealliance/oai-upf-vpp:v1.5.1",
-      "from": "Receberia o tráfego do gNB (N3) e as regras do SMF (N4).",
-      "does": "Plano de usuário: encaminharia os pacotes do UE para a internet.",
-      "to": "Sairia para a Data Network (N6). NÃO RODA no ARM64 (libhyperscan é Intel-only) — por isso o plano de dados do Projeto 2 está inativo.",
-      "ports": "N3 (GTP-U) · N4 (PFCP) · N6", "network": "demo-oai / access / core", "ip": "—",
-      "statusKey": "vpp-upf", "planned": true
+      "image": "oaisoftwarealliance/oai-upf:v2.2.1",
+      "from": "Recebe o tráfego do gNB (N3) e as regras do SMF (N4).",
+      "does": "Plano de usuário: encaminha os pacotes do UE para a internet (datapath simple_switch).",
+      "to": "Sai para a Data Network (N6, com NAT). Roda no ARM64 (imagem oficial multi-arch). O UE pega IP 12.1.1.x e navega quando há CPU para o nrUE (ver guia PROJETO2-CPU-E-USERPLANE.md). Alternativa portada neste projeto: oai-upf-vpp arm64 (dataplane VPP, via Vectorscan).",
+      "ports": "N3 (GTP-U) · N4 (PFCP) · N6", "network": "demo-oai", "ip": "—",
+      "statusKey": "oai-upf", "planned": false
     }
   ],
   "links": [
@@ -179,7 +179,7 @@
     { "from": "gnb",   "to": "amf",   "iface": "N2",   "detail": "NGAP sobre SCTP :38412 — sinalização RAN↔Core." },
     { "from": "gnb",   "to": "ric",   "iface": "E2",   "detail": "E2AP sobre SCTP — métricas (KPM) e controle (RC)." },
     { "from": "xapps", "to": "ric",   "iface": "E42",  "detail": "API do FlexRIC entre xApp e RIC." },
-    { "from": "gnb",   "to": "upf",   "iface": "N3",   "detail": "GTP-U (plano de usuário) — inativo (UPF off).", "planned": true },
+    { "from": "gnb",   "to": "upf",   "iface": "N3",   "detail": "GTP-U (plano de usuário): UE → gNB → UPF → DN." },
 
     { "from": "amf",   "to": "nrf",   "iface": "SBI",  "detail": "Registro e descoberta de NFs (HTTP/2)." },
     { "from": "smf",   "to": "nrf",   "iface": "SBI",  "detail": "Registro e descoberta (HTTP/2)." },
@@ -188,18 +188,18 @@
     { "from": "udr",   "to": "nrf",   "iface": "SBI",  "detail": "Registro e descoberta (HTTP/2)." },
     { "from": "amf",   "to": "ausf",  "iface": "Nausf","detail": "AMF pede a autenticação do UE ao AUSF." },
     { "from": "amf",   "to": "smf",   "iface": "Nsmf", "detail": "AMF aciona a criação da sessão PDU." },
-    { "from": "ausf",  "to": "udm",   "iface": "Nudm", "detail": "Vetores de auth + auth-events [bug HTTP/2 aqui].", "warn": true },
+    { "from": "ausf",  "to": "udm",   "iface": "Nudm", "detail": "Vetores de auth + auth-events (5G-AKA) — OK no v2.2.1." },
     { "from": "udm",   "to": "udr",   "iface": "Nudr", "detail": "Dados do assinante." },
     { "from": "udr",   "to": "mysql", "iface": "SQL",  "detail": "Consultas ao banco oai_db." },
-    { "from": "smf",   "to": "upf",   "iface": "N4",   "detail": "PFCP :8805 — inativo (UPF off).", "planned": true },
-    { "from": "upf",   "to": "ext-dn","iface": "N6",   "detail": "Saída para a Data Network — inativo (UPF off).", "planned": true }
+    { "from": "smf",   "to": "upf",   "iface": "N4",   "detail": "PFCP :8805 — associação SMF↔UPF ativa." },
+    { "from": "upf",   "to": "ext-dn","iface": "N6",   "detail": "Saída para a Data Network (NAT)." }
   ],
   "interfaces_legend": [
     { "iface": "HTTPS",      "desc": "Acesso web do painel (TLS)." },
     { "iface": "N2",         "desc": "NGAP/SCTP — controle gNB↔AMF." },
-    { "iface": "N3",         "desc": "GTP-U — dados gNB↔UPF (inativo)." },
-    { "iface": "N4",         "desc": "PFCP — SMF↔UPF (inativo)." },
-    { "iface": "N6",         "desc": "UPF↔Internet/DN (inativo)." },
+    { "iface": "N3",         "desc": "GTP-U — dados gNB↔UPF." },
+    { "iface": "N4",         "desc": "PFCP — SMF↔UPF." },
+    { "iface": "N6",         "desc": "UPF↔Internet/DN." },
     { "iface": "E2",         "desc": "E2AP/SCTP — gNB↔near-RT RIC (KPM/RC)." },
     { "iface": "E42",        "desc": "xApp↔RIC (assinatura de Service Models)." },
     { "iface": "SBI",        "desc": "Interface HTTP/2 entre os NFs do Core." },

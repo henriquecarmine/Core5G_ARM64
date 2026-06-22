@@ -661,6 +661,8 @@
           <button class="test-p2" data-cmd="p2-test-e2-kpm">Testar E2SM-KPM</button>
           <button class="test-p2" data-cmd="p2-test-e2-kpm-traffic">Testar E2SM-KPM (com tráfego)</button>
           <button class="test-p2" data-cmd="p2-test-e2-rc">Testar E2SM-RC (attach)</button>
+          <button class="test-p2" data-cmd="p2-kpm-real">Coletar KPM com tráfego (real — ideal 4 vCPU)</button>
+          <button class="test-p2" data-cmd="p2-kpm-analytics">Analisar dados KPM (CSV + KPI)</button>
           <div class="lock-note">Ative o Projeto 2 no topo para rodar estes testes.</div>
         </div>
       </div>
@@ -1236,6 +1238,27 @@ const TEST_EXPLAIN = {
       'É o canal pelo qual o RIC pode <b>agir</b> sobre o RAN (não só observar): forçar handover, ajustar slice, etc.',
     ],
     concl: '✓ Mostra o controle near-real-time do O-RAN, fechando o laço observar → decidir → agir.',
+  },
+  'p2-kpm-real': {
+    title: 'O que acabou de acontecer — coleta KPM com tráfego real',
+    items: [
+      'Subiu o UE e <b>esperou por evento</b> (não por relógio) ele pegar IP — o heartbeat "⏳ … NÃO travou" mostra que está sincronizando.',
+      'Por <b>segurança não mexe no cpuset</b> (o guardrail anti-freeze fica intacto): em <b>2 vCPU</b> o UE não sustenta o tempo real, então ele <b>para o UE e conclui honesto</b> "sem dados — use 4 vCPU"; em <b>4 vCPU</b> o UE attacha e coleta dados reais de throughput/PRB.',
+      'Se algo falha, <b>repete e reporta o problema</b> — feito para <b>completar</b>, nunca travar nem congelar o box.',
+      'Ao fim, analisa o log (CSV + KPI + sparkline).',
+    ],
+    concl: '✓ Coleta resiliente e segura. Throughput real (relatório completo) depende de upgrade para 4 vCPU.',
+  },
+  'p2-kpm-analytics': {
+    title: 'O que acabou de acontecer — Dados na RAN (do KPM ao KPI)',
+    items: [
+      '<b>Coleta</b>: leu o log bruto do xApp KPM (texto, ~1 indicação/s) — a rede vista pela lente de <b>dados</b>, não de controle.',
+      '<b>ETL</b>: transformou cada linha <code>measName = valor unidade</code> numa série temporal estruturada (CSV: time, measName, valor, UE, slice).',
+      '<b>KPI</b>: agregou as amostras em indicadores por UE (throughput médio/máx, ocupação de PRB) — o número que se leva à decisão.',
+      '<b>Visualização</b>: sparkline ASCII mostra a forma do throughput no tempo (bursts de tráfego).',
+      'Sem UE gerando tráfego, o throughput vem ~0 — o script explica isso em vez de falhar.',
+    ],
+    concl: '✓ Fecha a cadeia Coleta→ETL→KPI→Decisão (aula06): o CSV é o insumo do UE-TP-rApp e do Módulo de Análise de Dados.',
   },
 };
 function appendExplain(cmd) {

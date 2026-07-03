@@ -7,7 +7,16 @@ controle próprio. Reúne **dois projetos** independentes da disciplina
 | Projeto | Stack | Pasta | Status |
 |---|---|---|---|
 | **Projeto 1** | Open5GS (5GC) + UERANSIM (gNB/UE simulados) | `server/` | ✅ Apresentado 13/06/2026, validado fim a fim |
-| **Projeto 2** | OAI 5GC + gNB RFSIM + agente E2 + **FlexRIC** (near-RT RIC) + xApps | `server/oai-cn-gnb-e2/` | ✅ Funcional — apresentação **20/06/2026** |
+| **Projeto 2** | OAI 5GC + gNB RFSIM + agente E2 + **FlexRIC** (near-RT RIC) + xApps | `server/oai-cn-gnb-e2/` | ✅ Apresentado 20/06/2026 |
+
+**Fase atual (jul/2026): artigo científico** — o Prof. Jonas está redigindo o
+artigo (Overleaf) e pediu um checklist de 8 aprimoramentos na plataforma
+(2026-07-02). Estado: **7 de 8 concluídos** no painel v0.33.x — topologia com
+bandas **CUPS** (plano de controle × usuário), interfaces **N1/N11** explícitas,
+layout sem sobreposições, **temas claro/escuro**, colorimetria **ISO** em todos
+os terminais, anotações didáticas na partida de cada serviço, e
+[política de custos](docs/POLITICA-DE-CUSTOS.md). Pendente: **i18n pt/es/en**
+(item 1b) — ver roadmap (§2).
 
 > **Quer só entender o quê/porquê de tudo?** Leia a
 > [**Bíblia do projeto**](core5g-arm64-bible.md) (referência conceitual completa,
@@ -157,10 +166,12 @@ Sobre isso, um **modo sala de aula** pensado para apresentar a um auditório:
 
 | Quando | Item | Estado |
 |---|---|---|
-| **20/06/2026** | Apresentar Projeto 2 (Aula 06, 08:00–11:00, 20 min) | 🎯 Pronto para apresentar |
-| Curto prazo | xApp **UE-TP-rApp** (previsão de throughput por UE: RSSI/RSRP/CQI/PRB) — o tema sorteado do grupo | ⏳ Esqueleto em `xapp_ue_tp_moni.c`; falta o modelo de previsão |
-| 🧱 **Bloqueio de HW** | **Relatório completo de KPM com throughput real** (dados não-zero para a análise/UE-TP-rApp) **depende de upgrade para 4 vCPU** (ex.: `t4g.xlarge`). Em 2 vCPU, o UE+gNB RFSIM não coexistem em tempo real sob o guardrail anti-freeze; coletar com tráfego exigiria remover o guardrail, o que **congela o box** (testado: 2 freezes). Por ora: **demonstração segura** = KPM assinado + análise sobre a amostra didática (`kpm_analytics.sh`) | ⚠️ Requer upgrade de CPU |
-| ✅ Resolvido | **User plane do UE no Projeto 2** (core v2.2.1): UE attacha, pega IP `12.1.1.2`, `ping` 0% perda pelo túnel. O gargalo era **CPU** (não o AUSF↔UDM, que era do v1.5.1): em 2 vCPU precisa liberar os 2 cores; em **4 vCPU** roda sem truque. Guia: [`PROJETO2-CPU-E-USERPLANE.md`](server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md) | ✅ Validado 22/06 |
+| **Curto prazo** | **i18n do painel — pt/es/en** (item 1b do checklist do artigo). Strings hardcoded em pt nos 3 HTML + textos didáticos nos JSONs de topologia; mecanismo será o mesmo do tema (dicionário + `localStorage`) | ⏳ Próximo grande item |
+| Curto prazo | xApp **UE-TP-rApp** (previsão de throughput por UE: RSSI/RSRP/CQI/PRB) — o tema do grupo. Wheels do **scikit-learn aarch64** já vendorados (`server/panel/vendor/`) para os RICs Near-RT/Non-RT | ⏳ Esqueleto em `xapp_ue_tp_moni.c`; falta o modelo |
+| 🧱 **Bloqueio de HW** | **Lab de RIC (Near/Non-RT) com IA + relatório KPM com throughput real dependem de 4 vCPU.** Em 2 vCPU, UE+gNB RFSIM não coexistem sob o guardrail anti-freeze (removê-lo congelou o box 2×). Análise de custo e runbook do resize reversível: [`docs/POLITICA-DE-CUSTOS.md`](docs/POLITICA-DE-CUSTOS.md) §3 | ⚠️ Aguarda aval (custos) |
+| ✅ Resolvido | **Checklist do artigo, pontos 2–7 + temas** (Prof. Jonas, 2026-07-02): topologia CUPS/N1/N11 sem sobreposições, IPs/portas padronizados, temas claro/escuro, colorimetria ISO fixa nos terminais, anotações didáticas na partida de serviços | ✅ v0.32.0–0.33.1 |
+| ✅ Resolvido | **Política de custos** (ponto 8) + higiene de disco (3,1 → 8,6 GB livres; causa-raiz dos volumes órfãos corrigida) | ✅ [`docs/POLITICA-DE-CUSTOS.md`](docs/POLITICA-DE-CUSTOS.md) |
+| ✅ Resolvido | **User plane do UE no Projeto 2** (core v2.2.1): UE attacha, IP `12.1.1.2`, `ping` 0% perda. Guia: [`PROJETO2-CPU-E-USERPLANE.md`](server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md) | ✅ Validado 22/06 |
 | Médio prazo | Sensor de protocolo E2/NGAP/GTP-U no painel (blueprint de observabilidade) | 📋 Planejado |
 | Médio prazo | Persistir os symlinks do FlexRIC (`/usr/local/lib/flexric`) no `bootstrap` — hoje se perdem ao trocar de instância | 📋 Planejado |
 | Quando der | Reportar os bugs do §8 da bible ao repositório OAI de origem | 📋 Planejado |
@@ -204,12 +215,15 @@ do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
 ├── .env.example               ← modelo de configuração (copie para .env)
 ├── .github/                   ← modelos de Issue e de Pull Request
 ├── docs/                      ← blueprint do painel + roteiros de laboratório
+│   ├── POLITICA-DE-CUSTOS.md  ← custos, regras de operação e upgrade de CPU
 │   └── relatorios-didaticos.md ← guia dev: como os testes/relatórios funcionam
 ├── infra/                     ← bootstrap do servidor + unit systemd do painel
 └── server/                    ← tudo que roda no servidor
-    ├── panel/                 ← painel web (FastAPI) + estáticos
+    ├── panel/                 ← painel web (FastAPI) — ver panel/README.md
+    │   ├── test/              ← testes headless (loaders + topologia/temas)
+    │   └── vendor/            ← wheels aarch64 do scikit-learn (lab RIC + IA)
     ├── ueransim/              ← RAN simulada (Projeto 1)
-    ├── scripts/               ← demo E2E, troca de projeto, etc.
+    ├── scripts/               ← demo E2E, troca de projeto, lib de logs ISO
     └── oai-cn-gnb-e2/         ← Projeto 2 (OAI + FlexRIC + xApps)
 ```
 

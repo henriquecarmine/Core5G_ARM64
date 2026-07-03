@@ -394,6 +394,23 @@ UE                  gNB              AMF          AUSF    UDM    SMF    UPF
 | Docker | `29.6.0` (pacotes `docker-ce`/`docker-ce-cli`/`containerd.io` arquitetura `arm64`, repositório oficial Docker) |
 | Docker Compose | `v5.1.4` (plugin) |
 
+### Custos e higiene de disco
+
+Regras, valores e o runbook de upgrade de CPU (lab de RIC com IA precisa de
+4 vCPU) vivem em [`docs/POLITICA-DE-CUSTOS.md`](docs/POLITICA-DE-CUSTOS.md).
+Lições permanentes da limpeza de 2026-07-03 (disco chegou a 8% livre; voltou
+a 8,6 GB livres):
+
+- O mysql do core P2 criava **um volume anônimo de ~197 MB por religada**
+  (achamos 16 órfãos = 3,1 GB). Corrigido na raiz: volume nomeado
+  `mysql-data` no `oai-cn5g-v2/docker-compose-basic-nrf.yaml` — de quebra os
+  cadastros de UE passaram a persistir entre religadas.
+- `docker volume prune -f` remove **só anônimos** (Docker ≥23) — os nomeados
+  (MongoDB dos alunos) ficam. Mesmo assim: inspecionar antes de podar.
+- Imagens OAI **custom** (arm64 buildadas, `oai-upf-vpp` portado) não são
+  re-puxáveis — **nunca** remover sem backup/aval. As oficiais v1.5.1 +
+  `mysql:8.0` (legado, ~2,6 GB) foram removidas com aval em 2026-07-03.
+
 ### Acesso manual (só pra debug — preferir `./deploy.sh ssh`)
 
 ```bash
@@ -1143,6 +1160,24 @@ Demonstração E2E mede **149 Mbit/s** reais pelo túnel 5G (§8.6).
 
 ## 10. Pendências / próximos passos
 
+- [x] **Checklist do artigo científico (Prof. Jonas, 2026-07-02) — 7 de 8
+      concluídos** (v0.32.0–0.33.1): topologia com bandas **CUPS** (plano de
+      controle × plano de usuário), **N1** explícito (lógico via gNB) e
+      **N11/Nsmf** rotulado, layout re-gradeado sem nenhuma linha atravessando
+      card de terceiro (verificador em `panel/test/check-topology.py`),
+      IPs/portas padronizados, **temas claro/escuro** (regra de ouro: consoles
+      escuros nos 2 temas com paleta ISO fixa `TERM` — nunca variáveis de tema
+      em conteúdo de terminal), anotações didáticas na partida de cada serviço
+      (`SERVICE_ROLES`), HTML com `no-cache` (deploy chega na hora) e
+      **política de custos** ([`docs/POLITICA-DE-CUSTOS.md`](docs/POLITICA-DE-CUSTOS.md)).
+- [ ] **i18n do painel — pt/es/en** (item 1b do checklist; o que falta do
+      artigo). Estratégia: dicionário JS + `localStorage` (mesmo padrão do
+      tema); inclui os textos didáticos dos JSONs de topologia e os resumos
+      dos scripts de teste.
+- [ ] **Lab de RIC Near-RT/Non-RT com IA** (scikit-learn aarch64 já vendorado
+      em `server/panel/vendor/`): xApp de inferência no loop de segundos +
+      rApp de treino no Non-RT. **Depende do upgrade p/ 4 vCPU** — análise de
+      custo e runbook do resize reversível na política de custos §3.
 - [ ] Confirmar com o professor a rubrica/plano de testes oficiais do
       Projeto 2 (não publicados no repo de origem na data da checagem).
 - [x] Diagnóstico do estado real do Projeto 2 (2026-06-18): nada estava

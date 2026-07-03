@@ -7,6 +7,10 @@ services:
         volumes:
             - ./database/oai_db2.sql:/docker-entrypoint-initdb.d/oai_db.sql
             - ./healthscripts/mysql-healthcheck2.sh:/tmp/mysql-healthcheck.sh
+            # Volume NOMEADO para /var/lib/mysql: sem ele a imagem cria um volume
+            # anônimo de ~197MB a cada recreate, que fica órfão no down (achamos
+            # 16 = 3.1GB de lixo no servidor). Nomeado = reusado e persistente.
+            - mysql-data:/var/lib/mysql
         environment:
             - TZ=Europe/Paris
             - MYSQL_DATABASE=oai_db
@@ -159,6 +163,10 @@ services:
             public_net:
 # For CI purposes, we are keeping the line commented
 #                ipv4_address: 192.168.70.135
+
+volumes:
+    mysql-data:
+        name: oai-cn5g-v2-mysql-data
 
 networks:
     public_net:

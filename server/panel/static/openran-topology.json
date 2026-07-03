@@ -84,7 +84,7 @@
     {
       "id": "amf", "label": "oai-amf", "role": "Mobilidade", "sublabel": "AMF",
       "layer": "core-cp", "kind": "container", "x": 600, "y": 260,
-      "image": "oaisoftwarealliance/oai-amf:v1.5.1",
+      "image": "oaisoftwarealliance/oai-amf:v2.2.1",
       "from": "Recebe o gNB e o UE pela interface N2 (NGAP) e o NAS do UE (N1).",
       "does": "Porta de entrada do Core: trata registro, autenticação e mobilidade do UE.",
       "to": "Chama o AUSF (autenticação) e o SMF (sessão, N11) via SBI; descobre NFs no NRF.",
@@ -94,7 +94,7 @@
     {
       "id": "nrf", "label": "oai-nrf", "role": "Descoberta", "sublabel": "NRF",
       "layer": "core-cp", "kind": "container", "x": 830, "y": 260,
-      "image": "oaisoftwarealliance/oai-nrf:v1.5.1",
+      "image": "oaisoftwarealliance/oai-nrf:v2.2.1",
       "from": "Todos os NFs se registram aqui ao subir (SBI).",
       "does": "Catálogo central — diz a cada função onde encontrar as outras.",
       "to": "Responde às consultas de descoberta de NF (AMF, SMF, AUSF, UDM, UDR).",
@@ -104,7 +104,7 @@
     {
       "id": "udm", "label": "oai-udm", "role": "Credenciais", "sublabel": "UDM",
       "layer": "core-cp", "kind": "container", "x": 1060, "y": 260,
-      "image": "oaisoftwarealliance/oai-udm:v1.5.1",
+      "image": "oaisoftwarealliance/oai-udm:v2.2.1",
       "from": "Consultado pelo AUSF (auth) e pelo AMF/SMF (perfil do assinante).",
       "does": "Gera os vetores de autenticação e a lógica de assinante.",
       "to": "Lê os dados persistidos no UDR.",
@@ -114,7 +114,7 @@
     {
       "id": "smf", "label": "oai-smf", "role": "Sessão", "sublabel": "SMF",
       "layer": "core-cp", "kind": "container", "x": 600, "y": 400,
-      "image": "oaisoftwarealliance/oai-smf:v1.5.1",
+      "image": "oaisoftwarealliance/oai-smf:v2.2.1",
       "from": "Acionado pelo AMF quando o UE pede uma sessão de dados (N11/Nsmf).",
       "does": "Cria e gerencia a sessão PDU e decide as regras de encaminhamento.",
       "to": "Programa o UPF pela interface N4 (PFCP) — é o elo de controle do CUPS.",
@@ -124,17 +124,17 @@
     {
       "id": "ausf", "label": "oai-ausf", "role": "Autenticação", "sublabel": "AUSF",
       "layer": "core-cp", "kind": "container", "x": 830, "y": 400,
-      "image": "oaisoftwarealliance/oai-ausf:v1.5.1",
+      "image": "oaisoftwarealliance/oai-ausf:v2.2.1",
       "from": "Recebe do AMF o pedido de autenticação do UE (SBI).",
       "does": "Executa o 5G-AKA: valida o desafio/resposta com os vetores do UDM.",
-      "to": "Pede os vetores ao UDM e devolve o resultado ao AMF. [Bug: notificação auth-events ao UDM por HTTP/2 falha.]",
+      "to": "Pede os vetores ao UDM e devolve o resultado ao AMF. (auth-events ao UDM OK no v2.2.1.)",
       "ports": "SBI: 80/TCP · 8080/TCP", "network": "demo-oai-public-net", "ip": "192.168.70.138",
       "statusKey": "oai-ausf", "planned": false
     },
     {
       "id": "udr", "label": "oai-udr", "role": "Repositório", "sublabel": "UDR",
       "layer": "core-cp", "kind": "container", "x": 1060, "y": 400,
-      "image": "oaisoftwarealliance/oai-udr:v1.5.1",
+      "image": "oaisoftwarealliance/oai-udr:v2.2.1",
       "from": "Consultado pelo UDM (SBI).",
       "does": "Camada de acesso aos dados do assinante (perfil, chaves, slices).",
       "to": "Lê e grava no banco MySQL.",
@@ -144,7 +144,7 @@
     {
       "id": "mysql", "label": "mysql", "role": "Banco", "sublabel": "DB de assinantes",
       "layer": "core-cp", "kind": "container", "x": 1060, "y": 540,
-      "image": "mysql:8.0",
+      "image": "mysql:9.6.0",
       "from": "Acessado pelo UDR via SQL.",
       "does": "Guarda os assinantes: IMSI, chaves K/OPc, slices, dados de auth (oai_db).",
       "to": "Devolve os registros consultados ao UDR.",

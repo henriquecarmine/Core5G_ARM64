@@ -31,6 +31,20 @@ Guia para operar a interface **E2** entre o gNB OAI e um **nearRT-RIC** (FlexRIC
 
 Versões padrão de compilação: **E2AP v2.03** + **E2SM-KPM v2.03** (devem coincidir entre gNB e FlexRIC).
 
+## Versões e codificação (o que ESTA plataforma usa)
+
+| Componente | Versão/valor | Onde está definido |
+|---|---|---|
+| FlexRIC (embutido no OAI) | **2.0.0** | `openairinterface5g/openair2/E2AP/flexric/CMakeLists.txt` (`project(FlexRIC VERSION 2.0.0)`) |
+| E2AP | v2.03 | flag de build (`-DE2AP_VERSION=E2AP_V2`) |
+| Codificação do E2AP | **ASN.1** (`E2AP_ENCODING="ASN"`, o padrão) | `flexric/CMakeLists.txt` linha ~205; nossos scripts **não** sobrescrevem |
+| FlatBuffers/FlatCC | **não usado** | alternativa upstream (`-DE2AP_ENCODING=FLATBUFFERS`, exige FlatCC instalado); fora do nosso build |
+
+> Para o artigo: "E2AP com codificação ASN.1 (FlexRIC 2.0.0); FlatBuffers é
+> suportado pelo FlexRIC upstream, mas não utilizado nesta plataforma."
+> Os SMs customizados (MAC/RLC/PDCP/GTP) usam encoding próprio ("Plain",
+> tabela acima) — isso é do Service Model, não do E2AP.
+
 Documentação upstream: `openairinterface5g/openair2/E2AP/README.md`
 
 ## Pré-requisitos

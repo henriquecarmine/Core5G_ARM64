@@ -61,6 +61,11 @@
   }
   * { box-sizing: border-box; }
   body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; }
+  /* qualidade base: foco visível no teclado + respeito a reduced-motion */
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+  }
   /* ===== Loader global + spinner por botão (nenhuma tela morta) ===== */
   #top-loader { position:fixed; top:0; left:0; right:0; height:3px; z-index:9999; overflow:hidden;
                 opacity:0; transition:opacity .25s; pointer-events:none; }
@@ -245,21 +250,23 @@
   .help-intro { font-size:11.5px; color:var(--muted); margin:0 0 9px 0; line-height:1.4; }
   .help-intro code { color:var(--text); }
 
-  /* Bloco de explicação (o que acabou de acontecer no teste) */
-  .explain { background:rgba(77,171,247,.08); border:1px solid rgba(77,171,247,.4); border-left:3px solid var(--info);
+  /* Bloco de explicação (o que acabou de acontecer no teste).
+     Vive DENTRO do console escuro (#output/#results-console, escuros nos 2
+     temas) — paleta FIXA de console, nunca variáveis de tema. */
+  .explain { background:rgba(77,171,247,.08); border:1px solid rgba(77,171,247,.4); border-left:3px solid #4dabf7;
              border-radius:8px; padding:11px 14px; margin:10px 0 4px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-  .explain .ex-title { color:var(--info); font-weight:600; font-size:13px; margin-bottom:7px; display:flex; align-items:center; gap:7px; }
+  .explain .ex-title { color:#74c0fc; font-weight:600; font-size:13px; margin-bottom:7px; display:flex; align-items:center; gap:7px; }
   .explain ul { margin:0; padding-left:18px; }
-  .explain li { font-size:12.5px; line-height:1.55; color:var(--text); margin-bottom:4px; }
-  .explain li b { color:var(--info); }
-  .explain .ex-concl { font-size:12.5px; line-height:1.5; color:var(--ok-fg); margin-top:8px; padding-top:8px; border-top:1px solid rgba(77,171,247,.25); }
-  /* Atalhos "ver logs" no fim de testes que produzem logs */
+  .explain li { font-size:12.5px; line-height:1.55; color:#e6e6e6; margin-bottom:4px; }
+  .explain li b { color:#74c0fc; }
+  .explain .ex-concl { font-size:12.5px; line-height:1.5; color:#69db7c; margin-top:8px; padding-top:8px; border-top:1px solid rgba(77,171,247,.25); }
+  /* Atalhos "ver logs" no fim de testes que produzem logs (também dentro do console) */
   .log-links { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin:8px 0 4px; padding:8px 11px;
                background:rgba(77,171,247,.06); border:1px dashed rgba(77,171,247,.38); border-radius:8px; }
-  .log-links .ll-label { font-size:12.5px; font-weight:600; color:var(--info); margin-right:2px; }
+  .log-links .ll-label { font-size:12.5px; font-weight:600; color:#74c0fc; margin-right:2px; }
   .ll-btn { display:inline-block; width:auto; margin:0; font:inherit; font-size:12px; cursor:pointer;
             padding:3px 10px; border-radius:5px; text-align:left;
-            background:rgba(77,171,247,.12); color:var(--info-strong); border:1px solid rgba(77,171,247,.45); transition:background .15s; }
+            background:rgba(77,171,247,.12); color:#cfe8ff; border:1px solid rgba(77,171,247,.45); transition:background .15s; }
   .ll-btn:hover { background:rgba(77,171,247,.26); }
 
   /* Console */

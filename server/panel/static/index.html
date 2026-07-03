@@ -960,13 +960,56 @@ function colorizeTokens(escaped) {
   return escaped.replace(TOKEN_RE, t => `<span style="color:${tokenColor(t)}">${t}</span>`);
 }
 
+// ===== Anotação didática ao INICIAR serviços =====
+// Quando um serviço/container sobe (docker compose "Container X Started/Healthy"
+// ou os "Subindo/Iniciando X" dos scripts), o console anexa em AZUL uma
+// descrição concisa do papel daquele componente — contexto didático no log.
+// Ordem importa: nomes mais específicos primeiro (upf-vpp antes de upf).
+const SERVICE_ROLES = [
+  ['nearRT-RIC',      'controlador O-RAN near-real-time: recebe métricas (KPM) e controla o gNB via E2'],
+  ['gNB + nrUE',      'gNB (rádio-base + agente E2) e UE simulado sobem juntos'],
+  ['gNB SEM nrUE',    'gNB (rádio-base + agente E2) sozinho — modo validação de xApp'],
+  ['nr-uesoftmodem',  'UE — celular simulado: registra na rede (NAS/N1) e abre a sessão de dados'],
+  ['nrUE',            'UE — celular simulado: registra na rede (NAS/N1) e abre a sessão de dados'],
+  ['nr-softmodem',    'gNB — estação rádio-base 5G + agente E2'],
+  ['ueransim',        'RAN simulada — gNB e UE no mesmo container'],
+  ['oai-ext-dn',      'Data Network — a "internet" do laboratório (destino N6)'],
+  ['trf-gen',         'Data Network — a "internet" do laboratório (destino N6)'],
+  ['open5gs-dn',      'Data Network — a "internet" do laboratório (iperf3, destino N6)'],
+  ['oai-upf-vpp',     'UPF (dataplane VPP) — plano de usuário: encaminha os dados do UE (N3→N6)'],
+  ['upf',             'UPF — plano de usuário: encaminha os dados do UE (N3→N6)'],
+  ['amf',             'AMF — registro e mobilidade do UE: porta de entrada do core (N1/N2)'],
+  ['smf',             'SMF — cria a sessão PDU e programa o UPF via N4 (controle do CUPS)'],
+  ['nrf',             'NRF — catálogo SBI: as NFs se registram e se descobrem aqui'],
+  ['ausf',            'AUSF — autentica o UE (5G-AKA)'],
+  ['udm',             'UDM — credenciais e perfil do assinante'],
+  ['udr',             'UDR — repositório dos dados do assinante'],
+  ['nssf',            'NSSF — escolhe a network slice (S-NSSAI) do UE'],
+  ['pcf',             'PCF — políticas e QoS das sessões'],
+  ['bsf',             'BSF — binding: liga cada sessão ao UE/IP'],
+  ['scp',             'SCP — proxy das chamadas SBI entre as NFs'],
+  ['mysql',           'banco de assinantes do core OAI (oai_db: IMSI, chaves, slices)'],
+  ['mongodb',         'banco de assinantes do Open5GS'],
+  ['webui',           'WebUI — cadastro de assinantes do Open5GS'],
+];
+const START_RE = /\bContainer\s+\S+\s+(?:Started|Healthy|Running)\b|\b(?:Subindo|Iniciando|Starting)\b/i;
+let _lastRoleAnnotated = '';   // dedup: "Subindo X" + "Iniciando X..." em sequência anota 1×
+function annotateServiceStart(cleanLine) {
+  if (!START_RE.test(cleanLine)) return '';
+  const hit = SERVICE_ROLES.find(([name]) => cleanLine.toLowerCase().includes(name.toLowerCase()));
+  if (!hit || hit[0] === _lastRoleAnnotated) return '';
+  _lastRoleAnnotated = hit[0];
+  return ` <span style="color:${TERM.blue}">· ${escHtml(hit[1])}</span>`;
+}
+
 // Renderiza uma linha: aplica ANSI (cores explícitas dos scripts) E, nos trechos
 // sem cor ANSI, a colorimetria por token acima — então valores e estados sempre
 // se destacam, mesmo em logs crus de serviço.
 function renderLogLine(line) {
   const raw = line.replace(/\r/g, '');
+  const note = annotateServiceStart(stripAnsi(raw));
   if (!/\x1b\[/.test(raw)) {
-    return { html: colorizeTokens(escHtml(raw)), color: lineColor(raw) };
+    return { html: colorizeTokens(escHtml(raw)) + note, color: lineColor(raw) };
   }
   let html = '', cur = null, bold = false, last = 0, m;
   const re = /\x1b\[([0-9;]*)m/g;
@@ -996,7 +1039,7 @@ function renderLogLine(line) {
     }
   }
   emit(raw.slice(last));
-  return { html, color: null };
+  return { html: html + note, color: null };
 }
 
 function lineColor(line) {
@@ -1263,6 +1306,7 @@ async function streamToConsole(resp) {
 
 let outputBootstrapped = false;
 function pushRunHeader(cmd) {
+  _lastRoleAnnotated = '';   // nova execução: anotações didáticas voltam a valer
   if (!outputBootstrapped) { output.innerHTML = ''; outputBootstrapped = true; }
   const div = document.createElement('div');
   div.className = 'run-header';

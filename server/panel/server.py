@@ -622,9 +622,15 @@ def _telemetry_loop() -> None:
 threading.Thread(target=_telemetry_loop, daemon=True, name="telemetry-collector").start()
 
 
+# HTML sempre com no-cache: sem isso o navegador aplica cache heurístico e
+# segura versões velhas do painel depois de cada deploy (o professor via bugs
+# já corrigidos). no-cache = revalida a cada load (304 quando não mudou).
+NO_CACHE = {"Cache-Control": "no-cache, must-revalidate"}
+
+
 @app.get("/")
 def index() -> FileResponse:
-    return FileResponse(STATIC_DIR / "index.html")
+    return FileResponse(STATIC_DIR / "index.html", headers=NO_CACHE)
 
 
 @app.get("/login")
@@ -634,7 +640,7 @@ def login(request: Request):
     html = (STATIC_DIR / "login.html").read_text()
     html = html.replace("__VERSION__", _VERSION)
     html = html.replace("__GUEST_ENABLED__", "true" if GUEST_ENABLED else "false")
-    return HTMLResponse(html)
+    return HTMLResponse(html, headers=NO_CACHE)
 
 
 def _set_session(response: JSONResponse, user: str, sid: str, email: str = "", name: str = "") -> JSONResponse:
@@ -916,7 +922,7 @@ def set_result_note(rid: str, payload: dict, request: Request) -> JSONResponse:
 
 @app.get("/topology")
 def topology_page() -> FileResponse:
-    return FileResponse(STATIC_DIR / "topology.html")
+    return FileResponse(STATIC_DIR / "topology.html", headers=NO_CACHE)
 
 
 def running_container_names() -> set[str]:

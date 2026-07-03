@@ -721,7 +721,14 @@ def do_logout(request: Request) -> JSONResponse:
                 ACTIVE_ADMIN.update(user=None, sid=None, ts=0.0)
             _VIEWERS.pop(sid, None)
     response = JSONResponse({"ok": True})
-    response.delete_cookie(SESSION_COOKIE)
+    # A remoção PRECISA repetir os mesmos atributos do set_cookie (Secure,
+    # HttpOnly, SameSite, Path). O token é stateless (assinado, sem store no
+    # servidor), então só "encerra a sessão" de verdade se o navegador descartar
+    # o cookie — e navegadores estritos ignoram a remoção se os atributos não
+    # baterem, deixando o aluno "logado" ao voltar pra /.
+    response.delete_cookie(
+        SESSION_COOKIE, path="/", httponly=True, samesite="lax", secure=True
+    )
     return response
 
 

@@ -109,9 +109,7 @@
   #theme-btn { width:auto; margin:0; padding:4px 9px; font-size:13px; border-radius:7px; cursor:pointer;
                background:var(--btn-bg); border:1px solid var(--border); color:var(--muted); line-height:1; }
   #theme-btn:hover { color:var(--text); border-color:var(--accent); }
-  #lang-sel { width:auto; margin:0; padding:4px 6px; font-size:12px; border-radius:7px; cursor:pointer;
-              background:var(--btn-bg); border:1px solid var(--border); color:var(--muted); }
-  #lang-sel:hover { color:var(--text); border-color:var(--accent); }
+  /* #lang-menu: seletor de idioma com bandeira, estilizado por static/i18n.js */
   #kiosk-btn:hover { color:var(--text); border-color:var(--accent); }
   #kiosk-exit { display:none; position:fixed; top:14px; right:16px; z-index:300; width:auto; margin:0; padding:7px 14px;
                 font-size:13px; border-radius:8px; cursor:pointer; background:var(--panel-glass); border:1px solid var(--border);
@@ -517,12 +515,7 @@
     </div>
     <div class="tb-right">
       <span id="viewer-badge"><span class="vb-dot"></span><span id="viewer-count">0 alunos</span></span>
-      <select id="lang-sel" title="Idioma">
-        <option value="pt">PT</option>
-        <option value="en">EN</option>
-        <option value="es">ES</option>
-        <option value="fr">FR</option>
-      </select>
+      <div id="lang-menu" title="Idioma"></div>
       <button id="theme-btn" title="Alternar tema claro/escuro">◐</button>
       <button id="kiosk-btn" data-i18n="topbar.projection" data-i18n-title="topbar.projection_title" title="Modo projeção — tela limpa para o datashow (Esc para sair)">⛶ Projeção</button>
       <div id="whoami" data-i18n="topbar.loading">carregando...</div>

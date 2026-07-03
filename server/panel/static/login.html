@@ -63,12 +63,9 @@
     border-radius: 7px; padding: 5px 10px; font-size: 14px; line-height: 1; cursor: pointer;
   }
   #theme-btn:hover { color: var(--text); border-color: var(--accent); }
-  #lang-sel {
-    position: fixed; top: 14px; right: 58px; width: auto;
-    background: var(--btn-bg); border: 1px solid var(--border); color: var(--muted);
-    border-radius: 7px; padding: 5px 8px; font-size: 12.5px; line-height: 1; cursor: pointer;
-  }
-  #lang-sel:hover { color: var(--text); border-color: var(--accent); }
+  /* #lang-menu: seletor de idioma com bandeira (estilizado por i18n.js);
+     aqui só o posicionamento fixo no canto, ao lado do botão de tema. */
+  #lang-menu { position: fixed; top: 14px; right: 56px; z-index: 20; }
   .card h1 {
     margin: 0 0 4px;
     font-size: 19px;
@@ -182,12 +179,7 @@
 </style>
 </head>
 <body>
-  <select id="lang-sel" title="Idioma">
-    <option value="pt">PT</option>
-    <option value="en">EN</option>
-    <option value="es">ES</option>
-    <option value="fr">FR</option>
-  </select>
+  <div id="lang-menu" title="Idioma"></div>
   <button id="theme-btn" type="button" title="Alternar tema claro/escuro">◐</button>
   <div class="card">
     <h1>Core5G<span>_ARM64</span></h1>

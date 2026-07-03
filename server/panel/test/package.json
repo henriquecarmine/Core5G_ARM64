@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node visual-smoke.js",
     "test:topo": "python3 check-topology.py && node topology-smoke.js",
-    "test:i18n": "node i18n-parity.js && node i18n-smoke.js"
+    "test:i18n": "node i18n-parity.js && node i18n-smoke.js",
+    "test:i18n:parity": "node i18n-parity.js"
   },
   "dependencies": {
     "puppeteer-core": "^23.0.0"

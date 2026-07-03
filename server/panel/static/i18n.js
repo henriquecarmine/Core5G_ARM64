@@ -2198,6 +2198,25 @@ const I18N_DICTS = {
   },
 };
 
+// ============================================================================
+// Metadados de idioma para o seletor com BANDEIRA (F6).
+// As bandeiras são SVG INLINE (não emoji): emoji de bandeira regional-indicator
+// não renderiza no Chrome/Windows (mostra as letras "BR", "US"…). SVG desenha
+// igual em todo SO/navegador. Escolha do país (decisão do professor 2026-07-03):
+// pt→🇧🇷 Brasil (público do CESAR), en→🇺🇸 EUA, es→🇪🇸 Espanha, fr→🇫🇷 França.
+// viewBox 0 0 20 14 em todas para alinharem no mesmo retângulo.
+// ============================================================================
+const LANG_META = {
+  pt: { code: 'PT', name: 'Português', flag:
+    `<svg viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="20" height="14" fill="#009c3b"/><polygon points="10,1.4 18.4,7 10,12.6 1.6,7" fill="#ffdf00"/><circle cx="10" cy="7" r="3.1" fill="#002776"/></svg>` },
+  en: { code: 'EN', name: 'English', flag:
+    `<svg viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="20" height="14" fill="#b22234"/><g fill="#fff"><rect y="1.08" width="20" height="1.08"/><rect y="3.23" width="20" height="1.08"/><rect y="5.38" width="20" height="1.08"/><rect y="7.54" width="20" height="1.08"/><rect y="9.69" width="20" height="1.08"/><rect y="11.85" width="20" height="1.08"/></g><rect width="8" height="7.54" fill="#3c3b6e"/><g fill="#fff"><circle cx="1.6" cy="1.7" r=".38"/><circle cx="3.2" cy="1.7" r=".38"/><circle cx="4.8" cy="1.7" r=".38"/><circle cx="6.4" cy="1.7" r=".38"/><circle cx="2.4" cy="3.2" r=".38"/><circle cx="4" cy="3.2" r=".38"/><circle cx="5.6" cy="3.2" r=".38"/><circle cx="1.6" cy="4.7" r=".38"/><circle cx="3.2" cy="4.7" r=".38"/><circle cx="4.8" cy="4.7" r=".38"/><circle cx="6.4" cy="4.7" r=".38"/><circle cx="2.4" cy="6.1" r=".38"/><circle cx="4" cy="6.1" r=".38"/><circle cx="5.6" cy="6.1" r=".38"/></g></svg>` },
+  es: { code: 'ES', name: 'Español', flag:
+    `<svg viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="20" height="14" fill="#c60b1e"/><rect y="3.5" width="20" height="7" fill="#ffc400"/></svg>` },
+  fr: { code: 'FR', name: 'Français', flag:
+    `<svg viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="20" height="14" fill="#fff"/><rect width="6.67" height="14" fill="#0055a4"/><rect x="13.33" width="6.67" height="14" fill="#ef4135"/></svg>` },
+};
+
 const I18N = (() => {
   const HTML_LANG = { pt: 'pt-BR', en: 'en', es: 'es', fr: 'fr' };
   let lang = 'pt';
@@ -2251,17 +2270,112 @@ const I18N = (() => {
 
   function onChange(f) { listeners.push(f); }
 
+  // CSS do seletor com bandeira — injetado UMA vez, usa as CSS vars que existem
+  // nas 3 páginas (--btn-bg/--border/--text/--muted/--accent/--panel) com
+  // fallback, para funcionar em login/index/topology e nos dois temas.
+  function ensureLangCSS() {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById('c5g-langmenu-css')) return;
+    const st = document.createElement('style');
+    st.id = 'c5g-langmenu-css';
+    st.textContent = [
+      '.lang-menu{position:relative;display:inline-block;font-size:12px}',
+      '.lang-menu .lang-btn{display:inline-flex;align-items:center;gap:6px;background:var(--btn-bg);border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 8px;font-size:12px;line-height:1;cursor:pointer;font-family:inherit}',
+      '.lang-menu .lang-btn:hover{color:var(--text);border-color:var(--accent)}',
+      '.lang-menu .lang-flag{display:inline-flex}',
+      '.lang-menu .lang-flag svg{width:20px;height:14px;display:block;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.18) inset}',
+      '.lang-menu .lang-code{font-weight:600;letter-spacing:.02em}',
+      '.lang-menu .lang-caret{font-size:9px;opacity:.7}',
+      '.lang-menu .lang-list{position:absolute;top:calc(100% + 5px);right:0;margin:0;padding:4px;list-style:none;background:var(--panel,var(--btn-bg,#1b1f27));border:1px solid var(--border);border-radius:9px;box-shadow:0 10px 30px rgba(0,0,0,.35);min-width:158px;z-index:9999}',
+      '.lang-menu .lang-list[hidden]{display:none}',
+      '.lang-menu .lang-list li{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;color:var(--text);cursor:pointer;white-space:nowrap;outline:none}',
+      '.lang-menu .lang-list li:hover,.lang-menu .lang-list li:focus{background:rgba(127,127,127,.16)}',
+      '.lang-menu .lang-list li[aria-selected="true"]{font-weight:600;background:rgba(127,127,127,.10)}',
+      '.lang-menu .lang-list .lang-name{flex:1}',
+      '.lang-menu .lang-list .lang-check{opacity:0;color:var(--accent);font-weight:700}',
+      '.lang-menu .lang-list li[aria-selected="true"] .lang-check{opacity:1}',
+    ].join('');
+    (document.head || document.documentElement).appendChild(st);
+  }
+
+  // Constrói o seletor de idioma com bandeira dentro de `el` (um contêiner).
+  // Acessível (role=listbox/option, teclado, Escape), fecha ao clicar fora,
+  // e reflete trocas externas de idioma via onChange. Nunca lança (protege o
+  // login, que depende deste arquivo).
+  function mountLangMenu(el) {
+    if (!el || typeof document === 'undefined') return;
+    try {
+      ensureLangCSS();
+      const codes = ['pt', 'en', 'es', 'fr'];
+      el.classList.add('lang-menu');
+      el.innerHTML = '';
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'lang-btn';
+      btn.setAttribute('aria-haspopup', 'listbox');
+      btn.setAttribute('aria-expanded', 'false');
+      const list = document.createElement('ul');
+      list.className = 'lang-list'; list.setAttribute('role', 'listbox'); list.hidden = true;
+      const items = {};
+      codes.forEach(code => {
+        const m = LANG_META[code];
+        const li = document.createElement('li');
+        li.setAttribute('role', 'option'); li.dataset.lang = code; li.tabIndex = -1;
+        li.innerHTML = '<span class="lang-flag">' + m.flag + '</span><span class="lang-name">' + m.name + '</span><span class="lang-check">✓</span>';
+        li.addEventListener('click', e => { e.stopPropagation(); choose(code); });
+        list.appendChild(li); items[code] = li;
+      });
+      el.appendChild(btn); el.appendChild(list);
+
+      function renderBtn() {
+        const m = LANG_META[lang] || LANG_META.pt;
+        btn.innerHTML = '<span class="lang-flag">' + m.flag + '</span><span class="lang-code">' + m.code + '</span><span class="lang-caret">▾</span>';
+        btn.title = t('ui.lang_title');
+        codes.forEach(c => items[c].setAttribute('aria-selected', c === lang ? 'true' : 'false'));
+      }
+      function open() {
+        list.hidden = false; btn.setAttribute('aria-expanded', 'true');
+        (items[lang] || items.pt).focus();
+        document.addEventListener('click', outside, true);
+        document.addEventListener('keydown', onKey, true);
+      }
+      function close() {
+        list.hidden = true; btn.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('click', outside, true);
+        document.removeEventListener('keydown', onKey, true);
+      }
+      function choose(code) { close(); btn.focus(); set(code); }
+      function outside(e) { if (!el.contains(e.target)) close(); }
+      function onKey(e) {
+        const cur = document.activeElement;
+        const idx = cur && cur.dataset ? codes.indexOf(cur.dataset.lang) : -1;
+        if (e.key === 'Escape') { close(); btn.focus(); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); items[codes[idx < 0 ? 0 : Math.min(codes.length - 1, idx + 1)]].focus(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); items[codes[idx < 0 ? 0 : Math.max(0, idx - 1)]].focus(); }
+        else if ((e.key === 'Enter' || e.key === ' ') && idx >= 0) { e.preventDefault(); choose(codes[idx]); }
+      }
+      btn.addEventListener('click', e => { e.stopPropagation(); list.hidden ? open() : close(); });
+      btn.addEventListener('keydown', e => {
+        if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (list.hidden) open(); }
+      });
+      renderBtn();
+      onChange(renderBtn);
+    } catch (e) { /* nunca derruba a página */ }
+  }
+
   lang = detect();
   if (typeof document !== 'undefined') syncCookie();
-  return { t, set, apply, onChange, get lang() { return lang; } };
+  return { t, set, apply, onChange, mountLangMenu, get lang() { return lang; } };
 })();
 
-// Auto-aplica e liga o seletor 🌐 (id="lang-sel") quando houver DOM.
+// Auto-aplica e monta o seletor de idioma (id="lang-menu") quando houver DOM.
+// Mantém compat com o antigo <select id="lang-sel"> (páginas em cache).
 if (typeof document !== 'undefined' && document.addEventListener) {
   document.addEventListener('DOMContentLoaded', () => {
-    I18N.apply();
+    try { I18N.apply(); } catch (e) { /* ok */ }
+    const menu = document.getElementById('lang-menu');
+    if (menu) I18N.mountLangMenu(menu);
     const sel = document.getElementById('lang-sel');
-    if (sel) {
+    if (sel && sel.tagName === 'SELECT') {
       sel.value = I18N.lang;
       sel.title = I18N.t('ui.lang_title');
       sel.addEventListener('change', () => { I18N.set(sel.value); sel.title = I18N.t('ui.lang_title'); });

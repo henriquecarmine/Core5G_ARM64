@@ -123,7 +123,8 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     console.log(`  screenshot: screenshots/topology-${proj}-light.png`);
 
     // idioma: troca para FR → chrome, hint, legenda e textos didáticos (via tt) em francês
-    await page.select('#lang-sel', 'fr');
+    await page.click('#lang-menu .lang-btn');            // abre o seletor com bandeira
+    await page.click('#lang-menu li[data-lang="fr"]');   // escolhe francês
     await new Promise(r => setTimeout(r, 200));
     const fr = await page.evaluate(() => ({
       hint: document.getElementById('mode-hint').textContent,

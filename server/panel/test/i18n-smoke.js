@@ -42,7 +42,8 @@ const EXPECT = {
   await page.goto('file://' + path.join(STATIC, 'login.html'), { waitUntil: 'domcontentloaded' });
   await new Promise(r => setTimeout(r, 300));
   for (const lang of ['pt', 'en', 'es', 'fr']) {
-    await page.select('#lang-sel', lang);
+    await page.click('#lang-menu .lang-btn');                 // abre o seletor com bandeira
+    await page.click(`#lang-menu li[data-lang="${lang}"]`);   // escolhe o idioma
     await new Promise(r => setTimeout(r, 120));
     const txt = await page.evaluate(() => ({
       enter: document.getElementById('btn-login').textContent.trim(),

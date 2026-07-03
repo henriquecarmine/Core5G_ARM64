@@ -59,8 +59,7 @@
   .modes button:hover { color:var(--text); background:var(--btn-hover); }
   .modes button.active { background:var(--accent); color:#fff; }
   .spacer { margin-left:auto; }
-  #lang-sel { background:var(--btn-bg); border:1px solid var(--border); color:var(--muted); border-radius:7px; padding:5px 7px; font-size:12px; cursor:pointer; }
-  #lang-sel:hover { color:var(--text); border-color:var(--accent); }
+  /* seletor de idioma (#lang-menu) estilizado por static/i18n.js (ensureLangCSS) */
 
   /* ---- Palco ---- */
   #stage { flex:1; position:relative; overflow:hidden;
@@ -189,7 +188,7 @@
   <button class="btn" id="tour-btn" data-i18n-title="topo.tour_btn_title" title="Tour guiado pelas camadas">
     <svg viewBox="0 0 24 24"><path d="M12 2l2.5 6.5L21 9l-5 4 1.5 7L12 16l-5.5 4L8 13 3 9l6.5-.5z"/></svg> <span data-i18n="topo.tour_btn">Tour</span>
   </button>
-  <select id="lang-sel" title="Idioma"><option value="pt">PT</option><option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option></select>
+  <div id="lang-menu" title="Idioma"></div>
   <button class="btn" id="theme-btn" title="Alternar tema claro/escuro">◐</button>
   <div class="modes spacer">
     <button data-mode="simplificado" data-i18n="topo.mode_simple">Simplificado</button>

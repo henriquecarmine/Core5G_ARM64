@@ -1,0 +1,53 @@
+# CI de internacionalização (i18n) e documentação.
+# Garante que as traduções não apodreçam silenciosamente:
+#  - dicionários do painel (pt/en/es/fr): mesmas chaves, sem órfãs, placeholders
+#    consistentes;
+#  - documentação traduzida (docs/i18n/<lang>/): sem órfãos e sem versões
+#    defasadas em relação ao canônico pt (checagem via histórico git).
+# Ver docs/i18n/GLOSSARY.md e CONTRIBUTING §7.
+name: i18n & docs
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  parity:
+    name: Paridade (dicionários + documentação)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # check-parity.py usa `git merge-base` p/ detectar defasagem
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Dicionários do painel — chaves × 4 idiomas, órfãs, placeholders
+        run: node server/panel/test/i18n-parity.js
+      - name: Documentação — órfãos e traduções defasadas
+        run: python3 docs/i18n/check-parity.py
+
+  smoke:
+    name: Smoke visual (login/topbar/topologia)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - id: chrome
+        uses: browser-actions/setup-chrome@v1
+      - name: Instalar dependências de teste
+        working-directory: server/panel/test
+        run: npm install --no-audit --no-fund
+      - name: test:i18n — paridade + troca de idioma real (pt/en/es/fr) + persistência
+        working-directory: server/panel/test
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: npm run test:i18n
+      - name: test:topo — geometria + render P1/P2 + temas + francês
+        working-directory: server/panel/test
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: npm run test:topo

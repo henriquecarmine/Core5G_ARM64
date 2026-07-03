@@ -137,15 +137,21 @@ O projeto é institucional e internacional: **pt (canônico) · en · es · fr**
    sobrar órfã ou divergirem os placeholders.
 2. **Glossário técnico não se traduz**: termos 3GPP/O-RAN (AMF, SMF, CUPS,
    slice, E2SM-KPM, PDU Session, N1/N2/N3…) ficam como nos specs em qualquer
-   idioma — traduz-se a explicação, nunca o termo.
+   idioma — traduz-se a explicação, nunca o termo. Lista completa dos termos
+   intocáveis + rótulos padronizados nos 4 idiomas em
+   [`docs/i18n/GLOSSARY.md`](docs/i18n/GLOSSARY.md) — mantenha aberto ao traduzir.
 3. **Documentação**: pt fica no lugar canônico; traduções vivem em
    `docs/i18n/<lang>/` (mesmo nome de arquivo, espelhando o caminho) e os
    READMEs da raiz como `README.<lang>.md`. Toda tradução leva o marcador
    `<!-- sync: <hash|versão> -->` no topo; `python3 docs/i18n/check-parity.py`
-   acusa órfãos e traduções defasadas.
+   acusa órfãos e traduções defasadas. Os exercícios (`docs/labs/` + tutorial E2
+   do P2) já têm en/es/fr — ponto de entrada: `docs/i18n/<lang>/INDEX.md`.
 4. **PR que altera doc canônico**: atualize as traduções afetadas no mesmo PR
    **ou** abra uma issue "tradução pendente" e cite-a no cabeçalho da tradução
    (`outdated-ok: #<issue>`).
+5. **CI**: o workflow [`.github/workflows/i18n.yml`](.github/workflows/i18n.yml)
+   roda a paridade dos dicionários e da documentação (+ smokes) a cada push/PR —
+   uma chave faltando ou uma tradução defasada **derruba o CI**.
 
 ---
 

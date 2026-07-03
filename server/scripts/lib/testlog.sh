@@ -25,10 +25,19 @@ kv()      { printf '  %s%-22s%s %s\n' "$_DIM" "$1" "$_RST" "$2"; }
 #   $1 = explicação (o que o teste fez)
 #   $2 = veredito (resultado em uma frase)
 #   $3 = status: ok | warn | err  (cor do veredito)
+# i18n (F5): o painel injeta LAB_LANG (pt|en|es|fr) — traduz os rótulos fixos
+# da lib. O texto de cada teste continua no idioma do script (pt canônico).
+case "${LAB_LANG:-pt}" in
+  en) _L_SUMMARY="Summary";  _L_WHAT="What it did:"; _L_RESULT="Result:" ;;
+  es) _L_SUMMARY="Resumen";  _L_WHAT="Qué hizo:";    _L_RESULT="Resultado:" ;;
+  fr) _L_SUMMARY="Résumé";   _L_WHAT="Action :";     _L_RESULT="Résultat :" ;;
+  *)  _L_SUMMARY="Resumo";   _L_WHAT="O que fez:";   _L_RESULT="Resultado:" ;;
+esac
+
 summary() {
     local what="$1" verdict="$2" status="${3:-ok}" color="$_GRN"
     case "$status" in warn) color="$_YEL" ;; err) color="$_RED" ;; esac
-    printf '\n%s%s── Resumo ──%s\n' "$_B" "$_CYN" "$_RST"
-    printf '  %sO que fez:%s %s\n' "$_B" "$_RST" "$what"
-    printf '  %sResultado:%s %s%s%s\n' "$_B" "$_RST" "$color" "$verdict" "$_RST"
+    printf '\n%s%s── %s ──%s\n' "$_B" "$_CYN" "$_L_SUMMARY" "$_RST"
+    printf '  %s%s%s %s\n' "$_B" "$_L_WHAT" "$_RST" "$what"
+    printf '  %s%s%s %s%s%s\n' "$_B" "$_L_RESULT" "$_RST" "$color" "$verdict" "$_RST"
 }

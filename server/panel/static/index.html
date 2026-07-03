@@ -913,6 +913,10 @@ function stripAnsi(s) {
   return s.replace(/\x1b\[[0-9;]*[mGKJHFABCDSTlu]/g, '');
 }
 
+// i18n com fallback pt-canônico: em pt lê o literal JS; en/es/fr vêm do dicionário
+const trf = (k, fb) => { if (I18N.lang === 'pt') return fb; const v = I18N.t(k); return v === k ? fb : v; };
+const sanitKey = x => x.replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+
 function escHtml(s) {
   return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 }
@@ -1009,7 +1013,7 @@ function annotateServiceStart(cleanLine) {
   const hit = SERVICE_ROLES.find(([name]) => cleanLine.toLowerCase().includes(name.toLowerCase()));
   if (!hit || hit[0] === _lastRoleAnnotated) return '';
   _lastRoleAnnotated = hit[0];
-  return ` <span style="color:${TERM.blue}">· ${escHtml(hit[1])}</span>`;
+  return ` <span style="color:${TERM.blue}">· ${escHtml(trf('svcrole.' + sanitKey(hit[0]), hit[1]))}</span>`;
 }
 
 // Renderiza uma linha: aplica ANSI (cores explícitas dos scripts) E, nos trechos
@@ -1389,7 +1393,7 @@ function appendExplain(cmd) {
   const e = TEST_EXPLAIN[cmd]; if (!e) return;
   const div = document.createElement('div');
   div.className = 'explain';
-  div.innerHTML = `<div class="ex-title">ℹ ${e.title}</div><ul>${e.items.map(i => '<li>' + i + '</li>').join('')}</ul><div class="ex-concl">${e.concl}</div>`;
+  div.innerHTML = `<div class="ex-title">ℹ ${trf(`explain.${cmd}.title`, e.title)}</div><ul>${e.items.map((it, i) => '<li>' + trf(`explain.${cmd}.i${i}`, it) + '</li>').join('')}</ul><div class="ex-concl">${trf(`explain.${cmd}.concl`, e.concl)}</div>`;
   output.appendChild(div);
   output.scrollTop = output.scrollHeight;
 }
@@ -1440,11 +1444,12 @@ function roleOfService(key) {
   return null;
 }
 function appendLogExplain(svc) {
-  const e = LOG_INFO[roleOfService(svc)];
+  const role = roleOfService(svc);
+  const e = LOG_INFO[role];
   if (!e) return;
   const div = document.createElement('div');
   div.className = 'explain';
-  div.innerHTML = `<div class="ex-title">ℹ O que é este log — ${e.t}</div><ul><li>${e.d}</li></ul><div class="ex-concl">👀 Observe: ${e.w}</div>`;
+  div.innerHTML = `<div class="ex-title">ℹ ${trf('log.what_is', 'O que é este log')} — ${trf(`loginfo.${role}.t`, e.t)}</div><ul><li>${trf(`loginfo.${role}.d`, e.d)}</li></ul><div class="ex-concl">👀 ${trf('log.observe', 'Observe')}: ${trf(`loginfo.${role}.w`, e.w)}</div>`;
   output.appendChild(div);
   output.scrollTop = output.scrollHeight;
 }
@@ -1804,8 +1809,8 @@ const INFO_CONTENT = {
 function openInfoModal(key) {
   const entry = INFO_CONTENT[key];
   if (!entry) return;
-  document.getElementById('info-modal-title').textContent = entry.title;
-  document.getElementById('info-modal-body').innerHTML = entry.html;
+  document.getElementById('info-modal-title').textContent = trf(`info.${key}.title`, entry.title);
+  document.getElementById('info-modal-body').innerHTML = trf(`info.${key}.html`, entry.html);
   document.getElementById('info-modal-overlay').classList.add('open');
 }
 function closeInfoModal() { document.getElementById('info-modal-overlay').classList.remove('open'); }
@@ -2050,7 +2055,7 @@ function openOperation(opts) {
   demoConfirmBtn.style.display = 'none';
   demoOverlay.classList.add('open');
   if (opts.confirm) {
-    demoAddStep('info', opts.confirmLabel || 'Confirmar operação?', opts.confirmDetail || '');
+    demoAddStep('info', opts.confirmLabel || trf('op.confirm_q', 'Confirmar operação?'), opts.confirmDetail || '');
     demoConfirmBtn.style.display = '';
     demoConfirmBtn.disabled = false;
   } else {
@@ -2087,7 +2092,7 @@ async function runOperation() {
           } else if (line.startsWith('DONE|')) {
             const ok = line.split('|')[1] === 'ok';
             demoSummaryEl.className = ok ? 'ok' : 'fail';
-            demoSummaryEl.textContent = ok ? (_op.doneOk || '✓ Concluído.') : (_op.doneFail || '✕ A operação não concluiu — veja o passo que falhou.');
+            demoSummaryEl.textContent = ok ? (_op.doneOk || trf('op.done', '✓ Concluído.')) : (_op.doneFail || trf('op.fail_generic', '✕ A operação não concluiu — veja o passo que falhou.'));
             demoSummaryEl.style.display = 'block';
           } else if (line) {
             // saída crua do servidor → painel de logs ao vivo
@@ -2098,7 +2103,7 @@ async function runOperation() {
       }
     }
   } catch (e) {
-    demoAddStep('fail', 'Erro de conexão', e.message, spinner);
+    demoAddStep('fail', trf('op.conn_err', 'Erro de conexão'), e.message, spinner);
   }
   spinner.remove();
   if (_op.allowRerun) demoRerunBtn.style.display = '';
@@ -2111,29 +2116,30 @@ async function runOperation() {
 // --- Demonstração E2E ---
 document.getElementById('demo-e2e-btn').addEventListener('click', () => openOperation({
   endpoint: '/api/demo-e2e',
-  title: '▶ Demonstração E2E — operação da rede 5G',
-  sub: 'UE conecta → recebe IP → sai para a internet → throughput (Projeto 1, medição real)',
-  spinnerLabel: 'Executando demonstração…',
-  doneOk: '✓ Operação fim-a-fim comprovada: o UE registrou, recebeu IP e navegou para a internet — tudo medido de verdade.',
-  doneFail: '✕ A demonstração não concluiu — provavelmente o RAN/Core do Projeto 1 não está no ar (use o seletor de projeto).',
+  title: trf('demo.e2e_title', '▶ Demonstração E2E — operação da rede 5G'),
+  sub: trf('demo.e2e_sub', 'UE conecta → recebe IP → sai para a internet → throughput (Projeto 1, medição real)'),
+  spinnerLabel: trf('demo.e2e_spinner', 'Executando demonstração…'),
+  doneOk: trf('demo.e2e_ok', '✓ Operação fim-a-fim comprovada: o UE registrou, recebeu IP e navegou para a internet — tudo medido de verdade.'),
+  doneFail: trf('demo.e2e_fail', '✕ A demonstração não concluiu — provavelmente o RAN/Core do Projeto 1 não está no ar (use o seletor de projeto).'),
   allowRerun: true,
 }));
 
 // --- Ativação de projeto (exclusivo): cards "ativar" + "desligar tudo" ([data-proj]) ---
 const projButtons = document.querySelectorAll('[data-proj]');
+// Chaves i18n + fallback pt, resolvidas NO CLIQUE (respeitam troca de idioma).
 const PROJ_INFO = {
-  p1: { title: 'Alternar para Projeto 1 — Open5GS + UERANSIM',
-        sub: 'Desliga o Projeto 2 e sobe o Core Open5GS + RAN UERANSIM.',
-        confirmDetail: 'Vai desligar o que estiver no ar (inclusive o Projeto 2) e subir o Projeto 1. Leva ~1 min.',
-        doneOk: '✓ Projeto 1 no ar. Pode rodar a Demonstração E2E.', },
-  p2: { title: 'Alternar para Projeto 2 — OAI 5GC + gNB + FlexRIC',
-        sub: 'Desliga o Projeto 1 e sobe o OAI Core + near-RT RIC + gNB (E2).',
-        confirmDetail: 'Vai desligar o Projeto 1 e subir o lab E2 do Projeto 2 (51 PRBs). Leva ~1–2 min.',
-        doneOk: '✓ Projeto 2 no ar. Veja a Topologia e rode os testes E2/xApp.', },
-  off: { title: 'Desligar tudo',
-         sub: 'Para os dois projetos e libera os recursos do servidor.',
-         confirmDetail: 'Vai parar Projeto 1 e Projeto 2 por completo.',
-         doneOk: '✓ Tudo desligado.', },
+  p1: { title: ['proj.p1_title', 'Alternar para Projeto 1 — Open5GS + UERANSIM'],
+        sub: ['proj.p1_sub', 'Desliga o Projeto 2 e sobe o Core Open5GS + RAN UERANSIM.'],
+        confirmDetail: ['proj.p1_confirm', 'Vai desligar o que estiver no ar (inclusive o Projeto 2) e subir o Projeto 1. Leva ~1 min.'],
+        doneOk: ['proj.p1_ok', '✓ Projeto 1 no ar. Pode rodar a Demonstração E2E.'] },
+  p2: { title: ['proj.p2_title', 'Alternar para Projeto 2 — OAI 5GC + gNB + FlexRIC'],
+        sub: ['proj.p2_sub', 'Desliga o Projeto 1 e sobe o OAI Core + near-RT RIC + gNB (E2).'],
+        confirmDetail: ['proj.p2_confirm', 'Vai desligar o Projeto 1 e subir o lab E2 do Projeto 2 (51 PRBs). Leva ~1–2 min.'],
+        doneOk: ['proj.p2_ok', '✓ Projeto 2 no ar. Veja a Topologia e rode os testes E2/xApp.'] },
+  off: { title: ['proj.off_title', 'Desligar tudo'],
+         sub: ['proj.off_sub', 'Para os dois projetos e libera os recursos do servidor.'],
+         confirmDetail: ['proj.off_confirm', 'Vai parar Projeto 1 e Projeto 2 por completo.'],
+         doneOk: ['proj.off_ok', '✓ Tudo desligado.'] },
 };
 projButtons.forEach(b => b.addEventListener('click', () => {
   if (isGuest || _opBusy) return;
@@ -2142,13 +2148,13 @@ projButtons.forEach(b => b.addEventListener('click', () => {
   const info = PROJ_INFO[proj];
   openOperation({
     endpoint: '/api/switch/' + proj,
-    title: info.title, sub: info.sub,
-    spinnerLabel: proj === 'off' ? 'Desligando…' : 'Alternando…',
+    title: trf(...info.title), sub: trf(...info.sub),
+    spinnerLabel: proj === 'off' ? trf('op.shutting', 'Desligando…') : trf('op.switching', 'Alternando…'),
     confirm: true,
-    confirmLabel: proj === 'off' ? 'Confirmar desligar?' : 'Confirmar troca de projeto?',
-    confirmDetail: info.confirmDetail,
-    doneOk: info.doneOk,
-    doneFail: '✕ A operação não concluiu — veja o passo que falhou acima.',
+    confirmLabel: proj === 'off' ? trf('op.confirm_off', 'Confirmar desligar?') : trf('op.confirm_switch', 'Confirmar troca de projeto?'),
+    confirmDetail: trf(...info.confirmDetail),
+    doneOk: trf(...info.doneOk),
+    doneFail: trf('op.fail_above', '✕ A operação não concluiu — veja o passo que falhou acima.'),
   });
 }));
 function setSelectorEnabled(on) {

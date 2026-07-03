@@ -308,11 +308,11 @@ def ensure_can_run(request: Request) -> str:
     outro / expirada): 409. Retorna o usuário ao chamador."""
     user, sid = current_session(request)
     if user is None or user == GUEST_USER:
-        raise HTTPException(status_code=403, detail="Aluno só pode visualizar, não executar comandos.")
+        raise HTTPException(status_code=403, detail=srv_msg("guest_403", req_lang(request)))
     if not is_active_admin(user, sid):
         raise HTTPException(
             status_code=409,
-            detail="Sua sessão de professor não está ativa (outro professor assumiu ou ela expirou). Recarregue e entre de novo.",
+            detail=srv_msg("seat_lost_409", req_lang(request)),
         )
     _touch_admin(sid)
     return user
@@ -326,7 +326,7 @@ async def require_session(request: Request, call_next):
     if current_user(request) is None:
         if path == "/" or not path.startswith("/api/"):
             return RedirectResponse("/login")
-        return JSONResponse({"detail": "Não autenticado."}, status_code=401)
+        return JSONResponse({"detail": srv_msg("not_auth_401", req_lang(request))}, status_code=401)
     return await call_next(request)
 
 # Comando exposto na UI -> script local (relativo a SERVER_DIR) + cwd.
@@ -371,7 +371,10 @@ _VALID_DISTANCES = {"none", "100m", "500m", "1km", "3km", "off"}
 _VALID_INTERFERENCES = {"none", "fraca", "media", "alta"}
 
 
-def stream_command(cmd: list[str], cwd: Path, env: dict | None = None) -> Iterator[str]:
+def stream_command(cmd: list[str], cwd: Path, env: dict | None = None, lang: str = "pt") -> Iterator[str]:
+    # LAB_LANG: os scripts (testlog.sh) traduzem a própria saída fixa por ele.
+    full_env = dict(env) if env is not None else dict(os.environ)
+    full_env["LAB_LANG"] = lang
     process = subprocess.Popen(
         cmd,
         cwd=cwd,
@@ -379,14 +382,14 @@ def stream_command(cmd: list[str], cwd: Path, env: dict | None = None) -> Iterat
         stderr=subprocess.STDOUT,
         text=True,
         bufsize=1,
-        env=env,
+        env=full_env,
     )
     assert process.stdout is not None
-    yield f"$ {' '.join(cmd)}  (em {cwd})\n\n"
+    yield f"$ {' '.join(cmd)}  ({srv_msg('in_dir', lang)} {cwd})\n\n"
     for line in process.stdout:
         yield line
     process.wait()
-    yield f"\n[processo encerrado, exit code {process.returncode}]\n"
+    yield f"\n[{srv_msg('proc_end', lang)} {process.returncode}]\n"
 
 
 def list_services() -> dict[str, Path]:
@@ -629,6 +632,63 @@ threading.Thread(target=_telemetry_loop, daemon=True, name="telemetry-collector"
 # já corrigidos). no-cache = revalida a cada load (304 quando não mudou).
 NO_CACHE = {"Cache-Control": "no-cache, must-revalidate"}
 
+# ---- i18n do servidor (F5): idioma vem do cookie que o painel grava ----
+LANGS = ("pt", "en", "es", "fr")
+SRV_MSG = {
+    "guest_403": {
+        "pt": "Aluno só pode visualizar, não executar comandos.",
+        "en": "Students can only watch, not run commands.",
+        "es": "El alumno solo puede ver, no ejecutar comandos.",
+        "fr": "L'étudiant peut seulement regarder, pas exécuter de commandes.",
+    },
+    "seat_lost_409": {
+        "pt": "Sua sessão de professor não está ativa (outro professor assumiu ou ela expirou). Recarregue e entre de novo.",
+        "en": "Your professor session is not active (another professor took over or it expired). Reload and sign in again.",
+        "es": "Tu sesión de profesor no está activa (otro profesor la asumió o expiró). Recarga y entra de nuevo.",
+        "fr": "Votre session de professeur n'est pas active (un autre professeur a pris la main ou elle a expiré). Rechargez et reconnectez-vous.",
+    },
+    "not_auth_401": {
+        "pt": "Não autenticado.",
+        "en": "Not authenticated.",
+        "es": "No autenticado.",
+        "fr": "Non authentifié.",
+    },
+    "bad_credentials_401": {
+        "pt": "Usuário ou senha inválidos.",
+        "en": "Invalid username or password.",
+        "es": "Usuario o contraseña inválidos.",
+        "fr": "Utilisateur ou mot de passe invalide.",
+    },
+    "seat_taken_409": {
+        "pt": "Já há um professor conectado ({user}) e a vaga é única. Entre como aluno para acompanhar a aula ao vivo — ou peça para o professor sair (logout) para liberar a vaga.",
+        "en": "A professor is already connected ({user}) and there is a single slot. Join as a student to watch the class live — or ask the professor to sign out to free the slot.",
+        "es": "Ya hay un profesor conectado ({user}) y el puesto es único. Entra como alumno para seguir la clase en vivo — o pídele al profesor que salga para liberar el puesto.",
+        "fr": "Un professeur est déjà connecté ({user}) et la place est unique. Entrez comme étudiant pour suivre le cours en direct — ou demandez au professeur de se déconnecter.",
+    },
+    "proc_end": {
+        "pt": "processo encerrado, exit code",
+        "en": "process finished, exit code",
+        "es": "proceso terminado, exit code",
+        "fr": "processus terminé, exit code",
+    },
+    "in_dir": {"pt": "em", "en": "in", "es": "en", "fr": "dans"},
+    "unknown_cmd": {
+        "pt": "Comando desconhecido",
+        "en": "Unknown command",
+        "es": "Comando desconocido",
+        "fr": "Commande inconnue",
+    },
+}
+
+
+def req_lang(request: Request) -> str:
+    lang = request.cookies.get("c5g-lang", "pt")
+    return lang if lang in LANGS else "pt"
+
+
+def srv_msg(key: str, lang: str, **params: str) -> str:
+    return SRV_MSG[key].get(lang, SRV_MSG[key]["pt"]).format(**params)
+
 
 @app.get("/")
 def index() -> FileResponse:
@@ -685,7 +745,7 @@ def do_login(payload: dict) -> JSONResponse:
     is_guest = GUEST_ENABLED and user == GUEST_USER and password == GUEST_PASSWORD
     is_admin = user in ADMIN_USERS and password == ADMIN_USERS[user]
     if not (is_guest or is_admin):
-        raise HTTPException(401, "Usuário ou senha inválidos.")
+        raise HTTPException(401, srv_msg("bad_credentials_401", req_lang(request)))
     if is_admin:
         now = time.time()
         with _state_lock:
@@ -696,9 +756,7 @@ def do_login(payload: dict) -> JSONResponse:
             if not _seat_free(now) and ACTIVE_ADMIN["user"] != user:
                 raise HTTPException(
                     409,
-                    f"Já há um professor conectado ({ACTIVE_ADMIN['user']}) e a vaga é única. "
-                    f"Entre como aluno para acompanhar a aula ao vivo — ou peça para o professor "
-                    f"sair (logout) para liberar a vaga.",
+                    srv_msg("seat_taken_409", req_lang(request), user=ACTIVE_ADMIN["user"]),
                 )
             sid = secrets.token_hex(8)
             ACTIVE_ADMIN.update(user=user, sid=sid, ts=now)
@@ -1334,12 +1392,13 @@ def add_subscriber(payload: dict, request: Request) -> StreamingResponse:
 @app.post("/api/run/{command}")
 def run_command(command: str, request: Request) -> StreamingResponse:
     by = ensure_can_run(request)
+    lang = req_lang(request)
     spec = COMMANDS.get(command)
     if spec is None:
         return StreamingResponse(
-            iter([f"Comando desconhecido: {command}\n"]), media_type="text/plain"
+            iter([f"{srv_msg('unknown_cmd', lang)}: {command}\n"]), media_type="text/plain"
         )
     return StreamingResponse(
-        tee_to_live(stream_command(spec["cmd"], spec["cwd"]), command, by, cmd=command),
+        tee_to_live(stream_command(spec["cmd"], spec["cwd"], lang=lang), command, by, cmd=command),
         media_type="text/plain",
     )

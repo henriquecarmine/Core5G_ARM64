@@ -59,6 +59,8 @@
   .modes button:hover { color:var(--text); background:var(--btn-hover); }
   .modes button.active { background:var(--accent); color:#fff; }
   .spacer { margin-left:auto; }
+  #lang-sel { background:var(--btn-bg); border:1px solid var(--border); color:var(--muted); border-radius:7px; padding:5px 7px; font-size:12px; cursor:pointer; }
+  #lang-sel:hover { color:var(--text); border-color:var(--accent); }
 
   /* ---- Palco ---- */
   #stage { flex:1; position:relative; overflow:hidden;
@@ -177,22 +179,23 @@
 </head>
 <body class="mode-tecnico">
 <header>
-  <h1>Core5G<b>_ARM64</b> · Topologia <span id="topo-proj" style="color:var(--muted);font-weight:400;font-size:14px"></span></h1>
-  <a class="btn" href="/" title="Voltar ao painel">
-    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> Painel
+  <h1>Core5G<b>_ARM64</b> · <span data-i18n="topo.title">Topologia</span> <span id="topo-proj" style="color:var(--muted);font-weight:400;font-size:14px"></span></h1>
+  <a class="btn" href="/" data-i18n-title="topo.back_title" title="Voltar ao painel">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg> <span data-i18n="topo.panel_btn">Painel</span>
   </a>
-  <button class="btn" id="logs-btn" title="Logs ao vivo dos componentes">
-    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg> Logs
+  <button class="btn" id="logs-btn" data-i18n-title="topo.logs_btn_title" title="Logs ao vivo dos componentes">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg> <span data-i18n="topo.logs_btn">Logs</span>
   </button>
-  <button class="btn" id="tour-btn" title="Tour guiado pelas camadas">
-    <svg viewBox="0 0 24 24"><path d="M12 2l2.5 6.5L21 9l-5 4 1.5 7L12 16l-5.5 4L8 13 3 9l6.5-.5z"/></svg> Tour
+  <button class="btn" id="tour-btn" data-i18n-title="topo.tour_btn_title" title="Tour guiado pelas camadas">
+    <svg viewBox="0 0 24 24"><path d="M12 2l2.5 6.5L21 9l-5 4 1.5 7L12 16l-5.5 4L8 13 3 9l6.5-.5z"/></svg> <span data-i18n="topo.tour_btn">Tour</span>
   </button>
+  <select id="lang-sel" title="Idioma"><option value="pt">PT</option><option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option></select>
   <button class="btn" id="theme-btn" title="Alternar tema claro/escuro">◐</button>
   <div class="modes spacer">
-    <button data-mode="simplificado">Simplificado</button>
-    <button data-mode="tecnico" class="active">Técnico</button>
-    <button data-mode="fluxo">Fluxo de dados</button>
-    <button data-mode="troubleshooting">Troubleshooting</button>
+    <button data-mode="simplificado" data-i18n="topo.mode_simple">Simplificado</button>
+    <button data-mode="tecnico" class="active" data-i18n="topo.mode_tech">Técnico</button>
+    <button data-mode="fluxo" data-i18n="topo.mode_flow">Fluxo de dados</button>
+    <button data-mode="troubleshooting" data-i18n="topo.mode_ts">Troubleshooting</button>
   </div>
 </header>
 
@@ -207,9 +210,9 @@
     <div class="c" id="tour-caption"></div>
     <div class="nav">
       <span class="step" id="tour-step"></span>
-      <button id="tour-prev">← Anterior</button>
-      <button id="tour-next" class="primary">Próximo →</button>
-      <button id="tour-exit">Sair</button>
+      <button id="tour-prev" data-i18n="topo.tour_prev">← Anterior</button>
+      <button id="tour-next" class="primary" data-i18n="topo.tour_next">Próximo →</button>
+      <button id="tour-exit" data-i18n="topo.tour_exit">Sair</button>
     </div>
   </div>
   <!-- Legenda minimalista, ancorada no canto inferior esquerdo (não ocupa linha) -->
@@ -229,9 +232,9 @@
     <div class="modal-body">
       <span class="badge" id="nm-status"></span>
       <div class="flow3">
-        <div class="row"><div class="ic" style="color:var(--info)">↘</div><div><div class="lab">De onde vem a informação</div><div class="val" id="nm-from"></div></div></div>
-        <div class="row"><div class="ic" style="color:var(--accent)">⚙</div><div><div class="lab">O que faz</div><div class="val" id="nm-does"></div></div></div>
-        <div class="row"><div class="ic" style="color:var(--green)">↗</div><div><div class="lab">Para onde vai</div><div class="val" id="nm-to"></div></div></div>
+        <div class="row"><div class="ic" style="color:var(--info)">↘</div><div><div class="lab" data-i18n="topo.nm_from">De onde vem a informação</div><div class="val" id="nm-from"></div></div></div>
+        <div class="row"><div class="ic" style="color:var(--accent)">⚙</div><div><div class="lab" data-i18n="topo.nm_does">O que faz</div><div class="val" id="nm-does"></div></div></div>
+        <div class="row"><div class="ic" style="color:var(--green)">↗</div><div><div class="lab" data-i18n="topo.nm_to">Para onde vai</div><div class="val" id="nm-to"></div></div></div>
       </div>
       <dl id="nm-tech"></dl>
     </div>
@@ -242,16 +245,17 @@
 <div class="overlay" id="logs-overlay">
   <div id="logs-modal">
     <div id="logs-head">
-      <h3>Logs ao vivo — o que está acontecendo</h3>
+      <h3 data-i18n="topo.logs_title">Logs ao vivo — o que está acontecendo</h3>
       <span id="logs-ts"></span>
-      <label style="font-size:12px;color:var(--muted)"><input type="checkbox" id="logs-auto" checked style="vertical-align:middle"> auto (5s)</label>
-      <button class="btn" id="logs-refresh"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg> Atualizar</button>
+      <label style="font-size:12px;color:var(--muted)"><input type="checkbox" id="logs-auto" checked style="vertical-align:middle"> <span data-i18n="topo.logs_auto">auto (5s)</span></label>
+      <button class="btn" id="logs-refresh"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg> <span data-i18n="topo.refresh">Atualizar</span></button>
       <button class="x" id="logs-close">×</button>
     </div>
     <div id="logs-body"></div>
   </div>
 </div>
 
+<script src="i18n.js"></script>
 <script>
 // ============================================================================
 // Topologia Open RAN — lê /api/topology (inventário real + status vivo).
@@ -261,24 +265,22 @@ const NODE_W = 184, NODE_H = 66, SVGNS = "http://www.w3.org/2000/svg";
 let TOPO = null, currentMode = "tecnico", logsTimer = null, gnbStats = null, tourLayer = null;
 // Projeto selecionado via ?proj=p1|p2 (padrão p2).
 const PROJ = (new URLSearchParams(location.search).get("proj") === "p1") ? "p1" : "p2";
-const PROJ_TITLE = PROJ === "p1" ? "Projeto 1 · Open5GS + UERANSIM" : "Projeto 2 · OAI + gNB + FlexRIC";
-document.getElementById("topo-proj").textContent = PROJ_TITLE;
+function setProjTitle() { document.getElementById("topo-proj").textContent = I18N.t(PROJ === "p1" ? "topo.p1_title" : "topo.p2_title"); }
+setProjTitle();
 const svg = document.getElementById("diagram");
+// i18n: tradução com fallback no texto pt do JSON (pt = canônico; nós nunca usam o dict em pt)
+const trf = (k, fb) => { if (I18N.lang === "pt") return fb; const v = I18N.t(k); return v === k ? fb : v; };
+const sanit = x => x.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 const FLOW_IFACES = new Set(["RF","N2","E2","E42","N3","N4","N6"]);
 const SECONDARY = new Set(["SBI","Nausf","Nudm","Nudr","SQL","Telemetria"]); // N11/Nsmf fica visível: didático (sessão PDU)
-const MODE_HINTS = {
-  simplificado: "Visão de alto nível: componentes e caminhos principais. Detalhes secundários ocultos.",
-  tecnico: "Visão técnica: todos os nós com IP, portas e rede reais.",
-  fluxo: "Fluxo de dados: o caminho UE→gNB→Core é animado (em cinza, o que está inativo).",
-  troubleshooting: "Troubleshooting: cor por status — verde no ar, vermelho parado, cinza a implementar."
-};
+const MODE_HINT_KEYS = { simplificado: "topo.hint_simple", tecnico: "topo.hint_tech", fluxo: "topo.hint_flow", troubleshooting: "topo.hint_ts" };
 
 function el(t,a,p){ const n=document.createElementNS(SVGNS,t); for(const k in a)n.setAttribute(k,a[k]); if(p)p.appendChild(n); return n; }
 function nodeById(id){ return TOPO.nodes.find(n=>n.id===id); }
 function center(n){ return {x:n.x+NODE_W/2, y:n.y+NODE_H/2}; }
 function layerColor(n){ return getComputedStyle(document.documentElement).getPropertyValue("--c-"+n.layer).trim(); }
 function statusOf(n){ if(n.kind==="external")return "external"; if(n.planned)return "planned"; return (TOPO.live_status&&TOPO.live_status[n.id])||"stopped"; }
-const STATUS_BADGE={running:["b-run","no ar"],stopped:["b-stop","parado"],planned:["b-plan","a implementar"],external:["b-ext","externo"]};
+const STATUS_BADGE={running:["b-run","topo.st_running"],stopped:["b-stop","topo.st_stopped"],planned:["b-plan","topo.st_planned"],external:["b-ext","topo.st_external"]};
 function borderColor(n){ const s=statusOf(n); if(s==="planned")return "#3a3f48";
   if(currentMode==="troubleshooting"){ if(s==="running")return "var(--green)"; if(s==="stopped")return "var(--red)"; return "#3a3f48"; }
   return layerColor(n); }
@@ -304,7 +306,7 @@ function render(){
     el("rect",{x:x0,y:y0,width:x1-x0,height:y1-y0,rx:14,class:"band",fill:bandCol,
                stroke:bandCol,"stroke-dasharray":"3 7"},gB);
     const bl=el("text",{x:x0+14,y:y0+18,class:"band-label",fill:bandCol},gB);
-    bl.textContent=ly.label.toUpperCase();
+    bl.textContent=trf(`topo.${PROJ}.layer.${k}`, ly.label).toUpperCase();
   }
 
   // links paralelos (mesmo par de nós, ex.: N1 e N2) recebem offset perpendicular
@@ -351,9 +353,9 @@ function render(){
     const g=el("g",{class:"node"+(n.planned?" planned":"")+(tourDim?" tour-dim":"")},gN); g.dataset.id=n.id;
     el("rect",{x:n.x,y:n.y,width:NODE_W,height:NODE_H,rx:9,class:"card",stroke:borderColor(n)},g);
     el("rect",{x:n.x,y:n.y,width:4,height:NODE_H,rx:2,fill:layerColor(n),opacity:n.planned?.4:1},g);
-    const tt=el("text",{x:n.x+14,y:n.y+20,class:"title"},g); tt.textContent=n.label;
+    const tt=el("text",{x:n.x+14,y:n.y+20,class:"title"},g); tt.textContent=trf(`topo.${PROJ}.${n.id}.label`, n.label);
     // PALAVRA-FUNÇÃO em destaque (o que o componente faz, em 1 palavra)
-    const rl=el("text",{x:n.x+14,y:n.y+37,class:"role",fill:n.planned?"#5a606b":layerColor(n)},g); rl.textContent=n.role||"";
+    const rl=el("text",{x:n.x+14,y:n.y+37,class:"role",fill:n.planned?"#5a606b":layerColor(n)},g); rl.textContent=trf(`topo.${PROJ}.${n.id}.role`, n.role||"");
     // #3 — métrica de RAN ao vivo no card do gNB (SNR/MCS/PRB do log real)
     if(n.id==="gnb" && gnbStats && gnbStats.up && gnbStats.snr!==undefined){
       const parts=[`SNR ${gnbStats.snr}dB`];
@@ -370,29 +372,29 @@ function render(){
       el("circle",{cx:n.x+NODE_W-12,cy:n.y+12,class:"dot",fill:col},g); }
     g.addEventListener("click",()=>openNode(n.id));
   });
-  document.getElementById("mode-hint").textContent=MODE_HINTS[currentMode];
+  document.getElementById("mode-hint").textContent=I18N.t(MODE_HINT_KEYS[currentMode]);
 }
 
 // ---- modal do nó (de onde vem / o que faz / pra onde vai) ----
 function openNode(id){
   const n=nodeById(id);
-  document.getElementById("nm-title").textContent=n.label;
-  const roleEl=document.getElementById("nm-role"); roleEl.textContent=n.role||""; roleEl.style.color=layerColor(n);
-  const [bc,bt]=STATUS_BADGE[statusOf(n)];
-  const stEl=document.getElementById("nm-status"); stEl.className="badge "+bc; stEl.textContent=bt;
-  document.getElementById("nm-from").textContent=n.from||"—";
-  document.getElementById("nm-does").textContent=n.does||n.fn||"—";
-  document.getElementById("nm-to").textContent=n.to||"—";
+  document.getElementById("nm-title").textContent=trf(`topo.${PROJ}.${n.id}.label`, n.label);
+  const roleEl=document.getElementById("nm-role"); roleEl.textContent=trf(`topo.${PROJ}.${n.id}.role`, n.role||""); roleEl.style.color=layerColor(n);
+  const [bc,btKey]=STATUS_BADGE[statusOf(n)];
+  const stEl=document.getElementById("nm-status"); stEl.className="badge "+bc; stEl.textContent=I18N.t(btKey);
+  document.getElementById("nm-from").textContent=trf(`topo.${PROJ}.${n.id}.from`, n.from||"—");
+  document.getElementById("nm-does").textContent=trf(`topo.${PROJ}.${n.id}.does`, n.does||n.fn||"—");
+  document.getElementById("nm-to").textContent=trf(`topo.${PROJ}.${n.id}.to`, n.to||"—");
   const tech=document.getElementById("nm-tech");
-  const kind={container:"Container Docker",native:"Processo nativo (host)",systemd:"Serviço systemd",external:"Externo"}[n.kind]||n.kind;
-  let h=`<dt>Tipo</dt><dd>${kind}</dd>`;
-  if(n.image)h+=`<dt>Imagem / binário</dt><dd>${n.image}</dd>`;
+  const kind=I18N.t({container:"topo.kind_container",native:"topo.kind_native",systemd:"topo.kind_systemd",external:"topo.kind_external"}[n.kind])||n.kind;
+  let h=`<dt>${I18N.t("topo.nm_type")}</dt><dd>${kind}</dd>`;
+  if(n.image)h+=`<dt>${I18N.t("topo.nm_image")}</dt><dd>${n.image}</dd>`;
   if(n.ip&&n.ip!=="—")h+=`<dt>IP</dt><dd>${n.ip}</dd>`;
-  if(n.ports&&n.ports!=="—")h+=`<dt>Portas</dt><dd>${n.ports}</dd>`;
-  if(n.network)h+=`<dt>Rede</dt><dd>${n.network}</dd>`;
+  if(n.ports&&n.ports!=="—")h+=`<dt>${I18N.t("topo.nm_ports")}</dt><dd>${n.ports}</dd>`;
+  if(n.network)h+=`<dt>${I18N.t("topo.nm_net")}</dt><dd>${n.network}</dd>`;
   const conns=TOPO.links.filter(l=>l.from===n.id||l.to===n.id)
     .map(l=>`${l.iface}: ${l.from===n.id?"→ "+nodeById(l.to).label:"← "+nodeById(l.from).label}`);
-  if(conns.length)h+=`<dt>Conexões</dt><dd style="font-family:inherit">${conns.join("<br>")}</dd>`;
+  if(conns.length)h+=`<dt>${I18N.t("topo.nm_conns")}</dt><dd style="font-family:inherit">${conns.join("<br>")}</dd>`;
   tech.innerHTML=h;
   document.getElementById("node-overlay").classList.add("open");
 }
@@ -402,14 +404,14 @@ document.getElementById("node-overlay").addEventListener("click",e=>{ if(e.targe
 // ---- legenda: badge minimalista no canto inferior esquerdo (recolhível) ----
 function renderLegend(){
   const f=document.getElementById("legend");
-  let body='<div class="lg-sec">Camadas</div>';
-  for(const k in TOPO.layers) body+=`<div class="lyk"><span class="sw" style="background:var(--c-${k})"></span>${TOPO.layers[k].label}</div>`;
-  body+='<div class="lg-sec">Interfaces</div>';
-  TOPO.interfaces_legend.forEach(i=>{ body+=`<div class="ifk"><span class="k">${i.iface}</span><span class="v">${i.desc}</span></div>`; });
+  let body=`<div class="lg-sec">${I18N.t('topo.layers')}</div>`;
+  for(const k in TOPO.layers) body+=`<div class="lyk"><span class="sw" style="background:var(--c-${k})"></span>${trf(`topo.${PROJ}.layer.${k}`, TOPO.layers[k].label)}</div>`;
+  body+=`<div class="lg-sec">${I18N.t('topo.interfaces')}</div>`;
+  TOPO.interfaces_legend.forEach(i=>{ body+=`<div class="ifk"><span class="k">${i.iface}</span><span class="v">${trf('topo.'+PROJ+'.if.'+sanit(i.iface), i.desc)}</span></div>`; });
   f.innerHTML=
     '<div class="lg-head" id="lg-toggle">'+
       '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>'+
-      '<span class="lg-t">Legenda</span>'+
+      `<span class="lg-t">${I18N.t('topo.legend')}</span>`+
       '<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>'+
     '</div>'+
     '<div class="lg-body">'+body+'</div>';
@@ -431,10 +433,10 @@ async function loadLogs(){
     const res=await fetch("/api/topology/logs?proj="+PROJ,{cache:"no-store"});
     if(res.status===401){ window.location.href="/login"; return; }
     const d=await res.json();
-    document.getElementById("logs-ts").textContent="atualizado "+new Date().toLocaleTimeString("pt-BR");
-    if(!d.sections.length){ body.innerHTML='<div id="logs-empty">Nenhum log disponível agora (componentes parados?).</div>'; return; }
+    document.getElementById("logs-ts").textContent=I18N.t("topo.logs_updated")+" "+new Date().toLocaleTimeString(document.documentElement.lang||"pt-BR");
+    if(!d.sections.length){ body.innerHTML='<div id="logs-empty">'+I18N.t('topo.logs_empty')+'</div>'; return; }
     body.innerHTML=d.sections.map(s=>`<div class="logsec"><h4><span class="dot"></span>${s.title}</h4><pre>${s.lines.map(colorLog).join("\n")}</pre></div>`).join("");
-  }catch(e){ body.innerHTML='<div id="logs-empty">Falha ao carregar logs.</div>'; }
+  }catch(e){ body.innerHTML='<div id="logs-empty">'+I18N.t('topo.logs_fail')+'</div>'; }
 }
 function escapeHtml(s){ return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 function openLogs(){ document.getElementById("logs-overlay").classList.add("open"); loadLogs();
@@ -473,8 +475,13 @@ function applyThemeIcon(){
   const dark=document.documentElement.dataset.theme!=="light";
   const b=document.getElementById("theme-btn");
   b.textContent=dark?"☀":"☾";
-  b.title=dark?"Mudar para o tema claro":"Mudar para o tema escuro";
+  b.title=I18N.t(dark?"ui.theme_to_light":"ui.theme_to_dark");
 }
+// troca de idioma: re-renderiza SVG, legenda, título, hint e tour
+I18N.onChange(()=>{ applyThemeIcon(); setProjTitle();
+  if(TOPO){ render(); renderLegend(); }
+  if(tourLayer) showTour(tourIdx);
+});
 document.getElementById("theme-btn").onclick=()=>{
   const next=document.documentElement.dataset.theme==="light"?"dark":"light";
   document.documentElement.dataset.theme=next;
@@ -483,31 +490,17 @@ document.getElementById("theme-btn").onclick=()=>{
 };
 applyThemeIcon();
 
-// ---- #2 tour guiado pelas camadas (por projeto; core dividido em CUPS) ----
-const TOURS = {
-  p2: [
-    { layer:"external", title:"Usuário / Admin", caption:"Tudo começa aqui: o operador acessa o painel pelo navegador (HTTPS). É a borda externa — quem comanda e observa a rede." },
-    { layer:"admin", title:"Acesso & Administração", caption:"O Caddy termina o TLS e autentica; o painel FastAPI faz observabilidade leve (telemetria, logs, controle do lab) — sem Prometheus/Grafana." },
-    { layer:"ran", title:"RAN + RIC (host nativo)", caption:"O coração O-RAN: o UE simulado fala por rádio (RFSIM) com o gNB; o gNB reporta ao near-RT RIC pela E2, e os xApps rodam a inteligência (ex.: previsão de throughput por UE)." },
-    { layer:"core-cp", title:"Core 5G — Plano de Controle (SBA)", caption:"Só sinalização (CUPS): o AMF recebe o gNB pela N2 e o NAS do UE (N1), autentica via AUSF/UDM (dados no UDR/MySQL) e pede a sessão ao SMF pela N11; o SMF programa o UPF pela N4." },
-    { layer:"core-up", title:"Core 5G — Plano de Usuário", caption:"Só dados (CUPS): os pacotes do UE seguem gNB→UPF (N3/GTP-U) e saem para a internet pela N6 — sem passar pelas NFs de controle." },
-  ],
-  p1: [
-    { layer:"external", title:"Usuário / Admin", caption:"Tudo começa aqui: o operador acessa o painel pelo navegador (HTTPS). É a borda externa — quem comanda e observa a rede." },
-    { layer:"admin", title:"Acesso & Administração", caption:"O Caddy termina o TLS e autentica; o painel FastAPI observa o lab; a WebUI do Open5GS cadastra assinantes no MongoDB." },
-    { layer:"ran", title:"RAN (UERANSIM)", caption:"O UERANSIM simula gNB + UE no mesmo container: NG Setup (N2), registro do UE (NAS/N1, que viaja dentro do N2) e sessão PDU; o tráfego do UE nasce na uesimtun0 (10.60.x)." },
-    { layer:"core-cp", title:"Core 5G — Plano de Controle (SBA)", caption:"Só sinalização (CUPS): AMF registra o UE e autentica via AUSF/UDM/UDR (MongoDB); NSSF escolhe a slice, PCF decide QoS; pela N11 o AMF aciona o SMF, que programa os UPFs pela N4." },
-    { layer:"core-up", title:"Core 5G — Plano de Usuário", caption:"Só dados (CUPS): o UPF-A encaminha o tráfego do UE (N3) para a Data Network (N6, iperf3); o UPF-B assume no teste de failover." },
-  ]
-};
-const TOUR = TOURS[PROJ];
+// ---- #2 tour guiado pelas camadas (por projeto; textos nos dicionários i18n) ----
+const TOUR_LAYERS = ["external","admin","ran","core-cp","core-up"];
+const TOUR = TOUR_LAYERS.map(layer => ({ layer }));
 let tourIdx=0;
 function showTour(i){
   tourIdx=(i+TOUR.length)%TOUR.length;
   const s=TOUR[tourIdx]; tourLayer=s.layer;
   const col=`var(--c-${s.layer})`;
-  document.getElementById("tour-title").innerHTML=`<span class="chip" style="background:${col}">Camada ${tourIdx+1}</span>${s.title}`;
-  document.getElementById("tour-caption").textContent=s.caption;
+  const ttl=I18N.t(`topo.tour.${PROJ}.${s.layer}.title`), cap=I18N.t(`topo.tour.${PROJ}.${s.layer}.caption`);
+  document.getElementById("tour-title").innerHTML=`<span class="chip" style="background:${col}">${I18N.t("topo.tour_layer",{n:tourIdx+1})}</span>${ttl}`;
+  document.getElementById("tour-caption").textContent=cap;
   document.getElementById("tour-step").textContent=`${tourIdx+1} / ${TOUR.length}`;
   render();
 }

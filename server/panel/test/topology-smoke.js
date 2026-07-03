@@ -52,7 +52,7 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.evaluateOnNewDocument((p1, p2) => {
-      try { localStorage.setItem('c5g-theme', 'dark'); } catch {}  // tema inicial determinístico
+      try { localStorage.setItem('c5g-theme', 'dark'); localStorage.setItem('c5g-lang', 'pt'); } catch {}  // tema/idioma iniciais determinísticos
       window.fetch = async (url) => {
         url = String(url);
         const j = (o, s = 200) => new Response(typeof o === 'string' ? o : JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json' } });
@@ -121,6 +121,26 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     console.log(`PASS ${proj} · tema claro aplicado e re-renderizado`);
     await page.screenshot({ path: path.join(SHOTS, `topology-${proj}-light.png`) });
     console.log(`  screenshot: screenshots/topology-${proj}-light.png`);
+
+    // idioma: troca para FR → chrome, hint, legenda e textos didáticos (via tt) em francês
+    await page.select('#lang-sel', 'fr');
+    await new Promise(r => setTimeout(r, 200));
+    const fr = await page.evaluate(() => ({
+      hint: document.getElementById('mode-hint').textContent,
+      legend: document.getElementById('legend').textContent,
+      roles: [...document.querySelectorAll('.node .role')].map(t => t.textContent),
+      title: document.getElementById('topo-proj').textContent,
+    }));
+    assert(fr.hint.includes('Vue technique'), `${proj}/fr: hint = "${fr.hint}"`);
+    assert(fr.legend.includes('Couches'), `${proj}/fr: legenda sem "Couches"`);
+    assert(fr.roles.some(r => r === 'Mobilité'), `${proj}/fr: papel do AMF não traduzido (${fr.roles.join(',')})`);
+    assert(fr.title.includes(proj === 'p1' ? 'Projet 1' : 'Projet 2'), `${proj}/fr: título = "${fr.title}"`);
+    await page.click('#tour-btn');
+    const tourT = await page.evaluate(() => document.getElementById('tour-title').textContent);
+    assert(tourT.includes('Couche 1'), `${proj}/fr: tour = "${tourT}"`);
+    await page.click('#tour-exit');
+    assert(errors.length === 0, `${proj}/fr: pageerror: ${errors.join(' | ')}`);
+    console.log(`PASS ${proj} · topologia em francês (chrome + nós + tour)`);
     await page.close();
   }
 

@@ -75,7 +75,9 @@ SESSION_COOKIE = "core5g_session"
 SESSION_MAX_AGE = 8 * 3600  # 8h
 
 # Rotas acessíveis sem sessão válida (tela de login e seus endpoints).
-PUBLIC_PATHS = {"/login", "/api/login", "/api/login/guest", "/api/version"}
+# /i18n.js é público: a PÁGINA DE LOGIN depende dele (dicionários pt/en/es/fr)
+# — atrás do auth, o redirect 307 quebra o <script> e trava o login inteiro.
+PUBLIC_PATHS = {"/login", "/api/login", "/api/login/guest", "/api/version", "/i18n.js"}
 
 app = FastAPI(title="Core5G_ARM64 — Painel (servidor)")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

@@ -537,28 +537,28 @@
       <span id="tm-disk">Disk —</span>
     </div>
     <details id="tm-containers-wrap">
-      <summary>Containers (CPU / RAM)</summary>
+      <summary data-i18n="tm.containers">Containers (CPU / RAM)</summary>
       <table id="tm-table">
-        <thead><tr><th>Nome</th><th>Função</th><th>CPU</th><th>RAM</th></tr></thead>
+        <thead><tr><th data-i18n="tm.name">Nome</th><th data-i18n="tm.role">Função</th><th>CPU</th><th>RAM</th></tr></thead>
         <tbody id="tm-containers"></tbody>
       </table>
     </details>
   </div>
 </header>
-<div id="guest-banner">Modo somente leitura — guest pode visualizar, mas não executar comandos.</div>
+<div id="guest-banner" data-i18n="banner.readonly">Modo somente leitura — guest pode visualizar, mas não executar comandos.</div>
 
 <div id="projects-bar">
   <div class="proj-card" data-proj-card="p1">
     <div class="pc-head">
-      <div class="pc-title"><span class="pc-dot"></span>Projeto 1 · Open5GS<span class="pc-desc">rede 5G fim-a-fim (Core + RAN)</span></div>
-      <button class="pc-activate" data-proj="p1" title="Sobe Open5GS + UERANSIM (desliga o Projeto 2)">ativar</button>
+      <div class="pc-title"><span class="pc-dot"></span><span data-i18n="pc.p1_title">Projeto 1 · Open5GS</span><span class="pc-desc" data-i18n="pc.p1_desc">rede 5G fim-a-fim (Core + RAN)</span></div>
+      <button class="pc-activate" data-proj="p1" data-i18n-title="pc.p1_activate_title" title="Sobe Open5GS + UERANSIM (desliga o Projeto 2)" data-i18n="pc.activate">ativar</button>
     </div>
     <div class="pc-servers">
       <button class="toggle-btn" data-toggle="p1-core" data-up="up-core" data-down="down-core" data-label="Core" title="Core Open5GS — AMF · SMF · UPF · AUSF · UDM/UDR · NRF">
         <div class="toggle-main"><span>Core</span><span class="toggle-dot"></span></div>
         <div class="toggle-sub">AMF·SMF·UPF·AUSF·UDM·NRF</div>
       </button>
-      <button class="toggle-btn" data-toggle="p1-ran" data-up="up-ran" data-down="down-ran" data-label="RAN" title="RAN — UERANSIM gNB + UE simulados (N2/N3)">
+      <button class="toggle-btn" data-toggle="p1-ran" data-up="up-ran" data-down="down-ran" data-label="RAN" data-i18n-title="pc.p1_ran_title" title="RAN — UERANSIM gNB + UE simulados (N2/N3)">
         <div class="toggle-main"><span>RAN</span><span class="toggle-dot"></span></div>
         <div class="toggle-sub">UERANSIM gNB+UE (N2/N3)</div>
       </button>
@@ -566,8 +566,8 @@
   </div>
   <div class="proj-card" data-proj-card="p2">
     <div class="pc-head">
-      <div class="pc-title"><span class="pc-dot"></span>Projeto 2 · OAI/RIC<span class="pc-desc">O-RAN · near-RT RIC + xApps (E2)</span></div>
-      <button class="pc-activate" data-proj="p2" title="Sobe OAI 5GC + gNB + FlexRIC (desliga o Projeto 1)">ativar</button>
+      <div class="pc-title"><span class="pc-dot"></span><span data-i18n="pc.p2_title">Projeto 2 · OAI/RIC</span><span class="pc-desc">O-RAN · near-RT RIC + xApps (E2)</span></div>
+      <button class="pc-activate" data-proj="p2" data-i18n-title="pc.p2_activate_title" title="Sobe OAI 5GC + gNB + FlexRIC (desliga o Projeto 1)" data-i18n="pc.activate">ativar</button>
     </div>
     <div class="pc-servers">
       <button class="toggle-btn" data-toggle="p2-core" data-up="p2-up-core" data-down="p2-down-core" data-label="Core (OAI)" title="Core OAI 5GC v2 — AMF/SMF/UPF (oai-cn5g-v2)">
@@ -586,8 +586,8 @@
 <section id="ran-live">
   <div class="rl-head">
     <span class="rl-dot"></span>
-    <span class="rl-title">RAN ao vivo · gNB OAI (E2)</span>
-    <span class="rl-sub" id="rl-sub">métricas PHY/MAC reais do UE simulado</span>
+    <span class="rl-title" data-i18n="ran.title">RAN ao vivo · gNB OAI (E2)</span>
+    <span class="rl-sub" id="rl-sub" data-i18n="ran.sub">métricas PHY/MAC reais do UE simulado</span>
   </div>
   <div class="rl-metrics">
     <div class="rl-metric" data-k="snr"><div class="rl-k">SNR</div><div class="rl-v"><span id="rl-snr">—</span> <i>dB</i></div><svg class="rl-spark" id="spark-snr" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
@@ -610,7 +610,7 @@
   <div id="demo-modal">
     <div id="demo-modal-header">
       <div>
-        <h3 id="demo-title">Operação</h3>
+        <h3 id="demo-title" data-i18n="demo.title_default">Operação</h3>
         <div class="sub" id="demo-sub"></div>
       </div>
       <button id="demo-modal-close">×</button>
@@ -618,15 +618,15 @@
     <div id="demo-body">
       <div id="demo-steps"></div>
       <div id="demo-log-wrap">
-        <div id="demo-log-label">logs do servidor</div>
+        <div id="demo-log-label" data-i18n="demo.log_label">logs do servidor</div>
         <div id="demo-log"></div>
       </div>
     </div>
     <div id="demo-summary" style="display:none"></div>
     <div id="demo-footer">
-      <button id="demo-confirm-btn" style="display:none;border-color:var(--accent);color:var(--accent)">Confirmar</button>
-      <button id="demo-rerun-btn" style="display:none;border-color:var(--green);color:var(--green)">▶ Rodar de novo</button>
-      <button id="demo-done-btn">Fechar</button>
+      <button id="demo-confirm-btn" style="display:none;border-color:var(--accent);color:var(--accent)" data-i18n="demo.confirm">Confirmar</button>
+      <button id="demo-rerun-btn" style="display:none;border-color:var(--green);color:var(--green)" data-i18n="demo.rerun">▶ Rodar de novo</button>
+      <button id="demo-done-btn" data-i18n="demo.close">Fechar</button>
     </div>
   </div>
 </div>
@@ -635,25 +635,25 @@
 <div id="results-overlay">
   <div id="results-modal">
     <div id="results-head">
-      <h3>📊 Resultados salvos <span id="results-count"></span></h3>
+      <h3><span data-i18n="res.title">📊 Resultados salvos</span> <span id="results-count"></span></h3>
       <div id="results-head-actions">
-        <button id="results-select" title="Selecionar vários para excluir" style="display:none">☑ Selecionar</button>
-        <button id="results-sel-all" title="Selecionar todos" style="display:none">Tudo</button>
-        <button id="results-del-sel" title="Excluir selecionados" style="display:none">🗑 Excluir (0)</button>
-        <button id="results-sel-cancel" title="Sair do modo seleção" style="display:none">Cancelar</button>
-        <button id="results-refresh" title="Atualizar">↻</button>
-        <button id="results-close" title="Fechar">×</button>
+        <button id="results-select" data-i18n="res.select" data-i18n-title="res.select_title" title="Selecionar vários para excluir" style="display:none">☑ Selecionar</button>
+        <button id="results-sel-all" data-i18n="res.all" title="Selecionar todos" style="display:none">Tudo</button>
+        <button id="results-del-sel" data-i18n-title="res.del_sel_title" title="Excluir selecionados" style="display:none">🗑 Excluir (0)</button>
+        <button id="results-sel-cancel" data-i18n="res.cancel" data-i18n-title="res.cancel_title" title="Sair do modo seleção" style="display:none">Cancelar</button>
+        <button id="results-refresh" data-i18n-title="ui.refresh_title" title="Atualizar">↻</button>
+        <button id="results-close" data-i18n-title="ui.close_title" title="Fechar">×</button>
       </div>
     </div>
     <div id="results-body">
       <div id="results-list"></div>
       <div id="results-detail">
         <div id="results-detail-head">
-          <button id="results-back">← Lista</button>
+          <button id="results-back" data-i18n="res.back">← Lista</button>
           <span id="results-detail-title"></span>
           <span id="results-detail-actions">
-            <button id="results-replay-btn">▶ Reproduzir</button>
-            <button id="results-stop-btn" class="danger" style="display:none">■ Parar</button>
+            <button id="results-replay-btn" data-i18n="res.replay">▶ Reproduzir</button>
+            <button id="results-stop-btn" class="danger" style="display:none" data-i18n="res.stop">■ Parar</button>
           </span>
         </div>
         <div id="results-console"></div>
@@ -666,13 +666,13 @@
 <div id="alunos-overlay">
   <div id="alunos-modal">
     <div id="alunos-head">
-      <h3>👁 Alunos <span id="alunos-count"></span></h3>
+      <h3><span data-i18n="al.title">👁 Alunos</span> <span id="alunos-count"></span></h3>
       <div id="alunos-tabs">
-        <button class="al-tab active" data-tab="live">Conectados agora</button>
-        <button class="al-tab" data-tab="roster">Presença (todos)</button>
+        <button class="al-tab active" data-tab="live" data-i18n="al.tab_live">Conectados agora</button>
+        <button class="al-tab" data-tab="roster" data-i18n="al.tab_roster">Presença (todos)</button>
       </div>
-      <button id="alunos-refresh" title="Atualizar">↻</button>
-      <button id="alunos-close" title="Fechar">×</button>
+      <button id="alunos-refresh" data-i18n-title="ui.refresh_title" title="Atualizar">↻</button>
+      <button id="alunos-close" data-i18n-title="ui.close_title" title="Fechar">×</button>
     </div>
     <div id="alunos-body"></div>
   </div>
@@ -680,37 +680,37 @@
 <main>
   <aside id="sidebar">
     <div id="sidebar-inner">
-      <div class="rail-title"><span class="rt-dot"></span><span id="rail-proj-label">Ferramentas</span></div>
+      <div class="rail-title"><span class="rt-dot"></span><span id="rail-proj-label" data-i18n="rail.tools">Ferramentas</span></div>
 
-      <div id="tools-empty">Ative um projeto no topo (P1 ou P2) para usar suas ferramentas e testes.</div>
+      <div id="tools-empty" data-i18n="rail.empty">Ative um projeto no topo (P1 ou P2) para usar suas ferramentas e testes.</div>
 
       <!-- ===== Ferramentas do Projeto 1 ===== -->
       <div class="tools-set" data-tools="p1">
         <a class="rail-item" id="topology-btn-p1" href="/topology?proj=p1">
           <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.6 7.4l3 8.5M16.4 7.4l-3 8.5M8 6h8"/></svg>
-          Topologia
+          <span data-i18n="rail.topology">Topologia</span>
         </a>
         <button class="rail-item" id="uelab-open-btn">
           <svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L5 19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1l-5-10V3"/><path d="M7.5 14h9"/></svg>
-          UE Lab
+          <span>UE Lab</span>
         </button>
         <button class="rail-item" id="demo-e2e-btn">
           <svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
-          Demonstração E2E
+          <span data-i18n="rail.demo">Demonstração E2E</span>
         </button>
         <div class="test-block" data-proj-tests="p1">
-          <div class="rail-group-label">Testes · Projeto 1</div>
-          <button class="test-p1" data-cmd="status">Status / Healthcheck</button>
+          <div class="rail-group-label" data-i18n="rail.tests_p1">Testes · Projeto 1</div>
+          <button class="test-p1" data-cmd="status" data-i18n="t.status">Status / Healthcheck</button>
           <select id="diag-test-select" class="test-p1">
-            <option value="test-system-status">Status detalhado de todos os NFs</option>
+            <option value="test-system-status" data-i18n="t.sysstatus">Status detalhado de todos os NFs</option>
             <option value="test-ng-setup">NG Setup (N2 · gNB ↔ AMF)</option>
-            <option value="test-registration">Registro do UE (N1/NAS)</option>
-            <option value="test-config-coherence">Coerência de config (gNB ↔ UE)</option>
-            <option value="test-ue-connection">Conectividade do UE (E2E)</option>
+            <option value="test-registration" data-i18n="t.registration">Registro do UE (N1/NAS)</option>
+            <option value="test-config-coherence" data-i18n="t.coherence">Coerência de config (gNB ↔ UE)</option>
+            <option value="test-ue-connection" data-i18n="t.ueconn">Conectividade do UE (E2E)</option>
             <option value="test-upf-failover">Failover UPF-A / UPF-B</option>
           </select>
-          <button id="diag-test-btn" class="primary test-p1">▶ Rodar teste selecionado</button>
-          <div class="lock-note">Ative o Projeto 1 no topo para rodar estes testes.</div>
+          <button id="diag-test-btn" class="primary test-p1" data-i18n="t.run">▶ Rodar teste selecionado</button>
+          <div class="lock-note" data-i18n="rail.lock_p1">Ative o Projeto 1 no topo para rodar estes testes.</div>
         </div>
       </div>
 
@@ -718,35 +718,35 @@
       <div class="tools-set" data-tools="p2">
         <a class="rail-item" id="topology-btn-p2" href="/topology?proj=p2">
           <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.6 7.4l3 8.5M16.4 7.4l-3 8.5M8 6h8"/></svg>
-          Topologia
+          <span data-i18n="rail.topology">Topologia</span>
         </a>
         <div class="test-block" data-proj-tests="p2">
-          <div class="rail-group-label">Testes · Projeto 2</div>
-          <button class="test-p2" data-cmd="p2-test-e2-sm">Testar E2 SM (all)</button>
-          <button class="test-p2" data-cmd="p2-test-e2-kpm">Testar E2SM-KPM</button>
-          <button class="test-p2" data-cmd="p2-test-e2-kpm-traffic">Testar E2SM-KPM (com tráfego)</button>
-          <button class="test-p2" data-cmd="p2-test-e2-rc">Testar E2SM-RC (attach)</button>
-          <button class="test-p2" data-cmd="p2-kpm-real">Coletar KPM com tráfego (real — ideal 4 vCPU)</button>
-          <button class="test-p2" data-cmd="p2-kpm-analytics">Analisar dados KPM (CSV + KPI)</button>
-          <div class="lock-note">Ative o Projeto 2 no topo para rodar estes testes.</div>
+          <div class="rail-group-label" data-i18n="rail.tests_p2">Testes · Projeto 2</div>
+          <button class="test-p2" data-cmd="p2-test-e2-sm" data-i18n="t.p2_sm">Testar E2 SM (all)</button>
+          <button class="test-p2" data-cmd="p2-test-e2-kpm" data-i18n="t.p2_kpm">Testar E2SM-KPM</button>
+          <button class="test-p2" data-cmd="p2-test-e2-kpm-traffic" data-i18n="t.p2_kpm_traffic">Testar E2SM-KPM (com tráfego)</button>
+          <button class="test-p2" data-cmd="p2-test-e2-rc" data-i18n="t.p2_rc">Testar E2SM-RC (attach)</button>
+          <button class="test-p2" data-cmd="p2-kpm-real" data-i18n="t.p2_kpm_real">Coletar KPM com tráfego (real — ideal 4 vCPU)</button>
+          <button class="test-p2" data-cmd="p2-kpm-analytics" data-i18n="t.p2_analytics">Analisar dados KPM (CSV + KPI)</button>
+          <div class="lock-note" data-i18n="rail.lock_p2">Ative o Projeto 2 no topo para rodar estes testes.</div>
         </div>
       </div>
 
       <!-- ===== Logs (comum aos dois) ===== -->
       <div class="rail-group" id="logs-group">
-        <div class="rail-group-label">Logs &amp; Diagnóstico</div>
+        <div class="rail-group-label" data-i18n="rail.logs_group">Logs &amp; Diagnóstico</div>
         <select id="log-service"></select>
-        <button id="logs-btn">Ver logs</button>
-        <button id="logs-stop-btn" class="danger">Parar logs</button>
-        <button type="button" class="info-link-btn" style="margin-top:6px;color:var(--muted);border:1px solid var(--border)" onclick="openInfoModal('oranArch')">ℹ Arquitetura O-RAN</button>
+        <button id="logs-btn" data-i18n="rail.see_logs">Ver logs</button>
+        <button id="logs-stop-btn" class="danger" data-i18n="rail.stop_logs">Parar logs</button>
+        <button type="button" class="info-link-btn" style="margin-top:6px;color:var(--muted);border:1px solid var(--border)" onclick="openInfoModal('oranArch')" data-i18n="rail.oran_arch">ℹ Arquitetura O-RAN</button>
       </div>
 
       <!-- ===== Resultados salvos (sempre visível; Professor e Aluno) ===== -->
       <div class="rail-group" id="results-group">
-        <div class="rail-group-label">Histórico</div>
+        <div class="rail-group-label" data-i18n="rail.history">Histórico</div>
         <button class="rail-item" id="results-open-btn">
           <svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/><circle cx="19" cy="19" r="2.2"/></svg>
-          Resultados salvos
+          <span data-i18n="rail.results">Resultados salvos</span>
         </button>
       </div>
     </div>
@@ -754,20 +754,20 @@
 
   <div id="console-wrap">
     <div id="console-toolbar">
-      <span id="status-pill">ocioso</span>
+      <span id="status-pill" data-i18n="st.idle">ocioso</span>
       <span>
-        <button id="copy-btn">copiar</button>
-        <button id="clear-btn">limpar</button>
+        <button id="copy-btn" data-i18n="btn.copy">copiar</button>
+        <button id="clear-btn" data-i18n="btn.clear">limpar</button>
       </span>
     </div>
-    <div id="output">Pronto. Clique em um comando à esquerda ou abra o UE Lab.</div>
+    <div id="output" data-i18n="console.ready">Pronto. Clique em um comando à esquerda ou abra o UE Lab.</div>
   </div>
 </main>
 
 <footer>
   <span style="width:1px"></span>
   <span class="foot-center">Core5G_ARM64 v<span id="version-label">—</span> &nbsp;·&nbsp; UE-TP-rApp &nbsp;·&nbsp; CESAR School</span>
-  <span class="foot-credit">Coordenação Prof. Jonas A. Kunzler &nbsp;·&nbsp; mantido por Henrique Carmine</span>
+  <span class="foot-credit" data-i18n="login.credits">Coordenação Prof. Jonas A. Kunzler &nbsp;·&nbsp; mantido por Henrique Carmine</span>
 </footer>
 
 <!-- =================== UE Lab =================== -->
@@ -776,7 +776,7 @@
     <div id="uelab-header">
       <div style="display:flex;align-items:baseline;gap:0">
         <h2>UE Lab</h2>
-        <span id="uelab-header-sub">— Gerenciamento de Subscribers &amp; Testes de Canal 5G</span>
+        <span id="uelab-header-sub" data-i18n="uelab.sub">— Gerenciamento de Subscribers &amp; Testes de Canal 5G</span>
       </div>
       <button id="uelab-close">×</button>
     </div>
@@ -787,55 +787,55 @@
       <div id="uelab-left">
 
         <div>
-          <div class="lab-section-title">Subscribers cadastrados</div>
+          <div class="lab-section-title" data-i18n="uelab.subs">Subscribers cadastrados</div>
           <table class="ue-table">
             <thead><tr><th>IMSI</th><th>MSISDN</th><th></th></tr></thead>
             <tbody id="ue-list-body">
-              <tr><td colspan="3" style="color:var(--muted);font-size:12px">Carregando...</td></tr>
+              <tr><td colspan="3" style="color:var(--muted);font-size:12px" data-i18n="uelab.loading">Carregando...</td></tr>
             </tbody>
           </table>
-          <button id="uelab-refresh-btn" style="margin-top:6px">↻ Atualizar</button>
+          <button id="uelab-refresh-btn" style="margin-top:6px" data-i18n="uelab.refresh">↻ Atualizar</button>
         </div>
 
         <details id="ue-reg-details">
-          <summary>+ Cadastrar novo UE</summary>
+          <summary data-i18n="uelab.register_new">+ Cadastrar novo UE</summary>
 
           <label for="lab-imsi">IMSI <span style="color:var(--accent)">*</span></label>
           <div class="input-row">
             <input id="lab-imsi" placeholder="001010000000001">
-            <button class="suggest-btn" onclick="labSuggestImsi()">Sugerir</button>
+            <button class="suggest-btn" onclick="labSuggestImsi()" data-i18n="uelab.suggest">Sugerir</button>
           </div>
           <p class="field-help">MCC(3) + MNC(2) + MSIN(10) — ex.: 001 01 0000000001</p>
 
           <label for="lab-msisdn">MSISDN</label>
           <div class="input-row">
             <input id="lab-msisdn" placeholder="33638060001">
-            <button class="suggest-btn" onclick="labSuggestMsisdn()">Sugerir</button>
+            <button class="suggest-btn" onclick="labSuggestMsisdn()" data-i18n="uelab.suggest">Sugerir</button>
           </div>
-          <p class="field-help">Número E.164 do subscriber</p>
+          <p class="field-help" data-i18n="uelab.help_msisdn">Número E.164 do subscriber</p>
 
           <label for="lab-k">K (Ki) — 128 bits</label>
           <div class="input-row">
             <input id="lab-k" placeholder="32 hex">
-            <button class="suggest-btn" onclick="suggestHex('lab-k')">Sugerir</button>
+            <button class="suggest-btn" onclick="suggestHex('lab-k')" data-i18n="uelab.suggest">Sugerir</button>
           </div>
-          <p class="field-help">Chave de autenticação gravada no eSIM/USIM — usada em AKA (3GPP TS 33.102)</p>
+          <p class="field-help" data-i18n="uelab.help_k">Chave de autenticação gravada no eSIM/USIM — usada em AKA (3GPP TS 33.102)</p>
 
           <label for="lab-opc">OPc — 128 bits</label>
           <div class="input-row">
             <input id="lab-opc" placeholder="32 hex">
-            <button class="suggest-btn" onclick="suggestHex('lab-opc')">Sugerir</button>
+            <button class="suggest-btn" onclick="suggestHex('lab-opc')" data-i18n="uelab.suggest">Sugerir</button>
           </div>
-          <p class="field-help">Operator Ciphering Key — derivada de OP ⊕ f(K); vai ao UDR, não ao ar</p>
+          <p class="field-help" data-i18n="uelab.help_opc">Operator Ciphering Key — derivada de OP ⊕ f(K); vai ao UDR, não ao ar</p>
 
           <label for="lab-amf">AMF</label>
           <div class="input-row">
             <input id="lab-amf" placeholder="8000">
             <button class="suggest-btn" onclick="document.getElementById('lab-amf').value='8000'">8000</button>
           </div>
-          <p class="field-help">Authentication Management Field — bitmap 16 bits (3GPP TS 33.102)</p>
+          <p class="field-help" data-i18n="uelab.help_amf">Authentication Management Field — bitmap 16 bits (3GPP TS 33.102)</p>
 
-          <button class="primary" id="lab-register-btn" style="margin-top:8px">Cadastrar</button>
+          <button class="primary" id="lab-register-btn" style="margin-top:8px" data-i18n="uelab.register">Cadastrar</button>
         </details>
 
       </div>
@@ -843,10 +843,10 @@
       <!-- ===== COLUNA DIREITA: condições + resultado + console ===== -->
       <div id="uelab-right">
 
-        <button type="button" class="info-link-btn" style="margin-bottom:2px;color:var(--muted);border:1px solid var(--border)" onclick="openInfoModal('testFlow')">ℹ Fluxo do teste no contexto O-RAN</button>
+        <button type="button" class="info-link-btn" style="margin-bottom:2px;color:var(--muted);border:1px solid var(--border)" onclick="openInfoModal('testFlow')" data-i18n="uelab.flow_info">ℹ Fluxo do teste no contexto O-RAN</button>
 
         <div>
-          <div class="lab-section-title">Condições do Canal</div>
+          <div class="lab-section-title" data-i18n="uelab.conditions">Condições do Canal</div>
           <div class="channel-info-bar">
             5G NR <span class="band-dl">n78</span> · TDD · 3.3–3.8 GHz · BW 100 MHz · SCS 30 kHz · 66 PRBs
             &nbsp;·&nbsp; <span class="band-dl">↓ DL ~665 Mbps</span> &nbsp;·&nbsp; <span class="band-ul">↑ UL ~250 Mbps</span>
@@ -854,43 +854,43 @@
 
           <div class="condition-grid">
             <div class="condition-block">
-              <label>Distância UE ↔ gNB <button type="button" class="info-btn" onclick="openInfoModal('distFormula')" title="Ver fórmula">i</button></label>
+              <label><span data-i18n="uelab.dist_label">Distância UE ↔ gNB </span><button type="button" class="info-btn" onclick="openInfoModal('distFormula')" data-i18n-title="uelab.see_formula" title="Ver fórmula">i</button></label>
               <select id="lab-dist">
-                <option value="none">Canal ideal — sem atenuação de percurso</option>
+                <option value="none" data-i18n="uelab.dist_ideal">Canal ideal — sem atenuação de percurso</option>
                 <option value="100m">100 m — PL 102.6 dB · RSRP −44 dBm · delay 1 ms · loss 0%</option>
                 <option value="500m">500 m — PL 129.9 dB · RSRP −72 dBm · delay 8 ms · loss 2%</option>
                 <option value="1km"> 1 km — PL 141.7 dB · RSRP −84 dBm · delay 20 ms · loss 8%</option>
-                <option value="3km"> 3 km — PL 159.6 dB · RSRP −102 dBm · delay 50 ms · loss 20% (borda de célula)</option>
+                <option value="3km" data-i18n="uelab.dist_3km"> 3 km — PL 159.6 dB · RSRP −102 dBm · delay 50 ms · loss 20% (borda de célula)</option>
               </select>
             </div>
 
             <div class="condition-block">
-              <label>Interferência de Rádio <button type="button" class="info-btn" onclick="openInfoModal('interfFormula')" title="Ver fórmula">i</button></label>
+              <label><span data-i18n="uelab.interf_label">Interferência de Rádio </span><button type="button" class="info-btn" onclick="openInfoModal('interfFormula')" data-i18n-title="uelab.see_formula" title="Ver fórmula">i</button></label>
               <select id="lab-interf">
-                <option value="none">Sem interferência — canal limpo</option>
-                <option value="fraca">Fraca — C/I > 20 dB · SINR 20 dB · C_max 665 Mbps · PDR 99% · +5 ms</option>
-                <option value="media">Média — C/I ≈ 15 dB · SINR 15 dB · C_max 498 Mbps · PDR 95% · +20 ms</option>
-                <option value="alta"> Alta  — C/I < 10 dB · SINR  5 dB · C_max 207 Mbps · PDR 85% · +50 ms</option>
+                <option value="none" data-i18n="uelab.interf_none">Sem interferência — canal limpo</option>
+                <option value="fraca" data-i18n="uelab.interf_low">Fraca — C/I > 20 dB · SINR 20 dB · C_max 665 Mbps · PDR 99% · +5 ms</option>
+                <option value="media" data-i18n="uelab.interf_mid">Média — C/I ≈ 15 dB · SINR 15 dB · C_max 498 Mbps · PDR 95% · +20 ms</option>
+                <option value="alta" data-i18n="uelab.interf_high"> Alta  — C/I < 10 dB · SINR  5 dB · C_max 207 Mbps · PDR 85% · +50 ms</option>
               </select>
             </div>
           </div>
         </div>
 
         <div class="lab-btn-row">
-          <select id="lab-duration" title="Duração do teste iperf3">
+          <select id="lab-duration" data-i18n-title="uelab.duration_title" title="Duração do teste iperf3">
             <option value="5">5 s</option>
             <option value="10" selected>10 s</option>
             <option value="30">30 s</option>
             <option value="60">60 s</option>
           </select>
-          <button class="primary" id="lab-run-btn">▶ Medir Throughput</button>
-          <button id="lab-apply-btn">↕ Só aplicar condições</button>
-          <button class="danger" id="lab-reset-btn">✕ Limpar canal</button>
+          <button class="primary" id="lab-run-btn" data-i18n="uelab.run">▶ Medir Throughput</button>
+          <button id="lab-apply-btn" data-i18n="uelab.apply">↕ Só aplicar condições</button>
+          <button class="danger" id="lab-reset-btn" data-i18n="uelab.reset">✕ Limpar canal</button>
         </div>
 
         <!-- Resultado em evidência -->
         <div id="result-card">
-          <div class="lab-section-title">Resultado do Teste</div>
+          <div class="lab-section-title" data-i18n="uelab.result">Resultado do Teste</div>
           <div class="result-value" id="result-bw">— <span>Mbits/s</span></div>
           <div class="result-meta" id="result-meta"></div>
         </div>
@@ -1210,8 +1210,8 @@ async function professorBeat() {
       _seatLost = true;
       guestBanner.className = 'warn';
       guestBanner.textContent = d.active_admin
-        ? `⚠ Outro professor (${d.active_admin}) está com o controle. Você pode acompanhar; para reassumir, peça o logout dele ou aguarde liberar.`
-        : '⏳ Reassumindo o controle…';
+        ? I18N.t('seat.taken', { admin: d.active_admin })
+        : I18N.t('seat.retaking');
       guestBanner.style.display = 'block';
       setRunning(false);
     } else if (d.is_active === true && _seatLost) {
@@ -1247,15 +1247,15 @@ function applyLiveEvent(ev) {
     parts.forEach((seg, i) => { if (i === parts.length - 1 && seg === '') return; appendLine(seg); });
   } else if (ev.type === 'end') {
     const badge = output.querySelector('.run-header:last-of-type .run-badge');
-    if (badge) setRunBadge(badge, ev.status === 'ok' ? 'ok' : 'error', ev.status === 'ok' ? 'concluído' : 'erro');
+    if (badge) setRunBadge(badge, ev.status === 'ok' ? 'ok' : 'error', I18N.t(ev.status === 'ok' ? 'st.done_short' : 'st.error'));
   }
   // 'nav' é refletido pelo snapshot da sessão (updateAlunoBanner).
 }
 function updateAlunoBanner(session, nav, viewers) {
-  const watching = viewers ? `  ·  ${plural(viewers, 'aluno')} assistindo` : '';
+  const watching = viewers ? '  ·  ' + I18N.t('live.watching', { n: viewers }) : '';
   if (session && session.active) {
     guestBanner.className = 'live';
-    guestBanner.innerHTML = `<span class="lv-dot"></span><b>AO VIVO</b> — ${session.by || 'professor'}: ${prettyCmd(session.label)}` +
+    guestBanner.innerHTML = `<span class="lv-dot"></span><b>${I18N.t('live.live')}</b> — ${session.by || 'professor'}: ${prettyCmd(session.label)}` +
       `<span class="lv-sub">acompanhando ao vivo${watching}</span>`;
   } else {
     guestBanner.className = 'watch';
@@ -1510,19 +1510,19 @@ async function runCommand(cmd, srcBtn) {
   if (srcBtn && srcBtn.dataset.toggle) setToggleState(srcBtn, 'loading');
   else btnLoading(srcBtn, true);
   setRunning(true);
-  setStatus('running', 'executando: ' + cmd);
+  setStatus('running', I18N.t('st.running', { cmd }));
   const badge = pushRunHeader(cmd);
   try {
     const resp = await fetch('/api/run/' + cmd, { method: 'POST' });
-    if (resp.status === 403) { appendLine(await resp.text()); setStatus('error', 'bloqueado'); setRunBadge(badge, 'error', 'bloqueado'); return; }
+    if (resp.status === 403) { appendLine(await resp.text()); setStatus('error', I18N.t('st.blocked')); setRunBadge(badge, 'error', I18N.t('st.blocked')); return; }
     await streamToConsole(resp);
-    setStatus('ok', 'concluído: ' + cmd);
-    setRunBadge(badge, 'ok', 'concluído');
+    setStatus('ok', I18N.t('st.done', { cmd }));
+    setRunBadge(badge, 'ok', I18N.t('st.done_short'));
     appendExplain(cmd);
     appendLogLinks(cmd);   // atalho "ver logs" p/ testes que produzem logs
   } catch (e) {
-    appendLine('[erro: ' + e + ']'); setStatus('error', 'erro');
-    setRunBadge(badge, 'error', 'erro');
+    appendLine('[erro: ' + e + ']'); setStatus('error', I18N.t('st.error'));
+    setRunBadge(badge, 'error', I18N.t('st.error'));
   } finally {
     setRunning(false);
     if (srcBtn && !srcBtn.dataset.toggle) btnLoading(srcBtn, false);
@@ -1541,8 +1541,8 @@ document.getElementById('copy-btn').addEventListener('click', async () => {
   try {
     const lines = Array.from(output.children).map(e => e.textContent);
     await navigator.clipboard.writeText(lines.length ? lines.join('\n') : output.textContent);
-    setStatus('ok', 'copiado');
-  } catch { setStatus('error', 'falha ao copiar'); }
+    setStatus('ok', I18N.t('st.copied'));
+  } catch { setStatus('error', I18N.t('st.copy_fail')); }
 });
 
 // ===== Logs =====
@@ -1573,7 +1573,7 @@ async function loadServices() {
     sel.innerHTML = '';
     if (!d.services || d.services.length === 0) {
       const opt = document.createElement('option');
-      opt.value = ''; opt.textContent = 'nenhum serviço no ar — ative um projeto';
+      opt.value = ''; opt.textContent = I18N.t('log.none');
       sel.appendChild(opt);
       return;
     }
@@ -1599,7 +1599,7 @@ async function startLogs(forceSvc) {
   stopLogs();
   logsAbort = new AbortController();
   output.innerHTML = '';
-  setStatus('running', 'logs: ' + svc);
+  setStatus('running', I18N.t('st.logs', { svc }));
   const logsBtn = document.getElementById('logs-btn');
   loaderInc(); btnLoading(logsBtn, true);
   try {
@@ -1608,10 +1608,10 @@ async function startLogs(forceSvc) {
     await streamToConsole(resp);
     if (output.childElementCount === before) appendLine('(sem saída no momento para ' + svc + ')');
     appendLogExplain(svc);          // explicação didática no FIM dos logs
-    setStatus('ok', 'logs: ' + svc);
+    setStatus('ok', I18N.t('st.logs', { svc }));
   } catch (e) {
-    if (e.name !== 'AbortError') { appendLine('[erro: ' + e + ']'); setStatus('error', 'erro nos logs'); }
-    else setStatus('', 'ocioso');
+    if (e.name !== 'AbortError') { appendLine('[erro: ' + e + ']'); setStatus('error', I18N.t('st.logs_err')); }
+    else setStatus('', I18N.t('st.idle'));
   } finally {
     btnLoading(logsBtn, false); loaderDec();
   }
@@ -1829,13 +1829,13 @@ function closeUeLab() { document.getElementById('uelab-overlay').classList.remov
 
 // --- UE list ---
 async function loadUeList(srcBtn) {
-  ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);font-size:11px">Carregando...</td></tr>';
+  ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);font-size:11px">' + I18N.t('uelab.loading') + '</td></tr>';
   loaderInc(); btnLoading(srcBtn, true);
   try {
     const d = await (await fetch('/api/subscribers')).json();
     ueLab.listBody.innerHTML = '';
     if (!d.subscribers || d.subscribers.length === 0) {
-      ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);font-size:11px">Nenhum subscriber cadastrado.</td></tr>';
+      ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);font-size:11px">' + I18N.t('uelab.none') + '</td></tr>';
       return;
     }
     d.subscribers.forEach(sub => {
@@ -1847,14 +1847,14 @@ async function loadUeList(srcBtn) {
       ueLab.listBody.appendChild(tr);
     });
   } catch {
-    ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--red);font-size:11px">Erro ao carregar lista.</td></tr>';
+    ueLab.listBody.innerHTML = '<tr><td colspan="3" style="color:var(--red);font-size:11px">' + I18N.t('uelab.load_err') + '</td></tr>';
   } finally { btnLoading(srcBtn, false); loaderDec(); }
 }
 
 document.getElementById('uelab-refresh-btn').addEventListener('click', e => loadUeList(e.currentTarget));
 
 async function deleteUe(imsi, srcBtn) {
-  if (!confirm('Remover subscriber IMSI ' + imsi + '?')) return;
+  if (!confirm(I18N.t('uelab.del_confirm', { imsi }))) return;
   labAppendLine('Removendo ' + imsi + '...');
   loaderInc(); btnLoading(srcBtn, true);
   try {
@@ -1870,7 +1870,7 @@ async function deleteUe(imsi, srcBtn) {
 document.getElementById('lab-register-btn').addEventListener('click', async e => {
   if (isGuest) return;
   const imsi = document.getElementById('lab-imsi').value.trim();
-  if (!imsi) { labAppendLine('IMSI é obrigatório.'); return; }
+  if (!imsi) { labAppendLine(I18N.t('uelab.imsi_required')); return; }
   const payload = {
     imsi,
     msisdn: document.getElementById('lab-msisdn').value.trim(),
@@ -1879,7 +1879,7 @@ document.getElementById('lab-register-btn').addEventListener('click', async e =>
     amf: document.getElementById('lab-amf').value.trim(),
   };
   ueLab.labConsole.innerHTML = '';
-  labAppendLine('Cadastrando UE ' + imsi + '...');
+  labAppendLine(I18N.t('uelab.registering', { imsi }));
   await withLoader(e.currentTarget, async () => {
     try {
       const resp = await fetch('/api/subscriber', {
@@ -2156,7 +2156,7 @@ function setSelectorEnabled(on) {
 }
 // Reflete o projeto ativo (cards do topo + ferramentas da lateral) a partir do
 // estado dos grupos (telemetria).
-const RAIL_LABEL = { p1: 'Ferramentas · Projeto 1', p2: 'Ferramentas · Projeto 2', off: 'Ferramentas' };
+const RAIL_LABEL_KEYS = { p1: 'rail.tools_p1', p2: 'rail.tools_p2', off: 'rail.tools' };
 function updateProjSelector(groups) {
   if (!groups) return;
   const p1 = groups['p1-core'] !== 'off' || groups['p1-ran'] !== 'off';
@@ -2165,7 +2165,7 @@ function updateProjSelector(groups) {
   projButtons.forEach(b => {
     const on = b.dataset.proj === active && !_opBusy;
     b.classList.toggle('active', on);
-    b.textContent = on ? 'desligar' : 'ativar';   // card ativo: botão vira "desligar"
+    b.textContent = I18N.t(on ? 'pc.deactivate' : 'pc.activate'); b.removeAttribute('data-i18n');   // card ativo: botão vira "desligar"
   });
   // Topo: realça o card do projeto ativo.
   document.querySelectorAll('.proj-card[data-proj-card]').forEach(c => c.classList.toggle('active', c.dataset.projCard === active));
@@ -2185,7 +2185,7 @@ function updateProjSelector(groups) {
   document.getElementById('logs-group').style.display = active === 'off' ? 'none' : '';
   const railTitle = document.querySelector('.rail-title');
   const railLabel = document.getElementById('rail-proj-label');
-  if (railTitle && railLabel) { railLabel.textContent = RAIL_LABEL[active]; railTitle.classList.toggle('on', active !== 'off'); }
+  if (railTitle && railLabel) { railLabel.textContent = I18N.t(RAIL_LABEL_KEYS[active]); railLabel.removeAttribute('data-i18n'); railTitle.classList.toggle('on', active !== 'off'); }
   // Guarda de dependência: RAN (P1) só habilita com o Core (P1) no ar.
   if (!_running && !isGuest) {
     const ran = document.querySelector('[data-toggle="p1-ran"]');
@@ -2245,7 +2245,7 @@ function updateResultsHeadButtons() {
   if (_resSelectMode) {
     sel.style.display = 'none';
     all.style.display = del.style.display = cancel.style.display = '';
-    del.textContent = `🗑 Excluir (${_resSel.size})`;
+    del.textContent = I18N.t('res.del_sel', { n: _resSel.size });
     del.disabled = _resSel.size === 0;
     all.textContent = (_resSel.size === _resAll.length && _resAll.length) ? 'Nenhum' : 'Tudo';
   } else {
@@ -2282,7 +2282,7 @@ function renderResultsList(rs) {
   });
 }
 async function editResultNote(id, label, current) {
-  const note = prompt(`Observação para lembrar deste relatório\n(${prettyCmd(label)}):`, current || '');
+  const note = prompt(I18N.t('res.note_prompt', { label: prettyCmd(label) }), current || '');
   if (note === null) return;            // cancelou
   try {
     await fetch('/api/results/' + encodeURIComponent(id) + '/note', {
@@ -2304,14 +2304,14 @@ function selectAllResults() {
   renderResultsList(_resAll); updateResultsHeadButtons();
 }
 async function deleteOneResult(id, label) {
-  if (!confirm(`Excluir este resultado?\n\n${prettyCmd(label)}\n\nNão pode ser desfeito.`)) return;
+  if (!confirm(I18N.t('res.del_confirm', { label: prettyCmd(label) }))) return;
   try { await fetch('/api/results/' + encodeURIComponent(id), { method: 'DELETE' }); } catch {}
   _resSel.delete(id);
   loadResultsList();
 }
 async function deleteSelectedResults() {
   if (!_resSel.size) return;
-  if (!confirm(`Excluir ${_resSel.size} resultado(s) selecionado(s)?\n\nNão pode ser desfeito.`)) return;
+  if (!confirm(I18N.t('res.del_sel_confirm', { n: _resSel.size }))) return;
   try {
     await fetch('/api/results/delete', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2330,7 +2330,7 @@ async function loadResultsList() {
     document.getElementById('results-count').textContent = _resAll.length ? `(${_resAll.length})` : '';
     if (!_resAll.length) {
       _resSelectMode = false;
-      resList.innerHTML = '<div id="results-empty">Nenhum resultado salvo ainda.<br>Quando o professor rodar um teste/operação, ele aparece aqui — e dá pra reproduzir.</div>';
+      resList.innerHTML = '<div id="results-empty">' + I18N.t('res.empty1') + '<br>' + I18N.t('res.empty2') + '</div>';
       updateResultsHeadButtons();
       return;
     }
@@ -2438,7 +2438,7 @@ function initials(name) { const p = (name || '?').trim().split(/\s+/); return ((
 function fmtSince(ts) { if (!ts) return ''; try { return new Date(ts * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch { return ''; } }
 function renderAlunos(items, tab) {
   document.getElementById('alunos-count').textContent = items.length ? '· ' + items.length : '';
-  if (!items.length) { alunosBody.innerHTML = '<div id="alunos-empty">' + (tab === 'live' ? 'Nenhum aluno conectado agora.' : 'Ninguém entrou ainda.') + '</div>'; return; }
+  if (!items.length) { alunosBody.innerHTML = '<div id="alunos-empty">' + I18N.t(tab === 'live' ? 'al.empty_live' : 'al.empty_roster') + '</div>'; return; }
   alunosBody.innerHTML = '';
   items.forEach(a => {
     const div = document.createElement('div'); div.className = 'al-item';
@@ -2456,7 +2456,7 @@ async function loadAlunos() {
     const url = _alunosTab === 'live' ? '/api/viewers' : '/api/roster';
     const d = await (await fetch(url)).json();
     renderAlunos((_alunosTab === 'live' ? d.viewers : d.roster) || [], _alunosTab);
-  } catch { alunosBody.innerHTML = '<div id="alunos-empty">Falha ao carregar.</div>'; }
+  } catch { alunosBody.innerHTML = '<div id="alunos-empty">' + I18N.t('al.load_fail') + '</div>'; }
 }
 function alunosPoll(on) { if (_alunosTimer) { clearInterval(_alunosTimer); _alunosTimer = null; } if (on && _alunosTab === 'live') _alunosTimer = setInterval(loadAlunos, 3000); }
 function openAlunos() { if (isGuest) return; alunosOverlay.classList.add('open'); loadAlunos(); alunosPoll(true); }

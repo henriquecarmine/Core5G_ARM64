@@ -76,6 +76,23 @@ const EXPECT = {
   assert(tb.proj.includes('Ningún proyecto'), `index/es: projeto ativo = "${tb.proj}"`);
   assert(errors.length === 0, `index/es: pageerror: ${errors.join(' | ')}`);
   console.log('PASS index · topbar em espanhol ao carregar com idioma salvo');
+
+  // F2: corpo do painel (rail, console, projetos, UE Lab) traduzido
+  const body = await page.evaluate(() => ({
+    empty: document.getElementById('tools-empty').textContent,
+    ready: document.getElementById('output').textContent,
+    pill: document.getElementById('status-pill').textContent,
+    seeLogs: document.getElementById('logs-btn').textContent.trim(),
+    uelabRun: document.getElementById('lab-run-btn').textContent.trim(),
+    banner: document.getElementById('guest-banner').textContent,
+  }));
+  assert(body.empty.includes('Activa un proyecto'), `index/es F2: tools-empty = "${body.empty}"`);
+  assert(body.ready.includes('Listo.'), `index/es F2: console ready = "${body.ready}"`);
+  assert(body.pill === 'inactivo', `index/es F2: status pill = "${body.pill}"`);
+  assert(body.seeLogs === 'Ver logs', `index/es F2: ver logs = "${body.seeLogs}"`);
+  assert(body.uelabRun.includes('Medir throughput'), `index/es F2: UE Lab run = "${body.uelabRun}"`);
+  assert(body.banner.includes('solo lectura'), `index/es F2: banner = "${body.banner}"`);
+  console.log('PASS index · F2 (rail, console, banners, UE Lab) em espanhol');
   await page.close();
 
   await browser.close();

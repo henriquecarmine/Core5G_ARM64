@@ -1,5 +1,7 @@
 # Documentación traducida — es
 
+🌐 [pt](../pt/INDEX.md) · [en](../en/INDEX.md) · **es** · [fr](../fr/INDEX.md)
+
 > Espejo de la documentación canónica en portugués. Un archivo aquí replica
 > `<raíz-del-repo>/<ruta>` o `<raíz-del-repo>/docs/<ruta>`. Cada traducción lleva
 > un marcador `<!-- sync: <hash> -->` al inicio, verificado por

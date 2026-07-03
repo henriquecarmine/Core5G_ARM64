@@ -1,5 +1,7 @@
 # Translated documentation — en
 
+🌐 [pt](../pt/INDEX.md) · **en** · [es](../es/INDEX.md) · [fr](../fr/INDEX.md)
+
 > Mirror of the canonical Portuguese docs. A file here mirrors `<repo-root>/<path>`
 > or `<repo-root>/docs/<path>`. Every translation carries a `<!-- sync: <hash> -->`
 > marker at the top, checked by `docs/i18n/check-parity.py` (which flags orphans

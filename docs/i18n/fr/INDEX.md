@@ -1,5 +1,7 @@
 # Documentation traduite — fr
 
+🌐 [pt](../pt/INDEX.md) · [en](../en/INDEX.md) · [es](../es/INDEX.md) · **fr**
+
 > Miroir de la documentation canonique en portugais. Un fichier ici reproduit
 > `<racine-du-dépôt>/<chemin>` ou `<racine-du-dépôt>/docs/<chemin>`. Chaque
 > traduction porte un marqueur `<!-- sync: <hash> -->` en tête, vérifié par

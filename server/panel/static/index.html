@@ -907,14 +907,24 @@ function escHtml(s) {
   return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 }
 
-// Paleta ANSI → cores do painel (colorimetria consistente controlada pelos scripts).
+// Paleta ISO/ANSI FIXA dos consoles. Os consoles são escuros nos DOIS temas,
+// então aqui NUNCA se usa variável de tema (no claro elas resolvem para cores
+// escuras e o log fica ilegível sobre o fundo preto). Tons "bright" da paleta
+// ANSI padrão, calibrados para fundo escuro:
+const TERM = {
+  red: '#ff6b6b', green: '#69db7c', yellow: '#ffd43b', blue: '#74c0fc',
+  cyan: '#66d9e8', magenta: '#da77f2', gray: '#8a8f98', dim: '#6a7180',
+  text: '#e6e6e6',
+};
+// Códigos SGR → paleta do console (30-37 normais, 90-97 bright).
 const ANSI_COLORS = {
-  '31': 'var(--red)', '91': 'var(--red)',
-  '32': 'var(--green)', '92': 'var(--green)',
-  '33': 'var(--yellow)', '93': 'var(--yellow)',
-  '34': 'var(--info)', '94': 'var(--info)',
-  '36': 'var(--info)', '96': 'var(--info)',
-  '90': 'var(--muted)', '37': 'var(--text)',
+  '31': TERM.red, '91': TERM.red,
+  '32': TERM.green, '92': TERM.green,
+  '33': TERM.yellow, '93': TERM.yellow,
+  '34': TERM.blue, '94': TERM.blue,
+  '35': TERM.magenta, '95': TERM.magenta,
+  '36': TERM.cyan, '96': TERM.cyan,
+  '90': TERM.gray, '37': TERM.text, '97': TERM.text,
 };
 
 // Colorimetria ISO por TOKEN: destaca métricas (throughput, latência, %),
@@ -934,17 +944,17 @@ const TOKEN_RE = new RegExp([
 ].join('|'), 'gi');
 
 function tokenColor(t) {
-  if (/^0(?:\.0+)?%$/.test(t)) return 'var(--green)';                       // 0% (ex.: packet loss) = ótimo
-  if (/%$/.test(t)) return 'var(--yellow)';                                 // demais percentuais
-  if (/(?:Mbits|Gbits|Mbps|Gbps)/i.test(t)) return 'var(--green)';          // throughput
-  if (/(?:Kbits|ms|dBm)\b/i.test(t)) return 'var(--yellow)';                // latência/baixo
-  if (/(?:MHz|GHz)/i.test(t)) return 'var(--info)';                         // banda
-  if (/^(?:ERROR|ERRO|FAIL|FALHA|FATAL|CRITICAL|EMERG|ALERT|REJECT|refused|denied|✗|❌)/i.test(t)) return 'var(--red)';
-  if (/^(?:WARN|AVISO|degrad|jitter|retransmiss|packet|loss|delay|Latência|RTT|netem|timeout)/i.test(t)) return 'var(--yellow)';
-  if (/^(?:REGISTERED|CONNECTED|ATIV|SUCCESS|successful|established|HEALTHY|UP|OK|PASS|Aplicado|✓|✅)/i.test(t)) return 'var(--green)';
-  if (/^(?:DEBUG|TRACE)/i.test(t)) return '#5a6170';
-  if (/^(?:INFO|NOTICE)/i.test(t)) return 'var(--info)';
-  return 'var(--info)';                                                     // vocabulário de protocolo
+  if (/^0(?:\.0+)?%$/.test(t)) return TERM.green;                           // 0% (ex.: packet loss) = ótimo
+  if (/%$/.test(t)) return TERM.yellow;                                     // demais percentuais
+  if (/(?:Mbits|Gbits|Mbps|Gbps)/i.test(t)) return TERM.green;              // throughput
+  if (/(?:Kbits|ms|dBm)\b/i.test(t)) return TERM.yellow;                    // latência/baixo
+  if (/(?:MHz|GHz)/i.test(t)) return TERM.blue;                             // banda
+  if (/^(?:ERROR|ERRO|FAIL|FALHA|FATAL|CRITICAL|EMERG|ALERT|REJECT|refused|denied|✗|❌)/i.test(t)) return TERM.red;
+  if (/^(?:WARN|AVISO|degrad|jitter|retransmiss|packet|loss|delay|Latência|RTT|netem|timeout)/i.test(t)) return TERM.yellow;
+  if (/^(?:REGISTERED|CONNECTED|ATIV|SUCCESS|successful|established|HEALTHY|UP|OK|PASS|Aplicado|✓|✅)/i.test(t)) return TERM.green;
+  if (/^(?:DEBUG|TRACE)/i.test(t)) return TERM.dim;
+  if (/^(?:INFO|NOTICE)/i.test(t)) return TERM.blue;
+  return TERM.blue;                                                         // vocabulário de protocolo
 }
 function colorizeTokens(escaped) {
   return escaped.replace(TOKEN_RE, t => `<span style="color:${tokenColor(t)}">${t}</span>`);
@@ -991,22 +1001,22 @@ function renderLogLine(line) {
 
 function lineColor(line) {
   // Glifos de status usados pelos scripts (cobre todos os testes legados)
-  if (/[❌✗]|FALHOU|\bFALHA\b/i.test(line))              return 'var(--red)';
-  if (/[⚠]/.test(line))                                  return 'var(--yellow)';
-  if (/[✅✓]/.test(line))                                return 'var(--green)';
-  if (/FATAL|CRITICAL|EMERG|ALERT/i.test(line))         return 'var(--red)';
-  if (/\bERROR\b|REJECT|FAIL(ED)?|EXCEPTION|\bErro\b|não detectado|não está rodando/i.test(line)) return 'var(--red)';
-  if (/WARN(ING)?|AVISO/i.test(line))                    return 'var(--yellow)';
+  if (/[❌✗]|FALHOU|\bFALHA\b/i.test(line))              return TERM.red;
+  if (/[⚠]/.test(line))                                  return TERM.yellow;
+  if (/[✅✓]/.test(line))                                return TERM.green;
+  if (/FATAL|CRITICAL|EMERG|ALERT/i.test(line))         return TERM.red;
+  if (/\bERROR\b|REJECT|FAIL(ED)?|EXCEPTION|\bErro\b|não detectado|não está rodando/i.test(line)) return TERM.red;
+  if (/WARN(ING)?|AVISO/i.test(line))                    return TERM.yellow;
   // ----- Medições de canal / throughput (Projeto 1) -----
-  if (/\b0(\.0+)?%\s*packet loss\b/i.test(line))         return 'var(--green)';      // perda zero = ótimo
-  if (/packet loss|perda de pacotes/i.test(line))        return 'var(--yellow)';      // qualquer perda
-  if (/Mbits\/sec|Gbits\/sec|SUCCESS|sucesso|✓|Aplicado|ATIVA|ATIV[OA]|CONNECTED|REGISTERED/i.test(line)) return 'var(--green)';
-  if (/Kbits\/sec|degradad|Latência|\bRTT\b|jitter|netem|\bdelay\b|\bloss\b/i.test(line)) return 'var(--yellow)';
-  if (/RESUMO|Sinal|Célula|Estado do UE|Distância|Interferência|^\s*Canal|RSRP|SINR|PL =/i.test(line)) return 'var(--info)';
-  if (/^\s*={3,}|^\s*-{3,}/.test(line))                  return '#5a6170';            // separadores
-  if (/\b(DEBUG|TRACE|DEBU)\b/i.test(line))              return '#5a6170';
-  if (/\bINFO\b|\bNOTICE\b|\bNOTI\b/i.test(line))       return 'var(--info)';
-  return 'var(--text)';
+  if (/\b0(\.0+)?%\s*packet loss\b/i.test(line))         return TERM.green;          // perda zero = ótimo
+  if (/packet loss|perda de pacotes/i.test(line))        return TERM.yellow;         // qualquer perda
+  if (/Mbits\/sec|Gbits\/sec|SUCCESS|sucesso|✓|Aplicado|ATIVA|ATIV[OA]|CONNECTED|REGISTERED/i.test(line)) return TERM.green;
+  if (/Kbits\/sec|degradad|Latência|\bRTT\b|jitter|netem|\bdelay\b|\bloss\b/i.test(line)) return TERM.yellow;
+  if (/RESUMO|Sinal|Célula|Estado do UE|Distância|Interferência|^\s*Canal|RSRP|SINR|PL =/i.test(line)) return TERM.blue;
+  if (/^\s*={3,}|^\s*-{3,}/.test(line))                  return TERM.dim;            // separadores
+  if (/\b(DEBUG|TRACE|DEBU)\b/i.test(line))              return TERM.dim;
+  if (/\bINFO\b|\bNOTICE\b|\bNOTI\b/i.test(line))       return TERM.blue;
+  return TERM.text;
 }
 
 function randomDigits(n) {

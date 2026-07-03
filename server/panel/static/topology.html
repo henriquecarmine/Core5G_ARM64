@@ -13,7 +13,7 @@
     --c-external:#4dabf7; --c-admin:#b197fc; --c-ran:#2f9e44; --c-core:#e8590c;
     --c-core-cp:#1c7ed6; --c-core-up:#e8590c;
     --btn-bg:#21242b; --btn-hover:#262a32; --grid-dot:#23262e;
-    --planned:#3a3f48; --plan-fg:#5a606b; --log-fg:#9aa4b2;
+    --planned:#3a3f48; --plan-fg:#5a606b;
     --overlay:rgba(0,0,0,.72); --panel-glass:rgba(24,26,31,.82);
     --ok-bg:#163a1f; --ok-fg:#69db7c; --err-bg:#3a1616; --err-fg:#ff8787;
     --info-bg:#16263a; --info-fg:#74c0fc;
@@ -27,7 +27,7 @@
     --c-external:#1971c2; --c-admin:#7048e8; --c-ran:#2b8a3e; --c-core:#d9500a;
     --c-core-cp:#1971c2; --c-core-up:#d9500a;
     --btn-bg:#eef0f3; --btn-hover:#dfe3e9; --grid-dot:#d9dde3;
-    --planned:#b9c0ca; --plan-fg:#98a0ab; --log-fg:#4a5462;
+    --planned:#b9c0ca; --plan-fg:#98a0ab;
     --overlay:rgba(23,27,34,.45); --panel-glass:rgba(255,255,255,.92);
     --ok-bg:#d7f0de; --ok-fg:#217a37; --err-bg:#fbe1e1; --err-fg:#c22929;
     --info-bg:#dcecfb; --info-fg:#1971c2;
@@ -142,14 +142,16 @@
   #logs-head { display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid var(--border); }
   #logs-head h3 { font-size:14px; margin:0; }
   #logs-head .x { margin-left:auto; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
-  #logs-body { flex:1; overflow-y:auto; padding:8px 0; }
-  .logsec { border-bottom:1px solid var(--border); }
-  .logsec h4 { margin:0; padding:9px 18px 6px; font-size:12px; color:var(--accent); display:flex; align-items:center; gap:8px; }
-  .logsec h4 .dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
-  .logsec pre { margin:0; padding:0 18px 10px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11px; line-height:1.5; color:var(--log-fg); white-space:pre-wrap; word-break:break-word; }
-  #logs-empty { color:var(--muted); padding:24px; text-align:center; }
+  /* corpo de logs = terminal: escuro nos DOIS temas, paleta ISO fixa
+     (mesma regra dos consoles do painel — nunca variáveis de tema aqui) */
+  #logs-body { flex:1; overflow-y:auto; padding:8px 0; background:#0d0e11; }
+  .logsec { border-bottom:1px solid #2c3038; }
+  .logsec h4 { margin:0; padding:9px 18px 6px; font-size:12px; color:#e8590c; display:flex; align-items:center; gap:8px; }
+  .logsec h4 .dot { width:7px; height:7px; border-radius:50%; background:#2f9e44; }
+  .logsec pre { margin:0; padding:0 18px 10px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11px; line-height:1.5; color:#9aa4b2; white-space:pre-wrap; word-break:break-word; }
+  #logs-empty { color:#8a8f98; padding:24px; text-align:center; }
   #logs-ts { font-size:11px; color:var(--muted); }
-  .logsec pre .err { color:var(--err-fg); } .logsec pre .warn { color:var(--yellow); }
+  .logsec pre .err { color:#ff8787; } .logsec pre .warn { color:#ffd43b; }
 
   /* #3 — badge de RAN ao vivo no card do gNB */
   .gnb-live { font-size:10px; font-family:"SF Mono",Menlo,Consolas,monospace; fill:var(--green); }

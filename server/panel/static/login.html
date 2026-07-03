@@ -63,6 +63,12 @@
     border-radius: 7px; padding: 5px 10px; font-size: 14px; line-height: 1; cursor: pointer;
   }
   #theme-btn:hover { color: var(--text); border-color: var(--accent); }
+  #lang-sel {
+    position: fixed; top: 14px; right: 58px; width: auto;
+    background: var(--btn-bg); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 7px; padding: 5px 8px; font-size: 12.5px; line-height: 1; cursor: pointer;
+  }
+  #lang-sel:hover { color: var(--text); border-color: var(--accent); }
   .card h1 {
     margin: 0 0 4px;
     font-size: 19px;
@@ -176,48 +182,56 @@
 </style>
 </head>
 <body>
+  <select id="lang-sel" title="Idioma">
+    <option value="pt">PT</option>
+    <option value="en">EN</option>
+    <option value="es">ES</option>
+    <option value="fr">FR</option>
+  </select>
   <button id="theme-btn" type="button" title="Alternar tema claro/escuro">◐</button>
   <div class="card">
     <h1>Core5G<span>_ARM64</span></h1>
-    <p class="topic">Open5GS + UERANSIM + OAI 5G Core<br>Painel de controle do laboratório 5G</p>
+    <p class="topic">Open5GS + UERANSIM + OAI 5G Core<br><span data-i18n="login.subtitle">Painel de controle do laboratório 5G</span></p>
     <span class="version-badge">v__VERSION__</span>
 
     <div id="error">Usuário ou senha inválidos.</div>
 
     <form id="login-form">
-      <label for="user">Usuário</label>
+      <label for="user" data-i18n="login.user">Usuário</label>
       <input type="text" id="user" autocomplete="username" autofocus>
 
-      <label for="pass">Senha</label>
+      <label for="pass" data-i18n="login.pass">Senha</label>
       <input type="password" id="pass" autocomplete="current-password">
 
-      <button type="submit" id="btn-login">Entrar</button>
+      <button type="submit" id="btn-login" data-i18n="login.enter">Entrar</button>
     </form>
 
-    <div class="divider" id="guest-divider">ou entre como aluno</div>
+    <div class="divider" id="guest-divider" data-i18n="login.or_student">ou entre como aluno</div>
 
     <div id="guest-form">
-      <p id="guest-hint">Acompanhe a aula ao vivo (somente leitura). Informe seu nome e e-mail para entrar — é o registro de presença da turma.</p>
-      <input type="text" id="g-name" placeholder="Seu nome completo" autocomplete="name">
-      <input type="email" id="g-email" placeholder="Seu e-mail" autocomplete="email">
-      <button id="btn-guest" type="button">Entrar como aluno (acompanhar ao vivo)</button>
+      <p id="guest-hint" data-i18n="login.guest_hint">Acompanhe a aula ao vivo (somente leitura). Informe seu nome e e-mail para entrar — é o registro de presença da turma.</p>
+      <input type="text" id="g-name" data-i18n-ph="login.ph_name" placeholder="Seu nome completo" autocomplete="name">
+      <input type="email" id="g-email" data-i18n-ph="login.ph_email" placeholder="Seu e-mail" autocomplete="email">
+      <button id="btn-guest" type="button" data-i18n="login.enter_student">Entrar como aluno (acompanhar ao vivo)</button>
     </div>
 
     <footer>
       <a href="https://github.com/henriquecarmine/Core5G_ARM64" target="_blank" rel="noopener">github.com/henriquecarmine/Core5G_ARM64</a><br>
       v__VERSION__ &nbsp;·&nbsp; CESAR School · UE-TP-rApp<br>
-      Coordenação Prof. Jonas A. Kunzler · mantido por Henrique Carmine
+      <span data-i18n="login.credits">Coordenação Prof. Jonas A. Kunzler · mantido por Henrique Carmine</span>
     </footer>
   </div>
 
+<script src="i18n.js"></script>
 <script>
 // Tema claro/escuro (persistido; aplicado no <head> antes do paint)
 const themeBtn = document.getElementById("theme-btn");
 function applyThemeIcon() {
   const dark = document.documentElement.dataset.theme !== "light";
   themeBtn.textContent = dark ? "☀" : "☾";
-  themeBtn.title = dark ? "Mudar para o tema claro" : "Mudar para o tema escuro";
+  themeBtn.title = I18N.t(dark ? "ui.theme_to_light" : "ui.theme_to_dark");
 }
+I18N.onChange(applyThemeIcon);
 themeBtn.addEventListener("click", () => {
   const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
   document.documentElement.dataset.theme = next;
@@ -243,12 +257,12 @@ async function tryLogin(url, body) {
       return;
     }
     // 409 = já há um professor conectado (trava de professor único).
-    let detail = "Usuário ou senha inválidos.";
+    let detail = I18N.t("login.err_invalid");
     try { const d = await res.json(); if (d && d.detail) detail = d.detail; } catch {}
     errorBox.textContent = detail;
     errorBox.style.display = "block";
   } catch (e) {
-    errorBox.textContent = "Falha de conexão. Tente novamente.";
+    errorBox.textContent = I18N.t("login.err_conn");
     errorBox.style.display = "block";
   } finally {
     btnLogin.disabled = false;
@@ -274,8 +288,8 @@ if (!guestEnabled) {
   const enterAluno = () => {
     const name = gName.value.trim();
     const email = gEmail.value.trim();
-    if (name.length < 2) { errorBox.textContent = "Informe seu nome completo."; errorBox.style.display = "block"; gName.focus(); return; }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errorBox.textContent = "Informe um e-mail válido."; errorBox.style.display = "block"; gEmail.focus(); return; }
+    if (name.length < 2) { errorBox.textContent = I18N.t("login.err_name"); errorBox.style.display = "block"; gName.focus(); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errorBox.textContent = I18N.t("login.err_email"); errorBox.style.display = "block"; gEmail.focus(); return; }
     tryLogin("/api/login/guest", { name, email });
   };
   document.getElementById("btn-guest").addEventListener("click", enterAluno);

@@ -1,5 +1,7 @@
 # Core5G ARM64
 
+**🌐 Português · [English](README.en.md) · [Español](README.es.md) · [Français](README.fr.md)**
+
 Laboratório 5G completo rodando em **AWS Graviton (ARM64)**, com painel web de
 controle próprio. Reúne **dois projetos** independentes da disciplina
 *RAN Intelligent Controller (RIC)* — CESAR School (tema **UE-TP-rApp**):
@@ -14,9 +16,9 @@ artigo (Overleaf) e pediu um checklist de 8 aprimoramentos na plataforma
 (2026-07-02). Estado: **7 de 8 concluídos** no painel v0.33.x — topologia com
 bandas **CUPS** (plano de controle × usuário), interfaces **N1/N11** explícitas,
 layout sem sobreposições, **temas claro/escuro**, colorimetria **ISO** em todos
-os terminais, anotações didáticas na partida de cada serviço, e
-[política de custos](docs/POLITICA-DE-CUSTOS.md). Pendente: **i18n pt/es/en**
-(item 1b) — ver roadmap (§2).
+os terminais, anotações didáticas na partida de cada serviço, **seletor de
+idiomas 🌐 (PT/EN/ES/FR)** e a [política de custos](docs/POLITICA-DE-CUSTOS.md).
+Pendente: i18n completo do painel além de login/topbar — ver roadmap (§2).
 
 > **Quer só entender o quê/porquê de tudo?** Leia a
 > [**Bíblia do projeto**](core5g-arm64-bible.md) (referência conceitual completa,
@@ -166,7 +168,7 @@ Sobre isso, um **modo sala de aula** pensado para apresentar a um auditório:
 
 | Quando | Item | Estado |
 |---|---|---|
-| **Curto prazo** | **i18n do painel — pt/es/en** (item 1b do checklist do artigo). Strings hardcoded em pt nos 3 HTML + textos didáticos nos JSONs de topologia; mecanismo será o mesmo do tema (dicionário + `localStorage`) | ⏳ Próximo grande item |
+| **Curto prazo** | **i18n completo do painel — pt/en/es/fr** além do login/topbar: **F2** (index inteiro), **F3** (topologia/JSONs), **F4** (scripts bash via `LAB_LANG`). Infra pronta: `static/i18n.js` + seletor 🌐 + fallback + `npm run test:i18n` | ⏳ F1 pronta (v0.34.0) |
 | Curto prazo | xApp **UE-TP-rApp** (previsão de throughput por UE: RSSI/RSRP/CQI/PRB) — o tema do grupo. Wheels do **scikit-learn aarch64** já vendorados (`server/panel/vendor/`) para os RICs Near-RT/Non-RT | ⏳ Esqueleto em `xapp_ue_tp_moni.c`; falta o modelo |
 | 🧱 **Bloqueio de HW** | **Lab de RIC (Near/Non-RT) com IA + relatório KPM com throughput real dependem de 4 vCPU.** Em 2 vCPU, UE+gNB RFSIM não coexistem sob o guardrail anti-freeze (removê-lo congelou o box 2×). Análise de custo e runbook do resize reversível: [`docs/POLITICA-DE-CUSTOS.md`](docs/POLITICA-DE-CUSTOS.md) §3 | ⚠️ Aguarda aval (custos) |
 | ✅ Resolvido | **Checklist do artigo, pontos 2–7 + temas** (Prof. Jonas, 2026-07-02): topologia CUPS/N1/N11 sem sobreposições, IPs/portas padronizados, temas claro/escuro, colorimetria ISO fixa nos terminais, anotações didáticas na partida de serviços | ✅ v0.32.0–0.33.1 |
@@ -214,8 +216,10 @@ do PR: ver [`CONTRIBUTING.md`](CONTRIBUTING.md) §4 e §6.
 ├── deploy.sh                  ← entrypoint único de deploy (local → servidor)
 ├── .env.example               ← modelo de configuração (copie para .env)
 ├── .github/                   ← modelos de Issue e de Pull Request
+├── README.{en,es,fr}.md       ← traduções do README (barra de idiomas 🌐)
 ├── docs/                      ← blueprint do painel + roteiros de laboratório
 │   ├── POLITICA-DE-CUSTOS.md  ← custos, regras de operação e upgrade de CPU
+│   ├── i18n/                  ← docs traduzidos (en/es/fr) + check-parity.py
 │   └── relatorios-didaticos.md ← guia dev: como os testes/relatórios funcionam
 ├── infra/                     ← bootstrap do servidor + unit systemd do painel
 └── server/                    ← tudo que roda no servidor

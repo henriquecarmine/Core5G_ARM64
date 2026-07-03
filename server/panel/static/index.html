@@ -109,6 +109,9 @@
   #theme-btn { width:auto; margin:0; padding:4px 9px; font-size:13px; border-radius:7px; cursor:pointer;
                background:var(--btn-bg); border:1px solid var(--border); color:var(--muted); line-height:1; }
   #theme-btn:hover { color:var(--text); border-color:var(--accent); }
+  #lang-sel { width:auto; margin:0; padding:4px 6px; font-size:12px; border-radius:7px; cursor:pointer;
+              background:var(--btn-bg); border:1px solid var(--border); color:var(--muted); }
+  #lang-sel:hover { color:var(--text); border-color:var(--accent); }
   #kiosk-btn:hover { color:var(--text); border-color:var(--accent); }
   #kiosk-exit { display:none; position:fixed; top:14px; right:16px; z-index:300; width:auto; margin:0; padding:7px 14px;
                 font-size:13px; border-radius:8px; cursor:pointer; background:var(--panel-glass); border:1px solid var(--border);
@@ -505,19 +508,25 @@
 </head>
 <body>
 <div id="top-loader"></div>
-<button id="kiosk-exit" title="Sair do modo projeção (Esc)">✕ Sair da projeção</button>
+<button id="kiosk-exit" data-i18n="topbar.exit_projection" title="Sair do modo projeção (Esc)">✕ Sair da projeção</button>
 <header id="topbar">
   <div id="topbar-main">
     <div class="tb-left">
-      <h1>Core5G<span>_ARM64</span> — Painel</h1>
-      <div id="active-proj"><span class="ap-dot"></span><span id="active-proj-label">Nenhum projeto no ar</span></div>
+      <h1>Core5G<span>_ARM64</span> <span data-i18n="topbar.panel">— Painel</span></h1>
+      <div id="active-proj"><span class="ap-dot"></span><span id="active-proj-label" data-i18n="topbar.no_project">Nenhum projeto no ar</span></div>
     </div>
     <div class="tb-right">
       <span id="viewer-badge"><span class="vb-dot"></span><span id="viewer-count">0 alunos</span></span>
+      <select id="lang-sel" title="Idioma">
+        <option value="pt">PT</option>
+        <option value="en">EN</option>
+        <option value="es">ES</option>
+        <option value="fr">FR</option>
+      </select>
       <button id="theme-btn" title="Alternar tema claro/escuro">◐</button>
-      <button id="kiosk-btn" title="Modo projeção — tela limpa para o datashow (Esc para sair)">⛶ Projeção</button>
-      <div id="whoami">carregando...</div>
-      <button id="logout-btn" title="Sair (logout) — libera a vaga de professor para outro entrar">⎋ Sair</button>
+      <button id="kiosk-btn" data-i18n="topbar.projection" data-i18n-title="topbar.projection_title" title="Modo projeção — tela limpa para o datashow (Esc para sair)">⛶ Projeção</button>
+      <div id="whoami" data-i18n="topbar.loading">carregando...</div>
+      <button id="logout-btn" data-i18n="topbar.logout" title="Sair (logout) — libera a vaga de professor para outro entrar">⎋ Sair</button>
     </div>
   </div>
   <div id="topbar-telemetry">
@@ -897,6 +906,7 @@
   </div>
 </div>
 
+<script src="i18n.js"></script>
 <script>
 // ===== Utilitários =====
 function stripAnsi(s) {
@@ -1147,14 +1157,15 @@ function setToggleState(btn, state) {
 }
 
 // ===== Auth + papéis (Professor / Aluno) =====
-const ROLE_LABEL = { admin: 'Professor', guest: 'Aluno' };
+const roleLabel = r => r === 'admin' ? I18N.t('topbar.role_professor') : r === 'guest' ? I18N.t('topbar.role_student') : r;
 async function loadWhoami() {
   try {
     const data = await (await fetch('/api/whoami')).json();
     isGuest = data.role === 'guest';
-    whoamiEl.textContent = (data.user || '?') + ' · ' + (ROLE_LABEL[data.role] || data.role);
+    whoamiEl.textContent = (data.user || '?') + ' · ' + roleLabel(data.role);
+    whoamiEl.removeAttribute('data-i18n');   // já carregou: o apply() não sobrescreve mais
     whoamiEl.className = isGuest ? 'guest' : '';
-    logoutBtn.title = isGuest ? 'Sair (logout) do painel' : 'Sair (logout) — libera a vaga de professor para outro entrar';
+    logoutBtn.title = I18N.t(isGuest ? 'topbar.logout_title_guest' : 'topbar.logout_title_admin');
     setRunning(false);
     if (isGuest) startAlunoMode();
     else startProfessorMode();
@@ -1162,9 +1173,7 @@ async function loadWhoami() {
 }
 const logoutBtn = document.getElementById('logout-btn');
 async function doLogout() {
-  const msg = isGuest
-    ? 'Sair do painel?'
-    : 'Sair do painel?\n\nIsso libera a vaga de professor para outro entrar.';
+  const msg = I18N.t(isGuest ? 'topbar.logout_confirm' : 'topbar.logout_confirm_admin');
   if (!confirm(msg)) return;
   // Encerra os polls do modo aluno/professor antes de sair, pra não dispararem
   // durante o redirect (e voltarem a marcar presença/heartbeat).
@@ -1195,7 +1204,7 @@ async function professorBeat() {
     const d = await (await fetch('/api/heartbeat', { method: 'POST' })).json();
     if (viewerBadge) {
       viewerBadge.style.display = 'inline-flex';
-      viewerCount.textContent = plural(d.viewers || 0, 'aluno');
+      viewerCount.textContent = (d.viewers || 0) === 1 ? I18N.t('topbar.student_one') : I18N.t('topbar.students', { n: d.viewers || 0 });
     }
     if (d.is_active === false && !_seatLost) {
       _seatLost = true;
@@ -2164,9 +2173,10 @@ function updateProjSelector(groups) {
   // Cabeçalho: indica qual projeto está aberto.
   const apEl = document.getElementById('active-proj');
   const apLabel = document.getElementById('active-proj-label');
-  const AP = { p1: 'Projeto 1 · Open5GS no ar', p2: 'Projeto 2 · OAI/RIC no ar', off: 'Nenhum projeto no ar' };
+  const AP = { p1: I18N.t('topbar.p1_on'), p2: I18N.t('topbar.p2_on'), off: I18N.t('topbar.no_project') };
   if (apEl && apLabel) {
     apLabel.textContent = AP[active];
+    apLabel.removeAttribute('data-i18n');   // dinâmico assumiu: o apply() não sobrescreve mais
     apEl.classList.toggle('on', active !== 'off');
   }
   // Lateral: mostra as ferramentas do projeto ativo (troca conforme o projeto).
@@ -2480,8 +2490,11 @@ function applyThemeIcon() {
   const dark = document.documentElement.dataset.theme !== 'light';
   const b = document.getElementById('theme-btn');
   b.textContent = dark ? '☀' : '☾';
-  b.title = dark ? 'Mudar para o tema claro' : 'Mudar para o tema escuro';
+  b.title = I18N.t(dark ? 'ui.theme_to_light' : 'ui.theme_to_dark');
 }
+// Troca de idioma: re-renderiza o que é dinâmico (whoami, rótulo do projeto,
+// contagem de alunos vem no próximo poll) além dos data-i18n (I18N.apply).
+I18N.onChange(() => { applyThemeIcon(); loadWhoami(); loadServices(); });
 document.getElementById('theme-btn').addEventListener('click', () => {
   const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
   document.documentElement.dataset.theme = next;

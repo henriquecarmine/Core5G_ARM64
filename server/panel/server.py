@@ -633,6 +633,12 @@ def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html", headers=NO_CACHE)
 
 
+@app.get("/i18n.js")
+def i18n_js() -> FileResponse:
+    # Mesmo racional do no-cache dos HTML: dicionários mudam a cada release.
+    return FileResponse(STATIC_DIR / "i18n.js", media_type="application/javascript", headers=NO_CACHE)
+
+
 @app.get("/login")
 def login(request: Request):
     if current_user(request) is not None:

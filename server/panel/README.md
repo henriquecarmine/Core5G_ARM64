@@ -14,6 +14,7 @@ cookie de sessão). Deploy: `./deploy.sh panel` (rsync + bootstrap).
 | Topologia | [`static/topology.html`](static/topology.html) | Diagrama SVG **orientado a dados** (JSONs abaixo): bandas CUPS, 4 modos, tour guiado, offset de links paralelos |
 | Dados da topologia | [`static/openran-topology.json`](static/openran-topology.json) (P2) · [`static/openran-topology-p1.json`](static/openran-topology-p1.json) (P1) | Nós (x,y, textos didáticos, `statusKey`), links (iface), camadas (`band:true` = banda CUPS). Ver `_como_atualizar` dentro de cada JSON |
 | Login | [`static/login.html`](static/login.html) | Professor (credenciais do `.env`) ou Aluno (nome+e-mail = presença) |
+| i18n | [`static/i18n.js`](static/i18n.js) | Dicionários **pt/en/es/fr** + helper (`I18N.t`, `data-i18n`, fallback lang→en→pt, seletor 🌐, `localStorage c5g-lang`). F1 = login+topbar; toda chave nova entra nos 4 idiomas (`npm run test:i18n`) |
 | Testes | [`test/`](test/) | `npm test` (loaders) · `npm run test:topo` (geometria dos JSONs + render headless com temas). Ver [test/README.md](test/README.md) |
 | Vendor | [`vendor/`](vendor/) | Wheels aarch64 do scikit-learn p/ o lab de RIC com IA (fora do git — [vendor/README.md](vendor/README.md)) |
 
@@ -34,8 +35,8 @@ cookie de sessão). Deploy: `./deploy.sh panel` (rsync + bootstrap).
 5. **Versionamento**: cada release ajusta [`VERSION`](VERSION) + linha no
    [CHANGELOG](../../CHANGELOG.md) (tabela, mais novo primeiro no bloco final).
 
-## Estado atual (v0.33.x — 2026-07-03)
+## Estado atual (v0.34.x — 2026-07-03)
 
-Checklist do artigo (Prof. Jonas): pontos 2–7 + temas ✅ · **i18n pt/es/en
-pendente** (strings hardcoded em pt nos 3 HTML + textos didáticos nos JSONs).
-Roadmap completo: README raiz §2 e bible §10.
+Checklist do artigo (Prof. Jonas): pontos 2–7 + temas ✅ · **i18n F1 pronta**
+(infra + seletor 🌐 + login/topbar em pt/en/es/fr) · faltam F2 (index inteiro),
+F3 (topologia) e F4 (scripts via `LAB_LANG`). Roadmap: README raiz §2 e bible §10.

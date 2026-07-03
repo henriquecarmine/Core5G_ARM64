@@ -127,7 +127,29 @@ A cada release:
 
 ---
 
-## 7. Contato
+## 7. Idiomas (i18n) — projeto internacional
+
+O projeto é institucional e internacional: **pt (canônico) · en · es · fr**.
+
+1. **Painel**: toda string nova de UI entra nos **4 dicionários** de
+   `server/panel/static/i18n.js` (chaves `data-i18n`/`I18N.t`). O teste
+   `npm run test:i18n` (em `server/panel/test/`) **falha** se faltar chave,
+   sobrar órfã ou divergirem os placeholders.
+2. **Glossário técnico não se traduz**: termos 3GPP/O-RAN (AMF, SMF, CUPS,
+   slice, E2SM-KPM, PDU Session, N1/N2/N3…) ficam como nos specs em qualquer
+   idioma — traduz-se a explicação, nunca o termo.
+3. **Documentação**: pt fica no lugar canônico; traduções vivem em
+   `docs/i18n/<lang>/` (mesmo nome de arquivo, espelhando o caminho) e os
+   READMEs da raiz como `README.<lang>.md`. Toda tradução leva o marcador
+   `<!-- sync: <hash|versão> -->` no topo; `python3 docs/i18n/check-parity.py`
+   acusa órfãos e traduções defasadas.
+4. **PR que altera doc canônico**: atualize as traduções afetadas no mesmo PR
+   **ou** abra uma issue "tradução pendente" e cite-a no cabeçalho da tradução
+   (`outdated-ok: #<issue>`).
+
+---
+
+## 8. Contato
 
 Dúvidas, acesso de colaborador, ou as imagens OAI arm64 do Drive do grupo:
 

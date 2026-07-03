@@ -1170,10 +1170,14 @@ Demonstração E2E mede **149 Mbit/s** reais pelo túnel 5G (§8.6).
       em conteúdo de terminal), anotações didáticas na partida de cada serviço
       (`SERVICE_ROLES`), HTML com `no-cache` (deploy chega na hora) e
       **política de custos** ([`docs/POLITICA-DE-CUSTOS.md`](docs/POLITICA-DE-CUSTOS.md)).
-- [ ] **i18n do painel — pt/es/en** (item 1b do checklist; o que falta do
-      artigo). Estratégia: dicionário JS + `localStorage` (mesmo padrão do
-      tema); inclui os textos didáticos dos JSONs de topologia e os resumos
-      dos scripts de teste.
+- [ ] **i18n — pt/en/es/fr** (item 1b do checklist; decisão 2026-07-03: projeto
+      internacional, TUDO em 4 idiomas, fr incluído). **F1 pronta (v0.34.0)**:
+      infra `static/i18n.js` (dicionários + fallback lang→en→pt + teste de
+      paridade `npm run test:i18n`), seletor 🌐, login + topbar traduzidos;
+      READMEs em 4 idiomas + `docs/i18n/<lang>/` com `check-parity.py`.
+      **Faltam**: F2 (index inteiro), F3 (topologia/JSONs), F4 (scripts bash
+      via `LAB_LANG`); docs técnicos em en sob demanda. Regras no
+      CONTRIBUTING §7 (glossário 3GPP/O-RAN não se traduz).
 - [ ] **Lab de RIC Near-RT/Non-RT com IA** (scikit-learn aarch64 já vendorado
       em `server/panel/vendor/`): xApp de inferência no loop de segundos +
       rApp de treino no Non-RT. **Depende do upgrade p/ 4 vCPU** — análise de

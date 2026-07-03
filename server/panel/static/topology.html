@@ -4,12 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Core5G_ARM64 — Topologia Open RAN</title>
+<script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
 <style>
   :root {
     --bg:#16181d; --panel:#1e2128; --border:#2c3038; --text:#e6e6e6;
     --muted:#8a8f98; --accent:#e8590c; --green:#2f9e44; --yellow:#f59f00;
     --red:#e03131; --info:#4dabf7;
     --c-external:#4dabf7; --c-admin:#b197fc; --c-ran:#2f9e44; --c-core:#e8590c;
+    --c-core-cp:#1c7ed6; --c-core-up:#e8590c;
+    --btn-bg:#21242b; --btn-hover:#262a32; --grid-dot:#23262e;
+    --planned:#3a3f48; --plan-fg:#5a606b; --log-fg:#9aa4b2;
+    --overlay:rgba(0,0,0,.72); --panel-glass:rgba(24,26,31,.82);
+    --ok-bg:#163a1f; --ok-fg:#69db7c; --err-bg:#3a1616; --err-fg:#ff8787;
+    --info-bg:#16263a; --info-fg:#74c0fc;
+  }
+  :root[data-theme="light"] {
+    --bg:#eef0f4; --panel:#ffffff; --border:#d5dae1; --text:#1c2129;
+    --muted:#5d6570; --accent:#d9500a; --green:#2b8a3e; --yellow:#e67700;
+    --red:#c92a2a; --info:#1971c2;
+    --c-external:#1971c2; --c-admin:#7048e8; --c-ran:#2b8a3e; --c-core:#d9500a;
+    --c-core-cp:#1971c2; --c-core-up:#d9500a;
+    --btn-bg:#eef0f3; --btn-hover:#dfe3e9; --grid-dot:#d9dde3;
+    --planned:#b9c0ca; --plan-fg:#98a0ab; --log-fg:#4a5462;
+    --overlay:rgba(23,27,34,.45); --panel-glass:rgba(255,255,255,.92);
+    --ok-bg:#d7f0de; --ok-fg:#217a37; --err-bg:#fbe1e1; --err-fg:#c22929;
+    --info-bg:#dcecfb; --info-fg:#1971c2;
   }
   * { box-sizing:border-box; }
   body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -19,22 +38,22 @@
   header { padding:11px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; flex-shrink:0; }
   header h1 { font-size:15px; margin:0; font-weight:600; letter-spacing:.01em; }
   header h1 b { color:var(--accent); font-weight:600; }
-  .btn { display:inline-flex; align-items:center; gap:7px; background:#21242b; color:var(--text);
+  .btn { display:inline-flex; align-items:center; gap:7px; background:var(--btn-bg); color:var(--text);
          border:1px solid var(--border); border-radius:7px; padding:6px 12px; font-size:12.5px;
          cursor:pointer; text-decoration:none; transition:border-color .15s, background .15s; white-space:nowrap; }
-  .btn:hover { border-color:var(--accent); background:#262a32; }
+  .btn:hover { border-color:var(--accent); background:var(--btn-hover); }
   .btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
   .modes { display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; }
-  .modes button { background:#1b1e24; color:var(--muted); border:none; border-right:1px solid var(--border);
+  .modes button { background:var(--btn-bg); color:var(--muted); border:none; border-right:1px solid var(--border);
                   padding:6px 13px; font-size:12.5px; cursor:pointer; transition:.15s; }
   .modes button:last-child { border-right:none; }
-  .modes button:hover { color:var(--text); background:#262a32; }
+  .modes button:hover { color:var(--text); background:var(--btn-hover); }
   .modes button.active { background:var(--accent); color:#fff; }
   .spacer { margin-left:auto; }
 
   /* ---- Palco ---- */
   #stage { flex:1; position:relative; overflow:hidden;
-           background:radial-gradient(circle at 1px 1px,#23262e 1px,transparent 0); background-size:26px 26px; }
+           background:radial-gradient(circle at 1px 1px,var(--grid-dot) 1px,transparent 0); background-size:26px 26px; }
   svg#diagram { width:100%; height:100%; cursor:grab; }
   svg#diagram.grabbing { cursor:grabbing; }
   .zoom-ctrl { position:absolute; bottom:14px; right:14px; display:flex; gap:6px; }
@@ -42,7 +61,7 @@
                       color:var(--text); border-radius:6px; cursor:pointer; font-size:16px; }
   .zoom-ctrl button:hover { border-color:var(--accent); }
   .mode-hint { position:absolute; top:12px; left:14px; font-size:12px; color:var(--muted);
-               background:rgba(30,33,40,.9); padding:7px 13px; border-radius:7px; border:1px solid var(--border); max-width:440px; }
+               background:var(--panel-glass); padding:7px 13px; border-radius:7px; border:1px solid var(--border); max-width:440px; }
 
   /* ---- Cards (nós) ---- */
   .node { cursor:pointer; }
@@ -50,23 +69,27 @@
   .node .title { font-size:12.5px; font-weight:600; fill:var(--text); }
   .node .role  { font-size:12px; font-weight:600; }
   .node .tech  { font-size:9.5px; fill:var(--muted); font-family:"SF Mono",Menlo,Consolas,monospace; }
-  .node.planned .card { fill:#1a1c20; stroke:#3a3f48 !important; stroke-dasharray:5 4; }
-  .node.planned .title { fill:#5a606b; } .node.planned .role { fill:#5a606b !important; }
+  .node.planned .card { fill:var(--btn-bg); stroke:var(--planned) !important; stroke-dasharray:5 4; }
+  .node.planned .title { fill:var(--plan-fg); } .node.planned .role { fill:var(--plan-fg) !important; }
   .node .dot { r:4; }
+
+  /* bandas de plano (CUPS): retângulo de fundo por camada com band:true no JSON */
+  .band { pointer-events:none; }
+  .band-label { font-size:11px; font-weight:700; letter-spacing:.09em; opacity:.9; }
 
   .link { stroke-width:1.6; fill:none; }
   .link.dashed { stroke-dasharray:6 5; }
-  .link.planned { stroke:#3a3f48; stroke-dasharray:4 5; }
+  .link.planned { stroke:var(--planned); stroke-dasharray:4 5; }
   .link.warn { stroke:var(--red); stroke-width:2.2; }
   .link.flow { stroke-width:3; stroke-dasharray:9 7; animation:flowmove .55s linear infinite; }
   .link.flow.planned { stroke-width:2.4; }
   @keyframes flowmove { from { stroke-dashoffset:0; } to { stroke-dashoffset:-16; } }
   .link-label { font-size:10px; fill:var(--text); font-family:"SF Mono",Menlo,Consolas,monospace; }
-  .link-label-bg { fill:#1b1e24; stroke:var(--border); stroke-width:1; }
+  .link-label-bg { fill:var(--btn-bg); stroke:var(--border); stroke-width:1; }
 
   /* ---- Legenda: badge minimalista no canto inferior esquerdo ---- */
   #legend { position:absolute; bottom:14px; left:14px; z-index:40; max-width:300px;
-            background:rgba(24,26,31,.82); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
+            background:var(--panel-glass); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
             border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.35);
             font-size:11.5px; overflow:hidden; transition:max-width .2s; }
   #legend .lg-head { display:flex; align-items:center; gap:7px; padding:8px 11px; cursor:pointer; user-select:none; color:var(--muted); }
@@ -85,7 +108,7 @@
   .ifk .v { color:var(--muted); line-height:1.35; }
 
   /* ---- Modal (clique no nó) ---- */
-  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:200; align-items:center; justify-content:center; }
+  .overlay { display:none; position:fixed; inset:0; background:var(--overlay); z-index:200; align-items:center; justify-content:center; }
   .overlay.open { display:flex; }
   #node-modal { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:560px; max-height:84vh; display:flex; flex-direction:column; overflow:hidden; }
   .modal-head { display:flex; align-items:flex-start; justify-content:space-between; padding:15px 18px; border-bottom:1px solid var(--border); }
@@ -94,8 +117,8 @@
   .modal-head .x { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
   .modal-body { padding:16px 18px; overflow-y:auto; }
   .badge { display:inline-block; padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; margin-bottom:12px; }
-  .b-run{background:#163a1f;color:#69db7c} .b-stop{background:#3a1616;color:#ff8787}
-  .b-plan{background:#26282d;color:#7a808b} .b-ext{background:#16263a;color:#74c0fc}
+  .b-run{background:var(--ok-bg);color:var(--ok-fg)} .b-stop{background:var(--err-bg);color:var(--err-fg)}
+  .b-plan{background:var(--btn-bg);color:var(--plan-fg)} .b-ext{background:var(--info-bg);color:var(--info-fg)}
   .flow3 { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
   .flow3 .row { display:flex; gap:10px; align-items:flex-start; }
   .flow3 .ic { font-size:14px; flex-shrink:0; width:18px; text-align:center; }
@@ -114,10 +137,10 @@
   .logsec { border-bottom:1px solid var(--border); }
   .logsec h4 { margin:0; padding:9px 18px 6px; font-size:12px; color:var(--accent); display:flex; align-items:center; gap:8px; }
   .logsec h4 .dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
-  .logsec pre { margin:0; padding:0 18px 10px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11px; line-height:1.5; color:#9aa4b2; white-space:pre-wrap; word-break:break-word; }
+  .logsec pre { margin:0; padding:0 18px 10px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11px; line-height:1.5; color:var(--log-fg); white-space:pre-wrap; word-break:break-word; }
   #logs-empty { color:var(--muted); padding:24px; text-align:center; }
   #logs-ts { font-size:11px; color:var(--muted); }
-  .logsec pre .err { color:#ff8787; } .logsec pre .warn { color:#ffd43b; }
+  .logsec pre .err { color:var(--err-fg); } .logsec pre .warn { color:var(--yellow); }
 
   /* #3 — badge de RAN ao vivo no card do gNB */
   .gnb-live { font-size:10px; font-family:"SF Mono",Menlo,Consolas,monospace; fill:var(--green); }
@@ -135,7 +158,7 @@
   #tour-box .c { font-size:12.5px; color:var(--muted); line-height:1.45; }
   #tour-box .nav { display:flex; gap:8px; margin-top:11px; align-items:center; }
   #tour-box .nav .step { font-size:11px; color:var(--muted); margin-right:auto; }
-  #tour-box .nav button { background:#21242b; color:var(--text); border:1px solid var(--border); border-radius:6px; padding:5px 13px; font-size:12px; cursor:pointer; }
+  #tour-box .nav button { background:var(--btn-bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:5px 13px; font-size:12px; cursor:pointer; }
   #tour-box .nav button:hover { border-color:var(--accent); }
   #tour-box .nav button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
   .node.tour-dim, .link.tour-dim, .link-label.tour-dim, .link-label-bg.tour-dim { opacity:.12 !important; }
@@ -153,6 +176,7 @@
   <button class="btn" id="tour-btn" title="Tour guiado pelas camadas">
     <svg viewBox="0 0 24 24"><path d="M12 2l2.5 6.5L21 9l-5 4 1.5 7L12 16l-5.5 4L8 13 3 9l6.5-.5z"/></svg> Tour
   </button>
+  <button class="btn" id="theme-btn" title="Alternar tema claro/escuro">◐</button>
   <div class="modes spacer">
     <button data-mode="simplificado">Simplificado</button>
     <button data-mode="tecnico" class="active">Técnico</button>
@@ -230,7 +254,7 @@ const PROJ_TITLE = PROJ === "p1" ? "Projeto 1 · Open5GS + UERANSIM" : "Projeto 
 document.getElementById("topo-proj").textContent = PROJ_TITLE;
 const svg = document.getElementById("diagram");
 const FLOW_IFACES = new Set(["RF","N2","E2","E42","N3","N4","N6"]);
-const SECONDARY = new Set(["SBI","Nausf","Nsmf","Nudm","Nudr","SQL","Telemetria"]);
+const SECONDARY = new Set(["SBI","Nausf","Nudm","Nudr","SQL","Telemetria"]); // N11/Nsmf fica visível: didático (sessão PDU)
 const MODE_HINTS = {
   simplificado: "Visão de alto nível: componentes e caminhos principais. Detalhes secundários ocultos.",
   tecnico: "Visão técnica: todos os nós com IP, portas e rede reais.",
@@ -251,19 +275,42 @@ function borderColor(n){ const s=statusOf(n); if(s==="planned")return "#3a3f48";
 function render(){
   svg.innerHTML="";
   const defs=el("defs",{},svg);
-  [["arrow","var(--muted)"],["arrow-warn","var(--red)"],["arrow-plan","#3a3f48"]].forEach(([id,col])=>{
+  [["arrow","var(--muted)"],["arrow-warn","var(--red)"],["arrow-plan","var(--planned)"]].forEach(([id,col])=>{
     const m=el("marker",{id,markerWidth:9,markerHeight:9,refX:7,refY:3,orient:"auto",markerUnits:"strokeWidth"},defs);
     el("path",{d:"M0,0 L7,3 L0,6 Z",fill:col},m);
   });
-  // 3 camadas em ordem de z: links (fundo) → nós → rótulos de interface (topo).
+  // 4 camadas em ordem de z: bandas (fundo) → links → nós → rótulos de interface (topo).
   // Os rótulos no topo garantem que nenhum card "engole" o badge da interface.
-  const gL=el("g",{},svg), gN=el("g",{},svg), gT=el("g",{},svg);
+  const gB=el("g",{},svg), gL=el("g",{},svg), gN=el("g",{},svg), gT=el("g",{},svg);
+
+  // bandas de plano (CUPS): retângulo suave englobando os nós das camadas com band:true
+  for(const k in TOPO.layers){
+    const ly=TOPO.layers[k]; if(!ly.band) continue;
+    const ns=TOPO.nodes.filter(n=>n.layer===k); if(!ns.length) continue;
+    const x0=Math.min(...ns.map(n=>n.x))-24, y0=Math.min(...ns.map(n=>n.y))-30;
+    const x1=Math.max(...ns.map(n=>n.x+NODE_W))+24, y1=Math.max(...ns.map(n=>n.y+NODE_H))+14;
+    const bandCol=`var(--c-${k})`;
+    el("rect",{x:x0,y:y0,width:x1-x0,height:y1-y0,rx:14,class:"band",fill:bandCol,
+               opacity:.05,stroke:bandCol,"stroke-opacity":.38,"stroke-dasharray":"3 7"},gB);
+    const bl=el("text",{x:x0+14,y:y0+18,class:"band-label",fill:bandCol},gB);
+    bl.textContent=ly.label.toUpperCase();
+  }
+
+  // links paralelos (mesmo par de nós, ex.: N1 e N2) recebem offset perpendicular
+  const pairTotal={}, pairSeen={};
+  TOPO.links.forEach(lk=>{ const k=[lk.from,lk.to].sort().join("|"); pairTotal[k]=(pairTotal[k]||0)+1; });
 
   TOPO.links.forEach(lk=>{
     const a=nodeById(lk.from), b=nodeById(lk.to); if(!a||!b)return;
     // modo simplificado: esconde links secundários (SBI mesh, SQL, telemetria)
-    if(currentMode==="simplificado" && SECONDARY.has(lk.iface)) return;
-    const ca=center(a), cb=center(b);
+    if(currentMode==="simplificado" && (SECONDARY.has(lk.iface) || lk.secondary)) return;
+    const ca={...center(a)}, cb={...center(b)};
+    const pk=[lk.from,lk.to].sort().join("|"); const pi=(pairSeen[pk]=(pairSeen[pk]||0)+1)-1;
+    if(pairTotal[pk]>1){
+      const dx=cb.x-ca.x, dy=cb.y-ca.y, L=Math.hypot(dx,dy)||1;
+      const off=(pi-(pairTotal[pk]-1)/2)*22;
+      ca.x+=-dy/L*off; ca.y+=dx/L*off; cb.x+=-dy/L*off; cb.y+=dx/L*off;
+    }
     const cls=["link"]; let marker="arrow";
     if(lk.warn){cls.push("warn");marker="arrow-warn";}
     else if(lk.planned){cls.push("planned");marker="arrow-plan";}
@@ -305,7 +352,7 @@ function render(){
     } else if(currentMode!=="simplificado"){
       const tech=el("text",{x:n.x+14,y:n.y+53,class:"tech"},g);
       const bits=[]; if(n.ip&&n.ip!=="—")bits.push(n.ip); if(n.ports&&n.ports!=="—")bits.push(n.ports.split(/[·,]/)[0].trim());
-      tech.textContent=bits.join("  ·  ").slice(0,32);
+      tech.textContent=bits.join(" · ").slice(0,32);
     }
     const s=statusOf(n);
     if(s!=="external"){ const col=s==="running"?"var(--green)":s==="stopped"?"var(--red)":"#5a606b";
@@ -345,7 +392,7 @@ document.getElementById("node-overlay").addEventListener("click",e=>{ if(e.targe
 function renderLegend(){
   const f=document.getElementById("legend");
   let body='<div class="lg-sec">Camadas</div>';
-  for(const k in TOPO.layers) body+=`<div class="lyk"><span class="sw" style="background:${TOPO.layers[k].color}"></span>${TOPO.layers[k].label}</div>`;
+  for(const k in TOPO.layers) body+=`<div class="lyk"><span class="sw" style="background:var(--c-${k})"></span>${TOPO.layers[k].label}</div>`;
   body+='<div class="lg-sec">Interfaces</div>';
   TOPO.interfaces_legend.forEach(i=>{ body+=`<div class="ifk"><span class="k">${i.iface}</span><span class="v">${i.desc}</span></div>`; });
   f.innerHTML=
@@ -410,18 +457,44 @@ document.querySelectorAll(".modes button").forEach(b=>b.onclick=()=>{
   document.body.className="mode-"+currentMode; render();
 });
 
-// ---- #2 tour guiado pelas camadas ----
-const TOUR = [
-  { layer:"external", title:"Usuário / Admin", caption:"Tudo começa aqui: o operador acessa o painel pelo navegador (HTTPS). É a borda externa — quem comanda e observa a rede." },
-  { layer:"admin", title:"Administração", caption:"O Caddy termina o TLS e autentica; o painel FastAPI faz observabilidade leve (telemetria, logs, controle do lab) — sem Prometheus/Grafana." },
-  { layer:"ran", title:"RAN + RIC (host nativo)", caption:"O coração O-RAN: o UE simulado fala por rádio (RFSIM) com o gNB; o gNB reporta ao near-RT RIC pela E2, e os xApps rodam a inteligência (ex.: previsão de throughput por UE)." },
-  { layer:"core", title:"Core 5G (containers)", caption:"O núcleo 5G: AMF (mobilidade) recebe o gNB por N2, autentica via AUSF/UDM, cria sessão via SMF; o UPF (inativo no ARM64) levaria os dados à internet (N6)." },
-];
+// ---- tema claro/escuro (persistido; re-render pois as cores do SVG são lidas via getComputedStyle) ----
+function applyThemeIcon(){
+  const dark=document.documentElement.dataset.theme!=="light";
+  const b=document.getElementById("theme-btn");
+  b.textContent=dark?"☀":"☾";
+  b.title=dark?"Mudar para o tema claro":"Mudar para o tema escuro";
+}
+document.getElementById("theme-btn").onclick=()=>{
+  const next=document.documentElement.dataset.theme==="light"?"dark":"light";
+  document.documentElement.dataset.theme=next;
+  localStorage.setItem("c5g-theme",next);
+  applyThemeIcon(); if(TOPO)render();
+};
+applyThemeIcon();
+
+// ---- #2 tour guiado pelas camadas (por projeto; core dividido em CUPS) ----
+const TOURS = {
+  p2: [
+    { layer:"external", title:"Usuário / Admin", caption:"Tudo começa aqui: o operador acessa o painel pelo navegador (HTTPS). É a borda externa — quem comanda e observa a rede." },
+    { layer:"admin", title:"Acesso & Administração", caption:"O Caddy termina o TLS e autentica; o painel FastAPI faz observabilidade leve (telemetria, logs, controle do lab) — sem Prometheus/Grafana." },
+    { layer:"ran", title:"RAN + RIC (host nativo)", caption:"O coração O-RAN: o UE simulado fala por rádio (RFSIM) com o gNB; o gNB reporta ao near-RT RIC pela E2, e os xApps rodam a inteligência (ex.: previsão de throughput por UE)." },
+    { layer:"core-cp", title:"Core 5G — Plano de Controle (SBA)", caption:"Só sinalização (CUPS): o AMF recebe o gNB pela N2 e o NAS do UE (N1), autentica via AUSF/UDM (dados no UDR/MySQL) e pede a sessão ao SMF pela N11; o SMF programa o UPF pela N4." },
+    { layer:"core-up", title:"Core 5G — Plano de Usuário", caption:"Só dados (CUPS): os pacotes do UE seguem gNB→UPF (N3/GTP-U) e saem para a internet pela N6 — sem passar pelas NFs de controle." },
+  ],
+  p1: [
+    { layer:"external", title:"Usuário / Admin", caption:"Tudo começa aqui: o operador acessa o painel pelo navegador (HTTPS). É a borda externa — quem comanda e observa a rede." },
+    { layer:"admin", title:"Acesso & Administração", caption:"O Caddy termina o TLS e autentica; o painel FastAPI observa o lab; a WebUI do Open5GS cadastra assinantes no MongoDB." },
+    { layer:"ran", title:"RAN (UERANSIM)", caption:"O UERANSIM simula gNB + UE no mesmo container: NG Setup (N2), registro do UE (NAS/N1, que viaja dentro do N2) e sessão PDU; o tráfego do UE nasce na uesimtun0 (10.60.x)." },
+    { layer:"core-cp", title:"Core 5G — Plano de Controle (SBA)", caption:"Só sinalização (CUPS): AMF registra o UE e autentica via AUSF/UDM/UDR (MongoDB); NSSF escolhe a slice, PCF decide QoS; pela N11 o AMF aciona o SMF, que programa os UPFs pela N4." },
+    { layer:"core-up", title:"Core 5G — Plano de Usuário", caption:"Só dados (CUPS): o UPF-A encaminha o tráfego do UE (N3) para a Data Network (N6, iperf3); o UPF-B assume no teste de failover." },
+  ]
+};
+const TOUR = TOURS[PROJ];
 let tourIdx=0;
 function showTour(i){
   tourIdx=(i+TOUR.length)%TOUR.length;
   const s=TOUR[tourIdx]; tourLayer=s.layer;
-  const col=TOPO.layers[s.layer].color;
+  const col=`var(--c-${s.layer})`;
   document.getElementById("tour-title").innerHTML=`<span class="chip" style="background:${col}">Camada ${tourIdx+1}</span>${s.title}`;
   document.getElementById("tour-caption").textContent=s.caption;
   document.getElementById("tour-step").textContent=`${tourIdx+1} / ${TOUR.length}`;

@@ -1,3 +1,21 @@
+# Testes de fumaça do painel
+
+## Topologia (`npm run test:topo`)
+
+Valida a tela de **topologia** (`static/topology.html` + `openran-topology*.json`):
+
+1. `check-topology.py` — verificação **geométrica** dos dois JSONs: nenhum link
+   pode atravessar o card de um nó que não é endpoint (era o caso da linha N3
+   gNB→UPF "passando por dentro" do RIC), cards não se sobrepõem, bandas CUPS
+   (plano de controle × plano de usuário) não colidem. Rode sempre que mexer
+   nos `x,y` dos nós.
+2. `topology-smoke.js` — renderiza P1 e P2 em Chrome headless (fetch stubado
+   com os JSONs reais): bandas CUPS, rótulos N1 e N11/Nsmf, offset de links
+   paralelos, 4 modos, tour e **toggle de tema claro/escuro** (aplica, persiste
+   e re-renderiza) sem erro. Screenshots em `screenshots/topology-*{,-light}.png`.
+
+---
+
 # Teste de fumaça visual do painel
 
 Valida o componente de **loader** do painel (`server/panel/static/index.html`) —

@@ -4,7 +4,8 @@
   "private": true,
   "description": "Teste de fumaça visual do painel (loaders) via Chrome headless.",
   "scripts": {
-    "test": "node visual-smoke.js"
+    "test": "node visual-smoke.js",
+    "test:topo": "python3 check-topology.py && node topology-smoke.js"
   },
   "dependencies": {
     "puppeteer-core": "^23.0.0"

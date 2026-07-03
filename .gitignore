@@ -25,3 +25,8 @@ server/oai-cn-gnb-e2/flexric-lib/*.so
 # Teste visual do painel (deps locais + artefatos)
 server/panel/test/node_modules/
 server/panel/test/screenshots/
+
+# Wheels vendorizados (aarch64, ~57MB) — binários grandes ficam fora do git
+# (mesma política das imagens OAI). Chegam ao servidor pelo rsync do deploy;
+# para recriar: server/panel/vendor/README.md
+server/panel/vendor/wheels/

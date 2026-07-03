@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Core5G_ARM64 — Login</title>
+<script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
 <style>
   :root {
     --bg: #16181d;
@@ -13,6 +14,25 @@
     --muted: #8a8f98;
     --accent: #e8590c;
     --red: #e03131;
+    --input-bg: #15171c;
+    --btn-bg: #21242b;
+    --err-bg: #3a1616;
+    --err-fg: #ff8787;
+    --shadow: rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"] {
+    --bg: #eef0f4;
+    --panel: #ffffff;
+    --border: #d5dae1;
+    --text: #1c2129;
+    --muted: #5d6570;
+    --accent: #d9500a;
+    --red: #c92a2a;
+    --input-bg: #f7f8fa;
+    --btn-bg: #eef0f3;
+    --err-bg: #fbe1e1;
+    --err-fg: #c22929;
+    --shadow: rgba(25,30,40,.14);
   }
   * { box-sizing: border-box; }
   body {
@@ -31,8 +51,14 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 36px 32px 28px;
-    box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    box-shadow: 0 12px 40px var(--shadow);
   }
+  #theme-btn {
+    position: fixed; top: 14px; right: 16px; width: auto;
+    background: var(--btn-bg); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 7px; padding: 5px 10px; font-size: 14px; line-height: 1; cursor: pointer;
+  }
+  #theme-btn:hover { color: var(--text); border-color: var(--accent); }
   .card h1 {
     margin: 0 0 4px;
     font-size: 19px;
@@ -67,7 +93,7 @@
     width: 100%;
     padding: 10px 12px;
     margin-bottom: 16px;
-    background: #15171c;
+    background: var(--input-bg);
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text);
@@ -121,8 +147,8 @@
   #btn-guest:hover { color: var(--text); border-color: var(--muted); }
   #error {
     display: none;
-    background: #3a1616;
-    color: #ff8787;
+    background: var(--err-bg);
+    color: var(--err-fg);
     border-radius: 8px;
     padding: 8px 12px;
     font-size: 12.5px;
@@ -146,6 +172,7 @@
 </style>
 </head>
 <body>
+  <button id="theme-btn" type="button" title="Alternar tema claro/escuro">◐</button>
   <div class="card">
     <h1>Core5G<span>_ARM64</span></h1>
     <p class="topic">Open5GS + UERANSIM + OAI 5G Core<br>Painel de controle do laboratório 5G</p>
@@ -180,6 +207,21 @@
   </div>
 
 <script>
+// Tema claro/escuro (persistido; aplicado no <head> antes do paint)
+const themeBtn = document.getElementById("theme-btn");
+function applyThemeIcon() {
+  const dark = document.documentElement.dataset.theme !== "light";
+  themeBtn.textContent = dark ? "☀" : "☾";
+  themeBtn.title = dark ? "Mudar para o tema claro" : "Mudar para o tema escuro";
+}
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem("c5g-theme", next);
+  applyThemeIcon();
+});
+applyThemeIcon();
+
 const errorBox = document.getElementById("error");
 const btnLogin = document.getElementById("btn-login");
 

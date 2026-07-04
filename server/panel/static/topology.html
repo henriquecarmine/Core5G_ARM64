@@ -331,8 +331,12 @@ function render(){
     else if(lk.planned){cls.push("planned");marker="arrow-plan";}
     else if(lk.dashed)cls.push("dashed");
     const pairK=[lk.from,lk.to].sort().join("|");
-    const jAct = journeyStep && !journeyStep.full && journeyStep.linkSet.has(pairK);
-    const jDir = jAct ? journeyStep.linkDir.get(pairK) : null;
+    let jDir=null;
+    if(journeyStep && !journeyStep.full){
+      const m=journeyStep.links.find(e=>e.k===pairK && (!e.iface || e.iface===lk.iface));
+      if(m) jDir=m.dir;   // etapa que fixa a interface (ex.: N2 vs N1 no mesmo par) só acende a certa
+    }
+    const jAct=!!jDir;
     const isFlow = (currentMode==="fluxo" && FLOW_IFACES.has(lk.iface)) || jAct;
     if(isFlow) cls.push("flow");
     // tour: esmaece o que não toca a camada · jornada: esmaece o que não está na etapa
@@ -518,8 +522,9 @@ document.getElementById("tour-next").onclick=()=>journeyStep?showJourney(journey
 document.getElementById("tour-prev").onclick=()=>journeyStep?showJourney(journeyIdx-1):showTour(tourIdx-1);
 document.getElementById("tour-exit").onclick=()=>journeyStep?endJourney():endTour();
 
-// ---- Jornada do UE: visita guiada seguindo o pacote, passo a passo (só P2) ----
-const JOURNEY = [
+// ---- Jornada do UE: visita guiada seguindo o pacote, passo a passo (P1 e P2) ----
+// flow: [origem, destino] ou [origem, destino, iface] p/ desambiguar links paralelos.
+const JOURNEY_P2 = [
   { id:"start",    badge:"",    nodes:["ue"],                             flow:[] },
   { id:"radio",    badge:"req", nodes:["ue","gnb"],                       flow:[["ue","gnb"]] },
   { id:"n2",       badge:"req", nodes:["gnb","amf"],                      flow:[["gnb","amf"]] },
@@ -536,17 +541,32 @@ const JOURNEY = [
   { id:"nonrt",    badge:"opt", nodes:["ric","xapps"],                    flow:[] },
   { id:"summary",  badge:"",    nodes:[],                                 flow:[], full:true },
 ];
+const JOURNEY_P1 = [
+  { id:"start",    badge:"",    nodes:["ueransim"],                       flow:[] },
+  { id:"n2",       badge:"req", nodes:["ueransim","amf"],                 flow:[["ueransim","amf","N2"]] },
+  { id:"register", badge:"req", nodes:["ueransim","amf"],                 flow:[["ueransim","amf","N1"]] },
+  { id:"auth",     badge:"req", nodes:["amf","ausf","udm","udr","mongodb","nssf"], flow:[["amf","ausf"],["ausf","udm"],["udm","udr"],["udr","mongodb"],["amf","nssf"]] },
+  { id:"session",  badge:"req", nodes:["amf","smf","pcf","bsf"],          flow:[["amf","smf"],["smf","pcf"],["pcf","bsf"]] },
+  { id:"cups",     badge:"req", nodes:["smf","upf-a"],                    flow:[["smf","upf-a"]] },
+  { id:"ip",       badge:"req", nodes:["ueransim"],                       flow:[] },
+  { id:"uplink",   badge:"req", nodes:["ueransim","upf-a"],              flow:[["ueransim","upf-a"]] },
+  { id:"egress",   badge:"req", nodes:["upf-a","dn"],                     flow:[["upf-a","dn"]] },
+  { id:"downlink", badge:"",    nodes:["dn","upf-a","ueransim"],          flow:[["dn","upf-a"],["upf-a","ueransim"]] },
+  { id:"failover", badge:"opt", nodes:["smf","upf-a","upf-b","dn"],       flow:[["smf","upf-b"],["upf-b","dn"]] },
+  { id:"summary",  badge:"",    nodes:[],                                 flow:[], full:true },
+];
+const JOURNEY = PROJ==="p1" ? JOURNEY_P1 : JOURNEY_P2;
 let journeyIdx=0;
 const BADGE_COL={req:"#2f9e44",opt:"#1c7ed6"};
 function buildJStep(s){
-  const linkSet=new Set(), linkDir=new Map();
-  s.flow.forEach(([a,b])=>{ const k=[a,b].sort().join("|"); linkSet.add(k); linkDir.set(k,[a,b]); });
-  return { nodes:s.nodes, full:!!s.full, linkSet, linkDir };
+  const nodes=new Set(s.nodes); (s.flow||[]).forEach(([a,b])=>{nodes.add(a);nodes.add(b);});
+  return { nodes:[...nodes], full:!!s.full,
+    links:(s.flow||[]).map(([a,b,iface])=>({k:[a,b].sort().join("|"), iface:iface||null, dir:[a,b]})) };
 }
 function showJourney(i){
   journeyIdx=(i+JOURNEY.length)%JOURNEY.length;
   const s=JOURNEY[journeyIdx]; tourLayer=null; journeyStep=buildJStep(s);
-  const ttl=I18N.t(`topo.journey.p2.${s.id}.title`), cap=I18N.t(`topo.journey.p2.${s.id}.caption`);
+  const ttl=I18N.t(`topo.journey.${PROJ}.${s.id}.title`), cap=I18N.t(`topo.journey.${PROJ}.${s.id}.caption`);
   const badge=s.badge?`<span class="chip" style="background:${BADGE_COL[s.badge]}">${I18N.t("topo.journey.badge_"+s.badge)}</span>`:"";
   document.getElementById("tour-title").innerHTML=badge+ttl;
   document.getElementById("tour-caption").textContent=cap;
@@ -555,8 +575,7 @@ function showJourney(i){
 }
 function startJourney(){ if(tourLayer) endTour(); document.getElementById("tour-box").classList.add("open"); showJourney(0); }
 function endJourney(){ journeyStep=null; document.getElementById("tour-box").classList.remove("open"); render(); }
-if(PROJ==="p2"){ document.getElementById("journey-btn").onclick=()=>{ journeyStep?endJourney():startJourney(); }; }
-else { document.getElementById("journey-btn").style.display="none"; }
+document.getElementById("journey-btn").onclick=()=>{ journeyStep?endJourney():startJourney(); };
 
 // ---- #3 métrica de RAN ao vivo do gNB ----
 async function loadGnbStats(){

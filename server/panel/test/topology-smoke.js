@@ -113,9 +113,13 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       await page.click('#tour-exit');
       console.log(`PASS p2 · Jornada do UE (${jtotal} etapas) sem erro`);
     } else {
-      const jbHidden = await page.evaluate(() => getComputedStyle(document.getElementById('journey-btn')).display === 'none');
-      assert(jbHidden, 'p1: journey-btn deveria estar escondido (P2-only)');
-      console.log('PASS p1 · Jornada do UE escondida (P2-only)');
+      await page.click('#journey-btn');
+      const jtotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
+      assert(jtotal === 12, `p1: jornada esperava 12 etapas, veio ${jtotal}`);
+      for (let i = 0; i < jtotal - 1; i++) await page.click('#tour-next');
+      assert(errors.length === 0, `p1: pageerror na jornada: ${errors.join(' | ')}`);
+      await page.click('#tour-exit');
+      console.log(`PASS p1 · Jornada do UE (${jtotal} etapas · com failover de UPF) sem erro`);
     }
 
     await new Promise(r => setTimeout(r, 200));

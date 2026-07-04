@@ -188,6 +188,9 @@
   <button class="btn" id="tour-btn" data-i18n-title="topo.tour_btn_title" title="Tour guiado pelas camadas">
     <svg viewBox="0 0 24 24"><path d="M12 2l2.5 6.5L21 9l-5 4 1.5 7L12 16l-5.5 4L8 13 3 9l6.5-.5z"/></svg> <span data-i18n="topo.tour_btn">Tour</span>
   </button>
+  <button class="btn" id="journey-btn" data-i18n-title="topo.journey.btn_title" title="Jornada do UE">
+    <svg viewBox="0 0 24 24"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg> <span data-i18n="topo.journey.btn">Jornada do UE</span>
+  </button>
   <div id="lang-menu" title="Idioma"></div>
   <button class="btn" id="theme-btn" title="Alternar tema claro/escuro">◐</button>
   <div class="modes spacer">
@@ -261,7 +264,7 @@
 // Edite static/openran-topology.json para alterar o desenho (ver _como_atualizar).
 // ============================================================================
 const NODE_W = 184, NODE_H = 66, SVGNS = "http://www.w3.org/2000/svg";
-let TOPO = null, currentMode = "tecnico", logsTimer = null, gnbStats = null, tourLayer = null;
+let TOPO = null, currentMode = "tecnico", logsTimer = null, gnbStats = null, tourLayer = null, journeyStep = null;
 // Projeto selecionado via ?proj=p1|p2 (padrão p2).
 const PROJ = (new URLSearchParams(location.search).get("proj") === "p1") ? "p1" : "p2";
 function setProjTitle() { document.getElementById("topo-proj").textContent = I18N.t(PROJ === "p1" ? "topo.p1_title" : "topo.p2_title"); }
@@ -315,7 +318,7 @@ function render(){
   TOPO.links.forEach(lk=>{
     const a=nodeById(lk.from), b=nodeById(lk.to); if(!a||!b)return;
     // modo simplificado: esconde links secundários (SBI mesh, SQL, telemetria)
-    if(currentMode==="simplificado" && (SECONDARY.has(lk.iface) || lk.secondary)) return;
+    if(currentMode==="simplificado" && !journeyStep && (SECONDARY.has(lk.iface) || lk.secondary)) return;
     const ca={...center(a)}, cb={...center(b)};
     const pk=[lk.from,lk.to].sort().join("|"); const pi=(pairSeen[pk]=(pairSeen[pk]||0)+1)-1;
     if(pairTotal[pk]>1){
@@ -327,19 +330,24 @@ function render(){
     if(lk.warn){cls.push("warn");marker="arrow-warn";}
     else if(lk.planned){cls.push("planned");marker="arrow-plan";}
     else if(lk.dashed)cls.push("dashed");
-    const isFlow = currentMode==="fluxo" && FLOW_IFACES.has(lk.iface);
+    const pairK=[lk.from,lk.to].sort().join("|");
+    const jAct = journeyStep && !journeyStep.full && journeyStep.linkSet.has(pairK);
+    const jDir = jAct ? journeyStep.linkDir.get(pairK) : null;
+    const isFlow = (currentMode==="fluxo" && FLOW_IFACES.has(lk.iface)) || jAct;
     if(isFlow) cls.push("flow");
-    // tour: esmaece o que não toca a camada em foco
-    const tourDim = tourLayer && a.layer!==tourLayer && b.layer!==tourLayer;
+    // tour: esmaece o que não toca a camada · jornada: esmaece o que não está na etapa
+    const tourDim = (tourLayer && a.layer!==tourLayer && b.layer!==tourLayer) || (journeyStep && !journeyStep.full && !jAct);
     if(tourDim) cls.push("tour-dim");
     const stroke=lk.warn?"var(--red)":lk.planned?"#3a3f48":layerColor(b);
     el("path",{d:`M${ca.x},${ca.y} L${cb.x},${cb.y}`,class:cls.join(" "),stroke,"marker-end":`url(#${marker})`},gL);
     // #1 pacote viajante: ponto animado percorrendo o link no modo Fluxo
     if(isFlow && !lk.planned){
+      let fa=ca, fb=cb;
+      if(jDir && jDir[0]===lk.to){ fa=cb; fb=ca; }   // pacote no sentido da etapa (ida/volta)
       const dot=el("circle",{r:3.5,class:"packet"},gL);
-      const dur=(Math.hypot(cb.x-ca.x,cb.y-ca.y)/260+0.5).toFixed(2)+"s";
-      el("animate",{attributeName:"cx",from:ca.x,to:cb.x,dur,repeatCount:"indefinite"},dot);
-      el("animate",{attributeName:"cy",from:ca.y,to:cb.y,dur,repeatCount:"indefinite"},dot);
+      const dur=(Math.hypot(fb.x-fa.x,fb.y-fa.y)/260+0.5).toFixed(2)+"s";
+      el("animate",{attributeName:"cx",from:fa.x,to:fb.x,dur,repeatCount:"indefinite"},dot);
+      el("animate",{attributeName:"cy",from:fa.y,to:fb.y,dur,repeatCount:"indefinite"},dot);
     }
     // rótulo SEMPRE visível — desenhado na camada de topo (gT), nunca atrás de um card
     const mx=(ca.x+cb.x)/2, my=(ca.y+cb.y)/2, tw=lk.iface.length*6.6+14;
@@ -348,7 +356,7 @@ function render(){
   });
 
   TOPO.nodes.forEach(n=>{
-    const tourDim = tourLayer && n.layer!==tourLayer;
+    const tourDim = (tourLayer && n.layer!==tourLayer) || (journeyStep && !journeyStep.full && !journeyStep.nodes.includes(n.id));
     const g=el("g",{class:"node"+(n.planned?" planned":"")+(tourDim?" tour-dim":"")},gN); g.dataset.id=n.id;
     el("rect",{x:n.x,y:n.y,width:NODE_W,height:NODE_H,rx:9,class:"card",stroke:borderColor(n)},g);
     el("rect",{x:n.x,y:n.y,width:4,height:NODE_H,rx:2,fill:layerColor(n),opacity:n.planned?.4:1},g);
@@ -479,7 +487,7 @@ function applyThemeIcon(){
 // troca de idioma: re-renderiza SVG, legenda, título, hint e tour
 I18N.onChange(()=>{ applyThemeIcon(); setProjTitle();
   if(TOPO){ render(); renderLegend(); }
-  if(tourLayer) showTour(tourIdx);
+  if(journeyStep) showJourney(journeyIdx); else if(tourLayer) showTour(tourIdx);
 });
 document.getElementById("theme-btn").onclick=()=>{
   const next=document.documentElement.dataset.theme==="light"?"dark":"light";
@@ -505,10 +513,50 @@ function showTour(i){
 }
 function startTour(){ document.getElementById("tour-box").classList.add("open"); showTour(0); }
 function endTour(){ tourLayer=null; document.getElementById("tour-box").classList.remove("open"); render(); }
-document.getElementById("tour-btn").onclick=()=>{ tourLayer?endTour():startTour(); };
-document.getElementById("tour-next").onclick=()=>showTour(tourIdx+1);
-document.getElementById("tour-prev").onclick=()=>showTour(tourIdx-1);
-document.getElementById("tour-exit").onclick=endTour;
+document.getElementById("tour-btn").onclick=()=>{ if(journeyStep) endJourney(); tourLayer?endTour():startTour(); };
+document.getElementById("tour-next").onclick=()=>journeyStep?showJourney(journeyIdx+1):showTour(tourIdx+1);
+document.getElementById("tour-prev").onclick=()=>journeyStep?showJourney(journeyIdx-1):showTour(tourIdx-1);
+document.getElementById("tour-exit").onclick=()=>journeyStep?endJourney():endTour();
+
+// ---- Jornada do UE: visita guiada seguindo o pacote, passo a passo (só P2) ----
+const JOURNEY = [
+  { id:"start",    badge:"",    nodes:["ue"],                             flow:[] },
+  { id:"radio",    badge:"req", nodes:["ue","gnb"],                       flow:[["ue","gnb"]] },
+  { id:"n2",       badge:"req", nodes:["gnb","amf"],                      flow:[["gnb","amf"]] },
+  { id:"register", badge:"req", nodes:["ue","gnb","amf"],                 flow:[["ue","amf"]] },
+  { id:"auth",     badge:"req", nodes:["amf","ausf","udm","udr","mysql"], flow:[["amf","ausf"],["ausf","udm"],["udm","udr"],["udr","mysql"]] },
+  { id:"session",  badge:"req", nodes:["amf","smf"],                      flow:[["amf","smf"]] },
+  { id:"cups",     badge:"req", nodes:["smf","upf"],                      flow:[["smf","upf"]] },
+  { id:"ip",       badge:"req", nodes:["ue"],                             flow:[] },
+  { id:"uplink",   badge:"req", nodes:["ue","gnb","upf"],                 flow:[["ue","gnb"],["gnb","upf"]] },
+  { id:"egress",   badge:"req", nodes:["upf","ext-dn"],                   flow:[["upf","ext-dn"]] },
+  { id:"downlink", badge:"",    nodes:["ext-dn","upf","gnb","ue"],        flow:[["ext-dn","upf"],["upf","gnb"],["gnb","ue"]] },
+  { id:"collect",  badge:"opt", nodes:["gnb","ric"],                      flow:[["gnb","ric"]] },
+  { id:"act",      badge:"opt", nodes:["gnb","ric","xapps"],             flow:[["xapps","ric"],["ric","gnb"]] },
+  { id:"nonrt",    badge:"opt", nodes:["ric","xapps"],                    flow:[] },
+  { id:"summary",  badge:"",    nodes:[],                                 flow:[], full:true },
+];
+let journeyIdx=0;
+const BADGE_COL={req:"#2f9e44",opt:"#1c7ed6"};
+function buildJStep(s){
+  const linkSet=new Set(), linkDir=new Map();
+  s.flow.forEach(([a,b])=>{ const k=[a,b].sort().join("|"); linkSet.add(k); linkDir.set(k,[a,b]); });
+  return { nodes:s.nodes, full:!!s.full, linkSet, linkDir };
+}
+function showJourney(i){
+  journeyIdx=(i+JOURNEY.length)%JOURNEY.length;
+  const s=JOURNEY[journeyIdx]; tourLayer=null; journeyStep=buildJStep(s);
+  const ttl=I18N.t(`topo.journey.p2.${s.id}.title`), cap=I18N.t(`topo.journey.p2.${s.id}.caption`);
+  const badge=s.badge?`<span class="chip" style="background:${BADGE_COL[s.badge]}">${I18N.t("topo.journey.badge_"+s.badge)}</span>`:"";
+  document.getElementById("tour-title").innerHTML=badge+ttl;
+  document.getElementById("tour-caption").textContent=cap;
+  document.getElementById("tour-step").textContent=`${journeyIdx+1} / ${JOURNEY.length}`;
+  render();
+}
+function startJourney(){ if(tourLayer) endTour(); document.getElementById("tour-box").classList.add("open"); showJourney(0); }
+function endJourney(){ journeyStep=null; document.getElementById("tour-box").classList.remove("open"); render(); }
+if(PROJ==="p2"){ document.getElementById("journey-btn").onclick=()=>{ journeyStep?endJourney():startJourney(); }; }
+else { document.getElementById("journey-btn").style.display="none"; }
 
 // ---- #3 métrica de RAN ao vivo do gNB ----
 async function loadGnbStats(){

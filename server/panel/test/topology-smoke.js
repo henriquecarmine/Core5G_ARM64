@@ -103,6 +103,21 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     await page.click('#tour-exit');
     console.log(`PASS ${proj} · tour (5 camadas) sem erro`);
 
+    // Jornada do UE (só P2): percorre as 15 etapas seguindo o pacote, sem erro
+    if (proj === 'p2') {
+      await page.click('#journey-btn');
+      const jtotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
+      assert(jtotal === 15, `p2: jornada esperava 15 etapas, veio ${jtotal}`);
+      for (let i = 0; i < jtotal - 1; i++) await page.click('#tour-next');
+      assert(errors.length === 0, `p2: pageerror na jornada: ${errors.join(' | ')}`);
+      await page.click('#tour-exit');
+      console.log(`PASS p2 · Jornada do UE (${jtotal} etapas) sem erro`);
+    } else {
+      const jbHidden = await page.evaluate(() => getComputedStyle(document.getElementById('journey-btn')).display === 'none');
+      assert(jbHidden, 'p1: journey-btn deveria estar escondido (P2-only)');
+      console.log('PASS p1 · Jornada do UE escondida (P2-only)');
+    }
+
     await new Promise(r => setTimeout(r, 200));
     await page.screenshot({ path: path.join(SHOTS, `topology-${proj}.png`) });
     console.log(`  screenshot: screenshots/topology-${proj}.png`);

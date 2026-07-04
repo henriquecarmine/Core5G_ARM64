@@ -739,7 +739,7 @@ def _record_attendance(name: str, email: str) -> None:
 
 
 @app.post("/api/login")
-def do_login(payload: dict) -> JSONResponse:
+def do_login(payload: dict, request: Request) -> JSONResponse:
     user = str(payload.get("user", ""))
     password = str(payload.get("pass", ""))
     is_guest = GUEST_ENABLED and user == GUEST_USER and password == GUEST_PASSWORD

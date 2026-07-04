@@ -7,7 +7,7 @@ Guide pas à pas pour reproduire le laboratoire **5G SA natif** (Core Docker + g
 
 > **Périmètre :** ce lab s'exécute sur l'**hôte** (Docker uniquement pour le Core). Il **n'**utilise **pas** Kind multicluster ni l'intégration avec SD-RAN/Aether.
 
-> **Images du Core en arm64 :** les images `oaisoftwarealliance/*:v1.5.1` n'existent pas sur DockerHub pour `linux/arm64`. Elles ont été compilées nativement dans ce projet. Consultez le guide complet dans [OAI-CORE-ARM64.md](../../../../../../server/oai-cn-gnb-e2/docs/OAI-CORE-ARM64.md) avant de tenter de démarrer le Core sur un hôte Graviton2/Apple Silicon.
+> **Images du Core en arm64 :** les images `oaisoftwarealliance/*:v1.5.1` n'existent pas sur DockerHub pour `linux/arm64`. Elles ont été compilées nativement dans ce projet. Consultez le guide complet dans [OAI-CORE-ARM64.md](OAI-CORE-ARM64.md) avant de tenter de démarrer le Core sur un hôte Graviton2/Apple Silicon.
 
 ---
 
@@ -64,10 +64,10 @@ Guide pas à pas pour reproduire le laboratoire **5G SA natif** (Core Docker + g
 
 Documentation complémentaire :
 
-- [INSTALACAO_GNB_OAI.md](../../../../../../server/oai-cn-gnb-e2/docs/INSTALACAO_GNB_OAI.md) — dépendances et build de base du RAN
+- [INSTALACAO_GNB_OAI.md](INSTALACAO_GNB_OAI.md) — dépendances et build de base du RAN
 - [SLIDES_LAB_E2.md](../../../../../../server/oai-cn-gnb-e2/docs/SLIDES_LAB_E2.md) — présentation des résultats (format Marp)
-- [E2_FLEXRIC.md](../../../../../../server/oai-cn-gnb-e2/docs/E2_FLEXRIC.md) — opération E2/FlexRIC
-- [E2_SERVICE_MODELS.md](../../../../../../server/oai-cn-gnb-e2/docs/E2_SERVICE_MODELS.md) — détails RC/KPM/custom SMs
+- [E2_FLEXRIC.md](E2_FLEXRIC.md) — opération E2/FlexRIC
+- [E2_SERVICE_MODELS.md](E2_SERVICE_MODELS.md) — détails RC/KPM/custom SMs
 
 ---
 

@@ -272,12 +272,22 @@
 
   /* Console */
   #console-wrap { display:flex; flex-direction:column; min-height:0; }
-  #console-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  #console-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
   #status-pill { font-size:12px; padding:3px 10px; border-radius:12px; background:var(--btn-bg2); color:var(--muted); }
   #status-pill.running { background:var(--warn-bg); color:var(--warn-fg); }
   #status-pill.ok { background:var(--ok-bg); color:var(--ok-fg); }
   #status-pill.error { background:var(--err-bg); color:var(--err-fg); }
-  #clear-btn, #copy-btn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; width:auto; padding:4px 8px; margin:0; }
+  /* copiar/limpar: agrupados ao lado do status, pílulas translúcidas com ícone
+     (azul = copiar, verde = limpar). Cor via var(--info)/--ok-fg → legível nos 2 temas. */
+  #copy-btn, #clear-btn { display:inline-flex; align-items:center; gap:5px; width:auto; margin:0;
+    padding:3px 9px; border-radius:7px; font-family:inherit; font-size:11.5px; line-height:1;
+    cursor:pointer; background:none; border:1px solid transparent; transition:background .15s, border-color .15s; }
+  #copy-btn .tb-ic, #clear-btn .tb-ic { width:13px; height:13px; fill:none; stroke:currentColor;
+    stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  #copy-btn { color:var(--info); background:rgba(77,171,247,.12); border-color:rgba(77,171,247,.40); }
+  #copy-btn:hover { background:rgba(77,171,247,.22); border-color:rgba(77,171,247,.62); }
+  #clear-btn { color:var(--ok-fg); background:rgba(105,219,124,.12); border-color:rgba(105,219,124,.42); }
+  #clear-btn:hover { background:rgba(105,219,124,.24); border-color:rgba(105,219,124,.64); }
   /* consoles/terminais ficam escuros nos dois temas (identidade + colorização JS dos logs) */
   #output { flex:1; background:var(--term-bg); border:1px solid var(--border); border-radius:6px; padding:12px; overflow-y:auto; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px; white-space:pre-wrap; line-height:1.5; color:#e6e6e6; }
   /* .run-header vive dentro de consoles escuros (dois temas): cores fixas */
@@ -748,10 +758,14 @@
   <div id="console-wrap">
     <div id="console-toolbar">
       <span id="status-pill" data-i18n="st.idle">ocioso</span>
-      <span>
-        <button id="copy-btn" data-i18n="btn.copy">copiar</button>
-        <button id="clear-btn" data-i18n="btn.clear">limpar</button>
-      </span>
+      <button id="copy-btn" data-i18n-title="btn.copy" title="copiar">
+        <svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
+        <span data-i18n="btn.copy">copiar</span>
+      </button>
+      <button id="clear-btn" data-i18n-title="btn.clear" title="limpar">
+        <svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        <span data-i18n="btn.clear">limpar</span>
+      </button>
     </div>
     <div id="output" data-i18n="console.ready">Pronto. Clique em um comando à esquerda ou abra o UE Lab.</div>
   </div>

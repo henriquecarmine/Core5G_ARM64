@@ -35,7 +35,8 @@ RIC com Inteligência Artificial (Near-RT / Non-RT RIC), incluindo o **UE-TP-rAp
   (em 2 vCPU o UE + gNB RFSIM não coexistem sob o guardrail anti-freeze). Análise
   e runbook do resize reversível: [`POLITICA-DE-CUSTOS.md §3`](../../docs/POLITICA-DE-CUSTOS.md).
 
-> Próximo passo natural: converter os datasets (hoje em PDF) para **CSV** e montar
-> um pipeline Python starter (treino + avaliação de 2 técnicas por caso de uso).
+> **Próximo passo (planejado):** converter os datasets (hoje em PDF) para **CSV** e
+> montar um pipeline Python starter com scikit-learn — plano detalhado em
+> [`docs/plano-lab-ric-ia.md`](../../docs/plano-lab-ric-ia.md).
 >
 > Curso base (as 6 aulas do Prof. Jonas): [`../base/`](../base/).

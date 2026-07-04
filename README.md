@@ -13,12 +13,14 @@ controle próprio. Reúne **dois projetos** independentes da disciplina
 
 **Fase atual (jul/2026): artigo científico** — o Prof. Jonas está redigindo o
 artigo (Overleaf) e pediu um checklist de 8 aprimoramentos na plataforma
-(2026-07-02). Estado: **7 de 8 concluídos** no painel v0.33.x — topologia com
-bandas **CUPS** (plano de controle × usuário), interfaces **N1/N11** explícitas,
-layout sem sobreposições, **temas claro/escuro**, colorimetria **ISO** em todos
-os terminais, anotações didáticas na partida de cada serviço, **seletor de
-idiomas 🌐 (PT/EN/ES/FR)** e a [política de custos](docs/POLITICA-DE-CUSTOS.md).
-Pendente: i18n completo do painel além de login/topbar — ver roadmap (§2).
+(2026-07-02): **8 de 8 concluídos**. Topologia com bandas **CUPS** (plano de
+controle × usuário), interfaces **N1/N11** explícitas, layout sem sobreposições,
+**temas claro/escuro**, colorimetria **ISO** nos terminais, anotações didáticas
+na partida de cada serviço, **i18n completo em 4 idiomas** (🌐 PT/EN/ES/FR: painel
+inteiro + topologia + scripts via `LAB_LANG` + seletor com **bandeiras** + labs,
+guias e bíblia traduzidos) e a [política de custos](docs/POLITICA-DE-CUSTOS.md).
+Próximo marco técnico: o **lab de RIC com IA** (UE-TP-rApp) — aguarda upgrade p/
+4 vCPU (roadmap §2).
 
 > **Quer só entender o quê/porquê de tudo?** Leia a
 > [**Bíblia do projeto**](core5g-arm64-bible.md) (referência conceitual completa,
@@ -168,7 +170,7 @@ Sobre isso, um **modo sala de aula** pensado para apresentar a um auditório:
 
 | Quando | Item | Estado |
 |---|---|---|
-| **Curto prazo** | **i18n completo do painel — pt/en/es/fr** além do login/topbar: **F2** (index inteiro), **F3** (topologia/JSONs), **F4** (scripts bash via `LAB_LANG`). Infra pronta: `static/i18n.js` + seletor 🌐 + fallback + `npm run test:i18n` | ⏳ F1 pronta (v0.34.0) |
+| ✅ Resolvido | **i18n completo em 4 idiomas (pt/en/es/fr)**: painel inteiro (F1–F4), topologia, scripts via `LAB_LANG`, **seletor com bandeiras** (F6), e **toda a documentação** (labs, guias, bíblia) traduzida + [`docs/i18n/GLOSSARY.md`](docs/i18n/GLOSSARY.md) + **CI de paridade** | ✅ v0.34.0–0.39.0 |
 | Curto prazo | xApp **UE-TP-rApp** (previsão de throughput por UE: RSSI/RSRP/CQI/PRB) — o tema do grupo. Wheels do **scikit-learn aarch64** já vendorados (`server/panel/vendor/`) para os RICs Near-RT/Non-RT | ⏳ Esqueleto em `xapp_ue_tp_moni.c`; falta o modelo |
 | 🧱 **Bloqueio de HW** | **Lab de RIC (Near/Non-RT) com IA + relatório KPM com throughput real dependem de 4 vCPU.** Em 2 vCPU, UE+gNB RFSIM não coexistem sob o guardrail anti-freeze (removê-lo congelou o box 2×). Análise de custo e runbook do resize reversível: [`docs/POLITICA-DE-CUSTOS.md`](docs/POLITICA-DE-CUSTOS.md) §3 | ⚠️ Aguarda aval (custos) |
 | ✅ Resolvido | **Checklist do artigo, pontos 2–7 + temas** (Prof. Jonas, 2026-07-02): topologia CUPS/N1/N11 sem sobreposições, IPs/portas padronizados, temas claro/escuro, colorimetria ISO fixa nos terminais, anotações didáticas na partida de serviços | ✅ v0.32.0–0.33.1 |

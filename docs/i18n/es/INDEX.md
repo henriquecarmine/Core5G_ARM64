@@ -33,6 +33,22 @@ y las URL no se modifican.
 |------|-----------|
 | [Tutorial del lab E2](server/oai-cn-gnb-e2/docs/TUTORIAL_LAB_E2.md) | Core OAI + near-RT RIC + gNB (E2) + xApps, de punta a punta |
 
+## Corpus técnico
+
+La documentación de referencia — internos del 5GC, la pila E2/RIC y operación.
+
+| Doc | Contenido |
+|-----|-----------|
+| [Biblia del proyecto](core5g-arm64-bible.md) | Documento maestro: arquitectura, decisiones, trampas, roadmap |
+| [E2 / FlexRIC](server/oai-cn-gnb-e2/docs/E2_FLEXRIC.md) | near-RT RIC, E2AP, Service Models, codificación |
+| [E2 Service Models](server/oai-cn-gnb-e2/docs/E2_SERVICE_MODELS.md) | KPM / RC y los demás SMs |
+| [Analítica KPM](server/oai-cn-gnb-e2/docs/KPM-ANALYTICS.md) | Pipeline KPM → CSV → KPI |
+| [Recolección KPM resiliente](server/oai-cn-gnb-e2/docs/KPM-COLETA-RESILIENTE.md) | Captura KPM por eventos, sin congelar |
+| [Build del OAI Core arm64](server/oai-cn-gnb-e2/docs/OAI-CORE-ARM64.md) | Compilar las imágenes OAI para arm64 (5 bugs resueltos) |
+| [Instalación del gNB OAI](server/oai-cn-gnb-e2/docs/INSTALACAO_GNB_OAI.md) | Puesta en marcha del gNB RFSIM |
+| [P2 CPU y user plane](server/oai-cn-gnb-e2/docs/PROJETO2-CPU-E-USERPLANE.md) | Límites de 2 vCPU, user plane, upgrade a 4 vCPU |
+| [RAN (UERANSIM)](server/ueransim/docs/RAN.md) | La RAN simulada |
+
 ## READMEs
 
 Los cuatro README de la raíz: [README.es.md](../../../README.es.md).

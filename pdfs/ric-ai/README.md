@@ -7,21 +7,59 @@ RIC com Inteligência Artificial (Near-RT / Non-RT RIC), incluindo o **UE-TP-rAp
 
 ## Conteúdo
 
-- **`MLRAN_A01.pdf`** — Aula 01 (135 slides): ementa + introdução/motivação
-  (SON → RIC, Near-RT × Non-RT, xApp × rApp, NWDAF, "do modelo aos dados") +
-  fundamentos de IA. Ferramentas: **KNIME** (low-code) + **Python**
-  (`scikit-learn` / `pytorch` / `tensorflow`). Avaliação: aplicar **2 técnicas de
-  ML** a um caso de uso (traffic steering, espectro dinâmico, otimização de
-  energia, manutenção preditiva, detecção de anomalias) — entrega 01/08/26.
-- **`Base Fonts RIC/`** — datasets de treino (tabelas horárias sintéticas) dos
-  casos de uso de regressão:
+### Aulas — `MLRAN_A0x.pdf`
 
-  | Dataset | Features | Alvo | Caso de uso |
-  |---|---|---|---|
-  | `traffic_prediction` | ActiveUsers, AvgSINR, PRBUtilization | **Throughput** | **= UE-TP-rApp** |
-  | `traffic_load_prediction` | + TxPower | **TrafficLoad** | traffic steering |
-  | `energy_prediction` | ActiveUsers, AvgSINR, PRBUtilization | **EnergyConsumption** | energy saving |
-  | `energy_prediction_boosting` | + TxPower, CellTemperature | **EnergyConsumption** | energy saving (boosting) |
+| Aula | Slides | Conteúdo |
+|---|---|---|
+| **`MLRAN_A01.pdf`** | 135 | Ementa + introdução/motivação (SON → RIC, Near-RT × Non-RT, xApp × rApp, NWDAF, "do modelo aos dados") + fundamentos de IA. Ferramentas: **KNIME** (low-code) + **Python** (`scikit-learn` / `pytorch` / `tensorflow`). |
+| **`MLRAN_A02.pdf`** | 98 | Revisão + **Aprendizado supervisionado**: Regressão e Classificação. |
+| **`MLRAN_A03.pdf`** | 155 | **Proposta do Projeto Final** + Classificação + **Aprendizado não supervisionado**. |
+
+Avaliação da disciplina: aplicar **2 técnicas de ML** a um caso de uso (traffic
+steering, espectro dinâmico, otimização de energia, manutenção preditiva,
+detecção de anomalias) — entrega **01/08/26**.
+
+**Projeto final (A03):** reproduzir na prática um caso de uso do artigo *"RAN
+Intelligent Controller (RIC): From open-source implementation to real-world
+validation"* ([ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2405959524000067)) —
+casos sorteados: **Localization**, **UE-TP** (previsão de throughput por UE) e
+**Predictive Maintenance**. Dados brutos abertos:
+[`FCCLab/sutd_5g_dataset_2023`](https://github.com/FCCLab/sutd_5g_dataset_2023/tree/dataset/dataset).
+
+### Datasets — `Base Fonts RIC/`
+
+Tabelas sintéticas de KPIs de célula (RSRP/RSRQ/SINR, PRB, usuários ativos,
+throughput, energia…), organizadas por técnica de ML.
+
+**Regressão (supervisionado):**
+
+| Dataset | Features | Alvo | Caso de uso |
+|---|---|---|---|
+| `traffic_prediction` | ActiveUsers, AvgSINR, PRBUtilization | **Throughput** | **= UE-TP-rApp** |
+| `traffic_load_prediction` | + TxPower | **TrafficLoad** | traffic steering |
+| `energy_prediction` | ActiveUsers, AvgSINR, PRBUtilization | **EnergyConsumption** | energy saving |
+| `energy_prediction_boosting` | + TxPower, CellTemperature | **EnergyConsumption** | energy saving (boosting) |
+
+**Classificação (supervisionado):**
+
+| Dataset | Técnica | Features | Uso |
+|---|---|---|---|
+| `cell_congestion_tree` | Árvore de decisão | ActiveUsers, PRBUtilization, AvgSINR, TxPower, PacketLoss, SchedulingDelay | congestão de célula |
+| `cell_failure_logistic` | Regressão logística | + CellTemperature | falha de célula (manut. preditiva) |
+| `kNN_Practice_100rows` | k-NN | PRB_Usage, Active_Users, Throughput, SINR, RSRQ | estado da célula |
+| `naivebayes_practice` | Naive Bayes | PRB_Usage, Active_Users, Throughput, SINR, RSRQ | estado da célula |
+| `svm_interference_dataset` | SVM | RSRP, RSRQ, SINR, PRB_Usage, Active_Users | detecção de interferência (dataset maior) |
+
+**Não supervisionado** — todos com as mesmas features
+(Throughput_Mbps, Latency_ms, PRB_Utilization, Active_Users, Energy_Consumption_W):
+
+| Dataset | Técnica | Caso de uso |
+|---|---|---|
+| `kmeans_practice` | k-means | segmentação/perfilamento de células |
+| `dbscan_practive` | DBSCAN *(nome do arquivo grafado "practive")* | clustering por densidade |
+| `aggclustering_practice` | Clustering hierárquico (aglomerativo) | agrupamento de células |
+| `isolationforest_practice` | Isolation Forest | detecção de anomalia |
+| `pca_practice` | PCA | redução de dimensionalidade |
 
 ## Contexto e dependências
 

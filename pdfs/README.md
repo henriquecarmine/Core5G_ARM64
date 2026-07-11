@@ -24,6 +24,10 @@ Material de referência do **lab de RIC com Inteligência Artificial**
 (Near-RT / Non-RT RIC + **UE-TP-rApp**: previsão de throughput por UE) — o tema
 do grupo. Papers e slides sobre ML/IA aplicada ao RAN entram aqui.
 
+Aulas da disciplina do **Prof. Julio Tesolin** (`MLRAN_A01`–`A03`) e os datasets
+por técnica de ML (regressão, classificação, clustering, anomalia, PCA) em
+`Base Fonts RIC/`. Catálogo completo: [`ric-ai/README.md`](ric-ai/README.md).
+
 > Este lab é o próximo marco técnico do projeto; depende do upgrade para 4 vCPU
 > (ver [política de custos §3](../docs/POLITICA-DE-CUSTOS.md) e o roadmap no
 > [README](../README.md)). As wheels do scikit-learn aarch64 já estão

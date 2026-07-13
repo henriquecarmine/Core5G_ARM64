@@ -30,3 +30,7 @@ server/panel/test/screenshots/
 # (mesma política das imagens OAI). Chegam ao servidor pelo rsync do deploy;
 # para recriar: server/panel/vendor/README.md
 server/panel/vendor/wheels/
+
+# Dados de runtime do painel (Resultados salvos, roster, dúvidas do lab)
+# — gerados em produção pelo server.py, nunca versionar
+server/panel_results/

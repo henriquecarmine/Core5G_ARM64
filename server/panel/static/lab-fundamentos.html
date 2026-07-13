@@ -1,0 +1,234 @@
+<title>Lab RIC-IA · Fundamentos</title>
+<style>
+  :root{
+    --bg:#e9eef4; --surface:#ffffff; --surface-2:#f3f7fc; --inset:#0d1622;
+    --ink:#0f1b26; --ink-2:#4a5c6e; --ink-3:#7c8da0; --line:#d7e0ea;
+    --accent:#1f6fe5; --accent-2:#0aa5b8; --accent-ink:#ffffff;
+    --sup:#1f6fe5; --nsup:#0aa5b8; --good:#12874c;
+    --shadow:0 1px 2px rgba(16,32,48,.06),0 8px 24px rgba(16,32,48,.07);
+    --r:14px; --r-sm:9px;
+    --fs-display:clamp(1.6rem,1.1rem + 2vw,2.4rem);
+    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#080d14; --surface:#111a25; --surface-2:#0d1520; --inset:#080f18;
+    --ink:#e7eff8; --ink-2:#9aabbe; --ink-3:#6b7d92; --line:#213142;
+    --accent:#4d90ff; --accent-2:#28c2d6; --accent-ink:#06101d; --sup:#4d90ff; --nsup:#28c2d6; --good:#33c07d;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{--bg:#e9eef4;--surface:#ffffff;--surface-2:#f3f7fc;--inset:#0d1622;--ink:#0f1b26;--ink-2:#4a5c6e;--ink-3:#7c8da0;--line:#d7e0ea;--accent:#1f6fe5;--accent-2:#0aa5b8;--accent-ink:#ffffff;--sup:#1f6fe5;--nsup:#0aa5b8;--good:#12874c;}
+  :root[data-theme="dark"]{--bg:#080d14;--surface:#111a25;--surface-2:#0d1520;--inset:#080f18;--ink:#e7eff8;--ink-2:#9aabbe;--ink-3:#6b7d92;--line:#213142;--accent:#4d90ff;--accent-2:#28c2d6;--accent-ink:#06101d;--sup:#4d90ff;--nsup:#28c2d6;--good:#33c07d;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:clamp(16px,3vw,40px)}
+  h1,h2,h3,h4{text-wrap:balance;margin:0} p{margin:0}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px}
+  h1{font-size:var(--fs-display);font-weight:770;letter-spacing:-.02em;line-height:1.06}
+  .lead{color:var(--ink-2);margin-top:12px;max-width:58ch;font-size:1.04rem}
+  .themebtn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.05rem;display:grid;place-items:center;box-shadow:var(--shadow)}
+  .themebtn:hover{color:var(--accent);border-color:var(--accent)}
+  .topright{display:flex;align-items:center;gap:8px;flex:none}
+  .langsel{display:flex;gap:3px}
+  .langbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:3px 6px;font-size:1rem;cursor:pointer;line-height:1;opacity:.5;filter:grayscale(.5);transition:.15s}
+  .langbtn.on{opacity:1;filter:none;border-color:var(--accent)} .langbtn:hover{opacity:1}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:clamp(18px,2.4vw,26px);margin-bottom:18px}
+  .card h2{font-size:1.16rem;font-weight:730;display:flex;align-items:center;gap:9px}
+  .card p{color:var(--ink-2);margin-top:10px} .card p b{color:var(--ink)}
+  .kicker{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+
+  .fam{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  @media (max-width:600px){.fam{grid-template-columns:1fr}}
+  .famcol{border:1px solid var(--line);border-radius:var(--r-sm);padding:15px;background:var(--surface-2)}
+  .famcol.sup{border-top:3px solid var(--sup)} .famcol.nsup{border-top:3px solid var(--nsup)}
+  .famcol h3{font-size:1rem;font-weight:730} .famcol .tag{font-family:var(--mono);font-size:.68rem;color:var(--ink-3);font-weight:600}
+  .tlist{display:flex;flex-direction:column;gap:7px;margin-top:11px}
+  .tlink{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:8px 11px;font-size:.9rem;transition:.15s}
+  .tlink:hover{border-color:var(--accent)} .tlink b{font-weight:650} .tlink span{color:var(--ink-3);font-size:.82rem}
+  .tlink .em{font-size:1.1rem}
+
+  .helper{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .hbtn{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:999px;padding:8px 14px;font-size:.88rem;font-weight:600;cursor:pointer;transition:.15s}
+  .hbtn:hover,.hbtn.on{border-color:var(--accent);color:var(--accent)}
+  .result{margin-top:14px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--surface-2);padding:14px 16px;display:none}
+  .result.show{display:block}
+  .result .big{font-size:1.05rem;font-weight:730;display:flex;align-items:center;gap:8px}
+  .result p{margin-top:6px;font-size:.9rem;color:var(--ink-2)}
+  .result a{display:inline-block;margin-top:10px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:7px 14px;font-size:.86rem;font-weight:700;text-decoration:none}
+
+  .oranmap{display:flex;flex-direction:column;gap:0;margin-top:14px;max-width:520px}
+  .band{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:8px 12px}
+  .band.nrt{border-color:var(--accent)} .band.ran{border-color:var(--accent-2)}
+  .bl{font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:700;width:96px;flex:none;line-height:1.3}
+  .bn{flex:1;font-size:.82rem;font-weight:600} .bn small{font-weight:400;color:var(--ink-2);font-size:.72rem;display:block}
+  .conn{display:flex;justify-content:center;gap:20px;padding:3px 0;font-family:var(--mono);font-size:.63rem;color:var(--ink-3)}
+  .conn .up{color:var(--accent-2)} .conn .down{color:var(--accent)}
+
+  .howto{display:grid;gap:7px;margin-top:12px}
+  .howto div{font-size:.9rem;color:var(--ink-2);padding-left:26px;position:relative} .howto div b{color:var(--ink)}
+  .howto div::before{content:attr(data-i);position:absolute;left:0}
+  .cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:8px}
+  .cta a.primary{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:11px 18px;font-weight:700;text-decoration:none;font-size:.95rem}
+  .cta a.back{color:var(--ink-2);text-decoration:none;font-size:.9rem;font-weight:600}
+  footer{color:var(--ink-3);font-size:.8rem;margin-top:22px;padding:0 4px}
+  html.embed .topright,html.embed a[data-i18n="nav.journey"],html.embed a[href="/lab"]{display:none!important}
+  html.embed .wrap{padding:14px 18px 20px}
+  .comp{margin:6px 0 20px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);padding:16px 20px}
+  .comp .q{font-weight:700;margin-bottom:10px}
+  .comp .row{display:flex;gap:10px;flex-wrap:wrap}
+  .compok{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compno{border:1px solid #b07414;background:transparent;color:#b07414;border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compask{display:none;margin-top:10px}
+  .compask.open{display:block}
+  .compask textarea{width:100%;min-height:70px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.9rem}
+  .compsend{margin-top:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;cursor:pointer}
+  .compmsg{margin-top:8px;font-size:.86rem;color:var(--ink-2)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <a href="/lab" data-i18n="nav.journey" style="display:inline-block;margin-bottom:10px;font-size:.8rem;font-weight:600;color:var(--accent);text-decoration:none">← Jornada</a>
+      <div class="eyebrow" data-i18n="f.eyebrow">Lab RIC · IA — Aula 0 de 6</div>
+      <h1 data-i18n="f.h1">Fundamentos: IA e ML sem susto</h1>
+      <p class="lead" data-i18n-html="f.lead">Antes de qualquer técnica.</p>
+    </div>
+    <div class="topright">
+      <div class="langsel" id="langsel"></div>
+      <button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2 data-i18n="f.q1">🤖 O que é IA / ML?</h2>
+    <p data-i18n-html="f.q1a">Um programa que aprende padrões.</p>
+    <p data-i18n-html="f.q1b">Analogia.</p>
+  </section>
+
+  <section class="card">
+    <h2 data-i18n="f.fam">🌳 As duas famílias</h2>
+    <p data-i18n="f.famsub">Toda a IA deste lab cabe em duas caixas:</p>
+    <div class="fam">
+      <div class="famcol sup">
+        <h3 data-i18n="f.sup">Supervisionado</h3>
+        <div class="tag" data-i18n="f.suptag">aprende COM gabarito</div>
+        <div class="tlist">
+          <a class="tlink" href="/lab/regressao"><span class="em">📶</span> <b data-i18n="a.regressao.t">Regressão</b> — <span data-i18n="f.t.reg">prever um número</span></a>
+          <a class="tlink" href="/lab/classificacao"><span class="em">🚦</span> <b data-i18n="a.classificacao.t">Classificação</b> — <span data-i18n="f.t.clf">prever uma categoria</span></a>
+        </div>
+      </div>
+      <div class="famcol nsup">
+        <h3 data-i18n="f.nsup">Não supervisionado</h3>
+        <div class="tag" data-i18n="f.nsuptag">SEM gabarito</div>
+        <div class="tlist">
+          <a class="tlink" href="/lab/clustering"><span class="em">🎨</span> <b data-i18n="a.clustering.t">Clustering</b> — <span data-i18n="f.t.clu">agrupar parecidos</span></a>
+          <a class="tlink" href="/lab/anomalia"><span class="em">🚨</span> <b data-i18n="a.anomalia.t">Anomalia</b> — <span data-i18n="f.t.ano">achar o fora-da-curva</span></a>
+          <a class="tlink" href="/lab/pca"><span class="em">🧭</span> <b data-i18n="a.pca.t">PCA</b> — <span data-i18n="f.t.pca">resumir muitas variáveis</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 data-i18n="f.helperq">🧩 Qual técnica eu uso?</h2>
+    <p data-i18n="f.helpersub">Escolha o que você quer fazer com os dados:</p>
+    <div class="helper" id="helper"></div>
+    <div class="result" id="result"></div>
+  </section>
+
+  <section class="card">
+    <h2 data-i18n="f.oran">🛰️ Onde a IA roda na rede (O-RAN)</h2>
+    <p data-i18n-html="f.oransub">A IA vive no RIC.</p>
+    <div class="oranmap">
+      <div class="band nrt"><span class="bl">RIC<em></em></span><span class="bn"><span data-i18n="f.brain">o cérebro</span> <small data-i18n="f.brains">roda o modelo e decide</small></span></div>
+      <div class="conn"><span class="up" data-i18n="f.up">↑ KPIs sobem (E2/KPM)</span><span class="down" data-i18n="f.down">↓ ajuste desce (E2/RC)</span></div>
+      <div class="band ran"><span class="bl">RAN<em></em></span><span class="bn"><span data-i18n="f.ran">antena + celulares</span> <small data-i18n="f.rans">geram os KPIs e aplicam o ajuste</small></span></div>
+    </div>
+    <p style="font-size:.86rem;color:var(--ink-3)" data-i18n-html="f.orannote">Decisões rápidas por UE.</p>
+  </section>
+
+  <section class="card">
+    <h2 data-i18n="f.howq">🧭 Como usar cada aula</h2>
+    <div class="howto">
+      <div data-i="📖" data-i18n-html="f.how1"></div>
+      <div data-i="🎛️" data-i18n-html="f.how2"></div>
+      <div data-i="📊" data-i18n-html="f.how3"></div>
+      <div data-i="🔬" data-i18n-html="f.how4"></div>
+    </div>
+    <p style="font-size:.86rem" data-i18n-html="f.pace">Vá no seu ritmo.</p>
+    <div class="cta" style="margin-top:16px">
+      <a class="primary" href="/lab/regressao" data-i18n="f.cta">Começar: Aula 1 · Regressão ▸</a>
+      <a class="back" href="/lab" data-i18n="f.back">← Voltar à Jornada</a>
+    </div>
+  </section>
+
+  <div class="comp">
+    <div class="q" data-i18n="comp.q">Antes de seguir:</div>
+    <div class="row">
+      <button class="compok" id="compOk" data-i18n="comp.ok">✅ Entendi — próxima aula ▸</button>
+      <button class="compno" id="compNo" data-i18n="comp.no">🤔 Não entendi</button>
+    </div>
+    <div class="compask" id="compAsk">
+      <textarea id="compText" data-i18n-ph="comp.ph" placeholder="O que ficou confuso? Escreva sua dúvida…"></textarea>
+      <button class="compsend" id="compSend" data-i18n="comp.send">Enviar dúvida</button>
+      <div class="compmsg" id="compMsg"></div>
+    </div>
+  </div>
+
+  <footer data-i18n="f.footer">Aula 0 do Lab de IA para RIC.</footer>
+</div>
+
+<script src="/static/lab-i18n.js"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const T=(k,p)=>window.LABI18N?LABI18N.t(k,p):k;
+const GOALS=[
+  {id:"reg", t:"regressao", em:"📶", fam:"sup", href:"/lab/regressao"},
+  {id:"clf", t:"classificacao", em:"🚦", fam:"sup", href:"/lab/classificacao"},
+  {id:"clu", t:"clustering", em:"🎨", fam:"nsup", href:"/lab/clustering"},
+  {id:"ano", t:"anomalia", em:"🚨", fam:"nsup", href:"/lab/anomalia"},
+  {id:"pca", t:"pca", em:"🧭", fam:"nsup", href:"/lab/pca"},
+];
+let curGoal=null;
+function paintResult(o){curGoal=o;
+  const fam=o.fam==="sup"?T("f.sup")+" — "+T("f.suptag"):T("f.nsup")+" — "+T("f.nsuptag");
+  $("#result").innerHTML=`<div class="big">${o.em} ${T("f.use")} <span style="color:var(--accent)">${T("a."+o.t+".t")}</span></div>
+    <p><b>${fam}</b> · ${T("f.ex."+o.id)}</p><a href="${o.href}">${T("f.openaula")} ${T("a."+o.t+".t")} ▸</a>`;
+  $("#result").classList.add("show");}
+function paintHelper(){
+  $("#helper").innerHTML=GOALS.map((o,i)=>`<button class="hbtn" data-i="${i}">${T("f.goal."+o.id)}</button>`).join("");
+  $("#helper").querySelectorAll(".hbtn").forEach(b=>b.addEventListener("click",()=>{
+    $("#helper").querySelectorAll(".hbtn").forEach(x=>x.classList.toggle("on",x===b));
+    paintResult(GOALS[+b.dataset.i]);
+  }));
+}
+if(window.LABI18N)LABI18N.onChange(()=>{paintHelper();if(curGoal)paintResult(curGoal);});
+paintHelper();
+$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+
+/* ===== embed + compreensão ===== */
+const LESSON="fundamentos", NEXT="/lab/regressao";
+const EMBED=new URLSearchParams(location.search).has("embed");
+if(EMBED){document.documentElement.classList.add("embed");
+  try{const th=window.parent.document.documentElement.getAttribute("data-theme");if(th)document.documentElement.setAttribute("data-theme",th);}catch(e){}
+  try{window.parent.postMessage({c5gLab:{title:"Aula 0 · Fundamentos"}},location.origin);}catch(e){}
+}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('a[href^="/lab"]');
+  if(a&&EMBED){const u=a.getAttribute("href");if(u&&!u.includes("embed=1")){e.preventDefault();location.href=u+(u.includes("?")?"&":"?")+"embed=1";}}},true);
+const TT=(k,d)=>{const v=window.LABI18N?LABI18N.t(k):k;return v===k?d:v;};
+document.getElementById("compOk")?.addEventListener("click",()=>{
+  try{const K="c5g-lab-progress",pp=JSON.parse(localStorage.getItem(K)||"{}");pp[LESSON]=true;localStorage.setItem(K,JSON.stringify(pp));}catch(e){}
+  location.href=NEXT+(EMBED?"?embed=1":"");
+});
+document.getElementById("compNo")?.addEventListener("click",()=>{document.getElementById("compAsk").classList.toggle("open");});
+document.getElementById("compSend")?.addEventListener("click",async()=>{
+  const tx=(document.getElementById("compText").value||"").trim(); if(!tx) return;
+  const msg=document.getElementById("compMsg");
+  try{const r=await fetch("/api/lab/question",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lesson:LESSON,text:tx})});
+    if(!r.ok)throw 0; msg.textContent=TT("comp.sent","✓ Dúvida enviada — o professor verá."); document.getElementById("compText").value="";}
+  catch(e){msg.textContent=TT("comp.fail","Não deu para enviar daqui — anote e pergunte na aula.");}
+});
+</script>

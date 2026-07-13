@@ -1,0 +1,1136 @@
+<title>Lab RIC-IA · Classificação (estado da célula)</title>
+<style>
+  :root{
+    --bg:#e9eef4; --surface:#ffffff; --surface-2:#f3f7fc; --inset:#0d1622;
+    --ink:#0f1b26; --ink-2:#4a5c6e; --ink-3:#7c8da0; --line:#d7e0ea;
+    --accent:#1f6fe5; --accent-2:#0aa5b8; --accent-ink:#ffffff;
+    --good:#12874c; --warn:#b07414; --bad:#c73838;
+    --console-ink:#dce8f6; --console-dim:#7d93ab; --console-line:#20304a;
+    --shadow:0 1px 2px rgba(16,32,48,.06),0 8px 24px rgba(16,32,48,.07);
+    --r:14px; --r-sm:9px;
+    --fs-display:clamp(1.55rem,1.1rem + 1.9vw,2.3rem);
+    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#080d14; --surface:#111a25; --surface-2:#0d1520; --inset:#080f18;
+    --ink:#e7eff8; --ink-2:#9aabbe; --ink-3:#6b7d92; --line:#213142;
+    --accent:#4d90ff; --accent-2:#28c2d6; --accent-ink:#06101d;
+    --good:#33c07d; --warn:#e0a53f; --bad:#e5695f;
+    --console-ink:#d6e6f7; --console-dim:#748aa4; --console-line:#1c2b40;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{
+    --bg:#e9eef4; --surface:#ffffff; --surface-2:#f3f7fc; --inset:#0d1622;
+    --ink:#0f1b26; --ink-2:#4a5c6e; --ink-3:#7c8da0; --line:#d7e0ea;
+    --accent:#1f6fe5; --accent-2:#0aa5b8; --accent-ink:#ffffff;
+    --good:#12874c; --warn:#b07414; --bad:#c73838;
+    --console-ink:#dce8f6; --console-dim:#7d93ab; --console-line:#20304a;
+  }
+  :root[data-theme="dark"]{
+    --bg:#080d14; --surface:#111a25; --surface-2:#0d1520; --inset:#080f18;
+    --ink:#e7eff8; --ink-2:#9aabbe; --ink-3:#6b7d92; --line:#213142;
+    --accent:#4d90ff; --accent-2:#28c2d6; --accent-ink:#06101d;
+    --good:#33c07d; --warn:#e0a53f; --bad:#e5695f;
+    --console-ink:#d6e6f7; --console-dim:#748aa4; --console-line:#1c2b40;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:940px;margin:0 auto;padding:clamp(16px,3vw,40px)}
+  h1,h2,h3{text-wrap:balance;margin:0} p{margin:0}
+  .tnum{font-variant-numeric:tabular-nums}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px}
+  h1{font-size:var(--fs-display);font-weight:750;letter-spacing:-.02em;line-height:1.08}
+  .lead{color:var(--ink-2);margin-top:12px;max-width:62ch;font-size:1.02rem}
+  .themebtn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.05rem;display:grid;place-items:center;box-shadow:var(--shadow)}
+  .themebtn:hover{color:var(--accent);border-color:var(--accent)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:clamp(18px,2.4vw,28px);margin-bottom:20px}
+  .card > h2{font-size:1.22rem;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .card > .sub{color:var(--ink-2);margin-top:6px;font-size:.95rem;max-width:64ch}
+  .kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .explain p + p{margin-top:12px} .explain b{color:var(--ink)} .hl{color:var(--accent);font-weight:600}
+  details.more{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+  details.more summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more summary::before{content:"▸ ";color:var(--accent)} details.more[open] summary::before{content:"▾ "}
+
+  .dsrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .dschip{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:8px 13px;font-size:.86rem;font-weight:600;cursor:pointer;transition:.15s}
+  .dschip:hover{border-color:var(--accent)} .dschip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .dschip small{display:block;font-weight:400;font-size:.7rem;opacity:.8;margin-top:1px}
+  .srcnote{margin-top:12px;font-size:.82rem;color:var(--ink-2)} .srcnote b{color:var(--ink)}
+  .srcbadge{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;padding:2px 7px;border-radius:5px;font-weight:700}
+  .src-prof{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+
+  .oranmap{display:flex;flex-direction:column;gap:0;margin-top:14px;max-width:540px}
+  .band{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:8px 12px}
+  .band.live{border-color:var(--accent)} .band.ran{border-color:var(--accent-2)} .band.planned{border-style:dashed;opacity:.68}
+  .bl{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;width:112px;flex:none;line-height:1.3}
+  .bl em{display:block;font-style:normal;font-weight:500;text-transform:none;letter-spacing:0;font-size:.62rem}
+  .bn{flex:1;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .bn small{font-weight:400;color:var(--ink-2);font-size:.72rem} .band.live .bn{color:var(--accent)}
+  .youare{font-family:var(--mono);font-size:.54rem;letter-spacing:.05em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:1px 5px;border-radius:4px;font-weight:700}
+  .conn{display:flex;justify-content:center;gap:20px;padding:3px 0;font-family:var(--mono);font-size:.63rem}
+  .conn.planned{opacity:.5} .conn .up{color:var(--accent-2)} .conn .down{color:var(--accent)}
+  .flowcap{margin-top:14px;font-size:.85rem;color:var(--ink-2)} .flowcap b{color:var(--ink)}
+  .honest{margin-top:7px;font-size:.77rem;color:var(--ink-3)}
+
+  .scenrow{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 20px}
+  .chip{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:999px;padding:7px 14px;font-size:.86rem;font-weight:600;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .chip small{display:block;font-weight:400;color:var(--ink-3);font-size:.72rem;margin-top:1px}
+
+  .predlayout{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start}
+  @media (max-width:720px){.predlayout{grid-template-columns:1fr}}
+  .ctrl{padding:11px 0;border-bottom:1px solid var(--line)} .ctrl:last-child{border-bottom:none}
+  .ctrl-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .ctrl-head label{font-weight:600;font-size:.92rem} .ctrl-head .u{color:var(--ink-3);font-size:.76rem;font-family:var(--mono)}
+  .ctrl-in{display:flex;align-items:center;gap:12px;margin-top:9px}
+  .ctrl-in input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+  .val{width:74px;flex:none}
+  .val input{width:100%;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:6px 8px;font-size:.9rem}
+  .val input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .ctrl.bad .val input{border-color:var(--bad)} .ctrl.warn .val input{border-color:var(--warn)}
+  .msg{font-size:.78rem;margin-top:7px;display:none;line-height:1.4}
+  .ctrl.bad .msg{display:block;color:var(--bad)} .ctrl.warn .msg{display:block;color:var(--warn)}
+  .msg::before{font-family:var(--mono);margin-right:5px}
+  .ctrl.bad .msg::before{content:"✕"} .ctrl.warn .msg::before{content:"⚠"}
+
+  .readout{background:var(--inset);border-radius:var(--r);padding:20px;position:sticky;top:14px;border:1px solid var(--console-line)}
+  .readout .kicker{color:var(--console-dim)}
+  .verdict{display:flex;align-items:center;gap:12px;margin-top:10px}
+  .verdict .em{font-size:2.3rem;line-height:1} .verdict .nm{font-size:1.55rem;font-weight:750;letter-spacing:-.01em}
+  .conf{font-family:var(--mono);color:var(--console-dim);font-size:.8rem;margin-top:8px}
+  .probs{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+  .prob{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:9px;font-size:.76rem;color:var(--console-dim)}
+  .prob .tk{height:9px;border-radius:5px;background:rgba(255,255,255,.09);overflow:hidden}
+  .prob .tk > i{display:block;height:100%;border-radius:5px;width:0;transition:width .4s cubic-bezier(.2,.8,.2,1)}
+  .prob .pv{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--console-ink)}
+  .status{margin-top:16px;font-size:.82rem;color:var(--console-ink);min-height:2.2em;border-top:1px solid var(--console-line);padding-top:12px}
+  .status b{color:#fff}
+  .tag{display:inline-block;font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;font-weight:700;vertical-align:middle}
+  .tag.ok{background:rgba(51,192,125,.16);color:var(--good)} .tag.warn{background:rgba(224,165,63,.16);color:var(--warn)} .tag.bad{background:rgba(229,105,95,.16);color:var(--bad)}
+  .fg-good{color:var(--good)} .fg-warn{color:var(--warn)} .fg-bad{color:var(--bad)}
+  .bgf-good{background:var(--good)} .bgf-warn{background:var(--warn)} .bgf-bad{background:var(--bad)}
+
+  .tablewrap{overflow-x:auto;margin-top:10px}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:380px}
+  th,td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--line)} th:first-child,td:first-child{text-align:left}
+  thead th{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;border-bottom:1.5px solid var(--line)}
+  tbody tr.win{background:color-mix(in srgb,var(--good) 9%,transparent)} tbody tr.linear{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+  .r2bar{display:inline-block;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle;margin-left:8px}
+  td .model-tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:4px;margin-left:7px;font-weight:700}
+  .mt-win{background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good)} .mt-live{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
+  .takeaway{margin-top:16px;background:var(--surface-2);border-left:3px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:12px 15px;font-size:.9rem;color:var(--ink-2)} .takeaway b{color:var(--ink)}
+
+  .countrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 16px}
+  .countrow .lbl{font-size:.86rem;color:var(--ink-2);margin-right:2px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+  .seg button{border:none;background:var(--surface);color:var(--ink);padding:7px 15px;cursor:pointer;font-weight:600;font-size:.9rem;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:none} .seg button.on{background:var(--accent);color:var(--accent-ink)}
+  .cellgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+  .cellcard{border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 13px;background:var(--surface-2)}
+  .cellcard h4{margin:0 0 8px;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .cellcard .dice{border:none;background:none;cursor:pointer;font-size:.9rem;opacity:.7} .cellcard .dice:hover{opacity:1}
+  .statebadge{display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:.8rem;padding:2px 9px;border-radius:999px}
+  .sev-good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+  .sev-warn{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+  .sev-bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+  .cellcard .kpis{font-family:var(--mono);font-size:.68rem;color:var(--ink-3);margin-top:4px;line-height:1.5}
+  .summary{display:flex;flex-wrap:wrap;gap:14px;font-size:.9rem;font-weight:600;padding:12px 15px;background:var(--surface-2);border-radius:var(--r-sm)}
+  .ricnote{margin-top:14px;font-size:.9rem;color:var(--ink-2)} .ricnote b{color:var(--ink)}
+  footer{color:var(--ink-3);font-size:.8rem;line-height:1.6;margin-top:8px;padding:0 4px 10px} footer b{color:var(--ink-2)}
+  /* modal fórmula + Python */
+  .mathbtn{margin-top:16px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--accent);border-radius:var(--r-sm);padding:9px 15px;font-size:.9rem;font-weight:700;cursor:pointer}
+  .mathbtn:hover{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+  .backdrop{position:fixed;inset:0;background:rgba(6,12,20,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .backdrop.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);max-width:660px;width:100%;max-height:86vh;overflow:auto;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+  .modal h3{font-size:1.15rem;font-weight:750;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .modal .x{border:none;background:none;font-size:1.4rem;cursor:pointer;color:var(--ink-3);line-height:1} .modal .x:hover{color:var(--ink)}
+  .mlabel{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:18px 0 8px}
+  .msteps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:8px}
+  .msteps li{position:relative;padding-left:32px;font-size:.9rem;color:var(--ink-2)}
+  .msteps li b{color:var(--ink)} .msteps li code{font-family:var(--mono);background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:.85em}
+  .msteps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--mono);font-weight:700;font-size:.72rem;display:grid;place-items:center}
+  .mcode{background:var(--inset);color:#d6e6f7;border-radius:var(--r-sm);padding:15px;overflow-x:auto;margin:0;font-family:var(--mono);font-size:.82rem;line-height:1.6;white-space:pre}
+  .mcode .cap{color:#7fd8a0} .mcode .ret{color:#7fc0ff} .mcode .kw{color:#e0a53f} .mcode .cm{color:#8aa0b8}
+  .caplegend{display:flex;gap:16px;font-size:.78rem;margin-top:10px;color:var(--ink-2);flex-wrap:wrap} .cap-c{color:#2f9e63} .ret-c{color:#2b74e8}
+  /* relatório */
+  .repbtn{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 9%,transparent);color:var(--good);border-radius:var(--r-sm);padding:11px 18px;font-size:.95rem;font-weight:700;cursor:pointer}
+  .repbtn:hover{background:color-mix(in srgb,var(--good) 17%,transparent)}
+  .repform{display:grid;gap:14px;margin-top:16px}
+  .repform label{display:grid;gap:5px;font-weight:600;font-size:.86rem}
+  .repform input,.repform textarea{width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.88rem;font-weight:400}
+  .repform textarea{min-height:120px;resize:vertical;line-height:1.5}
+  .repform .hint{font-weight:400;color:var(--ink-3);font-size:.8rem}
+  .repactions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:10px 16px;font-size:.9rem;font-weight:700;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  #printarea{display:none}
+  @media print{ body>.wrap,body>.backdrop{display:none!important} #printarea{display:block!important} }
+
+  /* integração: embed no painel + compreensão + sistema real + variáveis */
+  html.embed .topright,html.embed .themebtn,html.embed a[href="/"],html.embed a[href="/lab"]{display:none!important}
+  html.embed .wrap{padding:14px 18px 20px}
+  .realbox{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--surface-2);padding:12px 15px;font-size:.9rem;color:var(--ink-2)}
+  .realbox b{color:var(--ink)}
+  .realbtn{display:inline-block;margin-top:9px;border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;font-size:.88rem;cursor:pointer}
+  .realbtn:hover{background:color-mix(in srgb,var(--good) 18%,transparent)}
+  .realnote{display:block;margin-top:6px;font-size:.78rem;color:var(--ink-3)}
+  .comp{margin:6px 0 20px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);padding:16px 20px}
+  .comp .q{font-weight:700;margin-bottom:10px}
+  .comp .row{display:flex;gap:10px;flex-wrap:wrap}
+  .compok{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compno{border:1px solid var(--warn);background:transparent;color:var(--warn);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compask{display:none;margin-top:10px}
+  .compask.open{display:block}
+  .compask textarea{width:100%;min-height:70px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.9rem}
+  .compsend{margin-top:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;cursor:pointer}
+  .compmsg{margin-top:8px;font-size:.86rem;color:var(--ink-2)}
+  .mvars{border-collapse:collapse;width:100%;font-size:.86rem;margin-top:6px}
+  .mvars td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+  .mvars td b{color:var(--ink)}
+  .mvars td:first-child{font-family:var(--mono);font-weight:700;white-space:nowrap;color:var(--accent)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow">Lab RIC · IA — Aula 2 de 6</div>
+      <h1>Classificação: em que estado está a célula?</h1>
+      <p class="lead">O segundo tipo de IA, com os <b>datasets rotulados do Prof. Tesolin</b>. Em vez de um número,
+        prevemos uma <b>categoria</b> — é o que um xApp usa para o RIC agir.</p>
+    </div>
+    <button class="themebtn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">◐</button>
+  </div>
+
+  <section class="card">
+    <h2>🗂️ Base de dados</h2>
+    <p class="sub">Datasets rotulados pelo professor. Cada um é um problema de classificação diferente.</p>
+    <div class="dsrow" id="dsRow"></div>
+    <p class="srcnote" id="srcNote"></p>
+  </section>
+
+  <section class="card explain">
+    <h2>📖 O que é classificação?</h2>
+    <div style="margin-top:12px">
+      <p>Pense numa <b>triagem</b>: olhar os sintomas e dizer a categoria. <b>Classificação é isso</b> — escolher um
+        <b>rótulo</b> (não um número).</p>
+      <p>Aqui as pistas são KPIs da célula e a resposta é <span class="hl" id="clsList">as classes</span>. No O-RAN
+        vira um xApp que, sabendo o estado, deixa o RIC agir.</p>
+      <details class="more">
+        <summary>🔬 Aprofundar: como a Regressão Logística decide</summary>
+        <p style="margin-top:12px">Ela soma os KPIs com pesos e passa por uma curva em “S”, virando uma
+          <b>probabilidade</b> para cada classe — a mais provável vence. Interpretável: dá pra ver qual KPI puxou o
+          resultado.</p>
+      </details>
+      <button class="mathbtn" id="openMath">🔬 Ver a fórmula e o Python — o que o modelo captura e retorna</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🛰️ Onde isso roda no O-RAN</h2>
+    <p class="sub">Mesmo laço da Aula 1 — muda a decisão no fim.</p>
+    <div class="oranmap">
+      <div class="band planned"><span class="bl">Non-RT RIC<em>planejado · &gt;1s</em></span><span class="bn">rApp <small>treina o modelo</small></span></div>
+      <div class="conn planned"><span class="down">↓ A1</span><span class="up">↑ O1</span></div>
+      <div class="band live"><span class="bl">Near-RT RIC<em>FlexRIC · 10ms–1s</em></span><span class="bn"><span class="youare">aqui</span> xApp Classificação <small>classifica → decide</small></span></div>
+      <div class="conn live"><span class="up">↑ E2/KPM</span><span class="down">↓ E2/RC</span></div>
+      <div class="band ran"><span class="bl">RAN<em>gera os KPIs</em></span><span class="bn">gNB + agente E2 · UEs</span></div>
+    </div>
+    <p class="flowcap"><b>Fluxo:</b> gera (RAN) → sobe por <b>E2/KPM</b> → <b>xApp</b> classifica → desce por
+      <b>E2/RC</b> → age (balanceamento, admissão, manutenção). Repete.</p>
+    <p class="honest">Sólido = roda hoje · tracejado = próxima fase. Regressão/Classificação → Near-RT (xApp).</p>
+    <div class="realbox"><b data-i18n="real.t">🔌 No sistema real</b><br>
+      <span data-i18n-html="real.txt">Os KPIs desta aula não são teóricos: neste servidor roda um 5G de verdade (gNB OAI + FlexRIC), e eles chegam pela interface <b>E2 (E2SM-KPM)</b>. Você pode coletá-los agora:</span>
+      <button class="realbtn" id="realRun" hidden data-i18n="real.btn">▶ Rodar a coleta KPM real (no console do painel)</button>
+      <span class="realnote" data-i18n="real.note">O professor executa; todos acompanham ao vivo no console. Disponível dentro do painel.</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🎛️ Mexa você mesmo</h2>
+    <p class="sub">Cenários = linhas reais do dataset. Ou arraste os KPIs. Valor impossível é recusado com explicação.</p>
+    <div class="kicker" style="margin-top:18px">Sugerir cenário (linhas reais)</div>
+    <div class="scenrow" id="scenRow"></div>
+    <div class="predlayout">
+      <div id="singleControls"></div>
+      <div class="readout">
+        <div class="kicker" id="predKicker">Classe prevista</div>
+        <div class="verdict" id="verdict"><span class="em">—</span><span class="nm">—</span></div>
+        <div class="conf" id="conf"></div>
+        <div class="probs" id="probs"></div>
+        <div class="status" id="predStatus"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>📊 Qual modelo é o melhor?</h2>
+    <p class="sub">7 classificadores na mesma base. <b>Acurácia</b> = % de acertos; <b>F1</b> equilibra as classes. Maior = melhor.</p>
+    <div class="tablewrap"><table id="modelTable"><thead><tr><th>Modelo</th><th>Acurácia</th><th>F1 ↓</th></tr></thead><tbody></tbody></table></div>
+    <div class="takeaway" id="takeaway"></div>
+  </section>
+
+  <section class="card">
+    <h2>👥 Várias células ao mesmo tempo</h2>
+    <p class="sub">O RIC vigia a rede toda — o modelo classifica várias células de uma vez. Use 🎲 para sortear cada uma.</p>
+    <div class="countrow"><span class="lbl">Quantas células:</span><div class="seg" id="countSeg"></div></div>
+    <div class="cellgrid" id="cellGrid"></div>
+    <div class="summary" id="summary"></div>
+    <p class="ricnote"><b>Decisão do RIC:</b> as células em <span class="fg-bad" style="font-weight:600">estado crítico</span>
+      disparam a ação — balancear carga, barrar acessos ou acionar manutenção. É esse mapa que o xApp gera a cada segundo.</p>
+  </section>
+
+  <section class="card">
+    <h2>📄 Relatório</h2>
+    <p class="sub" data-i18n="report.sub">A entrega do trabalho, nas 3 partes, com o que você rodou preenchido. Edite na sua voz e baixe: PDF, Word e o script Python.</p>
+    <button class="repbtn" id="openReport" style="margin-top:14px" data-i18n="report.btn">📄 Gerar relatório (PDF / Word / .py)</button>
+  </section>
+
+  <div class="comp">
+    <div class="q" data-i18n="comp.q">Antes de seguir:</div>
+    <div class="row">
+      <button class="compok" id="compOk" data-i18n="comp.ok">✅ Entendi — próxima aula ▸</button>
+      <button class="compno" id="compNo" data-i18n="comp.no">🤔 Não entendi</button>
+    </div>
+    <div class="compask" id="compAsk">
+      <textarea id="compText" data-i18n-ph="comp.ph" placeholder="O que ficou confuso? Escreva sua dúvida…"></textarea>
+      <button class="compsend" id="compSend" data-i18n="comp.send">Enviar dúvida</button>
+      <div class="compmsg" id="compMsg"></div>
+    </div>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Fórmula e código">
+    <h3>Regressão Logística — a fórmula e o código <button class="x" id="closeMath" aria-label="Fechar">×</button></h3>
+    <p style="color:var(--ink-2);font-size:.9rem;margin-top:6px">O que o modelo <b class="cap-c" style="font-family:var(--mono)">captura</b> (aprende no <code>fit</code>) e o que <b class="ret-c" style="font-family:var(--mono)">retorna</b> depois.</p>
+    <div class="mlabel">A ideia, passo a passo (sem jargão)</div>
+    <ol class="msteps">
+      <li>Soma os KPIs com pesos, igual à regressão: <code>s = β₀ + β₁·KPI₁ + …</code></li>
+      <li>Uma <b>curva em “S”</b> espreme esse número entre 0 e 1 → vira uma <b>probabilidade</b>.</li>
+      <li>Com várias classes, o <b>softmax</b> dá uma probabilidade para cada (somando 100%).</li>
+      <li>Vence a <b>classe de maior probabilidade</b>.</li>
+      <li>O treino ajusta os pesos até as probabilidades <b>baterem com os rótulos reais</b>.</li>
+    </ol>
+
+    <div class="mlabel" data-i18n="math.vars">As variáveis, uma a uma</div>
+    <table class="mvars"><tr><td>s</td><td><b>a pontuação</b> — a soma ponderada dos KPIs (igual à regressão): s = β₀ + β·KPIs.</td></tr><tr><td>β</td><td><b>os pesos por classe</b> — cada classe tem seu jogo de pesos; o KPI que “puxa” para Congestionada tem β alto nela.</td></tr><tr><td>σ(s)</td><td><b>a curva em “S” (sigmoide)</b> — espreme a pontuação para o intervalo 0–1, virando probabilidade.</td></tr><tr><td>softmax</td><td><b>o rateio</b> — com 3+ classes, transforma as pontuações em probabilidades que somam 100%.</td></tr><tr><td>P(classe)</td><td><b>a resposta</b> — a probabilidade de cada classe; vence a maior.</td></tr><tr><td>tipo</td><td><b>equação linear + função de achatamento (sigmoide/softmax)</b></td></tr><tr><td>serve p/</td><td><b>transformar KPIs em <i>probabilidade de categoria</i> — com direito a “quão confiante estou”</b></td></tr></table>
+    <div class="mlabel">O código Python (scikit-learn)</div>
+    <div class="mcode"><span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LogisticRegression
+
+model = LogisticRegression().fit(X, y)   <span class="cm"># <span class="cap">captura</span>: os pesos de cada classe</span>
+model.predict_proba(X_nova)              <span class="cm"># <span class="ret">retorna</span>: a probabilidade de cada classe</span>
+model.predict(X_nova)                    <span class="cm"># <span class="ret">retorna</span>: a classe vencedora</span></div>
+    <div class="caplegend"><span><b class="cap-c">■ captura</b> = <code>fit</code> (aprende dos dados)</span><span><b class="ret-c">■ retorna</b> = o resultado (probabilidades, classe)</span></div>
+  </div>
+</div>
+
+<div class="backdrop" id="repbackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Relatório">
+    <h3><span data-i18n="report.title">📄 Relatório do trabalho</span> <button class="x" id="repClose" aria-label="Fechar">×</button></h3>
+    <p style="color:var(--ink-2);font-size:.9rem;margin-top:6px">As Partes 1 e 2 vêm como <b>rascunho</b> — reescreva na sua voz. A Parte 3 já traz o que você rodou.</p>
+    <div class="repform">
+      <label><span data-i18n="report.name">Seu nome</span><input id="repNome" data-i18n-ph="report.name_ph" placeholder="Nome do aluno(a)"></label>
+      <label><span data-i18n="report.p1">Parte 1 — Análise crítica e seleção do algoritmo (~200 palavras)</span><textarea id="repP1"></textarea></label>
+      <label><span data-i18n="report.p2">Parte 2 — Fundamentação teórica (~500 palavras)</span><textarea id="repP2"></textarea></label>
+      <p class="hint" data-i18n="report.p3hint">Parte 3 (base, resultados e código) é montada automaticamente.</p>
+    </div>
+    <div class="repactions">
+      <button class="btn" id="repPdf" data-i18n="report.pdf">⬇ Baixar PDF</button>
+      <button class="btn ghost" id="repDoc" data-i18n="report.doc">⬇ Baixar Word (.doc)</button>
+      <button class="btn ghost" id="repPy" data-i18n="report.py">⬇ Baixar script Python (.py)</button>
+    </div>
+  </div>
+</div>
+
+<div id="printarea"></div>
+
+<script src="/static/lab-i18n.js"></script>
+<script>
+const DSC = {
+  "family": "Classificação",
+  "default": "congestion",
+  "datasets": {
+    "congestion": {
+      "label": "Congestionamento",
+      "source": "Prof. Tesolin",
+      "usecase": "nível de congestionamento da célula (árvore de decisão)",
+      "n_rows": 17,
+      "target_name": "Congestion",
+      "features": [
+        {
+          "key": "ActiveUsers",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            300
+          ],
+          "train": [
+            28.0,
+            128.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRBUtilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            20.0,
+            98.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "AvgSINR",
+          "label": "SINR médio",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            11.0,
+            28.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "TxPower",
+          "label": "Potência Tx",
+          "unit": "dBm",
+          "hard": [
+            0,
+            46
+          ],
+          "train": [
+            17.0,
+            31.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PacketLoss",
+          "label": "Perda de pacotes",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            0.2,
+            8.5
+          ],
+          "decimals": 1
+        },
+        {
+          "key": "SchedulingDelay",
+          "label": "Atraso de agendamento",
+          "unit": "ms",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            4.0,
+            55.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "classes": [
+        {
+          "name": "Low",
+          "display": "Baixa",
+          "emoji": "🟢",
+          "sev": "good"
+        },
+        {
+          "name": "Medium",
+          "display": "Média",
+          "emoji": "🟡",
+          "sev": "warn"
+        },
+        {
+          "name": "High",
+          "display": "Alta",
+          "emoji": "🔴",
+          "sev": "bad"
+        }
+      ],
+      "live_model": {
+        "features": [
+          "ActiveUsers",
+          "PRBUtilization",
+          "AvgSINR",
+          "TxPower",
+          "PacketLoss",
+          "SchedulingDelay"
+        ],
+        "mean": [
+          79.11765,
+          66.05882,
+          19.29412,
+          23.52941,
+          3.52353,
+          25.23529
+        ],
+        "std": [
+          30.5862,
+          25.64342,
+          5.2666,
+          4.31301,
+          2.67637,
+          16.13009
+        ],
+        "classes": [
+          "High",
+          "Low",
+          "Medium"
+        ],
+        "coef": [
+          [
+            0.51544,
+            0.52793,
+            -0.50051,
+            0.58156,
+            0.66911,
+            0.6132
+          ],
+          [
+            -0.56488,
+            -0.72757,
+            0.64865,
+            -0.51378,
+            -0.40112,
+            -0.50398
+          ],
+          [
+            0.04944,
+            0.19965,
+            -0.14814,
+            -0.06778,
+            -0.26799,
+            -0.10921
+          ]
+        ],
+        "intercept": [
+          0.20923,
+          -1.24071,
+          1.03148
+        ]
+      },
+      "scenarios": {
+        "Low": {
+          "label": "🟢 Baixa",
+          "hint": "classe baixa",
+          "values": {
+            "ActiveUsers": 28.0,
+            "PRBUtilization": 20.0,
+            "AvgSINR": 28.0,
+            "TxPower": 17.0,
+            "PacketLoss": 0.2,
+            "SchedulingDelay": 4.0
+          }
+        },
+        "Medium": {
+          "label": "🟡 Média",
+          "hint": "classe média",
+          "values": {
+            "ActiveUsers": 62.0,
+            "PRBUtilization": 55.0,
+            "AvgSINR": 22.0,
+            "TxPower": 21.0,
+            "PacketLoss": 1.5,
+            "SchedulingDelay": 15.0
+          }
+        },
+        "High": {
+          "label": "🔴 Alta",
+          "hint": "classe alta",
+          "values": {
+            "ActiveUsers": 92.0,
+            "PRBUtilization": 82.0,
+            "AvgSINR": 17.0,
+            "TxPower": 25.0,
+            "PacketLoss": 4.5,
+            "SchedulingDelay": 30.0
+          }
+        }
+      },
+      "start": {
+        "ActiveUsers": 62.0,
+        "PRBUtilization": 55.0,
+        "AvgSINR": 22.0,
+        "TxPower": 21.0,
+        "PacketLoss": 1.5,
+        "SchedulingDelay": 15.0
+      },
+      "metrics_table": [
+        {
+          "model": "Regressão Logística",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "Árvore de Decisão",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "Random Forest",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "Gradient Boosting",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "k-NN",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "Naive Bayes",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "SVM (RBF)",
+          "acc": 1.0,
+          "f1": 1.0
+        }
+      ],
+      "balance": {
+        "Low": 5,
+        "Medium": 5,
+        "High": 7
+      }
+    },
+    "failure": {
+      "label": "Falha de célula",
+      "source": "Prof. Tesolin",
+      "usecase": "prever falha da célula — manutenção preditiva (regressão logística)",
+      "n_rows": 20,
+      "target_name": "Failure",
+      "features": [
+        {
+          "key": "ActiveUsers",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            300
+          ],
+          "train": [
+            35.0,
+            156.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRBUtilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            22.0,
+            97.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "AvgSINR",
+          "label": "SINR médio",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            14.0,
+            28.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "TxPower",
+          "label": "Potência Tx",
+          "unit": "dBm",
+          "hard": [
+            0,
+            46
+          ],
+          "train": [
+            17.0,
+            28.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "CellTemperature",
+          "label": "Temperatura da célula",
+          "unit": "°C",
+          "hard": [
+            -20,
+            90
+          ],
+          "train": [
+            31.0,
+            50.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PacketLoss",
+          "label": "Perda de pacotes",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            0.4,
+            7.0
+          ],
+          "decimals": 1
+        }
+      ],
+      "classes": [
+        {
+          "name": "No",
+          "display": "Normal",
+          "emoji": "🟢",
+          "sev": "good"
+        },
+        {
+          "name": "Yes",
+          "display": "Falha",
+          "emoji": "🔴",
+          "sev": "bad"
+        }
+      ],
+      "live_model": {
+        "features": [
+          "ActiveUsers",
+          "PRBUtilization",
+          "AvgSINR",
+          "TxPower",
+          "CellTemperature",
+          "PacketLoss"
+        ],
+        "mean": [
+          97.2,
+          70.0,
+          19.75,
+          23.0,
+          40.5,
+          3.06
+        ],
+        "std": [
+          36.68733,
+          23.85582,
+          4.38035,
+          3.43511,
+          5.76628,
+          2.1122
+        ],
+        "classes": [
+          "No",
+          "Yes"
+        ],
+        "coef": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.64751,
+            0.60989,
+            -0.60762,
+            0.67239,
+            0.62365,
+            0.7271
+          ]
+        ],
+        "intercept": [
+          0.0,
+          -0.2052
+        ]
+      },
+      "scenarios": {
+        "No": {
+          "label": "🟢 Normal",
+          "hint": "classe normal",
+          "values": {
+            "ActiveUsers": 35.0,
+            "PRBUtilization": 22.0,
+            "AvgSINR": 28.0,
+            "TxPower": 17.0,
+            "CellTemperature": 31.0,
+            "PacketLoss": 0.4
+          }
+        },
+        "Yes": {
+          "label": "🔴 Falha",
+          "hint": "classe falha",
+          "values": {
+            "ActiveUsers": 102.0,
+            "PRBUtilization": 80.0,
+            "AvgSINR": 18.0,
+            "TxPower": 24.0,
+            "CellTemperature": 41.0,
+            "PacketLoss": 3.0
+          }
+        }
+      },
+      "start": {
+        "ActiveUsers": 35.0,
+        "PRBUtilization": 22.0,
+        "AvgSINR": 28.0,
+        "TxPower": 17.0,
+        "CellTemperature": 31.0,
+        "PacketLoss": 0.4
+      },
+      "metrics_table": [
+        {
+          "model": "Regressão Logística",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "Árvore de Decisão",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "Random Forest",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "Gradient Boosting",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "k-NN",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "SVM (RBF)",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "Naive Bayes",
+          "acc": 0.9,
+          "f1": 0.9
+        }
+      ],
+      "balance": {
+        "No": 10,
+        "Yes": 10
+      }
+    }
+  }
+};
+const $=(s,r=document)=>r.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+let cur=DSC.default, D=DSC.datasets[cur], FEAT={}, SEV={}, single={};
+
+function validate(key,v){
+  const f=FEAT[key];
+  if(v===""||v===null||isNaN(v)) return {level:"bad",msg:"Digite um número."};
+  if(v<f.hard[0]||v>f.hard[1]) return {level:"bad",msg:`${f.label} sai da faixa física (${f.hard[0]} a ${f.hard[1]} ${f.unit}).`};
+  if(v<f.train[0]||v>f.train[1]) return {level:"warn",msg:`Fora da faixa vista nesta base (${f.train[0]} a ${f.train[1]}) — menos confiável.`};
+  return {level:"ok",msg:""};
+}
+function classify(vals){
+  const m=D.live_model, z=m.features.map((k,i)=>(vals[k]-m.mean[i])/m.std[i]);
+  const lg=m.classes.map((c,ci)=>m.intercept[ci]+m.coef[ci].reduce((s,co,i)=>s+co*z[i],0));
+  const mx=Math.max(...lg), ex=lg.map(l=>Math.exp(l-mx)), su=ex.reduce((a,b)=>a+b,0);
+  const o={}; m.classes.forEach((c,i)=>o[c]=ex[i]/su); return o;
+}
+function topClass(p){return Object.entries(p).sort((a,b)=>b[1]-a[1])[0];}
+
+function buildDsRow(){
+  $("#dsRow").innerHTML=Object.entries(DSC.datasets).map(([k,d])=>
+    `<button class="dschip ${k===cur?'on':''}" data-ds="${k}">${d.label}<small>${d.source} · ${d.n_rows} lin · ${d.classes.length} classes</small></button>`).join("");
+  $("#dsRow").querySelectorAll("[data-ds]").forEach(b=>b.addEventListener("click",()=>setDataset(b.dataset.ds)));
+}
+function setDataset(key){
+  cur=key; D=DSC.datasets[key];
+  FEAT=Object.fromEntries(D.features.map(f=>[f.key,f]));
+  SEV=Object.fromEntries(D.classes.map(c=>[c.name,c]));
+  single={...D.start};
+  buildDsRow(); updateSrc(); updateExplain(); buildScenarios(); buildSingle(); buildTable();
+  const n=$("#countSeg .on"); setCount(n?+n.dataset.n:3); updateFooter();
+}
+function updateSrc(){
+  $("#srcNote").innerHTML=`<span class="srcbadge src-prof">BASE DO PROFESSOR</span> <b>${D.label}</b> — ${D.usecase}. `+
+    `${D.n_rows} linhas · alvo <b>${D.target_name}</b> (${D.classes.map(c=>c.emoji+' '+c.display).join(' · ')}).`;
+}
+function updateExplain(){ $("#clsList").textContent=D.classes.map(c=>c.display).join(", "); }
+
+function ctrlRow(f){const step=f.decimals===0?1:0.1;return `<div class="ctrl" data-k="${f.key}">
+  <div class="ctrl-head"><label>${f.label}</label><span class="u">${f.unit||f.hard[0]+"…"+f.hard[1]}</span></div>
+  <div class="ctrl-in"><input type="range" min="${f.hard[0]}" max="${f.hard[1]}" step="${step}" value="${single[f.key]}" data-role="range">
+    <span class="val"><input type="number" step="${step}" value="${single[f.key]}" data-role="num" aria-label="${f.label}"></span></div>
+  <div class="msg"></div></div>`;}
+function buildSingle(){
+  $("#singleControls").innerHTML=D.features.map(ctrlRow).join("");
+  $("#singleControls").querySelectorAll(".ctrl").forEach(el=>{
+    const k=el.dataset.k,rng=el.querySelector('[data-role=range]'),num=el.querySelector('[data-role=num]');
+    rng.addEventListener('input',()=>{num.value=rng.value;single[k]=parseFloat(rng.value);renderSingle();});
+    num.addEventListener('input',()=>{single[k]=num.value===""?"":parseFloat(num.value);
+      if(single[k]!=="")rng.value=clamp(single[k],FEAT[k].hard[0],FEAT[k].hard[1]);renderSingle();});
+  });
+  renderSingle();
+}
+function renderSingle(){
+  let bad=false,warn=false;
+  $("#singleControls").querySelectorAll(".ctrl").forEach(el=>{
+    const k=el.dataset.k,r=validate(k,single[k]);
+    el.classList.toggle("bad",r.level==="bad");el.classList.toggle("warn",r.level==="warn");
+    el.querySelector(".msg").textContent=r.msg; if(r.level==="bad")bad=true; if(r.level==="warn")warn=true;
+  });
+  const V=$("#verdict"),C=$("#conf"),P=$("#probs"),S=$("#predStatus");
+  if(bad){V.innerHTML='<span class="em">—</span><span class="nm">—</span>';C.textContent="";P.innerHTML="";
+    S.innerHTML='<span class="tag bad">corrigir</span> Ajuste os KPIs em vermelho.';return;}
+  const probs=classify(single),[cls,p]=topClass(probs),meta=SEV[cls];
+  V.innerHTML=`<span class="em">${meta.emoji}</span><span class="nm fg-${meta.sev}">${meta.display}</span>`;
+  C.textContent=`confiança ${(p*100).toFixed(0)}%`;
+  P.innerHTML=D.classes.map(c=>{const pr=probs[c.name]||0;
+    return `<div class="prob"><span>${c.emoji} ${c.display}</span><span class="tk"><i class="bgf-${c.sev}" style="width:${(pr*100).toFixed(0)}%"></i></span><span class="pv">${(pr*100).toFixed(0)}%</span></div>`;}).join("");
+  S.innerHTML= warn ? '<span class="tag warn">extrapolação</span> Algum KPI está fora da base — confie menos.'
+    : `<span class="tag ok">ok</span> Classe <b>${meta.display}</b>. Mude um KPI e veja a classe virar.`;
+}
+
+function buildScenarios(){
+  $("#scenRow").innerHTML=Object.entries(D.scenarios).map(([k,s])=>`<button class="chip" data-scen="${k}">${s.label}<small>${s.hint}</small></button>`).join("");
+  $("#scenRow").querySelectorAll("[data-scen]").forEach(b=>b.addEventListener("click",()=>{single={...D.scenarios[b.dataset.scen].values};buildSingle();}));
+}
+function buildTable(){
+  const tb=$("#modelTable tbody"),maxF1=Math.max(...D.metrics_table.map(r=>r.f1));
+  tb.innerHTML=D.metrics_table.map((r,i)=>{
+    const win=i===0,lin=r.model==="Regressão Logística";
+    const tag=win?'<span class="model-tag mt-win">melhor</span>':lin?'<span class="model-tag mt-live">usado no Mexe</span>':'';
+    const w=Math.max(2,(r.f1/maxF1)*54);
+    return `<tr class="${win?'win':''} ${lin?'linear':''}"><td>${r.model}${tag}</td>
+      <td class="tnum">${(r.acc*100).toFixed(1)}%</td><td class="tnum">${r.f1.toFixed(3)}<span class="r2bar" style="width:${w}px"></span></td></tr>`;
+  }).join("");
+  const best=D.metrics_table[0], lin=D.metrics_table.find(r=>r.model==="Regressão Logística");
+  const linTop=["Regressão Logística"].includes(best.model);
+  $("#takeaway").innerHTML= linTop
+    ? `<b>A Regressão Logística ganha</b> (F1=${best.f1}) — simples <b>e interpretável</b>, dá pra ler qual KPI decide. Por isso roda no “Mexe”.`
+    : `<b>Melhor: ${best.model}</b> (F1=${best.f1}); a Logística fica em ${lin?lin.f1:'—'}. Ainda usamos a Logística no “Mexe” por ser interpretável.`;
+}
+
+/* multi-célula: cada célula sorteada de um cenário (classe), só leitura + 🎲 */
+let cells=[];
+function seedCell(i){const keys=Object.keys(D.scenarios);const k=keys[i%keys.length];return {...D.scenarios[k].values};}
+function setCount(n){cells=Array.from({length:n},(_,i)=>seedCell(i));renderMulti();}
+function syncCount(){$("#countSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.n===cells.length));}
+function renderMulti(){
+  syncCount();
+  $("#cellGrid").innerHTML=cells.map((c,i)=>{
+    const cls=topClass(classify(c))[0],m=SEV[cls];
+    const kp=D.features.slice(0,3).map(f=>`${f.label.split(' ')[0]} ${c[f.key]}`).join(" · ");
+    return `<div class="cellcard"><h4><span>Célula ${String.fromCharCode(65+i)}</span><button class="dice" data-dice="${i}" title="Sortear">🎲</button></h4>
+      <span class="statebadge sev-${m.sev}">${m.emoji} ${m.display}</span>
+      <div class="kpis">${kp}</div></div>`;
+  }).join("");
+  $("#cellGrid").querySelectorAll("[data-dice]").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.dice,keys=Object.keys(D.scenarios);cells[i]={...D.scenarios[keys[(i+1)%keys.length]].values};
+    // varia um pouco pra não ficar idêntico
+    const f=D.features[0];cells[i]={...cells[i]};renderMulti();}));
+  renderSummary();
+}
+function renderSummary(){
+  const cnt={}; D.classes.forEach(c=>cnt[c.name]=0);
+  cells.forEach(c=>cnt[topClass(classify(c))[0]]++);
+  $("#summary").innerHTML=D.classes.map(c=>`<span class="fg-${c.sev}">${c.emoji} ${cnt[c.name]} ${c.display.toLowerCase()}</span>`).join("");
+}
+function buildCount(){
+  $("#countSeg").innerHTML=[1,2,3,5].map(n=>`<button data-n="${n}">${n}</button>`).join("");
+  $("#countSeg").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>setCount(+b.dataset.n)));
+}
+function updateFooter(){
+  $("#footer").innerHTML=`<b>Protótipo de design</b> — card “Classificação” (família) do lab de RIC-IA. Usa os
+    datasets <b>rotulados pelo Prof. Tesolin</b> (Base Fonts RIC, valores e rótulos originais). Preditor ao vivo:
+    Regressão Logística interpretável; a tabela compara 7 classificadores. Faltam kNN/Naive Bayes/SVM (tabelas largas).`;
+}
+
+$("#themeBtn").addEventListener("click",()=>{
+  const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+  document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");
+});
+
+buildCount(); setDataset(DSC.default);
+$("#openMath")?.addEventListener("click",()=>$("#backdrop").classList.add("open"));
+$("#closeMath")?.addEventListener("click",()=>$("#backdrop").classList.remove("open"));
+$("#backdrop")?.addEventListener("click",e=>{if(e.target===$("#backdrop"))$("#backdrop").classList.remove("open");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#backdrop")?.classList.remove("open");});
+
+const REPCODE=`from sklearn.linear_model import LogisticRegression
+model = LogisticRegression().fit(X, y)   # treina: aprende os pesos de cada classe
+model.predict_proba(X_nova)              # probabilidade de cada classe
+model.predict(X_nova)                    # a classe vencedora`;
+function draftP1(){const b=D.metrics_table[0];return `Para o problema "${D.usecase}", avaliei ${D.metrics_table.length} classificadores por validação cruzada estratificada, medindo Acurácia e F1-macro. O melhor foi ${b.model} (Acurácia ${(b.acc*100).toFixed(1)}%, F1 ${b.f1}). A Regressão Logística — interpretável e rápida — fica muito próxima do topo, sendo apropriada para um xApp near-RT que precisa explicar a decisão. O F1-macro equilibra o desempenho entre as classes, o que importa quando elas estão desbalanceadas; a Acurácia sozinha pode enganar nesse caso.`;}
+function draftP2(){return `A Regressão Logística é a irmã classificadora da regressão linear: soma os KPIs com pesos (s = β₀ + β·x) e passa o resultado por uma curva em "S" (sigmoide), transformando-o numa probabilidade entre 0 e 1. Com mais de duas classes, o softmax dá uma probabilidade para cada, somando 100%; vence a mais provável. O treino ajusta os pesos para que as probabilidades previstas batam com os rótulos reais (máxima verossimilhança). O principal hiperparâmetro é a força da regularização (C), que evita superajuste. Vantagens: rápida, interpretável (dá para ver qual KPI puxou a decisão) e devolve probabilidades calibráveis. Limitações: a fronteira de decisão é linear — problemas muito não lineares pedem árvores/SVM/redes —, e ela pode ir mal se as classes forem fortemente sobrepostas. Para o estado da célula, os KPIs separam bem as classes, o que a torna uma escolha adequada e explicável.`;}
+const REP={tec:"Classificação",badge:"🚦",fam:"aprendizado supervisionado",slug:()=>"classificacao-"+cur,
+ resumo(){const b=D.metrics_table[0],lr=D.metrics_table.find(r=>r.model==="Regressão Logística");
+  return [`Classificamos <b>${D.target_name}</b> em ${D.classes.length} classes (${D.classes.map(c=>c.display).join(" / ")}) — base rotulada do professor, ${D.n_rows} linhas.`,
+   `Melhor modelo: <b>${b.model}</b> — F1 ${b.f1} · acurácia ${(b.acc*100).toFixed(1)}%.`,
+   `A Regressão Logística (interpretável) marca F1 ${lr?lr.f1:"—"} — e ainda explica a decisão.`,
+   `Lição: o F1 equilibra as classes; a acurácia sozinha engana com classes desbalanceadas.`];},
+ metodo(){return [`Carregar a base rotulada do professor (${D.n_rows} linhas, alvo ${D.target_name}).`,
+  `Validação cruzada <b>estratificada</b> (mantém a proporção das classes em cada dobra).`,
+  `Treinar ${D.metrics_table.length} classificadores.`,
+  `Comparar por acurácia e F1-macro.`];},
+ formula(){return `s = β₀ + β·KPIs → curva “S” → probabilidade por classe (vence a maior)<br><span style="color:#5a6b7c">↑ ${D.features.length}×${D.live_model.classes.length} pesos aprendidos — dá para ler qual KPI puxa cada classe</span>`;},
+ tabela(){const mx=Math.max(...D.metrics_table.map(r=>r.f1));return {head:["Modelo","Acurácia","F1-macro"],rows:D.metrics_table.map((r,i)=>({name:r.model,vals:[(r.acc*100).toFixed(1)+"%",r.f1.toFixed(3)],bar:mx>0?r.f1/mx:0,win:i===0}))};},
+ exemplo(){const pr=classify(single),tc=topClass(pr),m=SEV[tc[0]];const f=D.features.map(x=>`${x.label} = ${single[x.key]}${x.unit?" "+x.unit:""}`).join("; ");return `${esc(f)} → classe <b>${m.emoji} ${m.display}</b> (confiança ${(tc[1]*100).toFixed(0)}%).`;},
+ gloss(){return [["Acurácia","% de acertos no total"],["F1-macro","média que dá o mesmo peso a cada classe — justa com desbalanceio"],["Probabilidade","a confiança do modelo em cada classe (soma 100%)"],["Estratificada","validação que preserva a proporção das classes"]];},
+ limites(){return [`Base pequena (${D.n_rows} linhas) — ótima para aprender, curta para produção.`,
+  `Os rótulos são do professor; num RIC real viriam de eventos medidos na rede.`,
+  `Próximo passo: classificar com <b>KPM real</b> (PRB/throughput por célula via E2).`];},
+ py(){return `# Script da entrega — Classificação (${D.label})
+# Coloque ao lado o CSV do professor (colunas: ${D.features.map(f=>f.key).join(", ")}, ${D.target_name})
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
+from sklearn.metrics import accuracy_score, f1_score
+
+df = pd.read_csv("dados.csv")
+X = df[[${D.features.map(f=>'"'+f.key+'"').join(", ")}]].to_numpy(float)
+y = df["${D.target_name}"].astype(str)
+
+modelos = {
+    "Regressao Logistica": make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000)),
+    "Arvore de Decisao": DecisionTreeClassifier(max_depth=4, random_state=42),
+    "Random Forest": RandomForestClassifier(n_estimators=200, max_depth=5, random_state=42),
+    "Gradient Boosting": GradientBoostingClassifier(n_estimators=150, max_depth=2, random_state=42),
+    "k-NN": make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=3)),
+    "Naive Bayes": GaussianNB(),
+    "SVM (RBF)": make_pipeline(StandardScaler(), SVC(kernel="rbf", C=10, gamma="scale")),
+}
+cv = StratifiedKFold(n_splits=4, shuffle=True, random_state=42)
+print(f"{'Modelo':<22s} {'Acuracia':>9s} {'F1':>7s}")
+for nome, m in modelos.items():
+    yp = cross_val_predict(m, X, y, cv=cv)
+    print(f"{nome:<22s} {accuracy_score(y, yp):9.4f} {f1_score(y, yp, average='macro'):7.4f}")
+`;}};
+const INKC="#16202b",SUBC="#5a6b7c",LINEC="#dfe5ec",ACC="#1f6fe5",TRACKC="#edf1f6";
+function esc(s){return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function rbar(p,win){const w=Math.max(3,Math.round(Math.min(1,Math.max(0,p))*110));
+  return `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse"><tr><td style="width:${w}px;height:9px;background:${win?ACC:"#a9c4ee"};font-size:2px;line-height:2px">&nbsp;</td><td style="width:${110-w}px;height:9px;background:${TRACKC};font-size:2px;line-height:2px">&nbsp;</td></tr></table>`;}
+function secH(n,t){return `<div style="margin:22px 0 8px;padding-top:10px;border-top:1px solid ${LINEC};font-size:11px;letter-spacing:2px;color:${ACC};font-weight:700">${n} · ${t.toUpperCase()}</div>`;}
+function reportBody(){
+  const nome=esc($("#repNome").value.trim()||"__________");
+  let dt="";try{dt=new Date().toLocaleDateString("pt-BR");}catch(e){}
+  const p1=esc($("#repP1").value).replace(/\n/g,"<br>");
+  const p2=esc($("#repP2").value).replace(/\n/g,"<br>");
+  const t=REP.tabela();
+  const thead=`<tr>${t.head.map((h,i)=>`<th align="${i===0?"left":"center"}" style="padding:6px 8px;border-bottom:2px solid ${INKC};font-size:10.5px;letter-spacing:1px;color:${SUBC}">${h.toUpperCase()}</th>`).join("")}<th style="padding:6px 8px;border-bottom:2px solid ${INKC}"></th></tr>`;
+  const rows=t.rows.map(r=>`<tr><td style="padding:6px 8px;border-bottom:1px solid ${LINEC};font-weight:${r.win?700:400}">${esc(r.name)}${r.win?` <span style="color:${ACC}">◂ melhor</span>`:""}</td>${r.vals.map(v=>`<td align="center" style="padding:6px 8px;border-bottom:1px solid ${LINEC}">${v}</td>`).join("")}<td style="padding:6px 8px;border-bottom:1px solid ${LINEC}">${rbar(r.bar,r.win)}</td></tr>`).join("");
+  const resumo=REP.resumo().map(b=>`<div style="margin:3px 0">• ${b}</div>`).join("");
+  const metodo=REP.metodo().map((s,i)=>`<div style="margin:3px 0"><b style="color:${ACC}">${i+1}.</b> ${s}</div>`).join("");
+  const gloss=REP.gloss().map(g=>`<div style="margin:2px 0"><b>${g[0]}</b> — ${g[1]}</div>`).join("");
+  const lim=REP.limites().map(b=>`<div style="margin:3px 0">• ${b}</div>`).join("");
+  return `
+<div style="color:${INKC}">
+  <div style="font-size:11px;letter-spacing:3px;color:${SUBC};font-weight:700">RELATÓRIO · ${REP.tec.toUpperCase()} ${REP.badge}</div>
+  <div style="font-size:24px;font-weight:800;margin:4px 0 2px">${esc(D.label)}</div>
+  <div style="font-size:12px;color:${SUBC};margin-bottom:14px">${nome} &nbsp;·&nbsp; ${dt} &nbsp;·&nbsp; ${esc(D.usecase)} &nbsp;·&nbsp; ${REP.fam}</div>
+  <div style="border:1px solid ${LINEC};border-left:4px solid ${ACC};padding:10px 14px;font-size:13px">
+    <div style="font-size:11px;letter-spacing:2px;color:${ACC};font-weight:700;margin-bottom:5px">⚡ EM 30 SEGUNDOS</div>${resumo}</div>
+  ${secH("1","Análise crítica e seleção do algoritmo")}<p style="margin:0;text-align:justify;font-size:13px;line-height:1.55">${p1}</p>
+  ${secH("2","Fundamentação teórica")}<p style="margin:0;text-align:justify;font-size:13px;line-height:1.55">${p2}</p>
+  ${secH("3","Experimentação prática")}
+  <div style="font-size:12.5px;margin-bottom:10px">${metodo}</div>
+  <table cellspacing="0" style="border-collapse:collapse;font-size:12.5px;margin:4px 0 8px">${thead}${rows}</table>
+  <div style="font-family:Consolas,monospace;font-size:12px;background:#f4f6fa;border:1px solid ${LINEC};padding:8px 12px;margin:8px 0">${REP.formula()}</div>
+  <div style="font-size:12.5px;margin:6px 0"><b>Exemplo (rodado no lab):</b> ${REP.exemplo()}</div>
+  <div style="font-size:11.5px;color:${SUBC};border-top:1px dashed ${LINEC};margin-top:10px;padding-top:8px"><b style="letter-spacing:1px">GLOSSÁRIO</b>${gloss}</div>
+  <div style="font-size:12px;border:1px solid ${LINEC};padding:8px 12px;margin-top:10px"><b style="font-size:11px;letter-spacing:2px;color:${SUBC}">LIMITES &amp; PRÓXIMOS PASSOS</b>${lim}</div>
+  <div style="font-size:11px;letter-spacing:1px;color:${SUBC};margin:14px 0 4px;font-weight:700">CÓDIGO (SCIKIT-LEARN) — SCRIPT COMPLETO NO ANEXO .PY</div>
+  <pre style="background:#f4f6fa;border:1px solid ${LINEC};padding:10px;font-size:11.5px;white-space:pre-wrap;margin:0">${esc(REPCODE)}</pre>
+  <div style="color:#98a4b1;font-size:10.5px;margin-top:14px">Dados: Prof. Julio Tesolin (Base Fonts RIC) · Gerado no Lab de IA para RIC · Core5G ARM64</div>
+</div>`;
+}
+function dlWord(){
+  const css="<style>body{font-family:Calibri,Arial,sans-serif;color:#16202b;line-height:1.5;max-width:720px;margin:0 auto;padding:24px}table{margin:6px 0}</style>";
+  const full="<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>"+css+"</head><body>"+reportBody()+"</body></html>";
+  const blob=new Blob(["﻿"+full],{type:"application/msword"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="relatorio-"+REP.slug()+".doc";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+function dlPy(){
+  const nome=($("#repNome").value.trim()||"aluno");
+  const head="# -*- coding: utf-8 -*-\n# Aluno(a): "+nome+"\n# Tecnica: "+REP.tec+" — "+D.label+" (dados: Prof. Julio Tesolin)\n# Gerado no Lab de IA para RIC\n\n";
+  const blob=new Blob([head+REP.py()],{type:"text/x-python"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="script-"+REP.slug()+".py";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+$("#openReport")?.addEventListener("click",()=>{if(!$("#repP1").value)$("#repP1").value=draftP1();if(!$("#repP2").value)$("#repP2").value=draftP2();$("#repbackdrop").classList.add("open");});
+$("#repClose")?.addEventListener("click",()=>$("#repbackdrop").classList.remove("open"));
+$("#repbackdrop")?.addEventListener("click",e=>{if(e.target===$("#repbackdrop"))$("#repbackdrop").classList.remove("open");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#repbackdrop")?.classList.remove("open");});
+$("#repDoc")?.addEventListener("click",dlWord);
+$("#repPy")?.addEventListener("click",dlPy);
+$("#repPdf")?.addEventListener("click",()=>{$("#printarea").innerHTML='<div style="max-width:720px;margin:0 auto">'+reportBody()+"</div>";window.print();});
+
+/* ===== integração: embed no painel + compreensão + sistema real ===== */
+const LESSON="classificacao", NEXT="/lab/clustering";
+const EMBED=new URLSearchParams(location.search).has("embed");
+if(EMBED){document.documentElement.classList.add("embed");
+  try{const t=window.parent.document.documentElement.getAttribute("data-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}
+  try{window.parent.postMessage({c5gLab:{title:document.title.replace("Lab RIC-IA · ","")}},location.origin);}catch(e){}
+  document.querySelectorAll('a[href^="/lab"]').forEach(a=>{const u=a.getAttribute("href");if(u&&!u.includes("embed=1"))a.setAttribute("href",u+(u.includes("?")?"&":"?")+"embed=1");});
+  const rb=document.getElementById("realRun"); if(rb) rb.hidden=false;
+}
+const TT=(k,d)=>{const v=window.LABI18N?LABI18N.t(k):k;return v===k?d:v;};
+document.getElementById("realRun")?.addEventListener("click",()=>{try{window.parent.postMessage({c5gLab:{runCmd:"p2-kpm-real"}},location.origin);}catch(e){}});
+document.getElementById("compOk")?.addEventListener("click",()=>{
+  try{const K="c5g-lab-progress",p=JSON.parse(localStorage.getItem(K)||"{}");p[LESSON]=true;localStorage.setItem(K,JSON.stringify(p));}catch(e){}
+  location.href=NEXT+(EMBED?"?embed=1":"");
+});
+document.getElementById("compNo")?.addEventListener("click",()=>{document.getElementById("compAsk").classList.toggle("open");});
+document.getElementById("compSend")?.addEventListener("click",async()=>{
+  const t=(document.getElementById("compText").value||"").trim(); if(!t) return;
+  const msg=document.getElementById("compMsg");
+  try{const r=await fetch("/api/lab/question",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lesson:LESSON,text:t})});
+    if(!r.ok)throw 0; msg.textContent=TT("comp.sent","✓ Dúvida enviada — o professor verá."); document.getElementById("compText").value="";}
+  catch(e){msg.textContent=TT("comp.fail","Não deu para enviar daqui — anote e pergunte na aula.");}
+});
+</script>

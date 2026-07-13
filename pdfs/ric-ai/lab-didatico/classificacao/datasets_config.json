@@ -1,0 +1,503 @@
+{
+  "family": "Classificação",
+  "default": "congestion",
+  "datasets": {
+    "congestion": {
+      "label": "Congestionamento",
+      "source": "Prof. Tesolin",
+      "usecase": "nível de congestionamento da célula (árvore de decisão)",
+      "n_rows": 17,
+      "target_name": "Congestion",
+      "features": [
+        {
+          "key": "ActiveUsers",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            300
+          ],
+          "train": [
+            28.0,
+            128.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRBUtilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            20.0,
+            98.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "AvgSINR",
+          "label": "SINR médio",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            11.0,
+            28.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "TxPower",
+          "label": "Potência Tx",
+          "unit": "dBm",
+          "hard": [
+            0,
+            46
+          ],
+          "train": [
+            17.0,
+            31.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PacketLoss",
+          "label": "Perda de pacotes",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            0.2,
+            8.5
+          ],
+          "decimals": 1
+        },
+        {
+          "key": "SchedulingDelay",
+          "label": "Atraso de agendamento",
+          "unit": "ms",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            4.0,
+            55.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "classes": [
+        {
+          "name": "Low",
+          "display": "Baixa",
+          "emoji": "🟢",
+          "sev": "good"
+        },
+        {
+          "name": "Medium",
+          "display": "Média",
+          "emoji": "🟡",
+          "sev": "warn"
+        },
+        {
+          "name": "High",
+          "display": "Alta",
+          "emoji": "🔴",
+          "sev": "bad"
+        }
+      ],
+      "live_model": {
+        "features": [
+          "ActiveUsers",
+          "PRBUtilization",
+          "AvgSINR",
+          "TxPower",
+          "PacketLoss",
+          "SchedulingDelay"
+        ],
+        "mean": [
+          79.11765,
+          66.05882,
+          19.29412,
+          23.52941,
+          3.52353,
+          25.23529
+        ],
+        "std": [
+          30.5862,
+          25.64342,
+          5.2666,
+          4.31301,
+          2.67637,
+          16.13009
+        ],
+        "classes": [
+          "High",
+          "Low",
+          "Medium"
+        ],
+        "coef": [
+          [
+            0.51544,
+            0.52793,
+            -0.50051,
+            0.58156,
+            0.66911,
+            0.6132
+          ],
+          [
+            -0.56488,
+            -0.72757,
+            0.64865,
+            -0.51378,
+            -0.40112,
+            -0.50398
+          ],
+          [
+            0.04944,
+            0.19965,
+            -0.14814,
+            -0.06778,
+            -0.26799,
+            -0.10921
+          ]
+        ],
+        "intercept": [
+          0.20923,
+          -1.24071,
+          1.03148
+        ]
+      },
+      "scenarios": {
+        "Low": {
+          "label": "🟢 Baixa",
+          "hint": "classe baixa",
+          "values": {
+            "ActiveUsers": 28.0,
+            "PRBUtilization": 20.0,
+            "AvgSINR": 28.0,
+            "TxPower": 17.0,
+            "PacketLoss": 0.2,
+            "SchedulingDelay": 4.0
+          }
+        },
+        "Medium": {
+          "label": "🟡 Média",
+          "hint": "classe média",
+          "values": {
+            "ActiveUsers": 62.0,
+            "PRBUtilization": 55.0,
+            "AvgSINR": 22.0,
+            "TxPower": 21.0,
+            "PacketLoss": 1.5,
+            "SchedulingDelay": 15.0
+          }
+        },
+        "High": {
+          "label": "🔴 Alta",
+          "hint": "classe alta",
+          "values": {
+            "ActiveUsers": 92.0,
+            "PRBUtilization": 82.0,
+            "AvgSINR": 17.0,
+            "TxPower": 25.0,
+            "PacketLoss": 4.5,
+            "SchedulingDelay": 30.0
+          }
+        }
+      },
+      "start": {
+        "ActiveUsers": 62.0,
+        "PRBUtilization": 55.0,
+        "AvgSINR": 22.0,
+        "TxPower": 21.0,
+        "PacketLoss": 1.5,
+        "SchedulingDelay": 15.0
+      },
+      "metrics_table": [
+        {
+          "model": "Regressão Logística",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "Árvore de Decisão",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "Random Forest",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "Gradient Boosting",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "k-NN",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "Naive Bayes",
+          "acc": 1.0,
+          "f1": 1.0
+        },
+        {
+          "model": "SVM (RBF)",
+          "acc": 1.0,
+          "f1": 1.0
+        }
+      ],
+      "balance": {
+        "Low": 5,
+        "Medium": 5,
+        "High": 7
+      }
+    },
+    "failure": {
+      "label": "Falha de célula",
+      "source": "Prof. Tesolin",
+      "usecase": "prever falha da célula — manutenção preditiva (regressão logística)",
+      "n_rows": 20,
+      "target_name": "Failure",
+      "features": [
+        {
+          "key": "ActiveUsers",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            300
+          ],
+          "train": [
+            35.0,
+            156.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRBUtilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            22.0,
+            97.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "AvgSINR",
+          "label": "SINR médio",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            14.0,
+            28.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "TxPower",
+          "label": "Potência Tx",
+          "unit": "dBm",
+          "hard": [
+            0,
+            46
+          ],
+          "train": [
+            17.0,
+            28.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "CellTemperature",
+          "label": "Temperatura da célula",
+          "unit": "°C",
+          "hard": [
+            -20,
+            90
+          ],
+          "train": [
+            31.0,
+            50.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PacketLoss",
+          "label": "Perda de pacotes",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            0.4,
+            7.0
+          ],
+          "decimals": 1
+        }
+      ],
+      "classes": [
+        {
+          "name": "No",
+          "display": "Normal",
+          "emoji": "🟢",
+          "sev": "good"
+        },
+        {
+          "name": "Yes",
+          "display": "Falha",
+          "emoji": "🔴",
+          "sev": "bad"
+        }
+      ],
+      "live_model": {
+        "features": [
+          "ActiveUsers",
+          "PRBUtilization",
+          "AvgSINR",
+          "TxPower",
+          "CellTemperature",
+          "PacketLoss"
+        ],
+        "mean": [
+          97.2,
+          70.0,
+          19.75,
+          23.0,
+          40.5,
+          3.06
+        ],
+        "std": [
+          36.68733,
+          23.85582,
+          4.38035,
+          3.43511,
+          5.76628,
+          2.1122
+        ],
+        "classes": [
+          "No",
+          "Yes"
+        ],
+        "coef": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.64751,
+            0.60989,
+            -0.60762,
+            0.67239,
+            0.62365,
+            0.7271
+          ]
+        ],
+        "intercept": [
+          0.0,
+          -0.2052
+        ]
+      },
+      "scenarios": {
+        "No": {
+          "label": "🟢 Normal",
+          "hint": "classe normal",
+          "values": {
+            "ActiveUsers": 35.0,
+            "PRBUtilization": 22.0,
+            "AvgSINR": 28.0,
+            "TxPower": 17.0,
+            "CellTemperature": 31.0,
+            "PacketLoss": 0.4
+          }
+        },
+        "Yes": {
+          "label": "🔴 Falha",
+          "hint": "classe falha",
+          "values": {
+            "ActiveUsers": 102.0,
+            "PRBUtilization": 80.0,
+            "AvgSINR": 18.0,
+            "TxPower": 24.0,
+            "CellTemperature": 41.0,
+            "PacketLoss": 3.0
+          }
+        }
+      },
+      "start": {
+        "ActiveUsers": 35.0,
+        "PRBUtilization": 22.0,
+        "AvgSINR": 28.0,
+        "TxPower": 17.0,
+        "CellTemperature": 31.0,
+        "PacketLoss": 0.4
+      },
+      "metrics_table": [
+        {
+          "model": "Regressão Logística",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "Árvore de Decisão",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "Random Forest",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "Gradient Boosting",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "k-NN",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "SVM (RBF)",
+          "acc": 0.95,
+          "f1": 0.9499
+        },
+        {
+          "model": "Naive Bayes",
+          "acc": 0.9,
+          "f1": 0.9
+        }
+      ],
+      "balance": {
+        "No": 10,
+        "Yes": 10
+      }
+    }
+  }
+}

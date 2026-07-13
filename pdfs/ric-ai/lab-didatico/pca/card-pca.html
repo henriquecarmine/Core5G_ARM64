@@ -1,0 +1,786 @@
+<title>Lab RIC-IA · PCA (redução de dimensão)</title>
+<style>
+  :root{
+    --bg:#e9eef4; --surface:#ffffff; --surface-2:#f3f7fc; --inset:#0d1622;
+    --ink:#0f1b26; --ink-2:#4a5c6e; --ink-3:#7c8da0; --line:#d7e0ea;
+    --accent:#1f6fe5; --accent-2:#0aa5b8; --accent-ink:#ffffff;
+    --good:#12874c; --warn:#b07414; --bad:#c73838;
+    --console-ink:#dce8f6; --console-dim:#7d93ab;
+    --shadow:0 1px 2px rgba(16,32,48,.06),0 8px 24px rgba(16,32,48,.07);
+    --r:14px; --r-sm:9px;
+    --fs-display:clamp(1.55rem,1.1rem + 1.9vw,2.3rem);
+    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#080d14; --surface:#111a25; --surface-2:#0d1520; --inset:#080f18;
+    --ink:#e7eff8; --ink-2:#9aabbe; --ink-3:#6b7d92; --line:#213142;
+    --accent:#4d90ff; --accent-2:#28c2d6; --accent-ink:#06101d;
+    --good:#33c07d; --warn:#e0a53f; --bad:#e5695f; --console-ink:#d6e6f7; --console-dim:#748aa4;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{--bg:#e9eef4;--surface:#ffffff;--surface-2:#f3f7fc;--inset:#0d1622;--ink:#0f1b26;--ink-2:#4a5c6e;--ink-3:#7c8da0;--line:#d7e0ea;--accent:#1f6fe5;--accent-2:#0aa5b8;--accent-ink:#ffffff;--good:#12874c;--warn:#b07414;--bad:#c73838;--console-ink:#dce8f6;--console-dim:#7d93ab;}
+  :root[data-theme="dark"]{--bg:#080d14;--surface:#111a25;--surface-2:#0d1520;--inset:#080f18;--ink:#e7eff8;--ink-2:#9aabbe;--ink-3:#6b7d92;--line:#213142;--accent:#4d90ff;--accent-2:#28c2d6;--accent-ink:#06101d;--good:#33c07d;--warn:#e0a53f;--bad:#e5695f;--console-ink:#d6e6f7;--console-dim:#748aa4;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:940px;margin:0 auto;padding:clamp(16px,3vw,40px)}
+  h1,h2,h3{text-wrap:balance;margin:0} p{margin:0} .tnum{font-variant-numeric:tabular-nums}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px}
+  h1{font-size:var(--fs-display);font-weight:750;letter-spacing:-.02em;line-height:1.08}
+  .lead{color:var(--ink-2);margin-top:12px;max-width:62ch;font-size:1.02rem}
+  .themebtn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.05rem;display:grid;place-items:center;box-shadow:var(--shadow)}
+  .themebtn:hover{color:var(--accent);border-color:var(--accent)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:clamp(18px,2.4vw,28px);margin-bottom:20px}
+  .card > h2{font-size:1.22rem;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .card > .sub{color:var(--ink-2);margin-top:6px;font-size:.95rem;max-width:64ch}
+  .kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .explain p + p{margin-top:12px} .explain b{color:var(--ink)} .hl{color:var(--accent);font-weight:600}
+  .srcnote{margin-top:14px;font-size:.82rem;color:var(--ink-2)} .srcnote b{color:var(--ink)}
+  .srcbadge{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;padding:2px 7px;border-radius:5px;font-weight:700;background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+  .mathbtn{margin-top:16px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--accent);border-radius:var(--r-sm);padding:9px 15px;font-size:.9rem;font-weight:700;cursor:pointer}
+  .mathbtn:hover{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+
+  .oranmap{display:flex;flex-direction:column;gap:0;margin-top:14px;max-width:540px}
+  .band{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:8px 12px}
+  .band.here{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
+  .band.ran{border-color:var(--accent-2)} .band.planned{border-style:dashed} .band.dim{opacity:.66}
+  .bl{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;width:112px;flex:none;line-height:1.3}
+  .bl em{display:block;font-style:normal;font-weight:500;text-transform:none;letter-spacing:0;font-size:.62rem}
+  .bn{flex:1;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .bn small{font-weight:400;color:var(--ink-2);font-size:.72rem} .band.here .bn{color:var(--accent)}
+  .youare{font-family:var(--mono);font-size:.54rem;letter-spacing:.05em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:1px 5px;border-radius:4px;font-weight:700}
+  .conn{display:flex;justify-content:center;gap:20px;padding:3px 0;font-family:var(--mono);font-size:.63rem;color:var(--ink-3)}
+  .conn .up{color:var(--accent-2)} .conn .down{color:var(--accent)}
+  .flowcap{margin-top:14px;font-size:.85rem;color:var(--ink-2)} .flowcap b{color:var(--ink)}
+  .honest{margin-top:7px;font-size:.77rem;color:var(--ink-3)}
+
+  .plotwrap{display:grid;grid-template-columns:1.3fr .7fr;gap:20px;align-items:start}
+  @media (max-width:720px){.plotwrap{grid-template-columns:1fr}}
+  svg.scatter{width:100%;height:auto;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm)}
+  .evbars{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .evrow{font-size:.8rem;color:var(--ink-2)}
+  .evrow .top{display:flex;justify-content:space-between} .evrow b{color:var(--ink)}
+  .evtrack{height:10px;border-radius:5px;background:var(--surface-2);overflow:hidden;margin-top:3px;border:1px solid var(--line)}
+  .evtrack > i{display:block;height:100%;background:var(--accent);border-radius:5px}
+  .assign{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;margin-top:12px}
+  .assign .big{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1rem;font-weight:700;margin-top:4px;color:var(--ink)}
+
+  .load{margin-top:16px}
+  .loadrow{display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:.82rem;margin:5px 0}
+  .loadrow .name{color:var(--ink-2)}
+  .loadbar{position:relative;height:16px;background:var(--surface-2);border-radius:4px}
+  .loadbar > i{position:absolute;top:0;bottom:0;background:var(--accent-2);border-radius:3px}
+  .loadbar .mid{position:absolute;top:-2px;bottom:-2px;left:50%;width:1px;background:var(--ink-3)}
+
+  .ctrls{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:2px 22px}
+  @media (max-width:560px){.ctrls{grid-template-columns:1fr}}
+  .ctrl{padding:9px 0;border-bottom:1px solid var(--line)}
+  .ctrl-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .ctrl-head label{font-weight:600;font-size:.86rem} .ctrl-head .v{font-family:var(--mono);color:var(--ink-2);font-size:.82rem}
+  .ctrl input[type=range]{width:100%;accent-color:var(--accent);height:4px;margin-top:6px}
+  .takeaway{margin-top:16px;background:var(--surface-2);border-left:3px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:12px 15px;font-size:.9rem;color:var(--ink-2)} .takeaway b{color:var(--ink)}
+  footer{color:var(--ink-3);font-size:.8rem;line-height:1.6;margin-top:8px;padding:0 4px 10px} footer b{color:var(--ink-2)}
+
+  /* MODAL fórmula + Python */
+  .backdrop{position:fixed;inset:0;background:rgba(6,12,20,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .backdrop.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);max-width:660px;width:100%;max-height:86vh;overflow:auto;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+  .modal h3{font-size:1.15rem;font-weight:750;display:flex;justify-content:space-between;align-items:center}
+  .modal .x{border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--ink-3);line-height:1}
+  .modal .x:hover{color:var(--ink)}
+  .mlabel{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:18px 0 8px}
+  .steps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:8px}
+  .steps li{position:relative;padding-left:32px;font-size:.9rem;color:var(--ink-2)}
+  .steps li b{color:var(--ink)} .steps li code{font-family:var(--mono);background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:.85em}
+  .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--mono);font-weight:700;font-size:.72rem;display:grid;place-items:center}
+  pre{background:var(--inset);color:var(--console-ink);border-radius:var(--r-sm);padding:15px;overflow-x:auto;margin:0;font-family:var(--mono);font-size:.82rem;line-height:1.6}
+  pre .cap{color:#7fd8a0} pre .ret{color:#7fc0ff} pre .kw{color:#e0a53f} pre .cm{color:var(--console-dim)}
+  .caplegend{display:flex;gap:16px;font-size:.78rem;margin-top:10px;color:var(--ink-2)}
+  .caplegend b{font-family:var(--mono)} .cap-c{color:#2f9e63} .ret-c{color:#2b74e8}
+  /* relatório */
+  .repbtn{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 9%,transparent);color:var(--good);border-radius:var(--r-sm);padding:11px 18px;font-size:.95rem;font-weight:700;cursor:pointer}
+  .repbtn:hover{background:color-mix(in srgb,var(--good) 17%,transparent)}
+  .repform{display:grid;gap:14px;margin-top:16px}
+  .repform label{display:grid;gap:5px;font-weight:600;font-size:.86rem}
+  .repform input,.repform textarea{width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.88rem;font-weight:400}
+  .repform textarea{min-height:120px;resize:vertical;line-height:1.5}
+  .repform .hint{font-weight:400;color:var(--ink-3);font-size:.8rem}
+  .repactions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:10px 16px;font-size:.9rem;font-weight:700;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  #printarea{display:none}
+  @media print{ body>.wrap,body>.backdrop{display:none!important} #printarea{display:block!important} }
+
+  /* integração: embed no painel + compreensão + sistema real + variáveis */
+  html.embed .topright,html.embed .themebtn,html.embed a[href="/"],html.embed a[href="/lab"]{display:none!important}
+  html.embed .wrap{padding:14px 18px 20px}
+  .realbox{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--surface-2);padding:12px 15px;font-size:.9rem;color:var(--ink-2)}
+  .realbox b{color:var(--ink)}
+  .realbtn{display:inline-block;margin-top:9px;border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;font-size:.88rem;cursor:pointer}
+  .realbtn:hover{background:color-mix(in srgb,var(--good) 18%,transparent)}
+  .realnote{display:block;margin-top:6px;font-size:.78rem;color:var(--ink-3)}
+  .comp{margin:6px 0 20px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);padding:16px 20px}
+  .comp .q{font-weight:700;margin-bottom:10px}
+  .comp .row{display:flex;gap:10px;flex-wrap:wrap}
+  .compok{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compno{border:1px solid var(--warn);background:transparent;color:var(--warn);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compask{display:none;margin-top:10px}
+  .compask.open{display:block}
+  .compask textarea{width:100%;min-height:70px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.9rem}
+  .compsend{margin-top:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;cursor:pointer}
+  .compmsg{margin-top:8px;font-size:.86rem;color:var(--ink-2)}
+  .mvars{border-collapse:collapse;width:100%;font-size:.86rem;margin-top:6px}
+  .mvars td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+  .mvars td b{color:var(--ink)}
+  .mvars td:first-child{font-family:var(--mono);font-weight:700;white-space:nowrap;color:var(--accent)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow">Lab RIC · IA — Aula 5 de 6</div>
+      <h1>PCA: resumir muitos KPIs em poucos</h1>
+      <p class="lead">Redução de dimensionalidade, com o dataset <b>do Prof. Tesolin</b>. Quando os KPIs andam juntos,
+        o PCA os <b>comprime</b> em poucas “direções” que guardam quase toda a informação.</p>
+    </div>
+    <button class="themebtn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">◐</button>
+  </div>
+
+  <section class="card explain">
+    <h2>📖 O que é PCA?</h2>
+    <div style="margin-top:12px">
+      <p>Imagine resumir um <b>relatório de 50 páginas em 3 frases</b> que guardam o essencial. <b>PCA é isso</b> para
+        dados: acha poucas “direções” (componentes) que capturam o máximo de <b>variação</b> dos KPIs.</p>
+      <p>Aqui os KPIs da célula (throughput, energia, usuários…) <b>sobem e descem juntos</b> — célula grande tem tudo
+        alto. Então uma única direção (<span class="hl">PC1</span>) já resume quase tudo. Serve para <b>visualizar</b>,
+        <b>comprimir</b> e <b>acelerar</b> outros modelos.</p>
+      <button class="mathbtn" id="openMath">🔬 Ver a fórmula e o Python (o que o modelo captura e retorna)</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🛰️ Onde isso roda no O-RAN</h2>
+    <p class="sub">PCA quase nunca age sozinho: é <b>pré-processamento</b> — roda no Non-RT antes de outro rApp.</p>
+    <div class="oranmap">
+      <div class="band planned here"><span class="bl">Non-RT RIC<em>rApp · planejado</em></span><span class="bn"><span class="youare">aqui</span> PCA <small>comprime os KPIs p/ outros rApps</small></span></div>
+      <div class="conn"><span class="up">↑ O1 dados</span><span class="down">↓ features reduzidas</span></div>
+      <div class="band dim"><span class="bl">Near-RT RIC<em>FlexRIC</em></span><span class="bn">xApps</span></div>
+      <div class="conn"><span class="up">↑ E2/KPM</span><span class="down">↓ E2/RC</span></div>
+      <div class="band ran dim"><span class="bl">RAN<em>gera os KPIs</em></span><span class="bn">gNB + UEs</span></div>
+    </div>
+    <p class="flowcap"><b>Fluxo:</b> KPIs sobem por <b>O1</b> → o PCA <b>reduz</b> (ex.: 5 KPIs → 2) → entrega features
+      enxutas para clustering/regressão rodarem mais rápido e claro.</p>
+    <div class="realbox"><b data-i18n="real.t">🔌 No sistema real</b><br>
+      <span data-i18n-html="real.txt">Os KPIs desta aula não são teóricos: neste servidor roda um 5G de verdade (gNB OAI + FlexRIC), e eles chegam pela interface <b>E2 (E2SM-KPM)</b>. Você pode coletá-los agora:</span>
+      <button class="realbtn" id="realRun" hidden data-i18n="real.btn">▶ Rodar a coleta KPM real (no console do painel)</button>
+      <span class="realnote" data-i18n="real.note">O professor executa; todos acompanham ao vivo no console. Disponível dentro do painel.</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🎨 As células no espaço PCA</h2>
+    <p class="sub">Cada célula projetada em <b>PC1</b> (horizontal) × <b>PC2</b> (vertical). Ajuste a célula-teste (★) e veja onde ela cai.</p>
+    <div class="plotwrap">
+      <svg class="scatter" id="scatter" viewBox="0 0 480 340" role="img" aria-label="Células no espaço PCA"></svg>
+      <div>
+        <div class="kicker">Variância explicada</div>
+        <div class="evbars" id="evbars" style="margin-top:8px"></div>
+        <div class="assign">
+          <div class="kicker">Sua célula-teste (★)</div>
+          <div class="big" id="assignBig">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="load">
+      <div class="kicker">Peso de cada KPI na PC1 (loadings)</div>
+      <div id="loadings" style="margin-top:8px"></div>
+    </div>
+
+    <div class="kicker" style="margin-top:18px">Ajuste a célula-teste (★)</div>
+    <div class="ctrls" id="ctrls"></div>
+
+    <div class="takeaway" id="takeaway"></div>
+  </section>
+
+  <section class="card">
+    <h2>📄 Relatório</h2>
+    <p class="sub" data-i18n="report.sub">A entrega do trabalho, nas 3 partes, com o que você rodou preenchido. Edite na sua voz e baixe: PDF, Word e o script Python.</p>
+    <button class="repbtn" id="openReport" style="margin-top:14px" data-i18n="report.btn">📄 Gerar relatório (PDF / Word / .py)</button>
+  </section>
+
+  <div class="comp">
+    <div class="q" data-i18n="comp.q">Antes de seguir:</div>
+    <div class="row">
+      <button class="compok" id="compOk" data-i18n="comp.ok">✅ Entendi — próxima aula ▸</button>
+      <button class="compno" id="compNo" data-i18n="comp.no">🤔 Não entendi</button>
+    </div>
+    <div class="compask" id="compAsk">
+      <textarea id="compText" data-i18n-ph="comp.ph" placeholder="O que ficou confuso? Escreva sua dúvida…"></textarea>
+      <button class="compsend" id="compSend" data-i18n="comp.send">Enviar dúvida</button>
+      <div class="compmsg" id="compMsg"></div>
+    </div>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Fórmula e código do PCA">
+    <h3>PCA — a fórmula e o código <button class="x" id="closeMath" aria-label="Fechar">×</button></h3>
+    <p style="color:var(--ink-2);font-size:.9rem;margin-top:6px">O que o modelo <b class="cap-c">captura</b> (aprende no <code>fit</code>) e o que <b class="ret-c">retorna</b> (no <code>transform</code>/atributos).</p>
+
+    <div class="mlabel">A matemática, em 5 passos</div>
+    <ol class="steps">
+      <li><b>Padroniza</b> cada KPI para a mesma escala: <code>z = (x − μ) / σ</code>.</li>
+      <li><b>Covariância</b> entre os KPIs: <code>C = (1/n) ZᵀZ</code> — quem varia junto com quem.</li>
+      <li><b>Autovetores</b> de <code>C</code> = as <b>componentes principais</b> (as direções de maior variância).</li>
+      <li><b>Projeta</b> cada célula nessas direções: <code>Y = Z · W</code> (W = top-k autovetores).</li>
+      <li><b>Variância explicada</b> de cada PC: <code>λᵢ / Σλ</code> — o quanto ela “resume”.</li>
+    </ol>
+
+
+    <div class="mlabel" data-i18n="math.vars">As variáveis, uma a uma</div>
+    <table class="mvars"><tr><td>z</td><td><b>o KPI padronizado</b> — z = (x − μ)/σ: tira a unidade e põe tudo na mesma escala.</td></tr><tr><td>W (loadings)</td><td><b>os pesos da direção</b> — quanto cada KPI entra em cada componente (a “receita” da mistura).</td></tr><tr><td>PC1, PC2</td><td><b>as novas réguas</b> — direções que capturam o máximo da variação; projetamos as células nelas.</td></tr><tr><td>λ (variância)</td><td><b>quanto cada PC resume</b> — aqui a PC1 sozinha guarda ~97% da informação.</td></tr><tr><td>tipo</td><td><b>álgebra linear — uma rotação dos eixos (autovetores da matriz de covariância)</b></td></tr><tr><td>serve p/</td><td><b>comprimir muitos KPIs em 1–2 números e <i>visualizar</i> a estrutura escondida</b></td></tr></table>
+    <div class="mlabel">O código Python (scikit-learn)</div>
+    <pre><span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.decomposition <span class="kw">import</span> PCA
+
+Z = StandardScaler().fit_transform(X)   <span class="cm"># <span class="cap">captura</span>: μ e σ de cada KPI → padroniza</span>
+pca = PCA(n_components=<span class="kw">2</span>).fit(Z)         <span class="cm"># <span class="cap">captura</span>: as direções de maior variância</span>
+Y = pca.transform(Z)                     <span class="cm"># <span class="ret">retorna</span>: cada célula em (PC1, PC2)</span>
+pca.explained_variance_ratio_            <span class="cm"># <span class="ret">retorna</span>: quanto cada PC resume (ex.: 97%, 2.5%)</span>
+pca.components_                          <span class="cm"># <span class="ret">retorna</span>: o peso de cada KPI em cada PC</span></pre>
+    <div class="caplegend"><span><b class="cap-c">■ captura</b> = <code>fit</code> (aprende dos dados)</span><span><b class="ret-c">■ retorna</b> = <code>transform</code> / atributos (o resultado)</span></div>
+    <p style="color:var(--ink-2);font-size:.86rem;margin-top:14px">Nesta base, <code>explained_variance_ratio_</code> deu
+      <b id="evInline">—</b> na PC1: os KPIs andam tão juntos que <b>quase tudo cabe em um número</b>.</p>
+  </div>
+</div>
+
+<div class="backdrop" id="repbackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Relatório">
+    <h3><span data-i18n="report.title">📄 Relatório do trabalho</span> <button class="x" id="repClose" aria-label="Fechar">×</button></h3>
+    <p style="color:var(--ink-2);font-size:.9rem;margin-top:6px">As Partes 1 e 2 vêm como <b>rascunho</b> — reescreva na sua voz. A Parte 3 já traz o que você rodou.</p>
+    <div class="repform">
+      <label><span data-i18n="report.name">Seu nome</span><input id="repNome" data-i18n-ph="report.name_ph" placeholder="Nome do aluno(a)"></label>
+      <label><span data-i18n="report.p1">Parte 1 — Análise crítica e seleção do algoritmo (~200 palavras)</span><textarea id="repP1"></textarea></label>
+      <label><span data-i18n="report.p2">Parte 2 — Fundamentação teórica (~500 palavras)</span><textarea id="repP2"></textarea></label>
+      <p class="hint" data-i18n="report.p3hint">Parte 3 (base, resultados e código) é montada automaticamente.</p>
+    </div>
+    <div class="repactions">
+      <button class="btn" id="repPdf" data-i18n="report.pdf">⬇ Baixar PDF</button>
+      <button class="btn ghost" id="repDoc" data-i18n="report.doc">⬇ Baixar Word (.doc)</button>
+      <button class="btn ghost" id="repPy" data-i18n="report.py">⬇ Baixar script Python (.py)</button>
+    </div>
+  </div>
+</div>
+
+<div id="printarea"></div>
+
+<script src="/static/lab-i18n.js"></script>
+<script>
+const DSC = {
+  "family": "PCA",
+  "default": "pca",
+  "datasets": {
+    "pca": {
+      "label": "PCA",
+      "source": "Prof. Tesolin",
+      "usecase": "resumir muitos KPIs em poucas dimensões",
+      "n_rows": 20,
+      "features": [
+        {
+          "key": "Throughput_Mbps",
+          "label": "Throughput",
+          "unit": "Mbps",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            58.0,
+            420.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Latency_ms",
+          "label": "Latência",
+          "unit": "ms",
+          "hard": [
+            0,
+            200
+          ],
+          "train": [
+            9.0,
+            37.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRB_Utilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            28.0,
+            97.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Active_Users",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            95.0,
+            720.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Energy_Consumption_W",
+          "label": "Energia",
+          "unit": "W",
+          "hard": [
+            0,
+            2000
+          ],
+          "train": [
+            140.0,
+            920.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "points": [
+        {
+          "Throughput_Mbps": 120.0,
+          "Latency_ms": 18.0,
+          "PRB_Utilization": 65.0,
+          "Active_Users": 220.0,
+          "Energy_Consumption_W": 310.0,
+          "pc1": -1.084,
+          "pc2": 0.397
+        },
+        {
+          "Throughput_Mbps": 135.0,
+          "Latency_ms": 20.0,
+          "PRB_Utilization": 70.0,
+          "Active_Users": 240.0,
+          "Energy_Consumption_W": 330.0,
+          "pc1": -0.749,
+          "pc2": 0.503
+        },
+        {
+          "Throughput_Mbps": 140.0,
+          "Latency_ms": 19.0,
+          "PRB_Utilization": 72.0,
+          "Active_Users": 250.0,
+          "Energy_Consumption_W": 340.0,
+          "pc1": -0.706,
+          "pc2": 0.537
+        },
+        {
+          "Throughput_Mbps": 300.0,
+          "Latency_ms": 25.0,
+          "PRB_Utilization": 90.0,
+          "Active_Users": 500.0,
+          "Energy_Consumption_W": 620.0,
+          "pc1": 1.61,
+          "pc2": 0.181
+        },
+        {
+          "Throughput_Mbps": 320.0,
+          "Latency_ms": 28.0,
+          "PRB_Utilization": 92.0,
+          "Active_Users": 520.0,
+          "Energy_Consumption_W": 640.0,
+          "pc1": 1.963,
+          "pc2": 0.169
+        },
+        {
+          "Throughput_Mbps": 310.0,
+          "Latency_ms": 27.0,
+          "PRB_Utilization": 88.0,
+          "Active_Users": 510.0,
+          "Energy_Consumption_W": 630.0,
+          "pc1": 1.758,
+          "pc2": 0.066
+        },
+        {
+          "Throughput_Mbps": 80.0,
+          "Latency_ms": 12.0,
+          "PRB_Utilization": 40.0,
+          "Active_Users": 150.0,
+          "Energy_Consumption_W": 200.0,
+          "pc1": -2.369,
+          "pc2": -0.212
+        },
+        {
+          "Throughput_Mbps": 85.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 42.0,
+          "Active_Users": 160.0,
+          "Energy_Consumption_W": 210.0,
+          "pc1": -2.326,
+          "pc2": -0.178
+        },
+        {
+          "Throughput_Mbps": 78.0,
+          "Latency_ms": 13.0,
+          "PRB_Utilization": 38.0,
+          "Active_Users": 140.0,
+          "Energy_Consumption_W": 195.0,
+          "pc1": -2.391,
+          "pc2": -0.259
+        },
+        {
+          "Throughput_Mbps": 200.0,
+          "Latency_ms": 22.0,
+          "PRB_Utilization": 75.0,
+          "Active_Users": 350.0,
+          "Energy_Consumption_W": 420.0,
+          "pc1": 0.103,
+          "pc2": 0.295
+        },
+        {
+          "Throughput_Mbps": 210.0,
+          "Latency_ms": 23.0,
+          "PRB_Utilization": 78.0,
+          "Active_Users": 360.0,
+          "Energy_Consumption_W": 430.0,
+          "pc1": 0.289,
+          "pc2": 0.361
+        },
+        {
+          "Throughput_Mbps": 195.0,
+          "Latency_ms": 21.0,
+          "PRB_Utilization": 74.0,
+          "Active_Users": 340.0,
+          "Energy_Consumption_W": 415.0,
+          "pc1": -0.019,
+          "pc2": 0.285
+        },
+        {
+          "Throughput_Mbps": 400.0,
+          "Latency_ms": 35.0,
+          "PRB_Utilization": 95.0,
+          "Active_Users": 700.0,
+          "Energy_Consumption_W": 900.0,
+          "pc1": 3.564,
+          "pc2": -0.465
+        },
+        {
+          "Throughput_Mbps": 420.0,
+          "Latency_ms": 37.0,
+          "PRB_Utilization": 97.0,
+          "Active_Users": 720.0,
+          "Energy_Consumption_W": 920.0,
+          "pc1": 3.863,
+          "pc2": -0.479
+        },
+        {
+          "Throughput_Mbps": 410.0,
+          "Latency_ms": 36.0,
+          "PRB_Utilization": 96.0,
+          "Active_Users": 710.0,
+          "Energy_Consumption_W": 910.0,
+          "pc1": 3.714,
+          "pc2": -0.472
+        },
+        {
+          "Throughput_Mbps": 60.0,
+          "Latency_ms": 10.0,
+          "PRB_Utilization": 30.0,
+          "Active_Users": 100.0,
+          "Energy_Consumption_W": 150.0,
+          "pc1": -2.936,
+          "pc2": -0.41
+        },
+        {
+          "Throughput_Mbps": 65.0,
+          "Latency_ms": 9.0,
+          "PRB_Utilization": 32.0,
+          "Active_Users": 110.0,
+          "Energy_Consumption_W": 160.0,
+          "pc1": -2.894,
+          "pc2": -0.376
+        },
+        {
+          "Throughput_Mbps": 58.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 28.0,
+          "Active_Users": 95.0,
+          "Energy_Consumption_W": 140.0,
+          "pc1": -2.956,
+          "pc2": -0.456
+        },
+        {
+          "Throughput_Mbps": 250.0,
+          "Latency_ms": 24.0,
+          "PRB_Utilization": 80.0,
+          "Active_Users": 400.0,
+          "Energy_Consumption_W": 480.0,
+          "pc1": 0.709,
+          "pc2": 0.237
+        },
+        {
+          "Throughput_Mbps": 255.0,
+          "Latency_ms": 25.0,
+          "PRB_Utilization": 82.0,
+          "Active_Users": 410.0,
+          "Energy_Consumption_W": 490.0,
+          "pc1": 0.858,
+          "pc2": 0.276
+        }
+      ],
+      "scaler": {
+        "mean": [
+          204.55,
+          21.3,
+          68.2,
+          349.25,
+          444.5
+        ],
+        "std": [
+          120.19962,
+          8.45636,
+          23.52361,
+          202.06605,
+          248.82172
+        ]
+      },
+      "components": [
+        [
+          0.4512,
+          0.4512,
+          0.4319,
+          0.4517,
+          0.4497
+        ],
+        [
+          -0.2273,
+          0.021,
+          0.8657,
+          -0.2655,
+          -0.3577
+        ]
+      ],
+      "explained": [
+        0.97,
+        0.0252,
+        0.0035,
+        0.0011,
+        0.0001
+      ],
+      "start": {
+        "Throughput_Mbps": 198.0,
+        "Latency_ms": 22.0,
+        "PRB_Utilization": 74.0,
+        "Active_Users": 345.0,
+        "Energy_Consumption_W": 418.0
+      }
+    }
+  }
+};
+const $=(s,r=document)=>r.querySelector(s);
+const D = DSC.datasets[DSC.default];
+const FEAT = Object.fromEntries(D.features.map(f=>[f.key,f]));
+let single={...D.start};
+
+function project(vals){const s=D.scaler,W=D.components;
+  const z=D.features.map((f,i)=>(vals[f.key]-s.mean[i])/s.std[i]);
+  return [0,1].map(pc=>z.reduce((a,zi,i)=>a+zi*W[pc][i],0));}
+function fmt(v){return Math.abs(v)>=100?v.toFixed(0):v.toFixed(2).replace(/\.?0+$/,"");}
+
+function initTop(){
+  $("#srcNote"); // (sem seletor: dataset único)
+  $("#evInline").textContent=(D.explained[0]*100).toFixed(1)+"%";
+  $("#footer").innerHTML=`<b>Protótipo de design</b> — card “PCA” do lab de RIC-IA. Dataset
+    <b>pca_practice do Prof. Tesolin</b>. Projeção e loadings vêm do scikit-learn (ver o modal 🔬); a célula-teste
+    projeta ao vivo com <code>z·W</code>.`;
+  buildEv(); buildLoadings(); buildCtrls();
+}
+function buildEv(){
+  $("#evbars").innerHTML=D.explained.slice(0,4).map((v,i)=>
+    `<div class="evrow"><div class="top"><span>PC${i+1}</span><b>${(v*100).toFixed(1)}%</b></div>
+      <div class="evtrack"><i style="width:${(v*100).toFixed(1)}%"></i></div></div>`).join("")
+    +`<div class="evrow" style="margin-top:4px;color:var(--ink-3)">PC1+PC2 resumem <b style="color:var(--ink)">${((D.explained[0]+D.explained[1])*100).toFixed(1)}%</b> de tudo</div>`;
+}
+function buildLoadings(){
+  const W=D.components[0], mx=Math.max(...W.map(Math.abs));
+  $("#loadings").innerHTML=D.features.map((f,i)=>{const w=W[i],pct=Math.abs(w)/mx*50;
+    return `<div class="loadrow"><span class="name">${f.label}</span>
+      <div class="loadbar"><span class="mid"></span><i style="${w>=0?'left:50%':'right:50%'};width:${pct}%;background:${w>=0?'var(--accent-2)':'var(--warn)'}"></i></div></div>`;}).join("");
+}
+function buildCtrls(){
+  $("#ctrls").innerHTML=D.features.map(f=>{const step=f.decimals===0?1:(f.decimals===1?0.1:0.01);
+    return `<div class="ctrl" data-k="${f.key}"><div class="ctrl-head"><label>${f.label}</label><span class="v"><span data-vv="${f.key}">${single[f.key]}</span> ${f.unit}</span></div>
+      <input type="range" min="${f.hard[0]}" max="${f.hard[1]}" step="${step}" value="${single[f.key]}" data-role="range"></div>`;}).join("");
+  $("#ctrls").querySelectorAll(".ctrl").forEach(el=>{const k=el.dataset.k,r=el.querySelector("input");
+    r.addEventListener("input",()=>{single[k]=parseFloat(r.value);$(`[data-vv="${k}"]`).textContent=r.value;renderScatter();renderAssign();});});
+}
+function renderScatter(){
+  const W=480,H=340,mL=40,mR=16,mT=16,mB=34;
+  const tp=project(single);
+  const xs=D.points.map(p=>p.pc1).concat(tp[0]),ys=D.points.map(p=>p.pc2).concat(tp[1]);
+  const xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);
+  const sx=v=>mL+(xmax===xmin?.5:(v-xmin)/(xmax-xmin))*(W-mL-mR);
+  const sy=v=>H-mB-(ymax===ymin?.5:(v-ymin)/(ymax-ymin))*(H-mT-mB);
+  const ax=`<line x1="${mL}" y1="${H-mB}" x2="${W-mR}" y2="${H-mB}" stroke="var(--line)"/><line x1="${mL}" y1="${mT}" x2="${mL}" y2="${H-mB}" stroke="var(--line)"/>
+    <text x="${(W+mL)/2}" y="${H-4}" font-size="10" fill="var(--ink-2)" text-anchor="middle">PC1 · ${(D.explained[0]*100).toFixed(0)}% da variação</text>
+    <text x="12" y="${(H-mB+mT)/2}" font-size="10" fill="var(--ink-2)" text-anchor="middle" transform="rotate(-90 12 ${(H-mB+mT)/2})">PC2 · ${(D.explained[1]*100).toFixed(1)}%</text>`;
+  const pts=D.points.map(p=>`<circle cx="${sx(p.pc1).toFixed(1)}" cy="${sy(p.pc2).toFixed(1)}" r="5" fill="var(--accent)" fill-opacity="0.72" stroke="#fff" stroke-width="0.6"/>`).join("");
+  const tx=sx(tp[0]).toFixed(1),ty=sy(tp[1]).toFixed(1);
+  const star=`<circle cx="${tx}" cy="${ty}" r="9" fill="var(--bad)" stroke="#fff" stroke-width="2"/><circle cx="${tx}" cy="${ty}" r="13" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="3 2"/>`;
+  $("#scatter").innerHTML=ax+pts+star;
+}
+function renderAssign(){const tp=project(single);
+  $("#assignBig").textContent=`PC1 = ${tp[0].toFixed(2)} · PC2 = ${tp[1].toFixed(2)}`;}
+function renderTakeaway(){
+  $("#takeaway").innerHTML=`<b>A lição:</b> a <b>PC1 sozinha</b> guarda ${(D.explained[0]*100).toFixed(0)}% da informação —
+    porque os KPIs sobem e descem juntos (célula grande = tudo alto). Dá pra trocar ${D.features.length} colunas por
+    <b>1–2 números</b> quase sem perder nada. É assim que o PCA <b>comprime</b> e <b>revela a estrutura</b> escondida.`;
+}
+$("#openMath")?.addEventListener("click",()=>$("#backdrop").classList.add("open"));
+function closeM(){$("#backdrop").classList.remove("open");}
+$("#closeMath").addEventListener("click",closeM);
+$("#backdrop").addEventListener("click",e=>{if(e.target===$("#backdrop"))closeM();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeM();});
+$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+
+initTop(); renderScatter(); renderAssign(); renderTakeaway();
+
+const REPCODE=`from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+Z = StandardScaler().fit_transform(X)   # padroniza os KPIs
+pca = PCA(n_components=2).fit(Z)         # acha as direções de maior variância
+pca.transform(Z)                         # projeta cada célula em PC1, PC2
+pca.explained_variance_ratio_            # quanto cada PC resume`;
+function draftP1(){const e=D.explained;return `Para reduzir a dimensionalidade de "${D.label}", apliquei PCA sobre ${D.features.length} KPIs. A PC1 sozinha explica ${(e[0]*100).toFixed(1)}% da variância, e PC1+PC2 juntas ${((e[0]+e[1])*100).toFixed(1)}% — ou seja, os KPIs andam fortemente juntos e podem ser resumidos em pouquíssimas dimensões quase sem perda. O PCA não é um "algoritmo mais apropriado" que compete com outros: ele é um pré-processamento que serve para visualizar os dados em 2D, comprimir os KPIs e acelerar/clarear outros modelos (regressão, clustering) que rodam depois sobre as componentes.`;}
+function draftP2(){return `O PCA acha novas "direções" (componentes) que capturam o máximo da variação dos dados. O procedimento: padronizar cada KPI (z = (x−μ)/σ) para a mesma escala; calcular a matriz de covariância, que diz quem varia junto com quem; extrair seus autovetores, que são as componentes principais (a PC1 é a direção de maior variância, a PC2 a maior variância ortogonal a ela, e assim por diante); e projetar cada célula nessas direções. A variância explicada de cada componente (λᵢ/Σλ) diz quanto ela resume. O hiperparâmetro é o número de componentes que se mantém. Vantagens: comprime muitos KPIs em poucos, revela a estrutura escondida e ajuda a visualizar. Limitações: as componentes são combinações lineares — relações não lineares não são capturadas — e são menos interpretáveis que os KPIs originais (uma componente é uma mistura de vários). Quando os KPIs são correlacionados, como aqui, o ganho é enorme: 5 colunas viram 1–2 sem perder quase nada.`;}
+const REP={tec:"PCA",badge:"🧭",fam:"aprendizado não supervisionado",slug:()=>"pca",
+ resumo(){const e=D.explained;const tp=project(single);return [`${D.features.length} KPIs de ${D.n_rows} células comprimidos em <b>2 componentes</b>.`,
+   `A <b>PC1 sozinha</b> explica ${(e[0]*100).toFixed(1)}% da variação; PC1+PC2 = ${((e[0]+e[1])*100).toFixed(1)}%.`,
+   `Sua célula-teste projetada: PC1 = ${tp[0].toFixed(2)}, PC2 = ${tp[1].toFixed(2)}.`,
+   `Lição: quando os KPIs andam juntos, <b>quase tudo cabe em 1–2 números</b>.`];},
+ metodo(){return [`Padronizar os ${D.features.length} KPIs (z = (x−μ)/σ).`,
+  `Achar as direções de maior variância (componentes principais).`,
+  `Projetar cada célula em PC1 × PC2.`,
+  `Ler a variância explicada — quanto cada componente “resume”.`];},
+ formula(){const W=D.components[0];const s=D.features.map((f,i)=>`${W[i]>=0?"+":"−"}${Math.abs(W[i]).toFixed(2)}·${f.key}`).join(" ");return `PC1 ≈ ${esc(s)}<br><span style="color:#5a6b7c">↑ a direção que o PCA aprendeu — os pesos (loadings) de cada KPI</span>`;},
+ tabela(){const e=D.explained.slice(0,4);return {head:["Componente","Variância explicada"],rows:e.map((v,i)=>({name:"PC"+(i+1),vals:[(v*100).toFixed(1)+"%"],bar:e[0]>0?v/e[0]:0,win:i===0}))};},
+ exemplo(){const tp=project(single);return `célula-teste projetada → PC1 = <b>${tp[0].toFixed(2)}</b>, PC2 = <b>${tp[1].toFixed(2)}</b>.`;},
+ gloss(){return [["Componente (PC)","uma direção nova, combinação dos KPIs originais"],["Variância explicada","quanto da variação total a componente resume"],["Loading","o peso de cada KPI dentro da componente"],["Padronizar","pôr os KPIs na mesma escala antes de comparar variações"]];},
+ limites(){return [`Componentes são combinações lineares — relações com curva escapam.`,
+  `PC1 é menos “legível” que um KPI (é uma mistura) — os loadings ajudam a interpretar.`,
+  `Próximo passo: usar PC1/PC2 como entrada enxuta de outros rApps (clustering, regressão).`];},
+ py(){return `# Script da entrega — PCA (${D.label})
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Dados do professor embutidos (${D.n_rows} células × ${D.features.length} KPIs: ${D.features.map(f=>f.key).join(", ")})
+X = np.array([
+${D.points.map(p=>"    ["+D.features.map(f=>p[f.key]).join(", ")+"],").join("\n")}
+])
+Z = StandardScaler().fit_transform(X)
+pca = PCA().fit(Z)
+print("variancia explicada:", [f"{v*100:.1f}%" for v in pca.explained_variance_ratio_])
+print("loadings PC1:", dict(zip([${D.features.map(f=>'"'+f.key+'"').join(", ")}], pca.components_[0].round(3))))
+Y = pca.transform(Z)[:, :2]
+print("primeiras projecoes (PC1, PC2):", Y[:3].round(2))
+`;}};
+const INKC="#16202b",SUBC="#5a6b7c",LINEC="#dfe5ec",ACC="#1f6fe5",TRACKC="#edf1f6";
+function esc(s){return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function rbar(p,win){const w=Math.max(3,Math.round(Math.min(1,Math.max(0,p))*110));
+  return `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse"><tr><td style="width:${w}px;height:9px;background:${win?ACC:"#a9c4ee"};font-size:2px;line-height:2px">&nbsp;</td><td style="width:${110-w}px;height:9px;background:${TRACKC};font-size:2px;line-height:2px">&nbsp;</td></tr></table>`;}
+function secH(n,t){return `<div style="margin:22px 0 8px;padding-top:10px;border-top:1px solid ${LINEC};font-size:11px;letter-spacing:2px;color:${ACC};font-weight:700">${n} · ${t.toUpperCase()}</div>`;}
+function reportBody(){
+  const nome=esc($("#repNome").value.trim()||"__________");
+  let dt="";try{dt=new Date().toLocaleDateString("pt-BR");}catch(e){}
+  const p1=esc($("#repP1").value).replace(/\n/g,"<br>");
+  const p2=esc($("#repP2").value).replace(/\n/g,"<br>");
+  const t=REP.tabela();
+  const thead=`<tr>${t.head.map((h,i)=>`<th align="${i===0?"left":"center"}" style="padding:6px 8px;border-bottom:2px solid ${INKC};font-size:10.5px;letter-spacing:1px;color:${SUBC}">${h.toUpperCase()}</th>`).join("")}<th style="padding:6px 8px;border-bottom:2px solid ${INKC}"></th></tr>`;
+  const rows=t.rows.map(r=>`<tr><td style="padding:6px 8px;border-bottom:1px solid ${LINEC};font-weight:${r.win?700:400}">${esc(r.name)}${r.win?` <span style="color:${ACC}">◂ melhor</span>`:""}</td>${r.vals.map(v=>`<td align="center" style="padding:6px 8px;border-bottom:1px solid ${LINEC}">${v}</td>`).join("")}<td style="padding:6px 8px;border-bottom:1px solid ${LINEC}">${rbar(r.bar,r.win)}</td></tr>`).join("");
+  const resumo=REP.resumo().map(b=>`<div style="margin:3px 0">• ${b}</div>`).join("");
+  const metodo=REP.metodo().map((s,i)=>`<div style="margin:3px 0"><b style="color:${ACC}">${i+1}.</b> ${s}</div>`).join("");
+  const gloss=REP.gloss().map(g=>`<div style="margin:2px 0"><b>${g[0]}</b> — ${g[1]}</div>`).join("");
+  const lim=REP.limites().map(b=>`<div style="margin:3px 0">• ${b}</div>`).join("");
+  return `
+<div style="color:${INKC}">
+  <div style="font-size:11px;letter-spacing:3px;color:${SUBC};font-weight:700">RELATÓRIO · ${REP.tec.toUpperCase()} ${REP.badge}</div>
+  <div style="font-size:24px;font-weight:800;margin:4px 0 2px">${esc(D.label)}</div>
+  <div style="font-size:12px;color:${SUBC};margin-bottom:14px">${nome} &nbsp;·&nbsp; ${dt} &nbsp;·&nbsp; ${esc(D.usecase)} &nbsp;·&nbsp; ${REP.fam}</div>
+  <div style="border:1px solid ${LINEC};border-left:4px solid ${ACC};padding:10px 14px;font-size:13px">
+    <div style="font-size:11px;letter-spacing:2px;color:${ACC};font-weight:700;margin-bottom:5px">⚡ EM 30 SEGUNDOS</div>${resumo}</div>
+  ${secH("1","Análise crítica e seleção do algoritmo")}<p style="margin:0;text-align:justify;font-size:13px;line-height:1.55">${p1}</p>
+  ${secH("2","Fundamentação teórica")}<p style="margin:0;text-align:justify;font-size:13px;line-height:1.55">${p2}</p>
+  ${secH("3","Experimentação prática")}
+  <div style="font-size:12.5px;margin-bottom:10px">${metodo}</div>
+  <table cellspacing="0" style="border-collapse:collapse;font-size:12.5px;margin:4px 0 8px">${thead}${rows}</table>
+  <div style="font-family:Consolas,monospace;font-size:12px;background:#f4f6fa;border:1px solid ${LINEC};padding:8px 12px;margin:8px 0">${REP.formula()}</div>
+  <div style="font-size:12.5px;margin:6px 0"><b>Exemplo (rodado no lab):</b> ${REP.exemplo()}</div>
+  <div style="font-size:11.5px;color:${SUBC};border-top:1px dashed ${LINEC};margin-top:10px;padding-top:8px"><b style="letter-spacing:1px">GLOSSÁRIO</b>${gloss}</div>
+  <div style="font-size:12px;border:1px solid ${LINEC};padding:8px 12px;margin-top:10px"><b style="font-size:11px;letter-spacing:2px;color:${SUBC}">LIMITES &amp; PRÓXIMOS PASSOS</b>${lim}</div>
+  <div style="font-size:11px;letter-spacing:1px;color:${SUBC};margin:14px 0 4px;font-weight:700">CÓDIGO (SCIKIT-LEARN) — SCRIPT COMPLETO NO ANEXO .PY</div>
+  <pre style="background:#f4f6fa;border:1px solid ${LINEC};padding:10px;font-size:11.5px;white-space:pre-wrap;margin:0">${esc(REPCODE)}</pre>
+  <div style="color:#98a4b1;font-size:10.5px;margin-top:14px">Dados: Prof. Julio Tesolin (Base Fonts RIC) · Gerado no Lab de IA para RIC · Core5G ARM64</div>
+</div>`;
+}
+function dlWord(){
+  const css="<style>body{font-family:Calibri,Arial,sans-serif;color:#16202b;line-height:1.5;max-width:720px;margin:0 auto;padding:24px}table{margin:6px 0}</style>";
+  const full="<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>"+css+"</head><body>"+reportBody()+"</body></html>";
+  const blob=new Blob(["﻿"+full],{type:"application/msword"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="relatorio-"+REP.slug()+".doc";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+function dlPy(){
+  const nome=($("#repNome").value.trim()||"aluno");
+  const head="# -*- coding: utf-8 -*-\n# Aluno(a): "+nome+"\n# Tecnica: "+REP.tec+" — "+D.label+" (dados: Prof. Julio Tesolin)\n# Gerado no Lab de IA para RIC\n\n";
+  const blob=new Blob([head+REP.py()],{type:"text/x-python"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="script-"+REP.slug()+".py";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+$("#openReport")?.addEventListener("click",()=>{if(!$("#repP1").value)$("#repP1").value=draftP1();if(!$("#repP2").value)$("#repP2").value=draftP2();$("#repbackdrop").classList.add("open");});
+$("#repClose")?.addEventListener("click",()=>$("#repbackdrop").classList.remove("open"));
+$("#repbackdrop")?.addEventListener("click",e=>{if(e.target===$("#repbackdrop"))$("#repbackdrop").classList.remove("open");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#repbackdrop")?.classList.remove("open");});
+$("#repDoc")?.addEventListener("click",dlWord);
+$("#repPy")?.addEventListener("click",dlPy);
+$("#repPdf")?.addEventListener("click",()=>{$("#printarea").innerHTML='<div style="max-width:720px;margin:0 auto">'+reportBody()+"</div>";window.print();});
+
+/* ===== integração: embed no painel + compreensão + sistema real ===== */
+const LESSON="pca", NEXT="/lab";
+const EMBED=new URLSearchParams(location.search).has("embed");
+if(EMBED){document.documentElement.classList.add("embed");
+  try{const t=window.parent.document.documentElement.getAttribute("data-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}
+  try{window.parent.postMessage({c5gLab:{title:document.title.replace("Lab RIC-IA · ","")}},location.origin);}catch(e){}
+  document.querySelectorAll('a[href^="/lab"]').forEach(a=>{const u=a.getAttribute("href");if(u&&!u.includes("embed=1"))a.setAttribute("href",u+(u.includes("?")?"&":"?")+"embed=1");});
+  const rb=document.getElementById("realRun"); if(rb) rb.hidden=false;
+}
+const TT=(k,d)=>{const v=window.LABI18N?LABI18N.t(k):k;return v===k?d:v;};
+document.getElementById("realRun")?.addEventListener("click",()=>{try{window.parent.postMessage({c5gLab:{runCmd:"p2-kpm-real"}},location.origin);}catch(e){}});
+document.getElementById("compOk")?.addEventListener("click",()=>{
+  try{const K="c5g-lab-progress",p=JSON.parse(localStorage.getItem(K)||"{}");p[LESSON]=true;localStorage.setItem(K,JSON.stringify(p));}catch(e){}
+  location.href=NEXT+(EMBED?"?embed=1":"");
+});
+document.getElementById("compNo")?.addEventListener("click",()=>{document.getElementById("compAsk").classList.toggle("open");});
+document.getElementById("compSend")?.addEventListener("click",async()=>{
+  const t=(document.getElementById("compText").value||"").trim(); if(!t) return;
+  const msg=document.getElementById("compMsg");
+  try{const r=await fetch("/api/lab/question",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lesson:LESSON,text:t})});
+    if(!r.ok)throw 0; msg.textContent=TT("comp.sent","✓ Dúvida enviada — o professor verá."); document.getElementById("compText").value="";}
+  catch(e){msg.textContent=TT("comp.fail","Não deu para enviar daqui — anote e pergunte na aula.");}
+});
+</script>

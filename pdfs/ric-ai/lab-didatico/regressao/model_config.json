@@ -1,0 +1,313 @@
+{
+  "target": {
+    "key": "Throughput",
+    "unit": "Mbps"
+  },
+  "features": [
+    {
+      "key": "ActiveUsers",
+      "label": "Usuários ativos",
+      "unit": "",
+      "hard": [
+        0,
+        200
+      ],
+      "train": [
+        5.0,
+        180.0
+      ],
+      "decimals": 0,
+      "primary": true
+    },
+    {
+      "key": "RSRP",
+      "label": "RSRP (potência do sinal)",
+      "unit": "dBm",
+      "hard": [
+        -140,
+        -44
+      ],
+      "train": [
+        -139.9,
+        -44.0
+      ],
+      "decimals": 0,
+      "primary": false
+    },
+    {
+      "key": "SINR",
+      "label": "SINR (sinal/ruído)",
+      "unit": "dB",
+      "hard": [
+        -10,
+        30
+      ],
+      "train": [
+        -10.0,
+        26.9
+      ],
+      "decimals": 1,
+      "primary": true
+    },
+    {
+      "key": "CQI",
+      "label": "CQI (qualidade do canal)",
+      "unit": "0–15",
+      "hard": [
+        0,
+        15
+      ],
+      "train": [
+        0.0,
+        14.0
+      ],
+      "decimals": 0,
+      "primary": false
+    },
+    {
+      "key": "MCS",
+      "label": "MCS (modulação/codificação)",
+      "unit": "0–28",
+      "hard": [
+        0,
+        28
+      ],
+      "train": [
+        0.0,
+        26.0
+      ],
+      "decimals": 0,
+      "primary": false
+    },
+    {
+      "key": "PRBUtilization",
+      "label": "PRB utilizado",
+      "unit": "%",
+      "hard": [
+        0,
+        100
+      ],
+      "train": [
+        3.2,
+        100.0
+      ],
+      "decimals": 0,
+      "primary": true
+    }
+  ],
+  "live_model": {
+    "features": [
+      "ActiveUsers",
+      "SINR",
+      "PRBUtilization"
+    ],
+    "intercept": -25.85302,
+    "coef": {
+      "ActiveUsers": -0.08305,
+      "SINR": 2.96162,
+      "PRBUtilization": 0.87514
+    }
+  },
+  "scenarios": {
+    "centro": {
+      "label": "🎯 Centro da célula",
+      "hint": "Sinal excelente, poucos usuários.",
+      "values": {
+        "ActiveUsers": 25.0,
+        "RSRP": -48.6,
+        "SINR": 23.9,
+        "CQI": 13,
+        "MCS": 24,
+        "PRBUtilization": 24.0
+      }
+    },
+    "madrugada": {
+      "label": "🌙 Madrugada",
+      "hint": "Célula quase vazia, recurso sobrando.",
+      "values": {
+        "ActiveUsers": 8.0,
+        "RSRP": -57.8,
+        "SINR": 20.8,
+        "CQI": 12,
+        "MCS": 22,
+        "PRBUtilization": 15.8
+      }
+    },
+    "pico": {
+      "label": "🏙️ Hora de pico",
+      "hint": "Célula lotada, PRB alto, SINR cai.",
+      "values": {
+        "ActiveUsers": 170.0,
+        "RSRP": -85.4,
+        "SINR": 7.9,
+        "CQI": 7,
+        "MCS": 13,
+        "PRBUtilization": 93.6
+      }
+    },
+    "borda": {
+      "label": "📶 Borda de célula",
+      "hint": "Sinal fraco (RSRP/SINR baixos).",
+      "values": {
+        "ActiveUsers": 45.0,
+        "RSRP": -128.6,
+        "SINR": -6.0,
+        "CQI": 1,
+        "MCS": 2,
+        "PRBUtilization": 33.6
+      }
+    }
+  },
+  "multi": {
+    "congestionada": {
+      "label": "🏙️ Célula congestionada (5 UEs, um na borda)",
+      "ues": [
+        {
+          "name": "UE-1 centro",
+          "values": {
+            "ActiveUsers": 160.0,
+            "RSRP": -53.2,
+            "SINR": 19.9,
+            "CQI": 11,
+            "MCS": 21,
+            "PRBUtilization": 88.8
+          }
+        },
+        {
+          "name": "UE-2 meio",
+          "values": {
+            "ActiveUsers": 160.0,
+            "RSRP": -80.8,
+            "SINR": 9.7,
+            "CQI": 7,
+            "MCS": 13,
+            "PRBUtilization": 88.8
+          }
+        },
+        {
+          "name": "UE-3 meio",
+          "values": {
+            "ActiveUsers": 160.0,
+            "RSRP": -90.0,
+            "SINR": 6.3,
+            "CQI": 6,
+            "MCS": 11,
+            "PRBUtilization": 88.8
+          }
+        },
+        {
+          "name": "UE-4 afastado",
+          "values": {
+            "ActiveUsers": 160.0,
+            "RSRP": -108.4,
+            "SINR": -0.5,
+            "CQI": 4,
+            "MCS": 7,
+            "PRBUtilization": 88.8
+          }
+        },
+        {
+          "name": "UE-5 borda",
+          "values": {
+            "ActiveUsers": 160.0,
+            "RSRP": -131.4,
+            "SINR": -9.0,
+            "CQI": 0,
+            "MCS": 0,
+            "PRBUtilization": 88.8
+          }
+        }
+      ]
+    },
+    "mista": {
+      "label": "🌆 Mix de posições (3 UEs)",
+      "ues": [
+        {
+          "name": "UE-1 centro",
+          "values": {
+            "ActiveUsers": 60.0,
+            "RSRP": -53.2,
+            "SINR": 21.6,
+            "CQI": 12,
+            "MCS": 22,
+            "PRBUtilization": 40.8
+          }
+        },
+        {
+          "name": "UE-2 meio",
+          "values": {
+            "ActiveUsers": 60.0,
+            "RSRP": -94.6,
+            "SINR": 6.3,
+            "CQI": 6,
+            "MCS": 11,
+            "PRBUtilization": 40.8
+          }
+        },
+        {
+          "name": "UE-3 borda",
+          "values": {
+            "ActiveUsers": 60.0,
+            "RSRP": -126.8,
+            "SINR": -5.6,
+            "CQI": 2,
+            "MCS": 4,
+            "PRBUtilization": 40.8
+          }
+        }
+      ]
+    }
+  },
+  "metrics_table": [
+    {
+      "model": "SVR (RBF)",
+      "rmse": 2.399,
+      "mae": 1.396,
+      "r2": 0.9952,
+      "infer_us": 37.17
+    },
+    {
+      "model": "Gradient Boosting",
+      "rmse": 4.088,
+      "mae": 2.769,
+      "r2": 0.9861,
+      "infer_us": 18.42
+    },
+    {
+      "model": "Random Forest",
+      "rmse": 4.127,
+      "mae": 2.638,
+      "r2": 0.9858,
+      "infer_us": 604.33
+    },
+    {
+      "model": "k-NN (k=5)",
+      "rmse": 4.161,
+      "mae": 2.722,
+      "r2": 0.9856,
+      "infer_us": 35.71
+    },
+    {
+      "model": "Árvore de Decisão",
+      "rmse": 6.91,
+      "mae": 4.656,
+      "r2": 0.9602,
+      "infer_us": 4.91
+    },
+    {
+      "model": "Ridge",
+      "rmse": 13.526,
+      "mae": 10.399,
+      "r2": 0.8475,
+      "infer_us": 4.08
+    },
+    {
+      "model": "Regressão Linear",
+      "rmse": 13.534,
+      "mae": 10.397,
+      "r2": 0.8473,
+      "infer_us": 3.88
+    }
+  ],
+  "n_rows": 600
+}

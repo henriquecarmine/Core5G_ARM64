@@ -1,0 +1,206 @@
+<title>Lab de IA para RIC — Jornada</title>
+<style>
+  :root{
+    --bg:#e9eef4; --surface:#ffffff; --surface-2:#f3f7fc; --inset:#0d1622;
+    --ink:#0f1b26; --ink-2:#4a5c6e; --ink-3:#7c8da0; --line:#d7e0ea;
+    --accent:#1f6fe5; --accent-2:#0aa5b8; --accent-ink:#ffffff;
+    --good:#12874c; --warn:#b07414; --sup:#1f6fe5; --nsup:#0aa5b8;
+    --shadow:0 1px 2px rgba(16,32,48,.06),0 8px 24px rgba(16,32,48,.07);
+    --r:14px; --r-sm:9px;
+    --fs-display:clamp(1.7rem,1.1rem + 2.4vw,2.7rem);
+    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#080d14; --surface:#111a25; --surface-2:#0d1520; --inset:#080f18;
+    --ink:#e7eff8; --ink-2:#9aabbe; --ink-3:#6b7d92; --line:#213142;
+    --accent:#4d90ff; --accent-2:#28c2d6; --accent-ink:#06101d;
+    --good:#33c07d; --warn:#e0a53f; --sup:#4d90ff; --nsup:#28c2d6;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{--bg:#e9eef4;--surface:#ffffff;--surface-2:#f3f7fc;--inset:#0d1622;--ink:#0f1b26;--ink-2:#4a5c6e;--ink-3:#7c8da0;--line:#d7e0ea;--accent:#1f6fe5;--accent-2:#0aa5b8;--accent-ink:#ffffff;--good:#12874c;--warn:#b07414;--sup:#1f6fe5;--nsup:#0aa5b8;}
+  :root[data-theme="dark"]{--bg:#080d14;--surface:#111a25;--surface-2:#0d1520;--inset:#080f18;--ink:#e7eff8;--ink-2:#9aabbe;--ink-3:#6b7d92;--line:#213142;--accent:#4d90ff;--accent-2:#28c2d6;--accent-ink:#06101d;--good:#33c07d;--warn:#e0a53f;--sup:#4d90ff;--nsup:#28c2d6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:clamp(16px,3vw,40px)}
+  h1,h2,h3,h4{text-wrap:balance;margin:0} p{margin:0}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:12px}
+  h1{font-size:var(--fs-display);font-weight:780;letter-spacing:-.02em;line-height:1.05}
+  .lead{color:var(--ink-2);margin-top:14px;max-width:60ch;font-size:1.06rem}
+  .themebtn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.05rem;display:grid;place-items:center;box-shadow:var(--shadow)}
+  .themebtn:hover{color:var(--accent);border-color:var(--accent)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:clamp(16px,2.2vw,24px)}
+  .kicker{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+
+  /* progresso */
+  .prog{margin-top:26px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .progbar{flex:1;min-width:180px;height:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .progbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:7px;width:0;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .progtx{font-size:.9rem;color:var(--ink-2);font-weight:600;white-space:nowrap}
+  .btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:9px 16px;font-size:.92rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  .btn:hover{filter:brightness(1.05)}
+  .reset{background:none;border:none;color:var(--ink-3);font-size:.8rem;cursor:pointer;text-decoration:underline}
+
+  /* trilhas rápida/estudo */
+  .tracks{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}
+  @media (max-width:640px){.tracks{grid-template-columns:1fr}}
+  .track{border:1px solid var(--line);border-radius:var(--r);padding:20px;background:var(--surface);position:relative;overflow:hidden}
+  .track::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+  .track.fast::before{background:var(--warn)} .track.study::before{background:var(--accent)}
+  .track h3{font-size:1.12rem;font-weight:750;display:flex;align-items:center;gap:8px}
+  .track p{color:var(--ink-2);font-size:.92rem;margin-top:8px;min-height:3.4em}
+  .track .btn{margin-top:12px}
+
+  /* jornada */
+  .section-h{margin:34px 0 6px;font-size:1.3rem;font-weight:750}
+  .group{margin-top:22px}
+  .grouplbl{display:flex;align-items:center;gap:9px;font-weight:700;font-size:.95rem}
+  .fambadge{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:5px;font-weight:700}
+  .fam-sup{background:color-mix(in srgb,var(--sup) 16%,transparent);color:var(--sup)}
+  .fam-nsup{background:color-mix(in srgb,var(--nsup) 18%,transparent);color:var(--nsup)}
+  .groupdesc{color:var(--ink-3);font-size:.84rem;margin:2px 0 12px}
+  .steps{display:flex;flex-direction:column;gap:10px}
+  .step{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;background:var(--surface);transition:.15s}
+  .step.done{border-color:color-mix(in srgb,var(--good) 45%,var(--line))}
+  .step.soon{opacity:.62}
+  .stepnum{flex:none;width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-weight:700;color:var(--ink-2);font-size:.95rem}
+  .step.done .stepnum{background:var(--good);border-color:var(--good);color:#fff}
+  .stepbody{flex:1;min-width:0}
+  .stepbody h4{font-size:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .stepbody p{color:var(--ink-2);font-size:.85rem;margin-top:2px}
+  .stepbody .oran{color:var(--ink-3);font-size:.76rem;font-family:var(--mono);margin-top:3px}
+  .stepgo{flex:none;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:var(--r-sm);padding:7px 13px;font-size:.85rem;font-weight:700;cursor:pointer;text-decoration:none}
+  .stepgo:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .stepdone{flex:none;display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ink-2);cursor:pointer;user-select:none}
+  .stepdone input{width:16px;height:16px;accent-color:var(--good);cursor:pointer}
+  .soonlbl{flex:none;font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);font-weight:700}
+
+  .howto{margin-top:34px}
+  .howto ul{margin:10px 0 0;padding-left:0;list-style:none;display:grid;gap:8px}
+  .howto li{font-size:.9rem;color:var(--ink-2);padding-left:26px;position:relative}
+  .howto li b{color:var(--ink)}
+  .howto li::before{content:attr(data-i);position:absolute;left:0;top:0}
+  footer{color:var(--ink-3);font-size:.8rem;line-height:1.6;margin-top:30px;padding:0 4px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow">Lab RIC · Inteligência Artificial</div>
+      <h1>Aprenda IA aplicada ao RIC — do zero, no seu ritmo</h1>
+      <p class="lead">Este é o seu <b>professor</b>. A cada passo você vê <b>o que está fazendo e onde</b> — no modelo
+        e na rede O-RAN — do básico ao avançado, <b>sem pressa</b>. Você pode só <b>rodar e entregar</b>, ou parar e
+        <b>entender tudo</b> em detalhe. A escolha é sua.</p>
+    </div>
+    <button class="themebtn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">◐</button>
+  </div>
+
+  <div class="prog">
+    <span class="progtx" id="progtx">—</span>
+    <div class="progbar"><i id="progfill"></i></div>
+    <a class="btn" id="continueBtn" href="#">Continuar ▸</a>
+    <button class="reset" id="resetBtn">zerar progresso</button>
+  </div>
+
+  <div class="tracks">
+    <div class="track fast">
+      <h3>⚡ Trilha rápida</h3>
+      <p>“Só preciso entregar.” Abra uma técnica, <b>rode o teste na hora</b> e veja as métricas. O <b>relatório</b>
+        (DOCX/PDF) sai daqui — em breve.</p>
+      <a class="btn" href="/lab/regressao">Ir direto rodar ▸</a>
+    </div>
+    <div class="track study">
+      <h3>📚 Trilha de estudo</h3>
+      <p>“Quero entender.” Comece do começo e avance <b>sem pressa</b>: cada aula explica em linguagem simples, mostra
+        onde roda no O-RAN e traz a fórmula + o Python.</p>
+      <a class="btn ghost" href="#trilha">Começar a trilha ▾</a>
+    </div>
+  </div>
+
+  <h2 class="section-h" id="trilha">A trilha completa</h2>
+  <p style="color:var(--ink-2);font-size:.92rem;margin-top:4px">Marque <b>“entendi”</b> conforme avança — o sistema
+    lembra onde você parou (neste navegador).</p>
+
+  <div id="journey"></div>
+
+  <div class="card howto">
+    <div class="kicker">O que você encontra em cada aula</div>
+    <ul>
+      <li data-i="📖"><b>Explica</b> — o conceito em linguagem de gente, com analogia.</li>
+      <li data-i="🛰️"><b>Onde roda no O-RAN</b> — o laço RAN → RIC → ajuste do parâmetro.</li>
+      <li data-i="🎛️"><b>Mexa</b> — você altera os KPIs e vê o modelo responder ao vivo.</li>
+      <li data-i="📊"><b>Compare</b> — qual modelo é melhor e por quê.</li>
+      <li data-i="🔬"><b>Fórmula &amp; Python</b> — a matemática (sem jargão) e o código real que roda.</li>
+    </ul>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+const AULAS = [
+  {id:"fundamentos", n:0, group:"Fundamentos", desc:"O ponto de partida — antes de qualquer técnica.", icon:"🧭", title:"Fundamentos", one:"O que é IA/ML, supervisionado × não supervisionado, e o laço do O-RAN.", oran:"panorama geral", fam:"", href:"/lab/fundamentos", soon:false},
+  {id:"regressao", n:1, group:"Aprendizado supervisionado", desc:"Aprende com gabarito: você mostra exemplos com a resposta certa.", icon:"📶", title:"Regressão", one:"Prever um número — o throughput de cada UE.", oran:"UE-TP · xApp near-RT", fam:"sup", href:"/lab/regressao"},
+  {id:"classificacao", n:2, group:"Aprendizado supervisionado", icon:"🚦", title:"Classificação", one:"Prever uma categoria — o estado da célula.", oran:"congestão/falha · xApp near-RT", fam:"sup", href:"/lab/classificacao"},
+  {id:"clustering", n:3, group:"Aprendizado não supervisionado", desc:"Sem gabarito: o modelo acha a estrutura sozinho.", icon:"🎨", title:"Clustering", one:"Agrupar células parecidas, sem rótulo.", oran:"perfil da rede · rApp non-RT", fam:"nsup", href:"/lab/clustering"},
+  {id:"anomalia", n:4, group:"Aprendizado não supervisionado", icon:"🚨", title:"Anomalia", one:"Achar a célula fora do padrão.", oran:"manutenção preditiva · rApp non-RT", fam:"nsup", href:"/lab/anomalia"},
+  {id:"pca", n:5, group:"Aprendizado não supervisionado", icon:"🧭", title:"PCA", one:"Resumir muitos KPIs em poucos.", oran:"pré-processamento · rApp non-RT", fam:"nsup", href:"/lab/pca"},
+  {id:"projeto", n:6, group:"Projeto final", desc:"Junte tudo: escolha um caso, rode e emita o relatório.", icon:"📄", title:"Projeto final", one:"Aplicar uma técnica a um caso de uso e entregar o relatório.", oran:"entrega", fam:"", href:null, soon:true},
+];
+const KEY="c5g-lab-progress";
+const $=(s,r=document)=>r.querySelector(s);
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){return {};}};
+const save=(p)=>{try{localStorage.setItem(KEY,JSON.stringify(p));}catch(e){}};
+const LIVE=AULAS.filter(a=>!a.soon);
+
+function famBadge(f){return f==="sup"?'<span class="fambadge fam-sup">supervisionado</span>':f==="nsup"?'<span class="fambadge fam-nsup">não supervisionado</span>':"";}
+
+function render(){
+  const p=load();
+  // agrupa por group preservando ordem
+  const groups=[];
+  AULAS.forEach(a=>{let g=groups.find(x=>x.name===a.group);if(!g){g={name:a.group,desc:a.desc,items:[]};groups.push(g);}a.desc&&(g.desc=a.desc);g.items.push(a);});
+  $("#journey").innerHTML=groups.map(g=>`
+    <div class="group">
+      <div class="grouplbl">${g.name}</div>
+      ${g.desc?`<div class="groupdesc">${g.desc}</div>`:""}
+      <div class="steps">
+        ${g.items.map(a=>{const done=!!p[a.id];
+          return `<div class="step ${done?'done':''} ${a.soon?'soon':''}">
+            <div class="stepnum">${a.soon?'·':a.n}</div>
+            <div class="stepbody">
+              <h4>${a.icon} ${a.title} ${famBadge(a.fam)}</h4>
+              <p>${a.one}</p>
+              <div class="oran">🛰️ ${a.oran}</div>
+            </div>
+            ${a.soon?'<span class="soonlbl">em breve</span>'
+              :`<a class="stepgo" href="${a.href}">Abrir ▸</a>
+                <label class="stepdone"><input type="checkbox" data-id="${a.id}" ${done?'checked':''}> entendi</label>`}
+          </div>`;}).join("")}
+      </div>
+    </div>`).join("");
+  $("#journey").querySelectorAll("input[type=checkbox]").forEach(cb=>cb.addEventListener("change",()=>{
+    const p=load();p[cb.dataset.id]=cb.checked;save(p);renderProgress();
+    cb.closest(".step").classList.toggle("done",cb.checked);
+    cb.closest(".step").querySelector(".stepnum").textContent=cb.checked?AULAS.find(a=>a.id===cb.dataset.id).n:AULAS.find(a=>a.id===cb.dataset.id).n;
+  }));
+  renderProgress();
+}
+function renderProgress(){
+  const p=load(); const done=LIVE.filter(a=>p[a.id]).length, total=LIVE.length;
+  $("#progfill").style.width=(done/total*100)+"%";
+  $("#progtx").textContent=done===0?`Comece agora · 0 de ${total} aulas`
+    :done===total?`🎉 Concluiu as ${total} aulas!`:`${done} de ${total} aulas concluídas`;
+  const next=LIVE.find(a=>!p[a.id]);
+  const btn=$("#continueBtn");
+  if(next){btn.textContent=(done===0?"Começar ":"Continuar ")+next.title+" ▸";btn.href=next.href;}
+  else{btn.textContent="Rever do início ▸";btn.href=LIVE[0].href;}
+}
+$("#resetBtn").addEventListener("click",()=>{save({});render();});
+$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+$("#footer").innerHTML='<b>Lab de IA para RIC</b> — trilha didática do básico ao avançado, sobre os datasets do Prof. Tesolin. Seu progresso fica salvo neste navegador. As técnicas rodam no seu ritmo; o relatório (DOCX/PDF) chega em breve.';
+render();
+</script>

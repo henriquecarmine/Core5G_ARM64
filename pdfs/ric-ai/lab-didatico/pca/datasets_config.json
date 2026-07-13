@@ -1,0 +1,312 @@
+{
+  "family": "PCA",
+  "default": "pca",
+  "datasets": {
+    "pca": {
+      "label": "PCA",
+      "source": "Prof. Tesolin",
+      "usecase": "resumir muitos KPIs em poucas dimensões",
+      "n_rows": 20,
+      "features": [
+        {
+          "key": "Throughput_Mbps",
+          "label": "Throughput",
+          "unit": "Mbps",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            58.0,
+            420.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Latency_ms",
+          "label": "Latência",
+          "unit": "ms",
+          "hard": [
+            0,
+            200
+          ],
+          "train": [
+            9.0,
+            37.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRB_Utilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            28.0,
+            97.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Active_Users",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            95.0,
+            720.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Energy_Consumption_W",
+          "label": "Energia",
+          "unit": "W",
+          "hard": [
+            0,
+            2000
+          ],
+          "train": [
+            140.0,
+            920.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "points": [
+        {
+          "Throughput_Mbps": 120.0,
+          "Latency_ms": 18.0,
+          "PRB_Utilization": 65.0,
+          "Active_Users": 220.0,
+          "Energy_Consumption_W": 310.0,
+          "pc1": -1.084,
+          "pc2": 0.397
+        },
+        {
+          "Throughput_Mbps": 135.0,
+          "Latency_ms": 20.0,
+          "PRB_Utilization": 70.0,
+          "Active_Users": 240.0,
+          "Energy_Consumption_W": 330.0,
+          "pc1": -0.749,
+          "pc2": 0.503
+        },
+        {
+          "Throughput_Mbps": 140.0,
+          "Latency_ms": 19.0,
+          "PRB_Utilization": 72.0,
+          "Active_Users": 250.0,
+          "Energy_Consumption_W": 340.0,
+          "pc1": -0.706,
+          "pc2": 0.537
+        },
+        {
+          "Throughput_Mbps": 300.0,
+          "Latency_ms": 25.0,
+          "PRB_Utilization": 90.0,
+          "Active_Users": 500.0,
+          "Energy_Consumption_W": 620.0,
+          "pc1": 1.61,
+          "pc2": 0.181
+        },
+        {
+          "Throughput_Mbps": 320.0,
+          "Latency_ms": 28.0,
+          "PRB_Utilization": 92.0,
+          "Active_Users": 520.0,
+          "Energy_Consumption_W": 640.0,
+          "pc1": 1.963,
+          "pc2": 0.169
+        },
+        {
+          "Throughput_Mbps": 310.0,
+          "Latency_ms": 27.0,
+          "PRB_Utilization": 88.0,
+          "Active_Users": 510.0,
+          "Energy_Consumption_W": 630.0,
+          "pc1": 1.758,
+          "pc2": 0.066
+        },
+        {
+          "Throughput_Mbps": 80.0,
+          "Latency_ms": 12.0,
+          "PRB_Utilization": 40.0,
+          "Active_Users": 150.0,
+          "Energy_Consumption_W": 200.0,
+          "pc1": -2.369,
+          "pc2": -0.212
+        },
+        {
+          "Throughput_Mbps": 85.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 42.0,
+          "Active_Users": 160.0,
+          "Energy_Consumption_W": 210.0,
+          "pc1": -2.326,
+          "pc2": -0.178
+        },
+        {
+          "Throughput_Mbps": 78.0,
+          "Latency_ms": 13.0,
+          "PRB_Utilization": 38.0,
+          "Active_Users": 140.0,
+          "Energy_Consumption_W": 195.0,
+          "pc1": -2.391,
+          "pc2": -0.259
+        },
+        {
+          "Throughput_Mbps": 200.0,
+          "Latency_ms": 22.0,
+          "PRB_Utilization": 75.0,
+          "Active_Users": 350.0,
+          "Energy_Consumption_W": 420.0,
+          "pc1": 0.103,
+          "pc2": 0.295
+        },
+        {
+          "Throughput_Mbps": 210.0,
+          "Latency_ms": 23.0,
+          "PRB_Utilization": 78.0,
+          "Active_Users": 360.0,
+          "Energy_Consumption_W": 430.0,
+          "pc1": 0.289,
+          "pc2": 0.361
+        },
+        {
+          "Throughput_Mbps": 195.0,
+          "Latency_ms": 21.0,
+          "PRB_Utilization": 74.0,
+          "Active_Users": 340.0,
+          "Energy_Consumption_W": 415.0,
+          "pc1": -0.019,
+          "pc2": 0.285
+        },
+        {
+          "Throughput_Mbps": 400.0,
+          "Latency_ms": 35.0,
+          "PRB_Utilization": 95.0,
+          "Active_Users": 700.0,
+          "Energy_Consumption_W": 900.0,
+          "pc1": 3.564,
+          "pc2": -0.465
+        },
+        {
+          "Throughput_Mbps": 420.0,
+          "Latency_ms": 37.0,
+          "PRB_Utilization": 97.0,
+          "Active_Users": 720.0,
+          "Energy_Consumption_W": 920.0,
+          "pc1": 3.863,
+          "pc2": -0.479
+        },
+        {
+          "Throughput_Mbps": 410.0,
+          "Latency_ms": 36.0,
+          "PRB_Utilization": 96.0,
+          "Active_Users": 710.0,
+          "Energy_Consumption_W": 910.0,
+          "pc1": 3.714,
+          "pc2": -0.472
+        },
+        {
+          "Throughput_Mbps": 60.0,
+          "Latency_ms": 10.0,
+          "PRB_Utilization": 30.0,
+          "Active_Users": 100.0,
+          "Energy_Consumption_W": 150.0,
+          "pc1": -2.936,
+          "pc2": -0.41
+        },
+        {
+          "Throughput_Mbps": 65.0,
+          "Latency_ms": 9.0,
+          "PRB_Utilization": 32.0,
+          "Active_Users": 110.0,
+          "Energy_Consumption_W": 160.0,
+          "pc1": -2.894,
+          "pc2": -0.376
+        },
+        {
+          "Throughput_Mbps": 58.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 28.0,
+          "Active_Users": 95.0,
+          "Energy_Consumption_W": 140.0,
+          "pc1": -2.956,
+          "pc2": -0.456
+        },
+        {
+          "Throughput_Mbps": 250.0,
+          "Latency_ms": 24.0,
+          "PRB_Utilization": 80.0,
+          "Active_Users": 400.0,
+          "Energy_Consumption_W": 480.0,
+          "pc1": 0.709,
+          "pc2": 0.237
+        },
+        {
+          "Throughput_Mbps": 255.0,
+          "Latency_ms": 25.0,
+          "PRB_Utilization": 82.0,
+          "Active_Users": 410.0,
+          "Energy_Consumption_W": 490.0,
+          "pc1": 0.858,
+          "pc2": 0.276
+        }
+      ],
+      "scaler": {
+        "mean": [
+          204.55,
+          21.3,
+          68.2,
+          349.25,
+          444.5
+        ],
+        "std": [
+          120.19962,
+          8.45636,
+          23.52361,
+          202.06605,
+          248.82172
+        ]
+      },
+      "components": [
+        [
+          0.4512,
+          0.4512,
+          0.4319,
+          0.4517,
+          0.4497
+        ],
+        [
+          -0.2273,
+          0.021,
+          0.8657,
+          -0.2655,
+          -0.3577
+        ]
+      ],
+      "explained": [
+        0.97,
+        0.0252,
+        0.0035,
+        0.0011,
+        0.0001
+      ],
+      "start": {
+        "Throughput_Mbps": 198.0,
+        "Latency_ms": 22.0,
+        "PRB_Utilization": 74.0,
+        "Active_Users": 345.0,
+        "Energy_Consumption_W": 418.0
+      }
+    }
+  }
+}

@@ -1,0 +1,1835 @@
+{
+  "family": "Clustering",
+  "default": "kmeans",
+  "datasets": {
+    "kmeans": {
+      "label": "Base k-means",
+      "source": "Prof. Tesolin",
+      "usecase": "agrupar células parecidas sem rótulo",
+      "n_rows": 18,
+      "features": [
+        {
+          "key": "Throughput_Mbps",
+          "label": "Throughput",
+          "unit": "Mbps",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            58.0,
+            420.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Latency_ms",
+          "label": "Latência",
+          "unit": "ms",
+          "hard": [
+            0,
+            200
+          ],
+          "train": [
+            9.0,
+            37.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRB_Utilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            28.0,
+            97.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Active_Users",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            95.0,
+            720.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Energy_Consumption_W",
+          "label": "Energia",
+          "unit": "W",
+          "hard": [
+            0,
+            2000
+          ],
+          "train": [
+            140.0,
+            920.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Packet_Loss_Rate",
+          "label": "Perda de pacotes",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            0.1,
+            2.7
+          ],
+          "decimals": 2
+        }
+      ],
+      "points": [
+        {
+          "Throughput_Mbps": 120.0,
+          "Latency_ms": 18.0,
+          "PRB_Utilization": 65.0,
+          "Active_Users": 220.0,
+          "Energy_Consumption_W": 310.0,
+          "Packet_Loss_Rate": 0.8,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 135.0,
+          "Latency_ms": 20.0,
+          "PRB_Utilization": 70.0,
+          "Active_Users": 240.0,
+          "Energy_Consumption_W": 330.0,
+          "Packet_Loss_Rate": 0.7,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 140.0,
+          "Latency_ms": 19.0,
+          "PRB_Utilization": 72.0,
+          "Active_Users": 250.0,
+          "Energy_Consumption_W": 340.0,
+          "Packet_Loss_Rate": 0.6,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 300.0,
+          "Latency_ms": 25.0,
+          "PRB_Utilization": 90.0,
+          "Active_Users": 500.0,
+          "Energy_Consumption_W": 620.0,
+          "Packet_Loss_Rate": 1.5,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 320.0,
+          "Latency_ms": 28.0,
+          "PRB_Utilization": 92.0,
+          "Active_Users": 520.0,
+          "Energy_Consumption_W": 640.0,
+          "Packet_Loss_Rate": 1.7,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 310.0,
+          "Latency_ms": 27.0,
+          "PRB_Utilization": 88.0,
+          "Active_Users": 510.0,
+          "Energy_Consumption_W": 630.0,
+          "Packet_Loss_Rate": 1.6,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 80.0,
+          "Latency_ms": 12.0,
+          "PRB_Utilization": 40.0,
+          "Active_Users": 150.0,
+          "Energy_Consumption_W": 200.0,
+          "Packet_Loss_Rate": 0.3,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 85.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 42.0,
+          "Active_Users": 160.0,
+          "Energy_Consumption_W": 210.0,
+          "Packet_Loss_Rate": 0.2,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 78.0,
+          "Latency_ms": 13.0,
+          "PRB_Utilization": 38.0,
+          "Active_Users": 140.0,
+          "Energy_Consumption_W": 195.0,
+          "Packet_Loss_Rate": 0.3,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 200.0,
+          "Latency_ms": 22.0,
+          "PRB_Utilization": 75.0,
+          "Active_Users": 350.0,
+          "Energy_Consumption_W": 420.0,
+          "Packet_Loss_Rate": 1.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 210.0,
+          "Latency_ms": 23.0,
+          "PRB_Utilization": 78.0,
+          "Active_Users": 360.0,
+          "Energy_Consumption_W": 430.0,
+          "Packet_Loss_Rate": 1.1,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 195.0,
+          "Latency_ms": 21.0,
+          "PRB_Utilization": 74.0,
+          "Active_Users": 340.0,
+          "Energy_Consumption_W": 415.0,
+          "Packet_Loss_Rate": 0.9,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 400.0,
+          "Latency_ms": 35.0,
+          "PRB_Utilization": 95.0,
+          "Active_Users": 700.0,
+          "Energy_Consumption_W": 900.0,
+          "Packet_Loss_Rate": 2.5,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 420.0,
+          "Latency_ms": 37.0,
+          "PRB_Utilization": 97.0,
+          "Active_Users": 720.0,
+          "Energy_Consumption_W": 920.0,
+          "Packet_Loss_Rate": 2.7,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 410.0,
+          "Latency_ms": 36.0,
+          "PRB_Utilization": 96.0,
+          "Active_Users": 710.0,
+          "Energy_Consumption_W": 910.0,
+          "Packet_Loss_Rate": 2.6,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 60.0,
+          "Latency_ms": 10.0,
+          "PRB_Utilization": 30.0,
+          "Active_Users": 100.0,
+          "Energy_Consumption_W": 150.0,
+          "Packet_Loss_Rate": 0.1,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 65.0,
+          "Latency_ms": 9.0,
+          "PRB_Utilization": 32.0,
+          "Active_Users": 110.0,
+          "Energy_Consumption_W": 160.0,
+          "Packet_Loss_Rate": 0.1,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 58.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 28.0,
+          "Active_Users": 95.0,
+          "Energy_Consumption_W": 140.0,
+          "Packet_Loss_Rate": 0.1,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        }
+      ],
+      "scaler": {
+        "mean": [
+          199.22222,
+          20.94444,
+          66.77778,
+          343.05556,
+          440.0,
+          1.05278
+        ],
+        "std": [
+          125.5736,
+          8.84102,
+          24.3825,
+          212.08711,
+          261.8895,
+          0.84755
+        ]
+      },
+      "kmeans": {
+        "2": {
+          "labels": [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "centroids_std": [
+            [
+              -0.6402,
+              -0.5875,
+              -0.5377,
+              -0.6293,
+              -0.63,
+              -0.6178
+            ],
+            [
+              1.2803,
+              1.1751,
+              1.0755,
+              1.2587,
+              1.2601,
+              1.2356
+            ]
+          ],
+          "centroids_orig": [
+            [
+              118.8,
+              15.8,
+              53.7,
+              209.6,
+              275.0,
+              0.5
+            ],
+            [
+              360.0,
+              31.3,
+              93.0,
+              610.0,
+              770.0,
+              2.1
+            ]
+          ],
+          "silhouette": 0.618
+        },
+        "3": {
+          "labels": [
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "centroids_std": [
+            [
+              -1.0211,
+              -1.1248,
+              -1.3033,
+              -1.0242,
+              -1.0087,
+              -1.0062
+            ],
+            [
+              1.2803,
+              1.1751,
+              1.0755,
+              1.2587,
+              1.2601,
+              1.2356
+            ],
+            [
+              -0.2593,
+              -0.0503,
+              0.2279,
+              -0.2344,
+              -0.2514,
+              -0.2294
+            ]
+          ],
+          "centroids_orig": [
+            [
+              71.0,
+              11.0,
+              35.0,
+              125.8,
+              175.8,
+              0.2
+            ],
+            [
+              360.0,
+              31.3,
+              93.0,
+              610.0,
+              770.0,
+              2.1
+            ],
+            [
+              166.7,
+              20.5,
+              72.3,
+              293.3,
+              374.2,
+              0.9
+            ]
+          ],
+          "silhouette": 0.66
+        },
+        "4": {
+          "labels": [
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            0,
+            0,
+            0,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "centroids_std": [
+            [
+              -1.0211,
+              -1.1248,
+              -1.3033,
+              -1.0242,
+              -1.0087,
+              -1.0062
+            ],
+            [
+              1.6785,
+              1.7029,
+              1.1985,
+              1.7302,
+              1.7947,
+              1.8255
+            ],
+            [
+              -0.2593,
+              -0.0503,
+              0.2279,
+              -0.2344,
+              -0.2514,
+              -0.2294
+            ],
+            [
+              0.8822,
+              0.6472,
+              0.9524,
+              0.7872,
+              0.7255,
+              0.6457
+            ]
+          ],
+          "centroids_orig": [
+            [
+              71.0,
+              11.0,
+              35.0,
+              125.8,
+              175.8,
+              0.2
+            ],
+            [
+              410.0,
+              36.0,
+              96.0,
+              710.0,
+              910.0,
+              2.6
+            ],
+            [
+              166.7,
+              20.5,
+              72.3,
+              293.3,
+              374.2,
+              0.9
+            ],
+            [
+              310.0,
+              26.7,
+              90.0,
+              510.0,
+              630.0,
+              1.6
+            ]
+          ],
+          "silhouette": 0.756
+        }
+      },
+      "default_k": 3,
+      "algos": [
+        {
+          "name": "k-means (k=3)",
+          "sil": 0.66
+        },
+        {
+          "name": "Hierárquico (k=3)",
+          "sil": 0.66
+        },
+        {
+          "name": "DBSCAN (eps=0.8)",
+          "sil": 0.776
+        }
+      ],
+      "start": {
+        "Throughput_Mbps": 168.0,
+        "Latency_ms": 20.0,
+        "PRB_Utilization": 73.0,
+        "Active_Users": 295.0,
+        "Energy_Consumption_W": 378.0,
+        "Packet_Loss_Rate": 0.88
+      },
+      "view": {
+        "x": "Packet_Loss_Rate",
+        "y": "Active_Users"
+      }
+    },
+    "dbscan": {
+      "label": "Base DBSCAN",
+      "source": "Prof. Tesolin",
+      "usecase": "agrupar células parecidas sem rótulo",
+      "n_rows": 27,
+      "features": [
+        {
+          "key": "Throughput_Mbps",
+          "label": "Throughput",
+          "unit": "Mbps",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            45.0,
+            600.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Latency_ms",
+          "label": "Latência",
+          "unit": "ms",
+          "hard": [
+            0,
+            200
+          ],
+          "train": [
+            8.0,
+            60.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRB_Utilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            25.0,
+            110.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Active_Users",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            80.0,
+            1200.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Energy_Consumption_W",
+          "label": "Energia",
+          "unit": "W",
+          "hard": [
+            0,
+            2000
+          ],
+          "train": [
+            120.0,
+            1500.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "points": [
+        {
+          "Throughput_Mbps": 120.0,
+          "Latency_ms": 18.0,
+          "PRB_Utilization": 65.0,
+          "Active_Users": 220.0,
+          "Energy_Consumption_W": 310.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 130.0,
+          "Latency_ms": 19.0,
+          "PRB_Utilization": 67.0,
+          "Active_Users": 230.0,
+          "Energy_Consumption_W": 320.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 125.0,
+          "Latency_ms": 17.0,
+          "PRB_Utilization": 66.0,
+          "Active_Users": 225.0,
+          "Energy_Consumption_W": 315.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 128.0,
+          "Latency_ms": 18.0,
+          "PRB_Utilization": 64.0,
+          "Active_Users": 215.0,
+          "Energy_Consumption_W": 312.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 132.0,
+          "Latency_ms": 19.0,
+          "PRB_Utilization": 68.0,
+          "Active_Users": 235.0,
+          "Energy_Consumption_W": 325.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 310.0,
+          "Latency_ms": 27.0,
+          "PRB_Utilization": 88.0,
+          "Active_Users": 510.0,
+          "Energy_Consumption_W": 630.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 320.0,
+          "Latency_ms": 28.0,
+          "PRB_Utilization": 90.0,
+          "Active_Users": 520.0,
+          "Energy_Consumption_W": 640.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 300.0,
+          "Latency_ms": 26.0,
+          "PRB_Utilization": 87.0,
+          "Active_Users": 500.0,
+          "Energy_Consumption_W": 620.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 315.0,
+          "Latency_ms": 27.0,
+          "PRB_Utilization": 89.0,
+          "Active_Users": 515.0,
+          "Energy_Consumption_W": 635.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 325.0,
+          "Latency_ms": 29.0,
+          "PRB_Utilization": 91.0,
+          "Active_Users": 525.0,
+          "Energy_Consumption_W": 645.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 80.0,
+          "Latency_ms": 12.0,
+          "PRB_Utilization": 40.0,
+          "Active_Users": 150.0,
+          "Energy_Consumption_W": 200.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 78.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 39.0,
+          "Active_Users": 145.0,
+          "Energy_Consumption_W": 195.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 82.0,
+          "Latency_ms": 13.0,
+          "PRB_Utilization": 41.0,
+          "Active_Users": 155.0,
+          "Energy_Consumption_W": 205.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 79.0,
+          "Latency_ms": 12.0,
+          "PRB_Utilization": 38.0,
+          "Active_Users": 148.0,
+          "Energy_Consumption_W": 198.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 81.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 40.0,
+          "Active_Users": 152.0,
+          "Energy_Consumption_W": 202.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 200.0,
+          "Latency_ms": 22.0,
+          "PRB_Utilization": 75.0,
+          "Active_Users": 350.0,
+          "Energy_Consumption_W": 420.0,
+          "k": {
+            "2": 1,
+            "3": 2,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 210.0,
+          "Latency_ms": 23.0,
+          "PRB_Utilization": 78.0,
+          "Active_Users": 360.0,
+          "Energy_Consumption_W": 430.0,
+          "k": {
+            "2": 1,
+            "3": 2,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 195.0,
+          "Latency_ms": 21.0,
+          "PRB_Utilization": 74.0,
+          "Active_Users": 340.0,
+          "Energy_Consumption_W": 415.0,
+          "k": {
+            "2": 1,
+            "3": 2,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 205.0,
+          "Latency_ms": 22.0,
+          "PRB_Utilization": 76.0,
+          "Active_Users": 355.0,
+          "Energy_Consumption_W": 425.0,
+          "k": {
+            "2": 1,
+            "3": 2,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 400.0,
+          "Latency_ms": 40.0,
+          "PRB_Utilization": 98.0,
+          "Active_Users": 800.0,
+          "Energy_Consumption_W": 950.0,
+          "k": {
+            "2": 0,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 405.0,
+          "Latency_ms": 42.0,
+          "PRB_Utilization": 99.0,
+          "Active_Users": 820.0,
+          "Energy_Consumption_W": 970.0,
+          "k": {
+            "2": 0,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 410.0,
+          "Latency_ms": 41.0,
+          "PRB_Utilization": 97.0,
+          "Active_Users": 810.0,
+          "Energy_Consumption_W": 960.0,
+          "k": {
+            "2": 0,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 60.0,
+          "Latency_ms": 10.0,
+          "PRB_Utilization": 30.0,
+          "Active_Users": 100.0,
+          "Energy_Consumption_W": 150.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 62.0,
+          "Latency_ms": 9.0,
+          "PRB_Utilization": 32.0,
+          "Active_Users": 105.0,
+          "Energy_Consumption_W": 155.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 58.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 28.0,
+          "Active_Users": 95.0,
+          "Energy_Consumption_W": 140.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 600.0,
+          "Latency_ms": 60.0,
+          "PRB_Utilization": 110.0,
+          "Active_Users": 1200.0,
+          "Energy_Consumption_W": 1500.0,
+          "k": {
+            "2": 0,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 45.0,
+          "Latency_ms": 8.0,
+          "PRB_Utilization": 25.0,
+          "Active_Users": 80.0,
+          "Energy_Consumption_W": 120.0,
+          "k": {
+            "2": 1,
+            "3": 0,
+            "4": 2
+          }
+        }
+      ],
+      "scaler": {
+        "mean": [
+          202.03704,
+          22.07407,
+          66.48148,
+          365.18519,
+          458.77778
+        ],
+        "std": [
+          140.51347,
+          12.03367,
+          25.18431,
+          273.87697,
+          324.19111
+        ]
+      },
+      "kmeans": {
+        "2": {
+          "labels": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            1
+          ],
+          "centroids_std": [
+            [
+              1.2388,
+              1.1203,
+              1.1059,
+              1.1819,
+              1.1725
+            ],
+            [
+              -0.6194,
+              -0.5602,
+              -0.553,
+              -0.591,
+              -0.5862
+            ]
+          ],
+          "centroids_orig": [
+            [
+              376.1,
+              35.6,
+              94.3,
+              688.9,
+              838.9
+            ],
+            [
+              115.0,
+              15.3,
+              52.6,
+              203.3,
+              268.7
+            ]
+          ],
+          "silhouette": 0.611
+        },
+        "3": {
+          "labels": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            2,
+            2,
+            2,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "centroids_std": [
+            [
+              -0.7973,
+              -0.7184,
+              -0.8161,
+              -0.7453,
+              -0.7218
+            ],
+            [
+              1.7914,
+              1.9675,
+              1.3706,
+              1.9801,
+              1.9625
+            ],
+            [
+              0.4441,
+              0.2431,
+              0.6603,
+              0.2793,
+              0.2505
+            ]
+          ],
+          "centroids_orig": [
+            [
+              90.0,
+              13.4,
+              45.9,
+              161.1,
+              224.8
+            ],
+            [
+              453.8,
+              45.8,
+              101.0,
+              907.5,
+              1095.0
+            ],
+            [
+              264.4,
+              25.0,
+              83.1,
+              441.7,
+              540.0
+            ]
+          ],
+          "silhouette": 0.593
+        },
+        "4": {
+          "labels": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            2,
+            2,
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            1,
+            2
+          ],
+          "centroids_std": [
+            [
+              -0.2952,
+              -0.1816,
+              0.1529,
+              -0.307,
+              -0.2937
+            ],
+            [
+              1.7914,
+              1.9675,
+              1.3706,
+              1.9801,
+              1.9625
+            ],
+            [
+              -0.9436,
+              -0.9387,
+              -1.2589,
+              -0.875,
+              -0.8788
+            ],
+            [
+              0.7968,
+              0.4426,
+              0.8941,
+              0.5434,
+              0.5405
+            ]
+          ],
+          "centroids_orig": [
+            [
+              160.6,
+              19.9,
+              70.3,
+              281.1,
+              363.6
+            ],
+            [
+              453.8,
+              45.8,
+              101.0,
+              907.5,
+              1095.0
+            ],
+            [
+              69.4,
+              10.8,
+              34.8,
+              125.6,
+              173.9
+            ],
+            [
+              314.0,
+              27.4,
+              89.0,
+              514.0,
+              634.0
+            ]
+          ],
+          "silhouette": 0.696
+        }
+      },
+      "default_k": 3,
+      "algos": [
+        {
+          "name": "k-means (k=3)",
+          "sil": 0.593
+        },
+        {
+          "name": "Hierárquico (k=3)",
+          "sil": 0.597
+        },
+        {
+          "name": "DBSCAN (eps=0.5)",
+          "sil": 0.825
+        }
+      ],
+      "start": {
+        "Throughput_Mbps": 132.0,
+        "Latency_ms": 19.0,
+        "PRB_Utilization": 68.0,
+        "Active_Users": 235.0,
+        "Energy_Consumption_W": 325.0
+      },
+      "view": {
+        "x": "Active_Users",
+        "y": "Latency_ms"
+      }
+    },
+    "agg": {
+      "label": "Base hierárquica",
+      "source": "Prof. Tesolin",
+      "usecase": "agrupar células parecidas sem rótulo",
+      "n_rows": 18,
+      "features": [
+        {
+          "key": "Throughput_Mbps",
+          "label": "Throughput",
+          "unit": "Mbps",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            58.0,
+            420.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Latency_ms",
+          "label": "Latência",
+          "unit": "ms",
+          "hard": [
+            0,
+            200
+          ],
+          "train": [
+            9.0,
+            37.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRB_Utilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            28.0,
+            97.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Active_Users",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            95.0,
+            720.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Energy_Consumption_W",
+          "label": "Energia",
+          "unit": "W",
+          "hard": [
+            0,
+            2000
+          ],
+          "train": [
+            140.0,
+            920.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "points": [
+        {
+          "Throughput_Mbps": 120.0,
+          "Latency_ms": 18.0,
+          "PRB_Utilization": 65.0,
+          "Active_Users": 220.0,
+          "Energy_Consumption_W": 310.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 135.0,
+          "Latency_ms": 20.0,
+          "PRB_Utilization": 70.0,
+          "Active_Users": 240.0,
+          "Energy_Consumption_W": 330.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 140.0,
+          "Latency_ms": 19.0,
+          "PRB_Utilization": 72.0,
+          "Active_Users": 250.0,
+          "Energy_Consumption_W": 340.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 300.0,
+          "Latency_ms": 25.0,
+          "PRB_Utilization": 90.0,
+          "Active_Users": 500.0,
+          "Energy_Consumption_W": 620.0,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 320.0,
+          "Latency_ms": 28.0,
+          "PRB_Utilization": 92.0,
+          "Active_Users": 520.0,
+          "Energy_Consumption_W": 640.0,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 310.0,
+          "Latency_ms": 27.0,
+          "PRB_Utilization": 88.0,
+          "Active_Users": 510.0,
+          "Energy_Consumption_W": 630.0,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 3
+          }
+        },
+        {
+          "Throughput_Mbps": 80.0,
+          "Latency_ms": 12.0,
+          "PRB_Utilization": 40.0,
+          "Active_Users": 150.0,
+          "Energy_Consumption_W": 200.0,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 85.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 42.0,
+          "Active_Users": 160.0,
+          "Energy_Consumption_W": 210.0,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 78.0,
+          "Latency_ms": 13.0,
+          "PRB_Utilization": 38.0,
+          "Active_Users": 140.0,
+          "Energy_Consumption_W": 195.0,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 200.0,
+          "Latency_ms": 22.0,
+          "PRB_Utilization": 75.0,
+          "Active_Users": 350.0,
+          "Energy_Consumption_W": 420.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 210.0,
+          "Latency_ms": 23.0,
+          "PRB_Utilization": 78.0,
+          "Active_Users": 360.0,
+          "Energy_Consumption_W": 430.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 195.0,
+          "Latency_ms": 21.0,
+          "PRB_Utilization": 74.0,
+          "Active_Users": 340.0,
+          "Energy_Consumption_W": 415.0,
+          "k": {
+            "2": 0,
+            "3": 2,
+            "4": 2
+          }
+        },
+        {
+          "Throughput_Mbps": 400.0,
+          "Latency_ms": 35.0,
+          "PRB_Utilization": 95.0,
+          "Active_Users": 700.0,
+          "Energy_Consumption_W": 900.0,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 420.0,
+          "Latency_ms": 37.0,
+          "PRB_Utilization": 97.0,
+          "Active_Users": 720.0,
+          "Energy_Consumption_W": 920.0,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 410.0,
+          "Latency_ms": 36.0,
+          "PRB_Utilization": 96.0,
+          "Active_Users": 710.0,
+          "Energy_Consumption_W": 910.0,
+          "k": {
+            "2": 1,
+            "3": 1,
+            "4": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 60.0,
+          "Latency_ms": 10.0,
+          "PRB_Utilization": 30.0,
+          "Active_Users": 100.0,
+          "Energy_Consumption_W": 150.0,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 65.0,
+          "Latency_ms": 9.0,
+          "PRB_Utilization": 32.0,
+          "Active_Users": 110.0,
+          "Energy_Consumption_W": 160.0,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 58.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 28.0,
+          "Active_Users": 95.0,
+          "Energy_Consumption_W": 140.0,
+          "k": {
+            "2": 0,
+            "3": 0,
+            "4": 0
+          }
+        }
+      ],
+      "scaler": {
+        "mean": [
+          199.22222,
+          20.94444,
+          66.77778,
+          343.05556,
+          440.0
+        ],
+        "std": [
+          125.5736,
+          8.84102,
+          24.3825,
+          212.08711,
+          261.8895
+        ]
+      },
+      "kmeans": {
+        "2": {
+          "labels": [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "centroids_std": [
+            [
+              -0.6402,
+              -0.5875,
+              -0.5377,
+              -0.6293,
+              -0.63
+            ],
+            [
+              1.2803,
+              1.1751,
+              1.0755,
+              1.2587,
+              1.2601
+            ]
+          ],
+          "centroids_orig": [
+            [
+              118.8,
+              15.8,
+              53.7,
+              209.6,
+              275.0
+            ],
+            [
+              360.0,
+              31.3,
+              93.0,
+              610.0,
+              770.0
+            ]
+          ],
+          "silhouette": 0.614
+        },
+        "3": {
+          "labels": [
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "centroids_std": [
+            [
+              -1.0211,
+              -1.1248,
+              -1.3033,
+              -1.0242,
+              -1.0087
+            ],
+            [
+              1.2803,
+              1.1751,
+              1.0755,
+              1.2587,
+              1.2601
+            ],
+            [
+              -0.2593,
+              -0.0503,
+              0.2279,
+              -0.2344,
+              -0.2514
+            ]
+          ],
+          "centroids_orig": [
+            [
+              71.0,
+              11.0,
+              35.0,
+              125.8,
+              175.8
+            ],
+            [
+              360.0,
+              31.3,
+              93.0,
+              610.0,
+              770.0
+            ],
+            [
+              166.7,
+              20.5,
+              72.3,
+              293.3,
+              374.2
+            ]
+          ],
+          "silhouette": 0.671
+        },
+        "4": {
+          "labels": [
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            0,
+            0,
+            0,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "centroids_std": [
+            [
+              -1.0211,
+              -1.1248,
+              -1.3033,
+              -1.0242,
+              -1.0087
+            ],
+            [
+              1.6785,
+              1.7029,
+              1.1985,
+              1.7302,
+              1.7947
+            ],
+            [
+              -0.2593,
+              -0.0503,
+              0.2279,
+              -0.2344,
+              -0.2514
+            ],
+            [
+              0.8822,
+              0.6472,
+              0.9524,
+              0.7872,
+              0.7255
+            ]
+          ],
+          "centroids_orig": [
+            [
+              71.0,
+              11.0,
+              35.0,
+              125.8,
+              175.8
+            ],
+            [
+              410.0,
+              36.0,
+              96.0,
+              710.0,
+              910.0
+            ],
+            [
+              166.7,
+              20.5,
+              72.3,
+              293.3,
+              374.2
+            ],
+            [
+              310.0,
+              26.7,
+              90.0,
+              510.0,
+              630.0
+            ]
+          ],
+          "silhouette": 0.759
+        }
+      },
+      "default_k": 3,
+      "algos": [
+        {
+          "name": "k-means (k=3)",
+          "sil": 0.671
+        },
+        {
+          "name": "Hierárquico (k=3)",
+          "sil": 0.671
+        },
+        {
+          "name": "DBSCAN (eps=0.8)",
+          "sil": 0.759
+        }
+      ],
+      "start": {
+        "Throughput_Mbps": 168.0,
+        "Latency_ms": 20.0,
+        "PRB_Utilization": 73.0,
+        "Active_Users": 295.0,
+        "Energy_Consumption_W": 378.0
+      },
+      "view": {
+        "x": "Active_Users",
+        "y": "Throughput_Mbps"
+      }
+    }
+  }
+}

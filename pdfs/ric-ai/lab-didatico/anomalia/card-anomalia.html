@@ -1,0 +1,945 @@
+<title>Lab RIC-IA · Anomalia (Isolation Forest)</title>
+<style>
+  :root{
+    --bg:#e9eef4; --surface:#ffffff; --surface-2:#f3f7fc; --inset:#0d1622;
+    --ink:#0f1b26; --ink-2:#4a5c6e; --ink-3:#7c8da0; --line:#d7e0ea;
+    --accent:#1f6fe5; --accent-2:#0aa5b8; --accent-ink:#ffffff;
+    --good:#12874c; --warn:#b07414; --bad:#c73838;
+    --shadow:0 1px 2px rgba(16,32,48,.06),0 8px 24px rgba(16,32,48,.07);
+    --r:14px; --r-sm:9px;
+    --fs-display:clamp(1.55rem,1.1rem + 1.9vw,2.3rem);
+    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#080d14; --surface:#111a25; --surface-2:#0d1520; --inset:#080f18;
+    --ink:#e7eff8; --ink-2:#9aabbe; --ink-3:#6b7d92; --line:#213142;
+    --accent:#4d90ff; --accent-2:#28c2d6; --accent-ink:#06101d;
+    --good:#33c07d; --warn:#e0a53f; --bad:#e5695f;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{--bg:#e9eef4;--surface:#ffffff;--surface-2:#f3f7fc;--ink:#0f1b26;--ink-2:#4a5c6e;--ink-3:#7c8da0;--line:#d7e0ea;--accent:#1f6fe5;--accent-2:#0aa5b8;--accent-ink:#ffffff;--good:#12874c;--warn:#b07414;--bad:#c73838;}
+  :root[data-theme="dark"]{--bg:#080d14;--surface:#111a25;--surface-2:#0d1520;--ink:#e7eff8;--ink-2:#9aabbe;--ink-3:#6b7d92;--line:#213142;--accent:#4d90ff;--accent-2:#28c2d6;--accent-ink:#06101d;--good:#33c07d;--warn:#e0a53f;--bad:#e5695f;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:940px;margin:0 auto;padding:clamp(16px,3vw,40px)}
+  h1,h2,h3{text-wrap:balance;margin:0} p{margin:0} .tnum{font-variant-numeric:tabular-nums}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px}
+  h1{font-size:var(--fs-display);font-weight:750;letter-spacing:-.02em;line-height:1.08}
+  .lead{color:var(--ink-2);margin-top:12px;max-width:62ch;font-size:1.02rem}
+  .themebtn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.05rem;display:grid;place-items:center;box-shadow:var(--shadow)}
+  .themebtn:hover{color:var(--accent);border-color:var(--accent)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:clamp(18px,2.4vw,28px);margin-bottom:20px}
+  .card > h2{font-size:1.22rem;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .card > .sub{color:var(--ink-2);margin-top:6px;font-size:.95rem;max-width:64ch}
+  .kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .explain p + p{margin-top:12px} .explain b{color:var(--ink)} .hl{color:var(--accent);font-weight:600}
+  details.more{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+  details.more summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more summary::before{content:"▸ ";color:var(--accent)} details.more[open] summary::before{content:"▾ "}
+  .srcnote{margin-top:14px;font-size:.82rem;color:var(--ink-2)} .srcnote b{color:var(--ink)}
+  .srcbadge{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;padding:2px 7px;border-radius:5px;font-weight:700;background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+
+  .oranmap{display:flex;flex-direction:column;gap:0;margin-top:14px;max-width:540px}
+  .band{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:8px 12px}
+  .band.here{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
+  .band.ran{border-color:var(--accent-2)} .band.planned{border-style:dashed} .band.dim{opacity:.66}
+  .bl{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;width:112px;flex:none;line-height:1.3}
+  .bl em{display:block;font-style:normal;font-weight:500;text-transform:none;letter-spacing:0;font-size:.62rem}
+  .bn{flex:1;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .bn small{font-weight:400;color:var(--ink-2);font-size:.72rem} .band.here .bn{color:var(--accent)}
+  .youare{font-family:var(--mono);font-size:.54rem;letter-spacing:.05em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:1px 5px;border-radius:4px;font-weight:700}
+  .conn{display:flex;justify-content:center;gap:20px;padding:3px 0;font-family:var(--mono);font-size:.63rem;color:var(--ink-3)}
+  .conn .up{color:var(--accent-2)} .conn .down{color:var(--accent)}
+  .flowcap{margin-top:14px;font-size:.85rem;color:var(--ink-2)} .flowcap b{color:var(--ink)}
+  .honest{margin-top:7px;font-size:.77rem;color:var(--ink-3)}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:6px 0 14px}
+  .field{display:flex;align-items:center;gap:7px;font-size:.84rem;color:var(--ink-2)}
+  .field select{font-family:var(--sans);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:5px 8px;font-size:.84rem}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+  .seg button{border:none;background:var(--surface);color:var(--ink);padding:6px 13px;cursor:pointer;font-weight:600;font-size:.86rem;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:none} .seg button.on{background:var(--accent);color:var(--accent-ink)}
+
+  .plotwrap{display:grid;grid-template-columns:1.35fr .65fr;gap:20px;align-items:start}
+  @media (max-width:720px){.plotwrap{grid-template-columns:1fr}}
+  svg.scatter{width:100%;height:auto;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm)}
+  .legend{display:flex;flex-direction:column;gap:8px}
+  .legrow{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--ink-2)}
+  .dot{width:11px;height:11px;border-radius:50%;flex:none}
+  .assign{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;margin-top:6px}
+  .assign .big{font-size:1.15rem;font-weight:750;margin-top:4px;display:flex;align-items:center;gap:8px}
+  .scorebar{height:10px;border-radius:5px;background:color-mix(in srgb,var(--ink-3) 22%,transparent);margin-top:10px;position:relative;overflow:visible}
+  .scorebar > i{display:block;height:100%;border-radius:5px;width:0;transition:width .35s}
+  .scorebar > .thr{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink-2)}
+  .scoretx{font-family:var(--mono);font-size:.7rem;color:var(--ink-3);margin-top:6px;display:flex;justify-content:space-between}
+
+  .ctrls{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:2px 22px}
+  @media (max-width:560px){.ctrls{grid-template-columns:1fr}}
+  .ctrl{padding:9px 0;border-bottom:1px solid var(--line)}
+  .ctrl-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .ctrl-head label{font-weight:600;font-size:.86rem} .ctrl-head .v{font-family:var(--mono);color:var(--ink-2);font-size:.82rem}
+  .ctrl input[type=range]{width:100%;accent-color:var(--accent);height:4px;margin-top:6px}
+  .ctrl.warn .ctrl-head .v{color:var(--warn)}
+
+  .anomlist{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .anomrow{display:flex;align-items:center;gap:10px;font-size:.86rem;padding:9px 12px;border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:var(--r-sm);background:var(--surface-2)}
+  .anomrow b{color:var(--ink)} .anomrow .why{color:var(--ink-3);font-family:var(--mono);font-size:.74rem}
+  .none{color:var(--ink-3);font-size:.88rem;padding:8px 0}
+  .takeaway{margin-top:16px;background:var(--surface-2);border-left:3px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:12px 15px;font-size:.9rem;color:var(--ink-2)} .takeaway b{color:var(--ink)}
+  footer{color:var(--ink-3);font-size:.8rem;line-height:1.6;margin-top:8px;padding:0 4px 10px} footer b{color:var(--ink-2)}
+  /* modal fórmula + Python */
+  .mathbtn{margin-top:16px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--accent);border-radius:var(--r-sm);padding:9px 15px;font-size:.9rem;font-weight:700;cursor:pointer}
+  .mathbtn:hover{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+  .backdrop{position:fixed;inset:0;background:rgba(6,12,20,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .backdrop.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);max-width:660px;width:100%;max-height:86vh;overflow:auto;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+  .modal h3{font-size:1.15rem;font-weight:750;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .modal .x{border:none;background:none;font-size:1.4rem;cursor:pointer;color:var(--ink-3);line-height:1} .modal .x:hover{color:var(--ink)}
+  .mlabel{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:18px 0 8px}
+  .msteps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:8px}
+  .msteps li{position:relative;padding-left:32px;font-size:.9rem;color:var(--ink-2)}
+  .msteps li b{color:var(--ink)} .msteps li code{font-family:var(--mono);background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:.85em}
+  .msteps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--mono);font-weight:700;font-size:.72rem;display:grid;place-items:center}
+  .mcode{background:var(--inset);color:#d6e6f7;border-radius:var(--r-sm);padding:15px;overflow-x:auto;margin:0;font-family:var(--mono);font-size:.82rem;line-height:1.6;white-space:pre}
+  .mcode .cap{color:#7fd8a0} .mcode .ret{color:#7fc0ff} .mcode .kw{color:#e0a53f} .mcode .cm{color:#8aa0b8}
+  .caplegend{display:flex;gap:16px;font-size:.78rem;margin-top:10px;color:var(--ink-2);flex-wrap:wrap} .cap-c{color:#2f9e63} .ret-c{color:#2b74e8}
+  /* relatório */
+  .repbtn{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 9%,transparent);color:var(--good);border-radius:var(--r-sm);padding:11px 18px;font-size:.95rem;font-weight:700;cursor:pointer}
+  .repbtn:hover{background:color-mix(in srgb,var(--good) 17%,transparent)}
+  .repform{display:grid;gap:14px;margin-top:16px}
+  .repform label{display:grid;gap:5px;font-weight:600;font-size:.86rem}
+  .repform input,.repform textarea{width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.88rem;font-weight:400}
+  .repform textarea{min-height:120px;resize:vertical;line-height:1.5}
+  .repform .hint{font-weight:400;color:var(--ink-3);font-size:.8rem}
+  .repactions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:10px 16px;font-size:.9rem;font-weight:700;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  #printarea{display:none}
+  @media print{ body>.wrap,body>.backdrop{display:none!important} #printarea{display:block!important} }
+
+  /* integração: embed no painel + compreensão + sistema real + variáveis */
+  html.embed .topright,html.embed .themebtn,html.embed a[href="/"],html.embed a[href="/lab"]{display:none!important}
+  html.embed .wrap{padding:14px 18px 20px}
+  .realbox{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--surface-2);padding:12px 15px;font-size:.9rem;color:var(--ink-2)}
+  .realbox b{color:var(--ink)}
+  .realbtn{display:inline-block;margin-top:9px;border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;font-size:.88rem;cursor:pointer}
+  .realbtn:hover{background:color-mix(in srgb,var(--good) 18%,transparent)}
+  .realnote{display:block;margin-top:6px;font-size:.78rem;color:var(--ink-3)}
+  .comp{margin:6px 0 20px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);padding:16px 20px}
+  .comp .q{font-weight:700;margin-bottom:10px}
+  .comp .row{display:flex;gap:10px;flex-wrap:wrap}
+  .compok{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compno{border:1px solid var(--warn);background:transparent;color:var(--warn);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compask{display:none;margin-top:10px}
+  .compask.open{display:block}
+  .compask textarea{width:100%;min-height:70px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.9rem}
+  .compsend{margin-top:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;cursor:pointer}
+  .compmsg{margin-top:8px;font-size:.86rem;color:var(--ink-2)}
+  .mvars{border-collapse:collapse;width:100%;font-size:.86rem;margin-top:6px}
+  .mvars td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+  .mvars td b{color:var(--ink)}
+  .mvars td:first-child{font-family:var(--mono);font-weight:700;white-space:nowrap;color:var(--accent)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow">Lab RIC · IA — Aula 4 de 6</div>
+      <h1>Anomalia: achar a célula fora do padrão</h1>
+      <p class="lead">Não supervisionado, com o dataset <b>do Prof. Tesolin</b>. O modelo aprende como é o
+        “normal” e aponta quem <b>foge dele</b> — o coração da <b>manutenção preditiva</b>.</p>
+    </div>
+    <button class="themebtn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">◐</button>
+  </div>
+
+  <section class="card">
+    <h2>🗂️ Base de dados</h2>
+    <p class="srcnote" id="srcNote"></p>
+  </section>
+
+  <section class="card explain">
+    <h2>📖 O que é detecção de anomalia?</h2>
+    <div style="margin-top:12px">
+      <p>É achar <b>a peça fora do lugar</b> — a célula que se comporta diferente de todas as outras. Sem ninguém
+        dizer o que é “defeito”: o modelo aprende o padrão comum e sinaliza os <b>outliers</b>.</p>
+      <p>Aqui cada ponto é uma <b>célula</b>. As <span class="fg-bad" style="color:var(--bad);font-weight:600">vermelhas</span>
+        destoam (throughput/energia/latência estranhos) → <b>candidatas a falha</b>. No O-RAN é um rApp de
+        <b>manutenção preditiva</b>: pegar o problema antes de virar queda.</p>
+      <details class="more">
+        <summary>🔬 Aprofundar: como o Isolation Forest isola</summary>
+        <p style="margin-top:12px">Ele corta os dados ao acaso, repetidamente. Um ponto <b>normal</b> está no meio da
+          multidão e precisa de <b>muitos cortes</b> para ser isolado; um <b>outlier</b> fica sozinho e é separado com
+          <b>poucos cortes</b>. Quanto mais fácil de isolar, mais anômalo. (No “Mexe”, para rodar no navegador, medimos
+          o quão <b>longe da massa normal</b> a célula está — mesmo princípio, calibrado com o Isolation Forest.)</p>
+      </details>
+      <button class="mathbtn" id="openMath">🔬 Ver a fórmula e o Python — o que o modelo captura e retorna</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🛰️ Onde isso roda no O-RAN</h2>
+    <p class="sub">Vigiar a saúde da rede é análise contínua e ampla — vive no <b>Non-RT RIC</b> (rApp).</p>
+    <div class="oranmap">
+      <div class="band planned here"><span class="bl">Non-RT RIC<em>rApp · &gt;1s · planejado</em></span><span class="bn"><span class="youare">aqui</span> rApp de Anomalia <small>vigia a saúde</small></span></div>
+      <div class="conn"><span class="up">↑ O1 dados</span><span class="down">↓ A1/alerta</span></div>
+      <div class="band dim"><span class="bl">Near-RT RIC<em>FlexRIC</em></span><span class="bn">xApps</span></div>
+      <div class="conn"><span class="up">↑ E2/KPM</span><span class="down">↓ E2/RC</span></div>
+      <div class="band ran dim"><span class="bl">RAN<em>gera os KPIs</em></span><span class="bn">gNB + UEs</span></div>
+    </div>
+    <p class="flowcap"><b>Fluxo:</b> KPIs sobem por <b>O1</b> → o <b>rApp vigia</b> e detecta a célula anômala →
+      dispara <b>alerta/manutenção</b>. Pega a falha antes da queda.</p>
+    <p class="honest">O Non-RT RIC é a próxima fase — hoje roda offline (nosso Python).</p>
+    <div class="realbox"><b data-i18n="real.t">🔌 No sistema real</b><br>
+      <span data-i18n-html="real.txt">Os KPIs desta aula não são teóricos: neste servidor roda um 5G de verdade (gNB OAI + FlexRIC), e eles chegam pela interface <b>E2 (E2SM-KPM)</b>. Você pode coletá-los agora:</span>
+      <button class="realbtn" id="realRun" hidden data-i18n="real.btn">▶ Rodar a coleta KPM real (no console do painel)</button>
+      <span class="realnote" data-i18n="real.note">O professor executa; todos acompanham ao vivo no console. Disponível dentro do painel.</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🚨 Veja as anomalias</h2>
+    <p class="sub">Vermelho = célula anômala. Ajuste a <b>sensibilidade</b> (quantas anomalias esperar) e os eixos.</p>
+    <div class="toolbar">
+      <div class="field"><span>Sensibilidade:</span><div class="seg" id="lvSeg"></div></div>
+      <div class="field"><span>Eixo X:</span><select id="xSel"></select></div>
+      <div class="field"><span>Eixo Y:</span><select id="ySel"></select></div>
+    </div>
+    <div class="plotwrap">
+      <svg class="scatter" id="scatter" viewBox="0 0 480 340" role="img" aria-label="Dispersão com anomalias"></svg>
+      <div>
+        <div class="legend" id="legend"></div>
+        <div class="assign">
+          <div class="kicker">Sua célula de teste (★)</div>
+          <div class="big" id="assignBig">—</div>
+          <div class="scorebar"><i id="scoreFill"></i><span class="thr" id="scoreThr"></span></div>
+          <div class="scoretx"><span>normal</span><span id="scoreVal"></span><span>anômala</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="kicker" style="margin-top:18px">Ajuste a célula-teste (★)</div>
+    <div class="ctrls" id="ctrls"></div>
+  </section>
+
+  <section class="card">
+    <h2>📋 Anomalias encontradas</h2>
+    <p class="sub" id="anomSub"></p>
+    <div class="anomlist" id="anomList"></div>
+    <div class="takeaway"><b>Manutenção preditiva:</b> cada célula vermelha é uma investigação — RRU superaquecendo,
+      link degradado, tráfego anômalo. Detectar cedo evita a queda. A <b>sensibilidade</b> é o trade-off clássico:
+      baixa pega só os casos gritantes; alta pega mais, mas com mais alarmes falsos.</div>
+  </section>
+
+  <section class="card">
+    <h2>📄 Relatório</h2>
+    <p class="sub" data-i18n="report.sub">A entrega do trabalho, nas 3 partes, com o que você rodou preenchido. Edite na sua voz e baixe: PDF, Word e o script Python.</p>
+    <button class="repbtn" id="openReport" style="margin-top:14px" data-i18n="report.btn">📄 Gerar relatório (PDF / Word / .py)</button>
+  </section>
+
+  <div class="comp">
+    <div class="q" data-i18n="comp.q">Antes de seguir:</div>
+    <div class="row">
+      <button class="compok" id="compOk" data-i18n="comp.ok">✅ Entendi — próxima aula ▸</button>
+      <button class="compno" id="compNo" data-i18n="comp.no">🤔 Não entendi</button>
+    </div>
+    <div class="compask" id="compAsk">
+      <textarea id="compText" data-i18n-ph="comp.ph" placeholder="O que ficou confuso? Escreva sua dúvida…"></textarea>
+      <button class="compsend" id="compSend" data-i18n="comp.send">Enviar dúvida</button>
+      <div class="compmsg" id="compMsg"></div>
+    </div>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Fórmula e código">
+    <h3>Isolation Forest — a fórmula e o código <button class="x" id="closeMath" aria-label="Fechar">×</button></h3>
+    <p style="color:var(--ink-2);font-size:.9rem;margin-top:6px">O que o modelo <b class="cap-c" style="font-family:var(--mono)">captura</b> (aprende no <code>fit</code>) e o que <b class="ret-c" style="font-family:var(--mono)">retorna</b> depois.</p>
+    <div class="mlabel">A ideia, passo a passo (sem jargão)</div>
+    <ol class="msteps">
+      <li>Corta os dados <b>ao acaso</b>, muitas vezes (monta várias “árvores”).</li>
+      <li>Conta <b>quantos cortes</b> para deixar cada ponto sozinho.</li>
+      <li>Ponto <b>normal</b> está no meio da multidão → precisa de <b>muitos cortes</b>.</li>
+      <li><b>Outlier</b> fica isolado com <b>poucos cortes</b> → é anomalia.</li>
+      <li><code>contamination</code> diz quantos % você espera que sejam anômalos.</li>
+    </ol>
+
+    <div class="mlabel" data-i18n="math.vars">As variáveis, uma a uma</div>
+    <table class="mvars"><tr><td>cortes</td><td><b>as divisões aleatórias</b> — cada árvore corta os dados ao acaso, várias vezes.</td></tr><tr><td>profundidade</td><td><b>quantos cortes até isolar</b> — ponto normal exige muitos; outlier se isola com poucos.</td></tr><tr><td>score</td><td><b>a nota de anomalia</b> — média entre as árvores: quanto mais fácil isolar, mais anômala.</td></tr><tr><td>contamination</td><td><b>a sensibilidade</b> — a fração de anomalias que você espera (0,05–0,15 aqui); define o limiar.</td></tr><tr><td>limiar</td><td><b>a régua final</b> — acima dela, anômala. No lab, calibrado na distância padronizada (ex.: 2,73).</td></tr><tr><td>tipo</td><td><b>floresta de árvores aleatórias (um comitê que vota)</b></td></tr><tr><td>serve p/</td><td><b>apontar o <i>fora-do-padrão</i> sem rótulo — manutenção preditiva antes da queda</b></td></tr></table>
+    <div class="mlabel">O código Python (scikit-learn)</div>
+    <div class="mcode"><span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> IsolationForest
+
+iso = IsolationForest(contamination=<span class="kw">0.1</span>).fit(X)  <span class="cm"># <span class="cap">captura</span>: como é o “normal”</span>
+iso.predict(X)                                    <span class="cm"># <span class="ret">retorna</span>: 1 = normal, −1 = anomalia</span>
+iso.decision_function(X)                          <span class="cm"># <span class="ret">retorna</span>: o score (quão anômala)</span></div>
+    <p style="color:var(--ink-3);font-size:.8rem;margin-top:10px">No “Mexe”, para rodar no navegador, usamos a <b>distância ao normal</b> — o mesmo princípio, calibrado com este Isolation Forest.</p>
+    <div class="caplegend"><span><b class="cap-c">■ captura</b> = <code>fit</code> (aprende dos dados)</span><span><b class="ret-c">■ retorna</b> = o resultado (rótulo, score)</span></div>
+  </div>
+</div>
+
+<div class="backdrop" id="repbackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Relatório">
+    <h3><span data-i18n="report.title">📄 Relatório do trabalho</span> <button class="x" id="repClose" aria-label="Fechar">×</button></h3>
+    <p style="color:var(--ink-2);font-size:.9rem;margin-top:6px">As Partes 1 e 2 vêm como <b>rascunho</b> — reescreva na sua voz. A Parte 3 já traz o que você rodou.</p>
+    <div class="repform">
+      <label><span data-i18n="report.name">Seu nome</span><input id="repNome" data-i18n-ph="report.name_ph" placeholder="Nome do aluno(a)"></label>
+      <label><span data-i18n="report.p1">Parte 1 — Análise crítica e seleção do algoritmo (~200 palavras)</span><textarea id="repP1"></textarea></label>
+      <label><span data-i18n="report.p2">Parte 2 — Fundamentação teórica (~500 palavras)</span><textarea id="repP2"></textarea></label>
+      <p class="hint" data-i18n="report.p3hint">Parte 3 (base, resultados e código) é montada automaticamente.</p>
+    </div>
+    <div class="repactions">
+      <button class="btn" id="repPdf" data-i18n="report.pdf">⬇ Baixar PDF</button>
+      <button class="btn ghost" id="repDoc" data-i18n="report.doc">⬇ Baixar Word (.doc)</button>
+      <button class="btn ghost" id="repPy" data-i18n="report.py">⬇ Baixar script Python (.py)</button>
+    </div>
+  </div>
+</div>
+
+<div id="printarea"></div>
+
+<script src="/static/lab-i18n.js"></script>
+<script>
+const DSC = {
+  "family": "Anomalia",
+  "default": "isolationforest",
+  "datasets": {
+    "isolationforest": {
+      "label": "Isolation Forest",
+      "source": "Prof. Tesolin",
+      "usecase": "detectar células anômalas (manutenção preditiva)",
+      "n_rows": 23,
+      "features": [
+        {
+          "key": "Throughput_Mbps",
+          "label": "Throughput",
+          "unit": "Mbps",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            45.0,
+            600.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Latency_ms",
+          "label": "Latência",
+          "unit": "ms",
+          "hard": [
+            0,
+            200
+          ],
+          "train": [
+            8.0,
+            60.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRB_Utilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            25.0,
+            110.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Active_Users",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            1000
+          ],
+          "train": [
+            80.0,
+            1200.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "Energy_Consumption_W",
+          "label": "Energia",
+          "unit": "W",
+          "hard": [
+            0,
+            2000
+          ],
+          "train": [
+            120.0,
+            1500.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "points": [
+        {
+          "Throughput_Mbps": 120.0,
+          "Latency_ms": 18.0,
+          "PRB_Utilization": 65.0,
+          "Active_Users": 220.0,
+          "Energy_Consumption_W": 310.0,
+          "dist": 1.189,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 135.0,
+          "Latency_ms": 20.0,
+          "PRB_Utilization": 70.0,
+          "Active_Users": 240.0,
+          "Energy_Consumption_W": 330.0,
+          "dist": 1.002,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 140.0,
+          "Latency_ms": 19.0,
+          "PRB_Utilization": 72.0,
+          "Active_Users": 250.0,
+          "Energy_Consumption_W": 340.0,
+          "dist": 0.98,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 300.0,
+          "Latency_ms": 25.0,
+          "PRB_Utilization": 90.0,
+          "Active_Users": 500.0,
+          "Energy_Consumption_W": 620.0,
+          "dist": 1.009,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 320.0,
+          "Latency_ms": 28.0,
+          "PRB_Utilization": 92.0,
+          "Active_Users": 520.0,
+          "Energy_Consumption_W": 640.0,
+          "dist": 1.211,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 310.0,
+          "Latency_ms": 27.0,
+          "PRB_Utilization": 88.0,
+          "Active_Users": 510.0,
+          "Energy_Consumption_W": 630.0,
+          "dist": 1.034,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 80.0,
+          "Latency_ms": 12.0,
+          "PRB_Utilization": 40.0,
+          "Active_Users": 150.0,
+          "Energy_Consumption_W": 200.0,
+          "dist": 2.12,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 85.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 42.0,
+          "Active_Users": 160.0,
+          "Energy_Consumption_W": 210.0,
+          "dist": 2.076,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 78.0,
+          "Latency_ms": 13.0,
+          "PRB_Utilization": 38.0,
+          "Active_Users": 140.0,
+          "Energy_Consumption_W": 195.0,
+          "dist": 2.155,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 200.0,
+          "Latency_ms": 22.0,
+          "PRB_Utilization": 75.0,
+          "Active_Users": 350.0,
+          "Energy_Consumption_W": 420.0,
+          "dist": 0.432,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 210.0,
+          "Latency_ms": 23.0,
+          "PRB_Utilization": 78.0,
+          "Active_Users": 360.0,
+          "Energy_Consumption_W": 430.0,
+          "dist": 0.433,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 195.0,
+          "Latency_ms": 21.0,
+          "PRB_Utilization": 74.0,
+          "Active_Users": 340.0,
+          "Energy_Consumption_W": 415.0,
+          "dist": 0.482,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 400.0,
+          "Latency_ms": 35.0,
+          "PRB_Utilization": 95.0,
+          "Active_Users": 700.0,
+          "Energy_Consumption_W": 900.0,
+          "dist": 2.257,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 420.0,
+          "Latency_ms": 37.0,
+          "PRB_Utilization": 97.0,
+          "Active_Users": 720.0,
+          "Energy_Consumption_W": 920.0,
+          "dist": 2.473,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 410.0,
+          "Latency_ms": 36.0,
+          "PRB_Utilization": 96.0,
+          "Active_Users": 710.0,
+          "Energy_Consumption_W": 910.0,
+          "dist": 2.365,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 60.0,
+          "Latency_ms": 10.0,
+          "PRB_Utilization": 30.0,
+          "Active_Users": 100.0,
+          "Energy_Consumption_W": 150.0,
+          "dist": 2.577,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 65.0,
+          "Latency_ms": 9.0,
+          "PRB_Utilization": 32.0,
+          "Active_Users": 110.0,
+          "Energy_Consumption_W": 160.0,
+          "dist": 2.529,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 58.0,
+          "Latency_ms": 11.0,
+          "PRB_Utilization": 28.0,
+          "Active_Users": 95.0,
+          "Energy_Consumption_W": 140.0,
+          "dist": 2.615,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 250.0,
+          "Latency_ms": 24.0,
+          "PRB_Utilization": 80.0,
+          "Active_Users": 400.0,
+          "Energy_Consumption_W": 480.0,
+          "dist": 0.426,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 255.0,
+          "Latency_ms": 25.0,
+          "PRB_Utilization": 82.0,
+          "Active_Users": 410.0,
+          "Energy_Consumption_W": 490.0,
+          "dist": 0.513,
+          "anom": {
+            "0.05": 0,
+            "0.10": 0,
+            "0.15": 0
+          }
+        },
+        {
+          "Throughput_Mbps": 600.0,
+          "Latency_ms": 60.0,
+          "PRB_Utilization": 110.0,
+          "Active_Users": 1200.0,
+          "Energy_Consumption_W": 1500.0,
+          "dist": 5.555,
+          "anom": {
+            "0.05": 1,
+            "0.10": 1,
+            "0.15": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 45.0,
+          "Latency_ms": 8.0,
+          "PRB_Utilization": 25.0,
+          "Active_Users": 80.0,
+          "Energy_Consumption_W": 120.0,
+          "dist": 2.853,
+          "anom": {
+            "0.05": 0,
+            "0.10": 1,
+            "0.15": 1
+          }
+        },
+        {
+          "Throughput_Mbps": 500.0,
+          "Latency_ms": 50.0,
+          "PRB_Utilization": 105.0,
+          "Active_Users": 1000.0,
+          "Energy_Consumption_W": 1300.0,
+          "dist": 4.231,
+          "anom": {
+            "0.05": 1,
+            "0.10": 1,
+            "0.15": 1
+          }
+        }
+      ],
+      "scaler": {
+        "mean": [
+          227.65217,
+          23.65217,
+          69.73913,
+          402.82609,
+          513.47826
+        ],
+        "std": [
+          154.04844,
+          12.85575,
+          26.35909,
+          292.68928,
+          365.94557
+        ]
+      },
+      "levels": {
+        "0.05": {
+          "threshold": 3.542,
+          "count": 2,
+          "label": "baixa"
+        },
+        "0.10": {
+          "threshold": 2.734,
+          "count": 3,
+          "label": "média"
+        },
+        "0.15": {
+          "threshold": 2.5438,
+          "count": 4,
+          "label": "alta"
+        }
+      },
+      "default_level": "0.10",
+      "dist_max": 5.555,
+      "start": {
+        "Throughput_Mbps": 200.0,
+        "Latency_ms": 22.0,
+        "PRB_Utilization": 75.0,
+        "Active_Users": 350.0,
+        "Energy_Consumption_W": 420.0
+      },
+      "view": {
+        "x": "Latency_ms",
+        "y": "Energy_Consumption_W"
+      }
+    }
+  }
+};
+const $=(s,r=document)=>r.querySelector(s);
+const D = DSC.datasets[DSC.default];
+const FEAT = Object.fromEntries(D.features.map(f=>[f.key,f]));
+let single={...D.start}, LV=D.default_level, xKey=D.view.x, yKey=D.view.y;
+const NORM="var(--accent-2)", ANOM="var(--bad)";
+
+function dist(vals){const s=D.scaler;let d=0;D.features.forEach((f,i)=>{const z=(vals[f.key]-s.mean[i])/s.std[i];d+=z*z;});return Math.sqrt(d);}
+function isAnom(vals){return dist(vals) > D.levels[LV].threshold;}
+function fmt(v){return Math.abs(v)>=100?v.toFixed(0):v.toFixed(2).replace(/\.?0+$/,"");}
+function standout(p){const s=D.scaler;let bi=0,bz=0,bs=1;D.features.forEach((f,i)=>{const z=(p[f.key]-s.mean[i])/s.std[i];if(Math.abs(z)>Math.abs(bz)){bz=z;bi=i;bs=z;}});
+  return `${D.features[bi].label} ${bs>0?'alto':'baixo'} demais`;}
+
+function initTop(){
+  $("#srcNote").innerHTML=`<span class="srcbadge">BASE DO PROFESSOR</span> <b>${D.label}</b> — ${D.usecase}. `+
+    `${D.n_rows} células · ${D.features.length} KPIs · <b>sem rótulo</b>. O Isolation Forest marca as anômalas.`;
+  $("#lvSeg").innerHTML=Object.entries(D.levels).map(([lv,d])=>`<button data-lv="${lv}" class="${lv===LV?'on':''}">${d.label}</button>`).join("");
+  $("#lvSeg").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{LV=b.dataset.lv;
+    $("#lvSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.lv===LV));renderAll();}));
+  const opts=D.features.map(f=>`<option value="${f.key}">${f.label}</option>`).join("");
+  $("#xSel").innerHTML=opts;$("#ySel").innerHTML=opts;$("#xSel").value=xKey;$("#ySel").value=yKey;
+  $("#xSel").onchange=()=>{xKey=$("#xSel").value;renderScatter();};
+  $("#ySel").onchange=()=>{yKey=$("#ySel").value;renderScatter();};
+  buildCtrls();
+}
+function buildCtrls(){
+  $("#ctrls").innerHTML=D.features.map(f=>{const step=f.decimals===0?1:(f.decimals===1?0.1:0.01);
+    return `<div class="ctrl" data-k="${f.key}"><div class="ctrl-head"><label>${f.label}</label><span class="v"><span data-vv="${f.key}">${single[f.key]}</span> ${f.unit}</span></div>
+      <input type="range" min="${f.hard[0]}" max="${f.hard[1]}" step="${step}" value="${single[f.key]}" data-role="range"></div>`;}).join("");
+  $("#ctrls").querySelectorAll(".ctrl").forEach(el=>{const k=el.dataset.k,r=el.querySelector("input");
+    r.addEventListener("input",()=>{single[k]=parseFloat(r.value);$(`[data-vv="${k}"]`).textContent=r.value;
+      el.classList.toggle("warn",single[k]<FEAT[k].train[0]||single[k]>FEAT[k].train[1]);renderScatter();renderAssign();});});
+}
+function renderAll(){renderScatter();renderAssign();renderLegend();renderList();}
+
+function renderScatter(){
+  const W=480,H=340,mL=46,mR=14,mT=14,mB=34;
+  const xs=D.points.map(p=>p[xKey]).concat(single[xKey]),ys=D.points.map(p=>p[yKey]).concat(single[yKey]);
+  const xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);
+  const sx=v=>mL+(xmax===xmin?.5:(v-xmin)/(xmax-xmin))*(W-mL-mR);
+  const sy=v=>H-mB-(ymax===ymin?.5:(v-ymin)/(ymax-ymin))*(H-mT-mB);
+  const ax=`<line x1="${mL}" y1="${H-mB}" x2="${W-mR}" y2="${H-mB}" stroke="var(--line)"/><line x1="${mL}" y1="${mT}" x2="${mL}" y2="${H-mB}" stroke="var(--line)"/>`;
+  const labs=`<text x="${mL}" y="${H-mB+16}" font-size="9" fill="var(--ink-3)" font-family="monospace">${fmt(xmin)}</text>
+    <text x="${W-mR}" y="${H-mB+16}" font-size="9" fill="var(--ink-3)" text-anchor="end" font-family="monospace">${fmt(xmax)}</text>
+    <text x="${mL-6}" y="${H-mB}" font-size="9" fill="var(--ink-3)" text-anchor="end" font-family="monospace">${fmt(ymin)}</text>
+    <text x="${mL-6}" y="${mT+8}" font-size="9" fill="var(--ink-3)" text-anchor="end" font-family="monospace">${fmt(ymax)}</text>
+    <text x="${(W+mL)/2}" y="${H-4}" font-size="10" fill="var(--ink-2)" text-anchor="middle">${FEAT[xKey].label}</text>
+    <text x="12" y="${(H-mB+mT)/2}" font-size="10" fill="var(--ink-2)" text-anchor="middle" transform="rotate(-90 12 ${(H-mB+mT)/2})">${FEAT[yKey].label}</text>`;
+  const pts=D.points.map(p=>{const a=p.anom[LV]===1;
+    return `<circle cx="${sx(p[xKey]).toFixed(1)}" cy="${sy(p[yKey]).toFixed(1)}" r="${a?6:5}" fill="${a?ANOM:NORM}" fill-opacity="${a?0.9:0.7}" stroke="#fff" stroke-width="0.6"/>`;}).join("");
+  const a=isAnom(single),tc=a?ANOM:NORM,tx=sx(single[xKey]).toFixed(1),ty=sy(single[yKey]).toFixed(1);
+  const star=`<circle cx="${tx}" cy="${ty}" r="9" fill="${tc}" stroke="#fff" stroke-width="2"/><circle cx="${tx}" cy="${ty}" r="13" fill="none" stroke="${tc}" stroke-width="1.5" stroke-dasharray="3 2"/>`;
+  $("#scatter").innerHTML=ax+labs+pts+star;
+}
+function renderAssign(){
+  const d=dist(single),a=d>D.levels[LV].threshold,mx=D.dist_max*1.05;
+  $("#assignBig").innerHTML=a?`<span class="dot" style="background:${ANOM}"></span> <span style="color:var(--bad)">Anômala</span>`
+    :`<span class="dot" style="background:${NORM}"></span> Normal`;
+  const f=$("#scoreFill");f.style.width=Math.min(100,d/mx*100)+"%";f.style.background=a?ANOM:NORM;
+  $("#scoreThr").style.left=Math.min(100,D.levels[LV].threshold/mx*100)+"%";
+  $("#scoreVal").textContent=`dist ${d.toFixed(2)} / limiar ${D.levels[LV].threshold}`;
+}
+function renderLegend(){
+  $("#legend").innerHTML=`<div class="legrow"><span class="dot" style="background:${NORM}"></span> Normal</div>
+    <div class="legrow"><span class="dot" style="background:${ANOM}"></span> Anomalia (${D.levels[LV].count})</div>
+    <div class="legrow" style="margin-top:2px"><span style="font-weight:700">★</span> sua célula-teste</div>`;
+}
+function renderList(){
+  const anom=D.points.map((p,i)=>({p,i})).filter(o=>o.p.anom[LV]===1).sort((a,b)=>b.p.dist-a.p.dist);
+  $("#anomSub").textContent=`Sensibilidade ${D.levels[LV].label}: ${anom.length} de ${D.n_rows} células marcadas como anômalas.`;
+  $("#anomList").innerHTML=anom.length?anom.map(o=>
+    `<div class="anomrow"><span class="dot" style="background:${ANOM}"></span> <b>Célula ${o.i+1}</b>
+      <span class="why">${standout(o.p)} · dist ${o.p.dist}</span></div>`).join("")
+    :`<div class="none">Nenhuma anomalia neste nível.</div>`;
+}
+function updateFooter(){
+  $("#footer").innerHTML=`<b>Protótipo de design</b> — card “Anomalia” do lab de RIC-IA. Dataset
+    <b>isolationforest_practice do Prof. Tesolin</b>. As células são rotuladas por <b>Isolation Forest</b> (3 níveis de
+    sensibilidade); a célula-teste ao vivo usa distância padronizada calibrada ao IF.`;
+}
+$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+
+initTop(); renderAll(); updateFooter();
+$("#openMath")?.addEventListener("click",()=>$("#backdrop").classList.add("open"));
+$("#closeMath")?.addEventListener("click",()=>$("#backdrop").classList.remove("open"));
+$("#backdrop")?.addEventListener("click",e=>{if(e.target===$("#backdrop"))$("#backdrop").classList.remove("open");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#backdrop")?.classList.remove("open");});
+
+const REPCODE=`from sklearn.ensemble import IsolationForest
+iso = IsolationForest(contamination=0.1).fit(X)  # treina: aprende o "normal"
+iso.predict(X)                                    # 1 = normal, -1 = anomalia
+iso.decision_function(X)                          # o score (quão anômala)`;
+function draftP1(){const lv=D.levels[LV];return `Para detectar células anômalas em "${D.label}" (manutenção preditiva), usei Isolation Forest com sensibilidade ${lv.label}, que marcou ${lv.count} de ${D.n_rows} células como anômalas. O Isolation Forest isola pontos com poucos cortes aleatórios: quem é fácil de separar está fora da multidão, logo é anômalo. A sensibilidade (parâmetro contamination) é o trade-off clássico — baixa pega só os casos gritantes; alta pega mais, com mais alarmes falsos. Detectar cedo a célula que destoa (RRU superaquecendo, link degradado) evita a queda antes que o usuário perceba.`;}
+function draftP2(){return `O Isolation Forest é uma floresta de árvores que cortam os dados ao acaso, repetidamente. Para cada ponto, conta-se quantos cortes foram necessários para isolá-lo: um ponto normal está no meio da multidão e exige muitos cortes; um outlier fica sozinho e é separado com poucos. O score de anomalia vem desse número médio de cortes entre as árvores. O hiperparâmetro principal é a contamination — a fração esperada de anomalias, que define o limiar entre normal e anômalo. Vantagens: não precisa de rótulos, escala bem para muitas amostras e não assume uma forma específica dos dados. Limitações: ele define o "normal" pela maioria, então se as anomalias forem frequentes o modelo se confunde; e a escolha da contamination é sensível. No "Mexe", como o navegador não roda a floresta, usamos a distância padronizada à massa normal — o mesmo princípio, calibrado com este Isolation Forest.`;}
+const REP={tec:"Anomalia",badge:"🚨",fam:"aprendizado não supervisionado",slug:()=>"anomalia",
+ resumo(){const lv=D.levels[LV];const anom=D.points.map((p,i)=>({p,i})).filter(o=>o.p.anom[LV]===1).sort((a,b)=>b.p.dist-a.p.dist);const top=anom[0];
+  return [`<b>${lv.count} de ${D.n_rows}</b> células marcadas como anômalas (sensibilidade ${lv.label}) — sem rótulo.`,
+   `Método: <b>Isolation Forest</b> — quem se isola com poucos cortes é outlier.`,
+   top?`Mais anômala: <b>Célula ${top.i+1}</b> (distância ${top.p.dist} do “normal”).`:`Nenhuma anomalia neste nível.`,
+   `Lição: a sensibilidade é o trade-off — mais detecção ⇄ mais alarmes falsos.`];},
+ metodo(){return [`Padronizar os ${D.features.length} KPIs das ${D.n_rows} células.`,
+  `Treinar o Isolation Forest só com os dados (sem rótulo).`,
+  `Marcar como anômalas as células fáceis de isolar (score alto).`,
+  `Variar a sensibilidade (${Object.values(D.levels).map(l=>l.label).join(" / ")}) e comparar.`];},
+ formula(){const lv=D.levels[LV];return `anômala ⇔ distância ao “normal” &gt; ${lv.threshold} (limiar calibrado no Isolation Forest)<br><span style="color:#5a6b7c">↑ no lab a régua é a distância padronizada — o mesmo princípio do isolamento</span>`;},
+ tabela(){const anom=D.points.map((p,i)=>({p,i})).filter(o=>o.p.anom[LV]===1).sort((a,b)=>b.p.dist-a.p.dist);const mx=Math.max(...anom.map(o=>o.p.dist),1);
+  return {head:["Célula anômala","Distância"],rows:anom.length?anom.map((o,ix)=>({name:"Célula "+(o.i+1),vals:[o.p.dist.toFixed(3)],bar:o.p.dist/mx,win:ix===0})):[{name:"— nenhuma neste nível",vals:["—"],bar:0,win:false}]};},
+ exemplo(){const d=dist(single),lv=D.levels[LV];return `sua célula-teste: distância ${d.toFixed(2)} vs limiar ${lv.threshold} → <b>${d>lv.threshold?"ANÔMALA":"normal"}</b>.`;},
+ gloss(){return [["Outlier","o ponto que foge do padrão da maioria"],["Contamination","a fração de anomalias que você espera (a sensibilidade)"],["Score","quão fácil foi isolar — quanto maior, mais anômala"],["Falso alarme","célula normal marcada como anômala — o custo da sensibilidade alta"]];},
+ limites(){return [`O “normal” é definido pela maioria — se anomalias forem comuns, o método confunde.`,
+  `A sensibilidade é escolha de operação (quantos alarmes você aguenta investigar).`,
+  `Próximo passo: vigiar <b>KPM real</b> continuamente no Non-RT RIC (manutenção preditiva).`];},
+ py(){return `# Script da entrega — Anomalia (Isolation Forest)
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import IsolationForest
+
+# Dados do professor embutidos (${D.n_rows} células × ${D.features.length} KPIs: ${D.features.map(f=>f.key).join(", ")})
+X = np.array([
+${D.points.map(p=>"    ["+D.features.map(f=>p[f.key]).join(", ")+"],").join("\n")}
+])
+Z = StandardScaler().fit_transform(X)
+for cont in (0.05, 0.10, 0.15):
+    iso = IsolationForest(contamination=cont, n_estimators=200, random_state=42).fit(Z)
+    pred = iso.predict(Z)
+    print(f"contamination={cont}: celulas anomalas {list(np.where(pred == -1)[0] + 1)}")
+`;}};
+const INKC="#16202b",SUBC="#5a6b7c",LINEC="#dfe5ec",ACC="#1f6fe5",TRACKC="#edf1f6";
+function esc(s){return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function rbar(p,win){const w=Math.max(3,Math.round(Math.min(1,Math.max(0,p))*110));
+  return `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse"><tr><td style="width:${w}px;height:9px;background:${win?ACC:"#a9c4ee"};font-size:2px;line-height:2px">&nbsp;</td><td style="width:${110-w}px;height:9px;background:${TRACKC};font-size:2px;line-height:2px">&nbsp;</td></tr></table>`;}
+function secH(n,t){return `<div style="margin:22px 0 8px;padding-top:10px;border-top:1px solid ${LINEC};font-size:11px;letter-spacing:2px;color:${ACC};font-weight:700">${n} · ${t.toUpperCase()}</div>`;}
+function reportBody(){
+  const nome=esc($("#repNome").value.trim()||"__________");
+  let dt="";try{dt=new Date().toLocaleDateString("pt-BR");}catch(e){}
+  const p1=esc($("#repP1").value).replace(/\n/g,"<br>");
+  const p2=esc($("#repP2").value).replace(/\n/g,"<br>");
+  const t=REP.tabela();
+  const thead=`<tr>${t.head.map((h,i)=>`<th align="${i===0?"left":"center"}" style="padding:6px 8px;border-bottom:2px solid ${INKC};font-size:10.5px;letter-spacing:1px;color:${SUBC}">${h.toUpperCase()}</th>`).join("")}<th style="padding:6px 8px;border-bottom:2px solid ${INKC}"></th></tr>`;
+  const rows=t.rows.map(r=>`<tr><td style="padding:6px 8px;border-bottom:1px solid ${LINEC};font-weight:${r.win?700:400}">${esc(r.name)}${r.win?` <span style="color:${ACC}">◂ melhor</span>`:""}</td>${r.vals.map(v=>`<td align="center" style="padding:6px 8px;border-bottom:1px solid ${LINEC}">${v}</td>`).join("")}<td style="padding:6px 8px;border-bottom:1px solid ${LINEC}">${rbar(r.bar,r.win)}</td></tr>`).join("");
+  const resumo=REP.resumo().map(b=>`<div style="margin:3px 0">• ${b}</div>`).join("");
+  const metodo=REP.metodo().map((s,i)=>`<div style="margin:3px 0"><b style="color:${ACC}">${i+1}.</b> ${s}</div>`).join("");
+  const gloss=REP.gloss().map(g=>`<div style="margin:2px 0"><b>${g[0]}</b> — ${g[1]}</div>`).join("");
+  const lim=REP.limites().map(b=>`<div style="margin:3px 0">• ${b}</div>`).join("");
+  return `
+<div style="color:${INKC}">
+  <div style="font-size:11px;letter-spacing:3px;color:${SUBC};font-weight:700">RELATÓRIO · ${REP.tec.toUpperCase()} ${REP.badge}</div>
+  <div style="font-size:24px;font-weight:800;margin:4px 0 2px">${esc(D.label)}</div>
+  <div style="font-size:12px;color:${SUBC};margin-bottom:14px">${nome} &nbsp;·&nbsp; ${dt} &nbsp;·&nbsp; ${esc(D.usecase)} &nbsp;·&nbsp; ${REP.fam}</div>
+  <div style="border:1px solid ${LINEC};border-left:4px solid ${ACC};padding:10px 14px;font-size:13px">
+    <div style="font-size:11px;letter-spacing:2px;color:${ACC};font-weight:700;margin-bottom:5px">⚡ EM 30 SEGUNDOS</div>${resumo}</div>
+  ${secH("1","Análise crítica e seleção do algoritmo")}<p style="margin:0;text-align:justify;font-size:13px;line-height:1.55">${p1}</p>
+  ${secH("2","Fundamentação teórica")}<p style="margin:0;text-align:justify;font-size:13px;line-height:1.55">${p2}</p>
+  ${secH("3","Experimentação prática")}
+  <div style="font-size:12.5px;margin-bottom:10px">${metodo}</div>
+  <table cellspacing="0" style="border-collapse:collapse;font-size:12.5px;margin:4px 0 8px">${thead}${rows}</table>
+  <div style="font-family:Consolas,monospace;font-size:12px;background:#f4f6fa;border:1px solid ${LINEC};padding:8px 12px;margin:8px 0">${REP.formula()}</div>
+  <div style="font-size:12.5px;margin:6px 0"><b>Exemplo (rodado no lab):</b> ${REP.exemplo()}</div>
+  <div style="font-size:11.5px;color:${SUBC};border-top:1px dashed ${LINEC};margin-top:10px;padding-top:8px"><b style="letter-spacing:1px">GLOSSÁRIO</b>${gloss}</div>
+  <div style="font-size:12px;border:1px solid ${LINEC};padding:8px 12px;margin-top:10px"><b style="font-size:11px;letter-spacing:2px;color:${SUBC}">LIMITES &amp; PRÓXIMOS PASSOS</b>${lim}</div>
+  <div style="font-size:11px;letter-spacing:1px;color:${SUBC};margin:14px 0 4px;font-weight:700">CÓDIGO (SCIKIT-LEARN) — SCRIPT COMPLETO NO ANEXO .PY</div>
+  <pre style="background:#f4f6fa;border:1px solid ${LINEC};padding:10px;font-size:11.5px;white-space:pre-wrap;margin:0">${esc(REPCODE)}</pre>
+  <div style="color:#98a4b1;font-size:10.5px;margin-top:14px">Dados: Prof. Julio Tesolin (Base Fonts RIC) · Gerado no Lab de IA para RIC · Core5G ARM64</div>
+</div>`;
+}
+function dlWord(){
+  const css="<style>body{font-family:Calibri,Arial,sans-serif;color:#16202b;line-height:1.5;max-width:720px;margin:0 auto;padding:24px}table{margin:6px 0}</style>";
+  const full="<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>"+css+"</head><body>"+reportBody()+"</body></html>";
+  const blob=new Blob(["﻿"+full],{type:"application/msword"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="relatorio-"+REP.slug()+".doc";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+function dlPy(){
+  const nome=($("#repNome").value.trim()||"aluno");
+  const head="# -*- coding: utf-8 -*-\n# Aluno(a): "+nome+"\n# Tecnica: "+REP.tec+" — "+D.label+" (dados: Prof. Julio Tesolin)\n# Gerado no Lab de IA para RIC\n\n";
+  const blob=new Blob([head+REP.py()],{type:"text/x-python"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="script-"+REP.slug()+".py";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+$("#openReport")?.addEventListener("click",()=>{if(!$("#repP1").value)$("#repP1").value=draftP1();if(!$("#repP2").value)$("#repP2").value=draftP2();$("#repbackdrop").classList.add("open");});
+$("#repClose")?.addEventListener("click",()=>$("#repbackdrop").classList.remove("open"));
+$("#repbackdrop")?.addEventListener("click",e=>{if(e.target===$("#repbackdrop"))$("#repbackdrop").classList.remove("open");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#repbackdrop")?.classList.remove("open");});
+$("#repDoc")?.addEventListener("click",dlWord);
+$("#repPy")?.addEventListener("click",dlPy);
+$("#repPdf")?.addEventListener("click",()=>{$("#printarea").innerHTML='<div style="max-width:720px;margin:0 auto">'+reportBody()+"</div>";window.print();});
+
+/* ===== integração: embed no painel + compreensão + sistema real ===== */
+const LESSON="anomalia", NEXT="/lab/pca";
+const EMBED=new URLSearchParams(location.search).has("embed");
+if(EMBED){document.documentElement.classList.add("embed");
+  try{const t=window.parent.document.documentElement.getAttribute("data-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}
+  try{window.parent.postMessage({c5gLab:{title:document.title.replace("Lab RIC-IA · ","")}},location.origin);}catch(e){}
+  document.querySelectorAll('a[href^="/lab"]').forEach(a=>{const u=a.getAttribute("href");if(u&&!u.includes("embed=1"))a.setAttribute("href",u+(u.includes("?")?"&":"?")+"embed=1");});
+  const rb=document.getElementById("realRun"); if(rb) rb.hidden=false;
+}
+const TT=(k,d)=>{const v=window.LABI18N?LABI18N.t(k):k;return v===k?d:v;};
+document.getElementById("realRun")?.addEventListener("click",()=>{try{window.parent.postMessage({c5gLab:{runCmd:"p2-kpm-real"}},location.origin);}catch(e){}});
+document.getElementById("compOk")?.addEventListener("click",()=>{
+  try{const K="c5g-lab-progress",p=JSON.parse(localStorage.getItem(K)||"{}");p[LESSON]=true;localStorage.setItem(K,JSON.stringify(p));}catch(e){}
+  location.href=NEXT+(EMBED?"?embed=1":"");
+});
+document.getElementById("compNo")?.addEventListener("click",()=>{document.getElementById("compAsk").classList.toggle("open");});
+document.getElementById("compSend")?.addEventListener("click",async()=>{
+  const t=(document.getElementById("compText").value||"").trim(); if(!t) return;
+  const msg=document.getElementById("compMsg");
+  try{const r=await fetch("/api/lab/question",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lesson:LESSON,text:t})});
+    if(!r.ok)throw 0; msg.textContent=TT("comp.sent","✓ Dúvida enviada — o professor verá."); document.getElementById("compText").value="";}
+  catch(e){msg.textContent=TT("comp.fail","Não deu para enviar daqui — anote e pergunte na aula.");}
+});
+</script>

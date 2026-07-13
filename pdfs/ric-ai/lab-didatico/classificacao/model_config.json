@@ -1,0 +1,298 @@
+{
+  "task": "classification",
+  "classes": [
+    {
+      "name": "Livre",
+      "emoji": "🟢",
+      "sev": "good"
+    },
+    {
+      "name": "Normal",
+      "emoji": "🟡",
+      "sev": "warn"
+    },
+    {
+      "name": "Congestionada",
+      "emoji": "🔴",
+      "sev": "bad"
+    }
+  ],
+  "features": [
+    {
+      "key": "ActiveUsers",
+      "label": "Usuários ativos",
+      "unit": "",
+      "hard": [
+        0,
+        200
+      ],
+      "train": [
+        5.0,
+        200.0
+      ],
+      "decimals": 0,
+      "primary": true
+    },
+    {
+      "key": "PRBUtilization",
+      "label": "PRB utilizado",
+      "unit": "%",
+      "hard": [
+        0,
+        100
+      ],
+      "train": [
+        1.0,
+        100.0
+      ],
+      "decimals": 0,
+      "primary": true
+    },
+    {
+      "key": "Latency",
+      "label": "Latência",
+      "unit": "ms",
+      "hard": [
+        1,
+        200
+      ],
+      "train": [
+        1.0,
+        56.8
+      ],
+      "decimals": 0,
+      "primary": true
+    },
+    {
+      "key": "PacketLoss",
+      "label": "Perda de pacotes",
+      "unit": "%",
+      "hard": [
+        0,
+        100
+      ],
+      "train": [
+        0.0,
+        13.6
+      ],
+      "decimals": 1,
+      "primary": true
+    }
+  ],
+  "live_model": {
+    "features": [
+      "ActiveUsers",
+      "PRBUtilization",
+      "Latency",
+      "PacketLoss"
+    ],
+    "mean": [
+      104.40143,
+      59.25486,
+      21.47057,
+      2.62357
+    ],
+    "std": [
+      56.50133,
+      28.06377,
+      15.7772,
+      4.16453
+    ],
+    "classes": [
+      "Congestionada",
+      "Livre",
+      "Normal"
+    ],
+    "coef": [
+      [
+        0.97845,
+        1.9879,
+        2.78858,
+        2.13096
+      ],
+      [
+        -1.20182,
+        -4.02994,
+        -2.82746,
+        -0.00048
+      ],
+      [
+        0.22337,
+        2.04204,
+        0.03887,
+        -2.13048
+      ]
+    ],
+    "intercept": [
+      -0.7434,
+      -0.66887,
+      1.41227
+    ]
+  },
+  "scenarios": {
+    "livre": {
+      "label": "🟢 Célula livre",
+      "hint": "pouca carga",
+      "values": {
+        "ActiveUsers": 20.0,
+        "PRBUtilization": 18.0,
+        "Latency": 6.3,
+        "PacketLoss": 0.0
+      }
+    },
+    "normal": {
+      "label": "🟡 Uso normal",
+      "hint": "carga média",
+      "values": {
+        "ActiveUsers": 100.0,
+        "PRBUtilization": 58.0,
+        "Latency": 14.8,
+        "PacketLoss": 0.0
+      }
+    },
+    "pico": {
+      "label": "🔴 Congestionada",
+      "hint": "PRB no talo",
+      "values": {
+        "ActiveUsers": 185.0,
+        "PRBUtilization": 100.0,
+        "Latency": 51.0,
+        "PacketLoss": 11.2
+      }
+    }
+  },
+  "multi": {
+    "pico": {
+      "label": "rede em pico",
+      "cells": [
+        {
+          "name": "Célula A",
+          "values": {
+            "ActiveUsers": 30.0,
+            "PRBUtilization": 23.0,
+            "Latency": 6.5,
+            "PacketLoss": 0.0
+          }
+        },
+        {
+          "name": "Célula B",
+          "values": {
+            "ActiveUsers": 80.0,
+            "PRBUtilization": 48.0,
+            "Latency": 11.0,
+            "PacketLoss": 0.0
+          }
+        },
+        {
+          "name": "Célula C",
+          "values": {
+            "ActiveUsers": 150.0,
+            "PRBUtilization": 83.0,
+            "Latency": 31.7,
+            "PacketLoss": 4.4
+          }
+        },
+        {
+          "name": "Célula D",
+          "values": {
+            "ActiveUsers": 190.0,
+            "PRBUtilization": 100.0,
+            "Latency": 51.0,
+            "PacketLoss": 11.2
+          }
+        },
+        {
+          "name": "Célula E",
+          "values": {
+            "ActiveUsers": 110.0,
+            "PRBUtilization": 63.0,
+            "Latency": 17.3,
+            "PacketLoss": 0.0
+          }
+        }
+      ]
+    },
+    "mista": {
+      "label": "rede mista",
+      "cells": [
+        {
+          "name": "Célula A",
+          "values": {
+            "ActiveUsers": 25.0,
+            "PRBUtilization": 20.5,
+            "Latency": 6.4,
+            "PacketLoss": 0.0
+          }
+        },
+        {
+          "name": "Célula B",
+          "values": {
+            "ActiveUsers": 120.0,
+            "PRBUtilization": 68.0,
+            "Latency": 20.1,
+            "PacketLoss": 0.0
+          }
+        },
+        {
+          "name": "Célula C",
+          "values": {
+            "ActiveUsers": 175.0,
+            "PRBUtilization": 95.5,
+            "Latency": 45.2,
+            "PacketLoss": 9.4
+          }
+        }
+      ]
+    }
+  },
+  "metrics_table": [
+    {
+      "model": "Random Forest",
+      "acc": 0.9757,
+      "f1": 0.9741,
+      "infer_us": 573.25
+    },
+    {
+      "model": "k-NN (k=7)",
+      "acc": 0.9743,
+      "f1": 0.9732,
+      "infer_us": 66.12
+    },
+    {
+      "model": "SVM (RBF)",
+      "acc": 0.9729,
+      "f1": 0.9702,
+      "infer_us": 19.95
+    },
+    {
+      "model": "Árvore de Decisão",
+      "acc": 0.97,
+      "f1": 0.9682,
+      "infer_us": 5.09
+    },
+    {
+      "model": "Regressão Logística",
+      "acc": 0.9686,
+      "f1": 0.9671,
+      "infer_us": 17.56
+    },
+    {
+      "model": "Gradient Boosting",
+      "acc": 0.9643,
+      "f1": 0.9627,
+      "infer_us": 44.52
+    },
+    {
+      "model": "Naive Bayes",
+      "acc": 0.8914,
+      "f1": 0.8808,
+      "infer_us": 8.43
+    }
+  ],
+  "n_rows": 700,
+  "class_balance": {
+    "Livre": 296,
+    "Normal": 197,
+    "Congestionada": 207
+  }
+}

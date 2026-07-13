@@ -1,0 +1,614 @@
+{
+  "family": "Regressão",
+  "default": "traffic_prediction",
+  "datasets": {
+    "traffic_prediction": {
+      "label": "UE-TP · Throughput",
+      "source": "Prof. Tesolin",
+      "usecase": "previsão de throughput por UE (UE-TP-rApp)",
+      "n_rows": 16,
+      "features": [
+        {
+          "key": "ActiveUsers",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            300
+          ],
+          "train": [
+            52.0,
+            176.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "AvgSINR",
+          "label": "SINR médio",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            16.0,
+            23.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRBUtilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            35.0,
+            92.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "target": {
+        "key": "Throughput",
+        "unit": "Mbps",
+        "min": 62.0,
+        "max": 184.0
+      },
+      "live_model": {
+        "features": [
+          "ActiveUsers",
+          "AvgSINR",
+          "PRBUtilization"
+        ],
+        "intercept": 11.90249,
+        "coef": {
+          "ActiveUsers": 0.81786,
+          "AvgSINR": -0.22439,
+          "PRBUtilization": 0.33875
+        }
+      },
+      "scenarios": {
+        "baixa": {
+          "label": "🌙 Carga baixa (hora 8)",
+          "hint": "carga baixa",
+          "values": {
+            "ActiveUsers": 52.0,
+            "AvgSINR": 23.0,
+            "PRBUtilization": 35.0
+          }
+        },
+        "media": {
+          "label": "🌆 Carga média (hora 14)",
+          "hint": "carga média",
+          "values": {
+            "ActiveUsers": 121.0,
+            "AvgSINR": 18.0,
+            "PRBUtilization": 74.0
+          }
+        },
+        "pico": {
+          "label": "🏙️ Pico (hora 18)",
+          "hint": "pico",
+          "values": {
+            "ActiveUsers": 176.0,
+            "AvgSINR": 16.0,
+            "PRBUtilization": 92.0
+          }
+        }
+      },
+      "start": {
+        "ActiveUsers": 121.0,
+        "AvgSINR": 18.0,
+        "PRBUtilization": 74.0
+      },
+      "metrics_table": [
+        {
+          "model": "Ridge",
+          "rmse": 0.657,
+          "mae": 0.548,
+          "r2": 0.9997
+        },
+        {
+          "model": "Regressão Linear",
+          "rmse": 0.664,
+          "mae": 0.556,
+          "r2": 0.9997
+        },
+        {
+          "model": "SVR (RBF)",
+          "rmse": 3.776,
+          "mae": 2.279,
+          "r2": 0.9895
+        },
+        {
+          "model": "Gradient Boosting",
+          "rmse": 6.476,
+          "mae": 5.469,
+          "r2": 0.969
+        },
+        {
+          "model": "Random Forest",
+          "rmse": 7.862,
+          "mae": 6.931,
+          "r2": 0.9544
+        },
+        {
+          "model": "k-NN",
+          "rmse": 8.917,
+          "mae": 6.938,
+          "r2": 0.9413
+        },
+        {
+          "model": "Árvore de Decisão",
+          "rmse": 10.992,
+          "mae": 9.969,
+          "r2": 0.9108
+        }
+      ]
+    },
+    "traffic_load": {
+      "label": "Traffic steering · Carga",
+      "source": "Prof. Tesolin",
+      "usecase": "previsão de carga p/ traffic steering",
+      "n_rows": 24,
+      "features": [
+        {
+          "key": "ActiveUsers",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            300
+          ],
+          "train": [
+            17.0,
+            172.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "AvgSINR",
+          "label": "SINR médio",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            18.0,
+            27.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRBUtilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            9.0,
+            95.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "TxPower",
+          "label": "Potência Tx",
+          "unit": "dBm",
+          "hard": [
+            0,
+            46
+          ],
+          "train": [
+            16.0,
+            25.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "target": {
+        "key": "TrafficLoad",
+        "unit": "",
+        "min": 15.0,
+        "max": 182.0
+      },
+      "live_model": {
+        "features": [
+          "ActiveUsers",
+          "AvgSINR",
+          "PRBUtilization",
+          "TxPower"
+        ],
+        "intercept": -23.06084,
+        "coef": {
+          "ActiveUsers": 0.772,
+          "AvgSINR": 1.5634,
+          "PRBUtilization": 0.90857,
+          "TxPower": -1.607
+        }
+      },
+      "scenarios": {
+        "baixa": {
+          "label": "🌙 Carga baixa (hora 2)",
+          "hint": "carga baixa",
+          "values": {
+            "ActiveUsers": 17.0,
+            "AvgSINR": 27.0,
+            "PRBUtilization": 9.0,
+            "TxPower": 16.0
+          }
+        },
+        "media": {
+          "label": "🌆 Carga média (hora 20)",
+          "hint": "carga média",
+          "values": {
+            "ActiveUsers": 98.0,
+            "AvgSINR": 22.0,
+            "PRBUtilization": 58.0,
+            "TxPower": 21.0
+          }
+        },
+        "pico": {
+          "label": "🏙️ Pico (hora 15)",
+          "hint": "pico",
+          "values": {
+            "ActiveUsers": 172.0,
+            "AvgSINR": 18.0,
+            "PRBUtilization": 95.0,
+            "TxPower": 25.0
+          }
+        }
+      },
+      "start": {
+        "ActiveUsers": 98.0,
+        "AvgSINR": 22.0,
+        "PRBUtilization": 58.0,
+        "TxPower": 21.0
+      },
+      "metrics_table": [
+        {
+          "model": "SVR (RBF)",
+          "rmse": 1.806,
+          "mae": 1.358,
+          "r2": 0.9992
+        },
+        {
+          "model": "Ridge",
+          "rmse": 1.885,
+          "mae": 1.517,
+          "r2": 0.9991
+        },
+        {
+          "model": "Regressão Linear",
+          "rmse": 1.902,
+          "mae": 1.534,
+          "r2": 0.9991
+        },
+        {
+          "model": "Random Forest",
+          "rmse": 2.277,
+          "mae": 1.946,
+          "r2": 0.9987
+        },
+        {
+          "model": "Gradient Boosting",
+          "rmse": 2.363,
+          "mae": 1.778,
+          "r2": 0.9986
+        },
+        {
+          "model": "Árvore de Decisão",
+          "rmse": 5.978,
+          "mae": 4.501,
+          "r2": 0.991
+        },
+        {
+          "model": "k-NN",
+          "rmse": 6.147,
+          "mae": 3.917,
+          "r2": 0.9905
+        }
+      ]
+    },
+    "energy": {
+      "label": "Energia · Consumo",
+      "source": "Prof. Tesolin",
+      "usecase": "otimização de energia",
+      "n_rows": 24,
+      "features": [
+        {
+          "key": "ActiveUsers",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            300
+          ],
+          "train": [
+            14.0,
+            172.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "AvgSINR",
+          "label": "SINR médio",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            17.0,
+            26.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRBUtilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            9.0,
+            94.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "target": {
+        "key": "EnergyConsumption",
+        "unit": "kWh",
+        "min": 1.16,
+        "max": 4.02
+      },
+      "live_model": {
+        "features": [
+          "ActiveUsers",
+          "AvgSINR",
+          "PRBUtilization"
+        ],
+        "intercept": -0.11941,
+        "coef": {
+          "ActiveUsers": 0.03053,
+          "AvgSINR": 0.04001,
+          "PRBUtilization": -0.02051
+        }
+      },
+      "scenarios": {
+        "baixa": {
+          "label": "🌙 Carga baixa (hora 3)",
+          "hint": "carga baixa",
+          "values": {
+            "ActiveUsers": 14.0,
+            "AvgSINR": 26.0,
+            "PRBUtilization": 9.0
+          }
+        },
+        "media": {
+          "label": "🌆 Carga média (hora 20)",
+          "hint": "carga média",
+          "values": {
+            "ActiveUsers": 104.0,
+            "AvgSINR": 20.0,
+            "PRBUtilization": 61.0
+          }
+        },
+        "pico": {
+          "label": "🏙️ Pico (hora 15)",
+          "hint": "pico",
+          "values": {
+            "ActiveUsers": 172.0,
+            "AvgSINR": 17.0,
+            "PRBUtilization": 94.0
+          }
+        }
+      },
+      "start": {
+        "ActiveUsers": 104.0,
+        "AvgSINR": 20.0,
+        "PRBUtilization": 61.0
+      },
+      "metrics_table": [
+        {
+          "model": "Gradient Boosting",
+          "rmse": 0.064,
+          "mae": 0.052,
+          "r2": 0.9962
+        },
+        {
+          "model": "Random Forest",
+          "rmse": 0.071,
+          "mae": 0.058,
+          "r2": 0.9953
+        },
+        {
+          "model": "SVR (RBF)",
+          "rmse": 0.082,
+          "mae": 0.07,
+          "r2": 0.9937
+        },
+        {
+          "model": "Ridge",
+          "rmse": 0.097,
+          "mae": 0.08,
+          "r2": 0.9912
+        },
+        {
+          "model": "Regressão Linear",
+          "rmse": 0.098,
+          "mae": 0.081,
+          "r2": 0.9911
+        },
+        {
+          "model": "k-NN",
+          "rmse": 0.102,
+          "mae": 0.082,
+          "r2": 0.9903
+        },
+        {
+          "model": "Árvore de Decisão",
+          "rmse": 0.147,
+          "mae": 0.124,
+          "r2": 0.9798
+        }
+      ]
+    },
+    "enriquecido": {
+      "label": "Realista (sintético)",
+      "source": "sintético (não linear)",
+      "usecase": "versão realista p/ aprofundar",
+      "n_rows": 600,
+      "features": [
+        {
+          "key": "ActiveUsers",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            300
+          ],
+          "train": [
+            5.0,
+            180.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "SINR",
+          "label": "SINR",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            -10.0,
+            26.9
+          ],
+          "decimals": 1
+        },
+        {
+          "key": "PRBUtilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            3.2,
+            100.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "target": {
+        "key": "Throughput",
+        "unit": "Mbps",
+        "min": 0.5,
+        "max": 163.99
+      },
+      "live_model": {
+        "features": [
+          "ActiveUsers",
+          "SINR",
+          "PRBUtilization"
+        ],
+        "intercept": -25.85302,
+        "coef": {
+          "ActiveUsers": -0.08305,
+          "SINR": 2.96162,
+          "PRBUtilization": 0.87514
+        }
+      },
+      "scenarios": {
+        "baixa": {
+          "label": "🌙 Carga baixa",
+          "hint": "carga baixa",
+          "values": {
+            "ActiveUsers": 7.0,
+            "SINR": -3.7,
+            "PRBUtilization": 3.0
+          }
+        },
+        "media": {
+          "label": "🌆 Carga média",
+          "hint": "carga média",
+          "values": {
+            "ActiveUsers": 46.0,
+            "SINR": 13.2,
+            "PRBUtilization": 28.0
+          }
+        },
+        "pico": {
+          "label": "🏙️ Pico",
+          "hint": "pico",
+          "values": {
+            "ActiveUsers": 178.0,
+            "SINR": 22.3,
+            "PRBUtilization": 100.0
+          }
+        }
+      },
+      "start": {
+        "ActiveUsers": 46.0,
+        "SINR": 13.2,
+        "PRBUtilization": 28.0
+      },
+      "metrics_table": [
+        {
+          "model": "SVR (RBF)",
+          "rmse": 2.35,
+          "mae": 1.332,
+          "r2": 0.9954
+        },
+        {
+          "model": "k-NN",
+          "rmse": 3.932,
+          "mae": 2.421,
+          "r2": 0.9871
+        },
+        {
+          "model": "Gradient Boosting",
+          "rmse": 4.086,
+          "mae": 2.945,
+          "r2": 0.9861
+        },
+        {
+          "model": "Random Forest",
+          "rmse": 6.548,
+          "mae": 4.234,
+          "r2": 0.9643
+        },
+        {
+          "model": "Árvore de Decisão",
+          "rmse": 12.41,
+          "mae": 8.539,
+          "r2": 0.8716
+        },
+        {
+          "model": "Regressão Linear",
+          "rmse": 13.624,
+          "mae": 10.485,
+          "r2": 0.8453
+        },
+        {
+          "model": "Ridge",
+          "rmse": 13.624,
+          "mae": 10.485,
+          "r2": 0.8453
+        }
+      ]
+    }
+  }
+}

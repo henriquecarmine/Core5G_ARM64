@@ -1,0 +1,561 @@
+<title>Lab RIC-IA · Clustering (agrupar células)</title>
+<style>
+  :root{
+    --bg:#e9eef4; --surface:#ffffff; --surface-2:#f3f7fc; --inset:#0d1622;
+    --ink:#0f1b26; --ink-2:#4a5c6e; --ink-3:#7c8da0; --line:#d7e0ea;
+    --accent:#1f6fe5; --accent-2:#0aa5b8; --accent-ink:#ffffff;
+    --good:#12874c; --warn:#b07414; --bad:#c73838;
+    --shadow:0 1px 2px rgba(16,32,48,.06),0 8px 24px rgba(16,32,48,.07);
+    --r:14px; --r-sm:9px;
+    --fs-display:clamp(1.55rem,1.1rem + 1.9vw,2.3rem);
+    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#080d14; --surface:#111a25; --surface-2:#0d1520; --inset:#080f18;
+    --ink:#e7eff8; --ink-2:#9aabbe; --ink-3:#6b7d92; --line:#213142;
+    --accent:#4d90ff; --accent-2:#28c2d6; --accent-ink:#06101d;
+    --good:#33c07d; --warn:#e0a53f; --bad:#e5695f;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{
+    --bg:#e9eef4; --surface:#ffffff; --surface-2:#f3f7fc; --inset:#0d1622;
+    --ink:#0f1b26; --ink-2:#4a5c6e; --ink-3:#7c8da0; --line:#d7e0ea;
+    --accent:#1f6fe5; --accent-2:#0aa5b8; --accent-ink:#ffffff;
+    --good:#12874c; --warn:#b07414; --bad:#c73838;
+  }
+  :root[data-theme="dark"]{
+    --bg:#080d14; --surface:#111a25; --surface-2:#0d1520; --inset:#080f18;
+    --ink:#e7eff8; --ink-2:#9aabbe; --ink-3:#6b7d92; --line:#213142;
+    --accent:#4d90ff; --accent-2:#28c2d6; --accent-ink:#06101d;
+    --good:#33c07d; --warn:#e0a53f; --bad:#e5695f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:940px;margin:0 auto;padding:clamp(16px,3vw,40px)}
+  h1,h2,h3{text-wrap:balance;margin:0} p{margin:0}
+  .tnum{font-variant-numeric:tabular-nums}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px}
+  h1{font-size:var(--fs-display);font-weight:750;letter-spacing:-.02em;line-height:1.08}
+  .lead{color:var(--ink-2);margin-top:12px;max-width:62ch;font-size:1.02rem}
+  .themebtn{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.05rem;display:grid;place-items:center;box-shadow:var(--shadow)}
+  .themebtn:hover{color:var(--accent);border-color:var(--accent)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:clamp(18px,2.4vw,28px);margin-bottom:20px}
+  .card > h2{font-size:1.22rem;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .card > .sub{color:var(--ink-2);margin-top:6px;font-size:.95rem;max-width:64ch}
+  .kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .explain p + p{margin-top:12px} .explain b{color:var(--ink)} .hl{color:var(--accent);font-weight:600}
+  details.more{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px}
+  details.more summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more summary::before{content:"▸ ";color:var(--accent)} details.more[open] summary::before{content:"▾ "}
+
+  .dsrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .dschip{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:8px 13px;font-size:.86rem;font-weight:600;cursor:pointer;transition:.15s}
+  .dschip:hover{border-color:var(--accent)} .dschip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .dschip small{display:block;font-weight:400;font-size:.7rem;opacity:.8;margin-top:1px}
+  .srcnote{margin-top:12px;font-size:.82rem;color:var(--ink-2)} .srcnote b{color:var(--ink)}
+  .srcbadge{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;padding:2px 7px;border-radius:5px;font-weight:700;background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+
+  .oranmap{display:flex;flex-direction:column;gap:0;margin-top:14px;max-width:540px}
+  .band{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:8px 12px}
+  .band.here{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
+  .band.ran{border-color:var(--accent-2)} .band.planned{border-style:dashed}
+  .band.planned.here{opacity:1} .band.dim{opacity:.66}
+  .bl{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;width:112px;flex:none;line-height:1.3}
+  .bl em{display:block;font-style:normal;font-weight:500;text-transform:none;letter-spacing:0;font-size:.62rem}
+  .bn{flex:1;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .bn small{font-weight:400;color:var(--ink-2);font-size:.72rem} .band.here .bn{color:var(--accent)}
+  .youare{font-family:var(--mono);font-size:.54rem;letter-spacing:.05em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:1px 5px;border-radius:4px;font-weight:700}
+  .conn{display:flex;justify-content:center;gap:20px;padding:3px 0;font-family:var(--mono);font-size:.63rem;color:var(--ink-3)}
+  .conn .up{color:var(--accent-2)} .conn .down{color:var(--accent)}
+  .flowcap{margin-top:14px;font-size:.85rem;color:var(--ink-2)} .flowcap b{color:var(--ink)}
+  .honest{margin-top:7px;font-size:.77rem;color:var(--ink-3)}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:6px 0 14px}
+  .field{display:flex;align-items:center;gap:7px;font-size:.84rem;color:var(--ink-2)}
+  .field select{font-family:var(--sans);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:5px 8px;font-size:.84rem}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+  .seg button{border:none;background:var(--surface);color:var(--ink);padding:6px 13px;cursor:pointer;font-weight:600;font-size:.86rem;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:none} .seg button.on{background:var(--accent);color:var(--accent-ink)}
+
+  .plotwrap{display:grid;grid-template-columns:1.35fr .65fr;gap:20px;align-items:start}
+  @media (max-width:720px){.plotwrap{grid-template-columns:1fr}}
+  svg.scatter{width:100%;height:auto;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm)}
+  .legend{display:flex;flex-direction:column;gap:8px}
+  .legrow{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--ink-2)}
+  .dot{width:11px;height:11px;border-radius:50%;flex:none}
+  .assign{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;margin-top:4px}
+  .assign .big{font-size:1.1rem;font-weight:700;margin-top:3px;display:flex;align-items:center;gap:8px}
+
+  .ctrls{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:2px 22px}
+  @media (max-width:560px){.ctrls{grid-template-columns:1fr}}
+  .ctrl{padding:9px 0;border-bottom:1px solid var(--line)}
+  .ctrl-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .ctrl-head label{font-weight:600;font-size:.86rem} .ctrl-head .v{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-2);font-size:.82rem}
+  .ctrl input[type=range]{width:100%;accent-color:var(--accent);height:4px;margin-top:6px}
+  .ctrl.warn .ctrl-head .v{color:var(--warn)}
+  .warnmsg{color:var(--warn);font-size:.75rem;margin-top:3px;display:none} .ctrl.warn .warnmsg{display:block}
+
+  .tablewrap{overflow-x:auto;margin-top:10px}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:320px}
+  th,td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--line)} th:first-child,td:first-child{text-align:left}
+  thead th{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;border-bottom:1.5px solid var(--line)}
+  tbody tr.win{background:color-mix(in srgb,var(--good) 9%,transparent)}
+  .r2bar{display:inline-block;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle;margin-left:8px}
+  td .model-tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:4px;margin-left:7px;font-weight:700;background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good)}
+  .takeaway{margin-top:16px;background:var(--surface-2);border-left:3px solid var(--accent);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:12px 15px;font-size:.9rem;color:var(--ink-2)} .takeaway b{color:var(--ink)}
+  .profiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:6px}
+  .prof{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;font-size:.82rem}
+  .prof h4{margin:0 0 4px;font-size:.86rem;display:flex;align-items:center;gap:6px}
+  .prof .kpis{font-family:var(--mono);font-size:.7rem;color:var(--ink-3);line-height:1.5}
+  footer{color:var(--ink-3);font-size:.8rem;line-height:1.6;margin-top:8px;padding:0 4px 10px} footer b{color:var(--ink-2)}
+  /* modal fórmula + Python */
+  .mathbtn{margin-top:16px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--accent);border-radius:var(--r-sm);padding:9px 15px;font-size:.9rem;font-weight:700;cursor:pointer}
+  .mathbtn:hover{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+  .backdrop{position:fixed;inset:0;background:rgba(6,12,20,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .backdrop.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);max-width:660px;width:100%;max-height:86vh;overflow:auto;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+  .modal h3{font-size:1.15rem;font-weight:750;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .modal .x{border:none;background:none;font-size:1.4rem;cursor:pointer;color:var(--ink-3);line-height:1} .modal .x:hover{color:var(--ink)}
+  .mlabel{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:18px 0 8px}
+  .msteps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:8px}
+  .msteps li{position:relative;padding-left:32px;font-size:.9rem;color:var(--ink-2)}
+  .msteps li b{color:var(--ink)} .msteps li code{font-family:var(--mono);background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:.85em}
+  .msteps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--mono);font-weight:700;font-size:.72rem;display:grid;place-items:center}
+  .mcode{background:var(--inset);color:#d6e6f7;border-radius:var(--r-sm);padding:15px;overflow-x:auto;margin:0;font-family:var(--mono);font-size:.82rem;line-height:1.6;white-space:pre}
+  .mcode .cap{color:#7fd8a0} .mcode .ret{color:#7fc0ff} .mcode .kw{color:#e0a53f} .mcode .cm{color:#8aa0b8}
+  .caplegend{display:flex;gap:16px;font-size:.78rem;margin-top:10px;color:var(--ink-2);flex-wrap:wrap} .cap-c{color:#2f9e63} .ret-c{color:#2b74e8}
+  /* relatório */
+  .repbtn{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 9%,transparent);color:var(--good);border-radius:var(--r-sm);padding:11px 18px;font-size:.95rem;font-weight:700;cursor:pointer}
+  .repbtn:hover{background:color-mix(in srgb,var(--good) 17%,transparent)}
+  .repform{display:grid;gap:14px;margin-top:16px}
+  .repform label{display:grid;gap:5px;font-weight:600;font-size:.86rem}
+  .repform input,.repform textarea{width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.88rem;font-weight:400}
+  .repform textarea{min-height:120px;resize:vertical;line-height:1.5}
+  .repform .hint{font-weight:400;color:var(--ink-3);font-size:.8rem}
+  .repactions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:10px 16px;font-size:.9rem;font-weight:700;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  #printarea{display:none}
+  @media print{ body>.wrap,body>.backdrop{display:none!important} #printarea{display:block!important} }
+
+  /* integração: embed no painel + compreensão + sistema real + variáveis */
+  html.embed .topright,html.embed .themebtn,html.embed a[href="/"],html.embed a[href="/lab"]{display:none!important}
+  html.embed .wrap{padding:14px 18px 20px}
+  .realbox{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--surface-2);padding:12px 15px;font-size:.9rem;color:var(--ink-2)}
+  .realbox b{color:var(--ink)}
+  .realbtn{display:inline-block;margin-top:9px;border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;font-size:.88rem;cursor:pointer}
+  .realbtn:hover{background:color-mix(in srgb,var(--good) 18%,transparent)}
+  .realnote{display:block;margin-top:6px;font-size:.78rem;color:var(--ink-3)}
+  .comp{margin:6px 0 20px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);padding:16px 20px}
+  .comp .q{font-weight:700;margin-bottom:10px}
+  .comp .row{display:flex;gap:10px;flex-wrap:wrap}
+  .compok{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compno{border:1px solid var(--warn);background:transparent;color:var(--warn);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compask{display:none;margin-top:10px}
+  .compask.open{display:block}
+  .compask textarea{width:100%;min-height:70px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.9rem}
+  .compsend{margin-top:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;cursor:pointer}
+  .compmsg{margin-top:8px;font-size:.86rem;color:var(--ink-2)}
+  .mvars{border-collapse:collapse;width:100%;font-size:.86rem;margin-top:6px}
+  .mvars td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+  .mvars td b{color:var(--ink)}
+  .mvars td:first-child{font-family:var(--mono);font-weight:700;white-space:nowrap;color:var(--accent)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="eyebrow">Lab RIC · IA — Aula 3 de 6</div>
+      <h1>Clustering: agrupar células sem gabarito</h1>
+      <p class="lead">O primeiro tipo <b>não supervisionado</b>, com os datasets do <b>Prof. Tesolin</b>. Ninguém diz
+        as categorias — o modelo <b>descobre os grupos</b> de células parecidas sozinho.</p>
+    </div>
+    <button class="themebtn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">◐</button>
+  </div>
+
+  <section class="card">
+    <h2>🗂️ Base de dados</h2>
+    <p class="sub">Três populações de células do professor. Sem coluna de rótulo — é o modelo que agrupa.</p>
+    <div class="dsrow" id="dsRow"></div>
+    <p class="srcnote" id="srcNote"></p>
+  </section>
+
+  <section class="card explain">
+    <h2>📖 O que é clustering?</h2>
+    <div style="margin-top:12px">
+      <p>Imagine uma <b>pilha de roupa</b> para separar em grupos parecidos — sem ninguém dizer as categorias. Você
+        junta o que é semelhante. <b>Clustering é isso</b>: achar grupos nos dados <b>sem rótulo</b>.</p>
+      <p>Aqui cada ponto é uma <b>célula</b> (throughput, PRB, energia…). O modelo as agrupa por semelhança — ex.:
+        “células grandes e cheias” vs “pequenas e ociosas”. No O-RAN isso perfila a rede para o operador decidir onde
+        investir ou economizar.</p>
+      <details class="more">
+        <summary>🔬 Aprofundar: como o k-means agrupa</summary>
+        <p style="margin-top:12px">Escolhe <b>k</b> centros, coloca cada célula no centro mais próximo, recalcula os
+          centros como a média do grupo, e repete até estabilizar. A <b>silhueta</b> (−1 a 1) mede se os grupos estão
+          bem separados: quanto mais perto de 1, melhor.</p>
+      </details>
+      <button class="mathbtn" id="openMath">🔬 Ver a fórmula e o Python — o que o modelo captura e retorna</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🛰️ Onde isso roda no O-RAN</h2>
+    <p class="sub">Clustering é análise da <b>rede toda</b>, lenta — vive no <b>Non-RT RIC</b> (rApp), não no laço rápido.</p>
+    <div class="oranmap">
+      <div class="band planned here"><span class="bl">Non-RT RIC<em>rApp · &gt;1s · planejado</em></span><span class="bn"><span class="youare">aqui</span> rApp de Clustering <small>perfila a rede</small></span></div>
+      <div class="conn"><span class="up">↑ O1 dados em massa</span><span class="down">↓ A1 política</span></div>
+      <div class="band dim"><span class="bl">Near-RT RIC<em>FlexRIC · 10ms–1s</em></span><span class="bn">xApps <small>agem por UE</small></span></div>
+      <div class="conn"><span class="up">↑ E2/KPM</span><span class="down">↓ E2/RC</span></div>
+      <div class="band ran dim"><span class="bl">RAN<em>gera os KPIs</em></span><span class="bn">gNB + UEs</span></div>
+    </div>
+    <p class="flowcap"><b>Fluxo:</b> a RAN gera KPIs → sobem em massa por <b>O1</b> ao Non-RT RIC → o <b>rApp agrupa</b>
+      as células → vira <b>política</b> (via A1) que o Near-RT aplica. Laço lento, de minutos/horas.</p>
+    <p class="honest">O Non-RT RIC é a próxima fase do nosso sistema — hoje esse agrupamento roda offline (nosso Python).</p>
+    <div class="realbox"><b data-i18n="real.t">🔌 No sistema real</b><br>
+      <span data-i18n-html="real.txt">Os KPIs desta aula não são teóricos: neste servidor roda um 5G de verdade (gNB OAI + FlexRIC), e eles chegam pela interface <b>E2 (E2SM-KPM)</b>. Você pode coletá-los agora:</span>
+      <button class="realbtn" id="realRun" hidden data-i18n="real.btn">▶ Rodar a coleta KPM real (no console do painel)</button>
+      <span class="realnote" data-i18n="real.note">O professor executa; todos acompanham ao vivo no console. Disponível dentro do painel.</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🎨 Veja os grupos</h2>
+    <p class="sub">Cada ponto é uma célula, colorida pelo grupo que o k-means achou. Troque os eixos e o número de grupos.</p>
+    <div class="toolbar">
+      <div class="field"><span>Grupos (k):</span><div class="seg" id="kSeg"></div></div>
+      <div class="field"><span>Eixo X:</span><select id="xSel"></select></div>
+      <div class="field"><span>Eixo Y:</span><select id="ySel"></select></div>
+    </div>
+    <div class="plotwrap">
+      <svg class="scatter" id="scatter" viewBox="0 0 480 340" role="img" aria-label="Dispersão das células por grupo"></svg>
+      <div>
+        <div class="kicker">Grupos</div>
+        <div class="legend" id="legend" style="margin-top:8px"></div>
+        <div class="assign">
+          <div class="kicker">Sua célula de teste</div>
+          <div class="big" id="assignBig">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kicker" style="margin-top:18px">Adicione uma célula (★) — veja em que grupo ela cai</div>
+    <div class="ctrls" id="ctrls"></div>
+  </section>
+
+  <section class="card">
+    <h2>📊 Qual algoritmo separa melhor?</h2>
+    <p class="sub">Silhueta (−1 a 1): mede o quão bem separados ficam os grupos. Maior = melhor.</p>
+    <div class="tablewrap"><table id="algoTable"><thead><tr><th>Algoritmo</th><th>Silhueta ↓</th></tr></thead><tbody></tbody></table></div>
+    <div class="takeaway" id="takeaway"></div>
+    <div class="kicker" style="margin-top:18px">Perfil de cada grupo (centro do k-means)</div>
+    <div class="profiles" id="profiles" style="margin-top:10px"></div>
+  </section>
+
+  <section class="card">
+    <h2>📄 Relatório</h2>
+    <p class="sub" data-i18n="report.sub">A entrega do trabalho, nas 3 partes, com o que você rodou preenchido. Edite na sua voz e baixe: PDF, Word e o script Python.</p>
+    <button class="repbtn" id="openReport" style="margin-top:14px" data-i18n="report.btn">📄 Gerar relatório (PDF / Word / .py)</button>
+  </section>
+
+  <div class="comp">
+    <div class="q" data-i18n="comp.q">Antes de seguir:</div>
+    <div class="row">
+      <button class="compok" id="compOk" data-i18n="comp.ok">✅ Entendi — próxima aula ▸</button>
+      <button class="compno" id="compNo" data-i18n="comp.no">🤔 Não entendi</button>
+    </div>
+    <div class="compask" id="compAsk">
+      <textarea id="compText" data-i18n-ph="comp.ph" placeholder="O que ficou confuso? Escreva sua dúvida…"></textarea>
+      <button class="compsend" id="compSend" data-i18n="comp.send">Enviar dúvida</button>
+      <div class="compmsg" id="compMsg"></div>
+    </div>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Fórmula e código">
+    <h3>k-means — a fórmula e o código <button class="x" id="closeMath" aria-label="Fechar">×</button></h3>
+    <p style="color:var(--ink-2);font-size:.9rem;margin-top:6px">O que o modelo <b class="cap-c" style="font-family:var(--mono)">captura</b> (aprende no <code>fit</code>) e o que <b class="ret-c" style="font-family:var(--mono)">retorna</b> depois.</p>
+    <div class="mlabel">A ideia, passo a passo (sem jargão)</div>
+    <ol class="msteps">
+      <li>Escolhe <b>k</b> pontos como “centros” iniciais.</li>
+      <li>Cada célula vai para o <b>centro mais próximo</b> (distância).</li>
+      <li>Recalcula cada centro = a <b>média</b> das células do seu grupo.</li>
+      <li>Repete os passos 2 e 3 até os grupos <b>pararem de mudar</b>.</li>
+      <li>A <b>silhueta</b> (−1 a 1) diz se os grupos ficaram bem separados.</li>
+    </ol>
+
+    <div class="mlabel" data-i18n="math.vars">As variáveis, uma a uma</div>
+    <table class="mvars"><tr><td>k</td><td><b>o nº de grupos</b> — você escolhe; a silhueta ajuda a decidir (aqui k=3).</td></tr><tr><td>centroₖ</td><td><b>a “célula média” do grupo k</b> — o perfil que o modelo descobriu (recalculado a cada rodada).</td></tr><tr><td>‖x − c‖</td><td><b>a distância</b> — a régua que decide o grupo: cada célula vai para o centro mais próximo.</td></tr><tr><td>silhueta</td><td><b>a nota da separação</b> — de −1 a 1: mede se cada célula está mais perto do próprio grupo que do vizinho.</td></tr><tr><td>tipo</td><td><b>algoritmo iterativo por distância (não é uma equação fechada: chuta centros → agrupa → recalcula → repete)</b></td></tr><tr><td>serve p/</td><td><b>descobrir grupos <i>sem rótulo</i> — perfilar células parecidas para o operador decidir</b></td></tr></table>
+    <div class="mlabel">O código Python (scikit-learn)</div>
+    <div class="mcode"><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> KMeans
+
+km = KMeans(n_clusters=<span class="kw">3</span>).fit(X)   <span class="cm"># <span class="cap">captura</span>: onde ficam os centros dos grupos</span>
+km.cluster_centers_                <span class="cm"># <span class="ret">retorna</span>: a posição de cada centro</span>
+km.predict(X_nova)                 <span class="cm"># <span class="ret">retorna</span>: em qual grupo a célula cai</span></div>
+    <div class="caplegend"><span><b class="cap-c">■ captura</b> = <code>fit</code> (aprende dos dados)</span><span><b class="ret-c">■ retorna</b> = o resultado (centros, grupo)</span></div>
+  </div>
+</div>
+
+<div class="backdrop" id="repbackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Relatório">
+    <h3><span data-i18n="report.title">📄 Relatório do trabalho</span> <button class="x" id="repClose" aria-label="Fechar">×</button></h3>
+    <p style="color:var(--ink-2);font-size:.9rem;margin-top:6px">As Partes 1 e 2 vêm como <b>rascunho</b> — reescreva na sua voz. A Parte 3 já traz o que você rodou.</p>
+    <div class="repform">
+      <label><span data-i18n="report.name">Seu nome</span><input id="repNome" data-i18n-ph="report.name_ph" placeholder="Nome do aluno(a)"></label>
+      <label><span data-i18n="report.p1">Parte 1 — Análise crítica e seleção do algoritmo (~200 palavras)</span><textarea id="repP1"></textarea></label>
+      <label><span data-i18n="report.p2">Parte 2 — Fundamentação teórica (~500 palavras)</span><textarea id="repP2"></textarea></label>
+      <p class="hint" data-i18n="report.p3hint">Parte 3 (base, resultados e código) é montada automaticamente.</p>
+    </div>
+    <div class="repactions">
+      <button class="btn" id="repPdf" data-i18n="report.pdf">⬇ Baixar PDF</button>
+      <button class="btn ghost" id="repDoc" data-i18n="report.doc">⬇ Baixar Word (.doc)</button>
+      <button class="btn ghost" id="repPy" data-i18n="report.py">⬇ Baixar script Python (.py)</button>
+    </div>
+  </div>
+</div>
+
+<div id="printarea"></div>
+
+<script src="/static/lab-i18n.js"></script>
+<script>
+const DSC = __DSC_JSON__;
+const $=(s,r=document)=>r.querySelector(s);
+const CLU=["#2b74e8","#12a19a","#d98a00","#7c5cff"];
+let cur=DSC.default, D=DSC.datasets[cur], FEAT={}, single={}, K=3, xKey="", yKey="";
+
+function assign(vals){
+  const s=D.scaler, cs=D.kmeans[K].centroids_std;
+  const z=D.features.map((f,i)=>(vals[f.key]-s.mean[i])/s.std[i]);
+  let best=0,bd=Infinity;
+  cs.forEach((c,ci)=>{let d=0;c.forEach((cv,i)=>d+=(z[i]-cv)**2);if(d<bd){bd=d;best=ci;}});
+  return best;
+}
+function fmt(v){return Math.abs(v)>=100?v.toFixed(0):v.toFixed(2).replace(/\.?0+$/,"");}
+
+function buildDsRow(){
+  $("#dsRow").innerHTML=Object.entries(DSC.datasets).map(([k,d])=>
+    `<button class="dschip ${k===cur?'on':''}" data-ds="${k}">${d.label}<small>${d.source} · ${d.n_rows} células · ${d.features.length} KPIs</small></button>`).join("");
+  $("#dsRow").querySelectorAll("[data-ds]").forEach(b=>b.addEventListener("click",()=>setDataset(b.dataset.ds)));
+}
+function setDataset(key){
+  cur=key; D=DSC.datasets[key]; FEAT=Object.fromEntries(D.features.map(f=>[f.key,f]));
+  single={...D.start}; K=String(D.default_k); xKey=D.view.x; yKey=D.view.y;
+  buildDsRow(); updateSrc();
+  $("#kSeg").innerHTML=["2","3","4"].map(k=>`<button data-k="${k}" class="${k===K?'on':''}">${k}</button>`).join("");
+  $("#kSeg").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{K=b.dataset.k;
+    $("#kSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.k===K));renderAll();}));
+  const opts=D.features.map(f=>`<option value="${f.key}">${f.label}</option>`).join("");
+  $("#xSel").innerHTML=opts; $("#ySel").innerHTML=opts; $("#xSel").value=xKey; $("#ySel").value=yKey;
+  $("#xSel").onchange=()=>{xKey=$("#xSel").value;renderScatter();};
+  $("#ySel").onchange=()=>{yKey=$("#ySel").value;renderScatter();};
+  buildCtrls(); renderAll(); updateFooter();
+}
+function updateSrc(){
+  $("#srcNote").innerHTML=`<span class="srcbadge">BASE DO PROFESSOR</span> <b>${D.label}</b> — ${D.usecase}. `+
+    `${D.n_rows} células · ${D.features.length} KPIs · <b>sem rótulo</b> (não supervisionado).`;
+}
+function buildCtrls(){
+  $("#ctrls").innerHTML=D.features.map(f=>{const step=f.decimals===0?1:(f.decimals===1?0.1:0.01);
+    return `<div class="ctrl" data-k="${f.key}"><div class="ctrl-head"><label>${f.label}</label><span class="v"><span data-vv="${f.key}">${single[f.key]}</span> ${f.unit}</span></div>
+      <input type="range" min="${f.hard[0]}" max="${f.hard[1]}" step="${step}" value="${single[f.key]}" data-role="range">
+      <div class="warnmsg">fora da faixa vista nesta base — o grupo é um chute</div></div>`;}).join("");
+  $("#ctrls").querySelectorAll(".ctrl").forEach(el=>{const k=el.dataset.k,r=el.querySelector("input");
+    r.addEventListener("input",()=>{single[k]=parseFloat(r.value);$(`[data-vv="${k}"]`).textContent=r.value;
+      el.classList.toggle("warn",single[k]<FEAT[k].train[0]||single[k]>FEAT[k].train[1]);renderScatter();renderAssign();});
+    el.classList.toggle("warn",single[k]<FEAT[k].train[0]||single[k]>FEAT[k].train[1]);
+  });
+}
+function renderAll(){ renderScatter(); renderAssign(); renderLegend(); renderTable(); renderProfiles(); }
+
+function renderScatter(){
+  const W=480,H=340,mL=46,mR=14,mT=14,mB=34, xi=D.features.findIndex(f=>f.key===xKey), yi=D.features.findIndex(f=>f.key===yKey);
+  const xs=D.points.map(p=>p[xKey]).concat(single[xKey]), ys=D.points.map(p=>p[yKey]).concat(single[yKey]);
+  const xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);
+  const sx=v=>mL+(xmax===xmin?.5:(v-xmin)/(xmax-xmin))*(W-mL-mR);
+  const sy=v=>H-mB-(ymax===ymin?.5:(v-ymin)/(ymax-ymin))*(H-mT-mB);
+  const ax=`<line x1="${mL}" y1="${H-mB}" x2="${W-mR}" y2="${H-mB}" stroke="var(--line)"/><line x1="${mL}" y1="${mT}" x2="${mL}" y2="${H-mB}" stroke="var(--line)"/>`;
+  const labs=`<text x="${mL}" y="${H-mB+16}" font-size="9" fill="var(--ink-3)" font-family="monospace">${fmt(xmin)}</text>
+    <text x="${W-mR}" y="${H-mB+16}" font-size="9" fill="var(--ink-3)" text-anchor="end" font-family="monospace">${fmt(xmax)}</text>
+    <text x="${mL-6}" y="${H-mB}" font-size="9" fill="var(--ink-3)" text-anchor="end" font-family="monospace">${fmt(ymin)}</text>
+    <text x="${mL-6}" y="${mT+8}" font-size="9" fill="var(--ink-3)" text-anchor="end" font-family="monospace">${fmt(ymax)}</text>
+    <text x="${(W+mL)/2}" y="${H-4}" font-size="10" fill="var(--ink-2)" text-anchor="middle">${FEAT[xKey].label}</text>
+    <text x="12" y="${(H-mB+mT)/2}" font-size="10" fill="var(--ink-2)" text-anchor="middle" transform="rotate(-90 12 ${(H-mB+mT)/2})">${FEAT[yKey].label}</text>`;
+  const pts=D.points.map(p=>{const c=CLU[p.k[K]%CLU.length];
+    return `<circle cx="${sx(p[xKey]).toFixed(1)}" cy="${sy(p[yKey]).toFixed(1)}" r="5" fill="${c}" fill-opacity="0.82" stroke="#fff" stroke-width="0.6"/>`;}).join("");
+  const cents=D.kmeans[K].centroids_orig.map((c,ci)=>{const cx=sx(c[xi]).toFixed(1),cy=sy(c[yi]).toFixed(1),col=CLU[ci%CLU.length];
+    return `<path d="M${cx-6},${cy-6} L${cx+6},${cy+6} M${cx-6},${cy+6} L${cx+6},${cy-6}" stroke="${col}" stroke-width="3" stroke-linecap="round"/><path d="M${cx-6},${cy-6} L${cx+6},${cy+6} M${cx-6},${cy+6} L${cx+6},${cy-6}" stroke="#fff" stroke-width="1"/>`;}).join("");
+  const g=assign(single), tc=CLU[g%CLU.length], tx=sx(single[xKey]).toFixed(1), ty=sy(single[yKey]).toFixed(1);
+  const star=`<circle cx="${tx}" cy="${ty}" r="9" fill="${tc}" stroke="#fff" stroke-width="2"/><circle cx="${tx}" cy="${ty}" r="13" fill="none" stroke="${tc}" stroke-width="1.5" stroke-dasharray="3 2"/>`;
+  $("#scatter").innerHTML=ax+labs+pts+cents+star;
+}
+function renderAssign(){
+  const g=assign(single);
+  $("#assignBig").innerHTML=`<span class="dot" style="background:${CLU[g%CLU.length]}"></span> Grupo ${g+1}`;
+}
+function renderLegend(){
+  const counts={}; D.points.forEach(p=>counts[p.k[K]]=(counts[p.k[K]]||0)+1);
+  $("#legend").innerHTML=D.kmeans[K].centroids_orig.map((_,i)=>
+    `<div class="legrow"><span class="dot" style="background:${CLU[i%CLU.length]}"></span> Grupo ${i+1} <span style="color:var(--ink-3)">· ${counts[i]||0} células</span></div>`).join("")
+    +`<div class="legrow" style="margin-top:4px"><span style="font-weight:700">✕</span> centro do grupo · <span style="font-weight:700">★</span> sua célula</div>`;
+}
+function renderTable(){
+  const rows=D.algos.filter(a=>a.sil!==null).sort((a,b)=>b.sil-a.sil);
+  const mx=Math.max(...rows.map(r=>r.sil));
+  $("#algoTable tbody").innerHTML=rows.map((r,i)=>`<tr class="${i===0?'win':''}"><td>${r.name}${i===0?'<span class="model-tag">melhor</span>':''}</td>
+    <td class="tnum">${r.sil.toFixed(3)}<span class="r2bar" style="width:${Math.max(2,r.sil/mx*54)}px"></span></td></tr>`).join("");
+  const best=rows[0];
+  $("#takeaway").innerHTML=`<b>Melhor separação: ${best.name}</b> (silhueta ${best.sil}). Não existe “resposta certa” em
+    clustering — a silhueta ajuda a escolher <b>k</b> e o algoritmo. <b>k-means</b> assume grupos redondos; o <b>DBSCAN</b>
+    acha formas irregulares e marca ruído; o <b>hierárquico</b> monta uma árvore de grupos.`;
+}
+function renderProfiles(){
+  const counts={}; D.points.forEach(p=>counts[p.k[K]]=(counts[p.k[K]]||0)+1);
+  $("#profiles").innerHTML=D.kmeans[K].centroids_orig.map((c,i)=>{
+    const kpis=D.features.map((f,j)=>`${f.label.split(' ')[0]} ${fmt(c[j])}${f.unit}`).slice(0,4).join(" · ");
+    return `<div class="prof"><h4><span class="dot" style="background:${CLU[i%CLU.length]}"></span> Grupo ${i+1} <span style="color:var(--ink-3);font-weight:400">· ${counts[i]||0}</span></h4><div class="kpis">${kpis}</div></div>`;
+  }).join("");
+}
+function updateFooter(){
+  $("#footer").innerHTML=`<b>Protótipo de design</b> — card “Clustering” (família) do lab de RIC-IA. Datasets
+    <b>do Prof. Tesolin</b> (Base Fonts RIC, sem rótulo). O “Mexe” roda k-means (atribuição ao centróide mais próximo);
+    a tabela compara k-means, DBSCAN e hierárquico por silhueta.`;
+}
+$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+
+setDataset(DSC.default);
+$("#openMath")?.addEventListener("click",()=>$("#backdrop").classList.add("open"));
+$("#closeMath")?.addEventListener("click",()=>$("#backdrop").classList.remove("open"));
+$("#backdrop")?.addEventListener("click",e=>{if(e.target===$("#backdrop"))$("#backdrop").classList.remove("open");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#backdrop")?.classList.remove("open");});
+
+const REPCODE=`from sklearn.cluster import KMeans
+km = KMeans(n_clusters=3).fit(X)   # treina: acha os centros dos grupos
+km.cluster_centers_                # a posição de cada centro
+km.predict(X_nova)                 # em qual grupo a célula cai`;
+function draftP1(){const A=D.algos.filter(a=>a.sil!==null).slice().sort((a,b)=>b.sil-a.sil),b=A[0];return `Para agrupar as células de "${D.label}" sem rótulo, usei k-means (k=${K}) e comparei com DBSCAN e hierárquico pela silhueta. A melhor separação foi ${b.name} (silhueta ${b.sil}). A silhueta (−1 a 1) mede o quão coeso e separado ficou cada grupo — como não há "resposta certa" em clustering, ela guia a escolha de k e do algoritmo. O k-means assume grupos redondos e é rápido; o DBSCAN acha formas irregulares e marca ruído; o hierárquico monta uma árvore de grupos. Neste caso os grupos são bem definidos, o que dá silhuetas altas.`;}
+function draftP2(){return `O k-means agrupa por proximidade. Ele escolhe k centros iniciais; coloca cada célula no centro mais próximo (distância euclidiana); recalcula cada centro como a média das células do seu grupo; e repete até os grupos pararem de mudar. O único hiperparâmetro essencial é o número de grupos k — escolhido observando a silhueta ou o "cotovelo" da variância. Como usa distância, é importante padronizar os KPIs (senão a variável de maior escala domina). Vantagens: simples, rápido e escala bem. Limitações: você precisa dizer o k de antemão; ele assume grupos aproximadamente esféricos e de tamanho parecido, indo mal com formas alongadas ou densidades diferentes (onde DBSCAN se sai melhor); e o resultado depende da inicialização (mitigado rodando várias vezes). Para perfilar células por carga/energia, esses limites não atrapalham, e o k-means entrega grupos claros e interpretáveis pelos centros.`;}
+const REP={tec:"Clustering",badge:"🎨",fam:"aprendizado não supervisionado",slug:()=>"clustering-"+cur,
+ resumo(){const A=D.algos.filter(a=>a.sil!==null).slice().sort((a,b)=>b.sil-a.sil),b=A[0];
+  return [`${D.n_rows} células agrupadas <b>sem rótulo</b> em ${K} grupos — ${D.features.length} KPIs por célula.`,
+   `Melhor separação: <b>${b.name}</b> — silhueta ${b.sil}.`,
+   `Sua célula de teste caiu no <b>Grupo ${assign(single)+1}</b> (centro mais próximo).`,
+   `Lição: sem “resposta certa” — a <b>silhueta</b> guia a escolha de k e do algoritmo.`];},
+ metodo(){return [`Padronizar os ${D.features.length} KPIs (mesma escala).`,
+  `Rodar k-means com k = ${K} (centros → média → repete até estabilizar).`,
+  `Comparar com DBSCAN e hierárquico.`,
+  `Medir a silhueta (−1 a 1): grupos coesos e separados = maior.`];},
+ formula(){return `Grupo(célula) = o centro mais próximo — ${K} centros × ${D.features.length} KPIs aprendidos<br><span style="color:#5a6b7c">↑ cada centro é a “célula média” do grupo — o perfil que o modelo descobriu</span>`;},
+ tabela(){const A=D.algos.filter(a=>a.sil!==null).slice().sort((a,b)=>b.sil-a.sil);const mx=Math.max(...A.map(r=>r.sil));return {head:["Algoritmo","Silhueta"],rows:A.map((r,i)=>({name:r.name,vals:[r.sil.toFixed(3)],bar:mx>0?r.sil/mx:0,win:i===0}))};},
+ exemplo(){const f=D.features.slice(0,3).map(x=>`${x.label} = ${single[x.key]}`).join("; ");return `${esc(f)}… → <b>Grupo ${assign(single)+1}</b>.`;},
+ gloss(){return [["Silhueta","de −1 a 1: mede se cada célula está no grupo certo (maior = melhor)"],["Centróide","o centro do grupo — a média das células dele"],["k","o número de grupos que você pede ao k-means"],["Padronizar","pôr todos os KPIs na mesma escala antes de medir distância"]];},
+ limites(){return [`Os grupos dependem de k e da escala — reporte sempre a silhueta junto.`,
+  `k-means assume grupos “redondos”; formas irregulares pedem DBSCAN.`,
+  `Próximo passo: perfilar células com <b>KPM real</b> agregado no Non-RT RIC (rApp).`];},
+ py(){return `# Script da entrega — Clustering (${D.label})
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
+from sklearn.metrics import silhouette_score
+
+# Dados do professor embutidos (${D.n_rows} células × ${D.features.length} KPIs: ${D.features.map(f=>f.key).join(", ")})
+X = np.array([
+${D.points.map(p=>"    ["+D.features.map(f=>p[f.key]).join(", ")+"],").join("\n")}
+])
+Z = StandardScaler().fit_transform(X)
+for k in (2, 3, 4):
+    km = KMeans(n_clusters=k, n_init=10, random_state=42).fit(Z)
+    print(f"k-means k={k}: silhueta {silhouette_score(Z, km.labels_):.3f}")
+agg = AgglomerativeClustering(n_clusters=${K}).fit_predict(Z)
+print(f"hierarquico k=${K}: silhueta {silhouette_score(Z, agg):.3f}")
+db = DBSCAN(eps=0.8, min_samples=3).fit_predict(Z)
+print("DBSCAN grupos:", sorted(set(db)))
+`;}};
+const INKC="#16202b",SUBC="#5a6b7c",LINEC="#dfe5ec",ACC="#1f6fe5",TRACKC="#edf1f6";
+function esc(s){return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function rbar(p,win){const w=Math.max(3,Math.round(Math.min(1,Math.max(0,p))*110));
+  return `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse"><tr><td style="width:${w}px;height:9px;background:${win?ACC:"#a9c4ee"};font-size:2px;line-height:2px">&nbsp;</td><td style="width:${110-w}px;height:9px;background:${TRACKC};font-size:2px;line-height:2px">&nbsp;</td></tr></table>`;}
+function secH(n,t){return `<div style="margin:22px 0 8px;padding-top:10px;border-top:1px solid ${LINEC};font-size:11px;letter-spacing:2px;color:${ACC};font-weight:700">${n} · ${t.toUpperCase()}</div>`;}
+function reportBody(){
+  const nome=esc($("#repNome").value.trim()||"__________");
+  let dt="";try{dt=new Date().toLocaleDateString("pt-BR");}catch(e){}
+  const p1=esc($("#repP1").value).replace(/\n/g,"<br>");
+  const p2=esc($("#repP2").value).replace(/\n/g,"<br>");
+  const t=REP.tabela();
+  const thead=`<tr>${t.head.map((h,i)=>`<th align="${i===0?"left":"center"}" style="padding:6px 8px;border-bottom:2px solid ${INKC};font-size:10.5px;letter-spacing:1px;color:${SUBC}">${h.toUpperCase()}</th>`).join("")}<th style="padding:6px 8px;border-bottom:2px solid ${INKC}"></th></tr>`;
+  const rows=t.rows.map(r=>`<tr><td style="padding:6px 8px;border-bottom:1px solid ${LINEC};font-weight:${r.win?700:400}">${esc(r.name)}${r.win?` <span style="color:${ACC}">◂ melhor</span>`:""}</td>${r.vals.map(v=>`<td align="center" style="padding:6px 8px;border-bottom:1px solid ${LINEC}">${v}</td>`).join("")}<td style="padding:6px 8px;border-bottom:1px solid ${LINEC}">${rbar(r.bar,r.win)}</td></tr>`).join("");
+  const resumo=REP.resumo().map(b=>`<div style="margin:3px 0">• ${b}</div>`).join("");
+  const metodo=REP.metodo().map((s,i)=>`<div style="margin:3px 0"><b style="color:${ACC}">${i+1}.</b> ${s}</div>`).join("");
+  const gloss=REP.gloss().map(g=>`<div style="margin:2px 0"><b>${g[0]}</b> — ${g[1]}</div>`).join("");
+  const lim=REP.limites().map(b=>`<div style="margin:3px 0">• ${b}</div>`).join("");
+  return `
+<div style="color:${INKC}">
+  <div style="font-size:11px;letter-spacing:3px;color:${SUBC};font-weight:700">RELATÓRIO · ${REP.tec.toUpperCase()} ${REP.badge}</div>
+  <div style="font-size:24px;font-weight:800;margin:4px 0 2px">${esc(D.label)}</div>
+  <div style="font-size:12px;color:${SUBC};margin-bottom:14px">${nome} &nbsp;·&nbsp; ${dt} &nbsp;·&nbsp; ${esc(D.usecase)} &nbsp;·&nbsp; ${REP.fam}</div>
+  <div style="border:1px solid ${LINEC};border-left:4px solid ${ACC};padding:10px 14px;font-size:13px">
+    <div style="font-size:11px;letter-spacing:2px;color:${ACC};font-weight:700;margin-bottom:5px">⚡ EM 30 SEGUNDOS</div>${resumo}</div>
+  ${secH("1","Análise crítica e seleção do algoritmo")}<p style="margin:0;text-align:justify;font-size:13px;line-height:1.55">${p1}</p>
+  ${secH("2","Fundamentação teórica")}<p style="margin:0;text-align:justify;font-size:13px;line-height:1.55">${p2}</p>
+  ${secH("3","Experimentação prática")}
+  <div style="font-size:12.5px;margin-bottom:10px">${metodo}</div>
+  <table cellspacing="0" style="border-collapse:collapse;font-size:12.5px;margin:4px 0 8px">${thead}${rows}</table>
+  <div style="font-family:Consolas,monospace;font-size:12px;background:#f4f6fa;border:1px solid ${LINEC};padding:8px 12px;margin:8px 0">${REP.formula()}</div>
+  <div style="font-size:12.5px;margin:6px 0"><b>Exemplo (rodado no lab):</b> ${REP.exemplo()}</div>
+  <div style="font-size:11.5px;color:${SUBC};border-top:1px dashed ${LINEC};margin-top:10px;padding-top:8px"><b style="letter-spacing:1px">GLOSSÁRIO</b>${gloss}</div>
+  <div style="font-size:12px;border:1px solid ${LINEC};padding:8px 12px;margin-top:10px"><b style="font-size:11px;letter-spacing:2px;color:${SUBC}">LIMITES &amp; PRÓXIMOS PASSOS</b>${lim}</div>
+  <div style="font-size:11px;letter-spacing:1px;color:${SUBC};margin:14px 0 4px;font-weight:700">CÓDIGO (SCIKIT-LEARN) — SCRIPT COMPLETO NO ANEXO .PY</div>
+  <pre style="background:#f4f6fa;border:1px solid ${LINEC};padding:10px;font-size:11.5px;white-space:pre-wrap;margin:0">${esc(REPCODE)}</pre>
+  <div style="color:#98a4b1;font-size:10.5px;margin-top:14px">Dados: Prof. Julio Tesolin (Base Fonts RIC) · Gerado no Lab de IA para RIC · Core5G ARM64</div>
+</div>`;
+}
+function dlWord(){
+  const css="<style>body{font-family:Calibri,Arial,sans-serif;color:#16202b;line-height:1.5;max-width:720px;margin:0 auto;padding:24px}table{margin:6px 0}</style>";
+  const full="<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>"+css+"</head><body>"+reportBody()+"</body></html>";
+  const blob=new Blob(["﻿"+full],{type:"application/msword"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="relatorio-"+REP.slug()+".doc";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+function dlPy(){
+  const nome=($("#repNome").value.trim()||"aluno");
+  const head="# -*- coding: utf-8 -*-\n# Aluno(a): "+nome+"\n# Tecnica: "+REP.tec+" — "+D.label+" (dados: Prof. Julio Tesolin)\n# Gerado no Lab de IA para RIC\n\n";
+  const blob=new Blob([head+REP.py()],{type:"text/x-python"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="script-"+REP.slug()+".py";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+$("#openReport")?.addEventListener("click",()=>{if(!$("#repP1").value)$("#repP1").value=draftP1();if(!$("#repP2").value)$("#repP2").value=draftP2();$("#repbackdrop").classList.add("open");});
+$("#repClose")?.addEventListener("click",()=>$("#repbackdrop").classList.remove("open"));
+$("#repbackdrop")?.addEventListener("click",e=>{if(e.target===$("#repbackdrop"))$("#repbackdrop").classList.remove("open");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#repbackdrop")?.classList.remove("open");});
+$("#repDoc")?.addEventListener("click",dlWord);
+$("#repPy")?.addEventListener("click",dlPy);
+$("#repPdf")?.addEventListener("click",()=>{$("#printarea").innerHTML='<div style="max-width:720px;margin:0 auto">'+reportBody()+"</div>";window.print();});
+
+/* ===== integração: embed no painel + compreensão + sistema real ===== */
+const LESSON="clustering", NEXT="/lab/anomalia";
+const EMBED=new URLSearchParams(location.search).has("embed");
+if(EMBED){document.documentElement.classList.add("embed");
+  try{const t=window.parent.document.documentElement.getAttribute("data-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}
+  try{window.parent.postMessage({c5gLab:{title:document.title.replace("Lab RIC-IA · ","")}},location.origin);}catch(e){}
+  document.querySelectorAll('a[href^="/lab"]').forEach(a=>{const u=a.getAttribute("href");if(u&&!u.includes("embed=1"))a.setAttribute("href",u+(u.includes("?")?"&":"?")+"embed=1");});
+  const rb=document.getElementById("realRun"); if(rb) rb.hidden=false;
+}
+const TT=(k,d)=>{const v=window.LABI18N?LABI18N.t(k):k;return v===k?d:v;};
+document.getElementById("realRun")?.addEventListener("click",()=>{try{window.parent.postMessage({c5gLab:{runCmd:"p2-kpm-real"}},location.origin);}catch(e){}});
+document.getElementById("compOk")?.addEventListener("click",()=>{
+  try{const K="c5g-lab-progress",p=JSON.parse(localStorage.getItem(K)||"{}");p[LESSON]=true;localStorage.setItem(K,JSON.stringify(p));}catch(e){}
+  location.href=NEXT+(EMBED?"?embed=1":"");
+});
+document.getElementById("compNo")?.addEventListener("click",()=>{document.getElementById("compAsk").classList.toggle("open");});
+document.getElementById("compSend")?.addEventListener("click",async()=>{
+  const t=(document.getElementById("compText").value||"").trim(); if(!t) return;
+  const msg=document.getElementById("compMsg");
+  try{const r=await fetch("/api/lab/question",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lesson:LESSON,text:t})});
+    if(!r.ok)throw 0; msg.textContent=TT("comp.sent","✓ Dúvida enviada — o professor verá."); document.getElementById("compText").value="";}
+  catch(e){msg.textContent=TT("comp.fail","Não deu para enviar daqui — anote e pergunte na aula.");}
+});
+</script>

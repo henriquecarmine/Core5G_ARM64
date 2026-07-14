@@ -101,6 +101,14 @@ SCRIPT
     else
         echo "Cron já configurado."
     fi
+    # @reboot: atualiza o DNS segundos após o boot — sem isso, após um
+    # stop/start da instância (IP público novo) o domínio fica apontando
+    # para o IP antigo (que a AWS recicla p/ outro cliente!) por até 5 min,
+    # e durante o desligamento ninguém atualiza. Visto na prática em 13/07/26.
+    if ! crontab -l 2>/dev/null | grep -q '@reboot.*duck.sh'; then
+        ( crontab -l 2>/dev/null; echo "@reboot sleep 20 && \${HOME}/duckdns/duck.sh >/dev/null 2>&1" ) | crontab -
+        echo "Cron @reboot instalado."
+    fi
 fi
 
 echo ""

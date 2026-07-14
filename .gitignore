@@ -34,3 +34,7 @@ server/panel/vendor/wheels/
 # Dados de runtime do painel (Resultados salvos, roster, dúvidas do lab)
 # — gerados em produção pelo server.py, nunca versionar
 server/panel_results/
+
+# App desktop local de administração da instância AWS (liga/desliga) —
+# ferramenta pessoal do operador, fica fora do repo público por decisão
+admin-local/

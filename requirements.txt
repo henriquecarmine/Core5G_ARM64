@@ -1,0 +1,36 @@
+# Dependências Python do projeto Core5G ARM64 — desenvolvimento local.
+#
+# Reúne tudo para trabalhar no projeto inteiro numa máquina de dev: rodar o
+# painel, (re)gerar as aulas do Lab de IA, rodar os experimentos e montar as
+# entregas.  Instale num venv:
+#     python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+#
+# NO SERVIDOR o painel usa só um subconjunto:
+#   - runtime: server/panel/requirements.txt (fastapi + uvicorn);
+#   - ML: numpy/scipy/scikit-learn/joblib vendorizados como wheels aarch64 em
+#     server/panel/vendor/wheels/, instalados no venv pelo infra/server-bootstrap.sh.
+#   Os testes de ML do servidor (p2-ml-*) são NUMPY-ONLY: pandas e matplotlib
+#   NÃO estão no servidor (por isso os experimentos de scripts/ml/ são numpy-only).
+
+# --- Painel (runtime FastAPI) — espelha server/panel/requirements.txt ---
+fastapi
+uvicorn
+
+# --- Lab de IA: experimentos e testes de ML ---
+# Mesmas versões vendorizadas no servidor (server/panel/vendor/wheels/).
+numpy==2.5.0
+scipy==1.18.0
+scikit-learn==1.9.0
+joblib==1.5.3
+threadpoolctl==3.6.0
+
+# --- Geradores dos cards/aulas + experimentos de casos-artigo (OFFLINE, só dev) ---
+# NÃO ficam no servidor — só rodam ao (re)gerar datasets_config.json e as figuras.
+pandas==3.0.3
+matplotlib==3.11.1
+
+# --- Geração das entregas (relatórios DOCX / PDF / HTML) ---
+# Wheels x86_64 E aarch64 (rodam no desktop e no servidor Graviton).
+markdown==3.10.2
+pypandoc-binary==1.17
+python-docx==1.2.0

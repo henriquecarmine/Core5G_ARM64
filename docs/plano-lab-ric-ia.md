@@ -1,8 +1,11 @@
-# Plano — Laboratório de RIC com IA (passo futuro)
+# Plano — Laboratório de RIC com IA (concluído)
 
-> **Status: PLANEJADO** (marcador de próximo passo). O ferramental já está pronto;
-> falta executar. Disparar quando houver sinal — e, para rodar no servidor, o
-> upgrade para **4 vCPU** (ver [POLITICA-DE-CUSTOS.md §3](POLITICA-DE-CUSTOS.md)).
+> **Status: CONCLUÍDO (v0.43.0 → 0.48.0).** O plano foi executado: **8 aulas
+> interativas** no painel (`/lab`), os datasets convertidos para CSV, e os **3
+> casos do artigo** (UE-TP, Localization, Predictive Maintenance) reproduzidos e
+> integrados como **testes no servidor** (`p2-ml-*`) **+ aulas**. Servidor já em
+> **4 vCPU** (t4g.xlarge). O que segue fica como registro; só continua opcional o
+> item 4 (ligar ao rApp em C) e o 5 (KNIME).
 
 ## Objetivo
 
@@ -16,8 +19,8 @@ tema do grupo.
 - **Biblioteca completa, offline, ARM64**: scikit-learn 1.9.0 + numpy 2.5.0 +
   scipy 1.18.0 + joblib + threadpoolctl + narwhals — **6 wheels, 57 MB**, em
   `server/panel/vendor/wheels/` (fora do git; recriável por
-  `server/panel/vendor/README.md`). Instalar sem internet:
-  `pip install --no-index --find-links server/panel/vendor/wheels/ scikit-learn`.
+  `server/panel/vendor/README.md`). **Instalado no venv automaticamente** pelo
+  `infra/server-bootstrap.sh` (v0.47.0) — antes era passo manual.
 - **Datasets de treino** em `pdfs/ric-ai/Base Fonts RIC/` (hoje em PDF).
 - **Material didático**: `pdfs/ric-ai/MLRAN_A01.pdf` (Aula 01).
 - **Pipeline de dados real**: `kpm_analytics.sh` → CSV (KPM → KPI), já pronto —
@@ -25,13 +28,16 @@ tema do grupo.
   [KPM-ANALYTICS.md](../server/oai-cn-gnb-e2/docs/KPM-ANALYTICS.md).
 - **Esqueleto do rApp**: `server/oai-cn-gnb-e2/.../xapp_ue_tp_moni.c` (falta o modelo).
 
-## Passos (a executar)
+## Passos — executados ✅
 
-1. **Datasets PDF → CSV.** Converter as 4 tabelas de `Base Fonts RIC/` para CSV
-   limpo (`pandas`-ready). Guardar em `pdfs/ric-ai/datasets/` (ou similar).
+Todos realizados (v0.43.0 → 0.48.0); registro do que foi feito em cada um:
+
+1. **Datasets PDF → CSV.** ✅ Feito — CSVs por técnica em
+   `pdfs/ric-ai/lab-didatico/<técnica>/data/` (via `parse_labels.py` + geradores).
 2. **Pipeline Python starter** (`scikit-learn`), por caso de uso: carregar CSV →
-   split treino/teste → treinar **2 técnicas distintas** → avaliar (MAE/RMSE/R²) →
-   comparar. Atende a avaliação da disciplina (2 técnicas por caso de uso).
+   split → treinar → avaliar → comparar. ✅ Feito — cada aula treina 7–8 modelos e
+   compara (RMSE/MAE/R² ou Acc/F1); os 3 casos do artigo rodam também como **testes
+   no servidor** (numpy-only, `server/oai-cn-gnb-e2/scripts/ml/`, split temporal).
 3. **Casos de uso ↔ dataset ↔ técnica sugerida:**
 
    | Caso de uso | Dataset | Alvo | Técnicas (ex.) |
@@ -43,17 +49,22 @@ tema do grupo.
 
 4. **Ligar ao rApp real**: alimentar o modelo com o CSV do `kpm_analytics.sh`
    (dados reais de KPM) além dos datasets sintéticos; conectar ao
-   `xapp_ue_tp_moni.c` (EWMA hoje → modelo treinado).
+   `xapp_ue_tp_moni.c` (EWMA hoje → modelo treinado). ⏳ **Opcional/futuro** — a
+   ponte KPM→sklearn recomendada via **sidecar Python**, não porta C.
 5. **(Opcional) KNIME**: a disciplina usa KNIME (low-code); o mesmo fluxo pode
-   ser reproduzido lá, com Python só quando necessário.
+   ser reproduzido lá, com Python só quando necessário. ⏳ Não feito (opcional).
 
 ## Dependências / bloqueios
 
 - **Treinar/experimentar localmente**: sem bloqueio (é CPU-leve; roda em qualquer
   máquina com as wheels).
-- **Rodar o lab E2E no servidor** (UE + gNB RFSIM + coleta KPM real + inferência):
-  depende de **4 vCPU** — em 2 vCPU o UE + gNB não coexistem sob o guardrail
-  anti-freeze. Runbook do resize reversível: [POLITICA-DE-CUSTOS.md §3](POLITICA-DE-CUSTOS.md).
+- **Testes de ML no servidor** (`p2-ml-*`): sem bloqueio — sklearn em alguns
+  milhares de linhas é CPU-leve, roda mesmo em 2 vCPU (diferente do teste KPM com
+  tráfego, que satura o box).
+- **Lab E2E no servidor** (UE + gNB RFSIM + coleta KPM real + inferência): depende
+  de **4 vCPU** — em 2 vCPU o UE + gNB não coexistem sob o guardrail anti-freeze.
+  **Destravado**: servidor já em **t4g.xlarge (4 vCPU)**. Runbook do resize:
+  [POLITICA-DE-CUSTOS.md §3](POLITICA-DE-CUSTOS.md).
 
 ## Contexto da disciplina (Prof. Julio Tesolin)
 

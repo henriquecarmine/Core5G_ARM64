@@ -8,16 +8,19 @@ venv do painel. Total ~57 MB.
 
 ## Propósito
 
-O scikit-learn será usado nos componentes de inteligência do RAN (O-RAN):
+O scikit-learn roda os **testes de ML por caso de uso** do painel — `p2-ml-uetp`,
+`p2-ml-localizacao`, `p2-ml-pm` (v0.47.0): cada um executa o experimento
+`../../oai-cn-gnb-e2/scripts/ml/*_experiment.py` (numpy-only) sobre os dados reais
+do walk test SUTD e streama a tabela de métricas no console. É também a base dos
+componentes de inteligência do RAN (O-RAN):
 
-- **Near-RT RIC** — xApps com ML sobre as métricas E2SM-KPM (pipeline de dados
-  KPM da v0.31.0), ex.: detecção de anomalia e classificação de carga em
-  escala de segundos.
-- **Non-RT RIC** — rApps/análise offline sobre séries históricas de KPIs para
-  políticas de otimização (A1) em escala de minutos/horas.
+- **Near-RT RIC** — xApps com ML sobre as métricas E2SM-KPM (pipeline KPM).
+- **Non-RT RIC** — rApps/análise offline sobre séries históricas de KPIs (A1).
 
-Ainda não está instalado no venv do painel nem referenciado no
-`requirements.txt` — por ora apenas vendorizado nesta pasta.
+**Instalado automaticamente** no venv pelo `infra/server-bootstrap.sh` (a partir da
+v0.47.0), com o mesmo comando offline abaixo. Os experimentos usam só **numpy +
+scikit-learn** — pandas/matplotlib **não** estão vendorizados (por isso os
+experimentos do servidor são numpy-only).
 
 ## Instalar no venv do painel (no servidor)
 

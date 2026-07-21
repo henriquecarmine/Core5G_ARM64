@@ -33,6 +33,11 @@ cd ric/code/oai-cn-gnb-e2
 ./scripts/test_e2_rc_attach.sh      # E2SM-RC (attach fresco)
 ./scripts/verify_e2_lab.sh           # checagem automatizada
 
+# Testes de ML por caso de uso (trabalho RIC-IA; recorte Instance, dados SUTD)
+./scripts/p2_ml_uetp.sh             # UE-TP — previsão de throughput (regressão)
+./scripts/p2_ml_localizacao.sh      # Localization — andar do UE (4/5/6)
+./scripts/p2_ml_pm.sh               # Predictive Maintenance — RRU perdida
+
 # Parar
 ./scripts/down_e2_lab.sh            # mantém Core
 ./scripts/down_e2_lab.sh --all      # Core + RAN + RIC
@@ -46,7 +51,9 @@ oai-cn-gnb-e2/
 ├── openairinterface5g/    # RAN OAI + submodule FlexRIC (E2AP)
 ├── flexric-lib/           # Service Models (.so) — gerado pelo build
 ├── config/flexric/        # flexric.conf do nearRT-RIC
-├── scripts/               # automação build/deploy/testes E2
+├── scripts/               # automação build/deploy/testes E2 + p2_ml_*.sh (testes de ML)
+├── scripts/ml/            # experimentos scikit-learn (numpy-only) dos 3 casos RIC-IA
+├── data/sutd/             # walk test SUTD (Ngo et al. 2024) — insumo dos testes de ML
 └── logs/                  # gnb_oai.log, nearRT-RIC.log, xapp_*.log
 ```
 

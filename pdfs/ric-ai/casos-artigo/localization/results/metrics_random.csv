@@ -1,0 +1,6 @@
+Modelo,Acc (%),Precisão,Recall,F1,Tamanho (kB),Inf. (µs/amostra)
+Linear (logística),78.2,0.802,0.784,0.787,1.7,1.2
+SVM,83.8,0.869,0.838,0.842,150.1,89.0
+Random Forest,90.2,0.906,0.902,0.903,8662.0,15.9
+Gradient Boosting (~XGBoost),89.1,0.897,0.891,0.893,387.7,6.1
+"MLP ~ DNN(1x7,30,3)",84.8,0.853,0.849,0.85,26.1,1.1

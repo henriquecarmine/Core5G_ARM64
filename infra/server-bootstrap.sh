@@ -122,6 +122,17 @@ if [ -d ~/server/panel ]; then
         python3 -m venv ~/server/panel/.venv
     fi
     ~/server/panel/.venv/bin/pip install -q -r ~/server/panel/requirements.txt
+    # Lab de IA — scikit-learn (+ numpy/scipy/joblib) para os testes de ML por
+    # caso de uso (p2-ml-*): instalado OFFLINE das wheels vendorizadas (aarch64),
+    # sem índice, para o venv conseguir importar sklearn nos experimentos.
+    if [ -d ~/server/panel/vendor/wheels ]; then
+        if ~/server/panel/.venv/bin/pip install -q --no-index \
+               --find-links ~/server/panel/vendor/wheels scikit-learn; then
+            echo "scikit-learn (wheels vendorizadas) instalado no venv."
+        else
+            echo "aviso: falha ao instalar scikit-learn das wheels vendorizadas."
+        fi
+    fi
     echo "Venv do painel pronto."
 else
     echo "~/server/panel ainda não foi sincronizado (rode ./deploy.sh panel primeiro), pulando."

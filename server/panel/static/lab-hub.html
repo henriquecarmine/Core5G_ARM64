@@ -160,10 +160,12 @@ const AULAS = [
   {id:"fundamentos", n:0, group:"Fundamentos", desc:"O ponto de partida — antes de qualquer técnica.", icon:"🧭", title:"Fundamentos", one:"O que é IA/ML, supervisionado × não supervisionado, e o laço do O-RAN.", oran:"panorama geral", fam:"", href:"/lab/fundamentos", soon:false},
   {id:"regressao", n:1, group:"Aprendizado supervisionado", desc:"Aprende com gabarito: você mostra exemplos com a resposta certa.", icon:"📶", title:"Regressão", one:"Prever um número — o throughput de cada UE.", oran:"UE-TP · xApp near-RT", fam:"sup", href:"/lab/regressao"},
   {id:"classificacao", n:2, group:"Aprendizado supervisionado", icon:"🚦", title:"Classificação", one:"Prever uma categoria — o estado da célula.", oran:"congestão/falha · xApp near-RT", fam:"sup", href:"/lab/classificacao"},
-  {id:"clustering", n:3, group:"Aprendizado não supervisionado", desc:"Sem gabarito: o modelo acha a estrutura sozinho.", icon:"🎨", title:"Clustering", one:"Agrupar células parecidas, sem rótulo.", oran:"perfil da rede · rApp non-RT", fam:"nsup", href:"/lab/clustering"},
-  {id:"anomalia", n:4, group:"Aprendizado não supervisionado", icon:"🚨", title:"Anomalia", one:"Achar a célula fora do padrão.", oran:"manutenção preditiva · rApp non-RT", fam:"nsup", href:"/lab/anomalia"},
-  {id:"pca", n:5, group:"Aprendizado não supervisionado", icon:"🧭", title:"PCA", one:"Resumir muitos KPIs em poucos.", oran:"pré-processamento · rApp non-RT", fam:"nsup", href:"/lab/pca"},
-  {id:"projeto", n:6, group:"Projeto final", desc:"Junte tudo: escolha um caso, rode e emita o relatório.", icon:"📄", title:"Projeto final", one:"Aplicar uma técnica a um caso de uso e entregar o relatório.", oran:"entrega", fam:"", href:null, soon:true},
+  {id:"localizacao", n:3, group:"Aprendizado supervisionado", icon:"📍", title:"Localização", one:"Prever o andar do UE só com KPMs de rádio.", oran:"Localization · dados reais SUTD", fam:"sup", href:"/lab/localizacao"},
+  {id:"manutencao", n:4, group:"Aprendizado supervisionado", icon:"🛠️", title:"Manutenção preditiva", one:"Detectar a RRU perdida pelo lado do UE.", oran:"Predictive Maintenance · dados reais SUTD", fam:"sup", href:"/lab/manutencao"},
+  {id:"clustering", n:5, group:"Aprendizado não supervisionado", desc:"Sem gabarito: o modelo acha a estrutura sozinho.", icon:"🎨", title:"Clustering", one:"Agrupar células parecidas, sem rótulo.", oran:"perfil da rede · rApp non-RT", fam:"nsup", href:"/lab/clustering"},
+  {id:"anomalia", n:6, group:"Aprendizado não supervisionado", icon:"🚨", title:"Anomalia", one:"Achar a célula fora do padrão.", oran:"manutenção preditiva · rApp non-RT", fam:"nsup", href:"/lab/anomalia"},
+  {id:"pca", n:7, group:"Aprendizado não supervisionado", icon:"🧭", title:"PCA", one:"Resumir muitos KPIs em poucos.", oran:"pré-processamento · rApp non-RT", fam:"nsup", href:"/lab/pca"},
+  {id:"projeto", n:8, group:"Projeto final", desc:"Junte tudo: escolha um caso, rode e emita o relatório.", icon:"📄", title:"Projeto final", one:"Aplicar uma técnica a um caso de uso e entregar o relatório.", oran:"entrega", fam:"", href:"/lab/projeto", soon:false},
 ];
 const KEY="c5g-lab-progress";
 const $=(s,r=document)=>r.querySelector(s);

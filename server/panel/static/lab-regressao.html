@@ -297,7 +297,14 @@
     <p class="ricnote"><b>Decisão do RIC:</b> o UE de pior valor (barra <span style="color:var(--warn);font-weight:600">âmbar</span>) é o candidato natural a ação (ex.: <i>traffic steering</i>). É essa comparação que um rApp usa.</p>
   </section>
 
-  <section class="card">
+    <section class="card">
+    <h2>🔍 Os modelos, um a um</h2>
+    <p class="sub">Todos recebem os mesmos KPIs (coletados via E2/KPM). O que muda é o que cada um <b>faz</b> com eles — clique para abrir.</p>
+    <div data-model-deepdive="linear,ridge,tree,rf,gb,knn,svr,mlp"></div>
+  </section>
+  <script src="/static/lab-models.js"></script>
+
+<section class="card">
     <h2>📄 Relatório</h2>
     <p class="sub" data-i18n="report.sub">A entrega do trabalho, nas 3 partes, com o que você rodou preenchido. Edite na sua voz e baixe: PDF, Word e o script Python.</p>
     <button class="repbtn" id="openReport" style="margin-top:14px" data-i18n="report.btn">📄 Gerar relatório (PDF / Word / .py)</button>
@@ -514,6 +521,12 @@ const DSC = {
           "rmse": 10.992,
           "mae": 9.969,
           "r2": 0.9108
+        },
+        {
+          "model": "MLP (10 neurônios)",
+          "rmse": 43.368,
+          "mae": 38.095,
+          "r2": -0.3884
         }
       ]
     },
@@ -681,6 +694,12 @@ const DSC = {
           "rmse": 6.147,
           "mae": 3.917,
           "r2": 0.9905
+        },
+        {
+          "model": "MLP (10 neurônios)",
+          "rmse": 24.258,
+          "mae": 20.233,
+          "r2": 0.8519
         }
       ]
     },
@@ -828,6 +847,12 @@ const DSC = {
           "rmse": 0.147,
           "mae": 0.124,
           "r2": 0.9798
+        },
+        {
+          "model": "MLP (10 neurônios)",
+          "rmse": 0.226,
+          "mae": 0.185,
+          "r2": 0.9523
         }
       ]
     },
@@ -939,6 +964,12 @@ const DSC = {
           "rmse": 2.35,
           "mae": 1.332,
           "r2": 0.9954
+        },
+        {
+          "model": "MLP (10 neurônios)",
+          "rmse": 3.877,
+          "mae": 2.776,
+          "r2": 0.9875
         },
         {
           "model": "k-NN",

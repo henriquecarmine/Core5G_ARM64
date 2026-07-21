@@ -1,4 +1,4 @@
-<title>Lab RIC-IA · Classificação (estado da célula)</title>
+<title>Lab RIC-IA · Manutenção preditiva (RRU perdida)</title>
 <style>
   :root{
     --bg:#e9eef4; --surface:#ffffff; --surface-2:#f3f7fc; --inset:#0d1622;
@@ -201,17 +201,17 @@
   <div class="top">
     <div>
       <a href="/" style="display:inline-block;margin-bottom:10px;font-size:.8rem;font-weight:600;color:var(--accent);text-decoration:none">← Painel</a>
-      <div class="eyebrow">Lab RIC · IA — Aula 2 de 6</div>
-      <h1>Classificação: em que estado está a célula?</h1>
-      <p class="lead">O segundo tipo de IA, com os <b>datasets rotulados do Prof. Tesolin</b>. Em vez de um número,
-        prevemos uma <b>categoria</b> — é o que um xApp usa para o RIC agir.</p>
+      <div class="eyebrow">Lab RIC · IA — Caso do artigo · Predictive Maintenance</div>
+      <h1>Manutenção preditiva: a célula perdeu uma RRU?</h1>
+      <p class="lead">Caso real do artigo (Ngo et al. 2024) sobre o <b>walk test 5G do SUTD</b>: detectar, pelo lado
+        do UE, se a célula está com <b>2 RRUs (normal) ou 1 (defeito)</b> — mesmo com o EMS dizendo que está OK.</p>
     </div>
     <button class="themebtn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">◐</button>
   </div>
 
   <section class="card">
     <h2>🗂️ Base de dados</h2>
-    <p class="sub">Datasets rotulados pelo professor. Cada um é um problema de classificação diferente.</p>
+    <p class="sub">Dados reais do SUTD no andar 6: a MESMA rota com 2 RRUs ativas (normal) e com 1 RRU (defeito), 7 KPMs.</p>
     <div class="dsrow" id="dsRow"></div>
     <p class="srcnote" id="srcNote"></p>
   </section>
@@ -239,7 +239,7 @@
     <div class="oranmap">
       <div class="band planned"><span class="bl">Non-RT RIC<em>planejado · &gt;1s</em></span><span class="bn">rApp <small>treina o modelo</small></span></div>
       <div class="conn planned"><span class="down">↓ A1</span><span class="up">↑ O1</span></div>
-      <div class="band live"><span class="bl">Near-RT RIC<em>FlexRIC · 10ms–1s</em></span><span class="bn"><span class="youare">aqui</span> xApp Classificação <small>classifica → decide</small></span></div>
+      <div class="band live"><span class="bl">Near-RT RIC<em>FlexRIC · 10ms–1s</em></span><span class="bn"><span class="youare">aqui</span> rApp Manutenção <small>detecta RRU perdida</small></span></div>
       <div class="conn live"><span class="up">↑ E2/KPM</span><span class="down">↓ E2/RC</span></div>
       <div class="band ran"><span class="bl">RAN<em>gera os KPIs</em></span><span class="bn">gNB + agente E2 · UEs</span></div>
     </div>
@@ -364,409 +364,164 @@ model.predict(X_nova)                    <span class="cm"># <span class="ret">re
 <script src="/static/lab-i18n.js"></script>
 <script>
 const DSC = {
-  "family": "Classificação",
-  "default": "congestion",
+  "family": "Manutenção preditiva",
+  "default": "rru",
   "datasets": {
-    "congestion": {
-      "label": "Congestionamento",
-      "source": "Prof. Tesolin",
-      "usecase": "nível de congestionamento da célula (árvore de decisão)",
-      "n_rows": 17,
-      "target_name": "Congestion",
+    "rru": {
+      "label": "Manutenção preditiva — RRU perdida",
+      "source": "SUTD walk test (Ngo et al. 2024)",
+      "usecase": "detectar se a célula tem 2 RRUs ou 1 (defeito) pelo lado do UE — PM-rApp",
+      "n_rows": 4366,
+      "target_name": "RRUs ativas",
       "features": [
         {
-          "key": "ActiveUsers",
-          "label": "Usuários ativos",
-          "unit": "",
+          "key": "RSRP",
+          "label": "RSRP (sinal)",
+          "unit": "dBm",
           "hard": [
-            0,
-            300
+            -125,
+            -55
           ],
           "train": [
-            28.0,
-            128.0
+            -138.5,
+            -70.6
           ],
           "decimals": 0
         },
         {
-          "key": "PRBUtilization",
-          "label": "PRB utilizado",
-          "unit": "%",
+          "key": "RSRQ",
+          "label": "RSRQ (qualidade)",
+          "unit": "dB",
           "hard": [
-            0,
-            100
+            -22,
+            -3
           ],
           "train": [
-            20.0,
-            98.0
+            -25.7,
+            -10.2
           ],
           "decimals": 0
         },
         {
-          "key": "AvgSINR",
-          "label": "SINR médio",
+          "key": "SINR",
+          "label": "SINR",
           "unit": "dB",
           "hard": [
             -10,
             40
           ],
           "train": [
-            11.0,
+            -12.9,
+            39.5
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PDSCH_MCS",
+          "label": "MCS (PDSCH)",
+          "unit": "",
+          "hard": [
+            0,
+            28
+          ],
+          "train": [
+            0.0,
             28.0
           ],
           "decimals": 0
         },
         {
-          "key": "TxPower",
-          "label": "Potência Tx",
-          "unit": "dBm",
+          "key": "PUSCH_MCS",
+          "label": "MCS (PUSCH)",
+          "unit": "",
           "hard": [
             0,
-            46
+            28
           ],
           "train": [
-            17.0,
-            31.0
+            0.0,
+            16.0
           ],
           "decimals": 0
         },
         {
-          "key": "PacketLoss",
-          "label": "Perda de pacotes",
-          "unit": "%",
+          "key": "PDSCH_PRBs",
+          "label": "PRBs (PDSCH)",
+          "unit": "",
           "hard": [
             0,
-            100
-          ],
-          "train": [
-            0.2,
-            8.5
-          ],
-          "decimals": 1
-        },
-        {
-          "key": "SchedulingDelay",
-          "label": "Atraso de agendamento",
-          "unit": "ms",
-          "hard": [
-            0,
-            100
+            140
           ],
           "train": [
             4.0,
-            55.0
+            129.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "throughput_DL",
+          "label": "Throughput DL",
+          "unit": "Mbps",
+          "hard": [
+            0,
+            600
+          ],
+          "train": [
+            0.0,
+            501.0
           ],
           "decimals": 0
         }
       ],
       "classes": [
         {
-          "name": "Low",
-          "display": "Baixa",
+          "name": "rru2",
+          "display": "2 RRUs (normal)",
           "emoji": "🟢",
           "sev": "good"
         },
         {
-          "name": "Medium",
-          "display": "Média",
-          "emoji": "🟡",
-          "sev": "warn"
-        },
-        {
-          "name": "High",
-          "display": "Alta",
+          "name": "rru1",
+          "display": "1 RRU (defeito)",
           "emoji": "🔴",
           "sev": "bad"
         }
       ],
       "live_model": {
         "features": [
-          "ActiveUsers",
-          "PRBUtilization",
-          "AvgSINR",
-          "TxPower",
-          "PacketLoss",
-          "SchedulingDelay"
+          "RSRP",
+          "RSRQ",
+          "SINR",
+          "PDSCH_MCS",
+          "PUSCH_MCS",
+          "PDSCH_PRBs",
+          "throughput_DL"
         ],
         "mean": [
-          79.11765,
-          66.05882,
-          19.29412,
-          23.52941,
-          3.52353,
-          25.23529
+          -97.14755,
+          -10.86787,
+          23.01825,
+          18.77668,
+          12.60078,
+          127.73729,
+          183.96267
         ],
         "std": [
-          30.5862,
-          25.64342,
-          5.2666,
-          4.31301,
-          2.67637,
-          16.13009
+          14.44512,
+          1.27157,
+          12.1937,
+          7.13933,
+          3.15833,
+          4.64043,
+          115.17527
         ],
         "classes": [
-          "High",
-          "Low",
-          "Medium"
+          "rru1",
+          "rru2"
         ],
         "coef": [
           [
-            0.51544,
-            0.52793,
-            -0.50051,
-            0.58156,
-            0.66911,
-            0.6132
-          ],
-          [
-            -0.56488,
-            -0.72757,
-            0.64865,
-            -0.51378,
-            -0.40112,
-            -0.50398
-          ],
-          [
-            0.04944,
-            0.19965,
-            -0.14814,
-            -0.06778,
-            -0.26799,
-            -0.10921
-          ]
-        ],
-        "intercept": [
-          0.20923,
-          -1.24071,
-          1.03148
-        ]
-      },
-      "scenarios": {
-        "Low": {
-          "label": "🟢 Baixa",
-          "hint": "classe baixa",
-          "values": {
-            "ActiveUsers": 28.0,
-            "PRBUtilization": 20.0,
-            "AvgSINR": 28.0,
-            "TxPower": 17.0,
-            "PacketLoss": 0.2,
-            "SchedulingDelay": 4.0
-          }
-        },
-        "Medium": {
-          "label": "🟡 Média",
-          "hint": "classe média",
-          "values": {
-            "ActiveUsers": 62.0,
-            "PRBUtilization": 55.0,
-            "AvgSINR": 22.0,
-            "TxPower": 21.0,
-            "PacketLoss": 1.5,
-            "SchedulingDelay": 15.0
-          }
-        },
-        "High": {
-          "label": "🔴 Alta",
-          "hint": "classe alta",
-          "values": {
-            "ActiveUsers": 92.0,
-            "PRBUtilization": 82.0,
-            "AvgSINR": 17.0,
-            "TxPower": 25.0,
-            "PacketLoss": 4.5,
-            "SchedulingDelay": 30.0
-          }
-        }
-      },
-      "start": {
-        "ActiveUsers": 62.0,
-        "PRBUtilization": 55.0,
-        "AvgSINR": 22.0,
-        "TxPower": 21.0,
-        "PacketLoss": 1.5,
-        "SchedulingDelay": 15.0
-      },
-      "metrics_table": [
-        {
-          "model": "Regressão Logística",
-          "acc": 1.0,
-          "f1": 1.0
-        },
-        {
-          "model": "Árvore de Decisão",
-          "acc": 1.0,
-          "f1": 1.0
-        },
-        {
-          "model": "Random Forest",
-          "acc": 1.0,
-          "f1": 1.0
-        },
-        {
-          "model": "Gradient Boosting",
-          "acc": 1.0,
-          "f1": 1.0
-        },
-        {
-          "model": "k-NN",
-          "acc": 1.0,
-          "f1": 1.0
-        },
-        {
-          "model": "Naive Bayes",
-          "acc": 1.0,
-          "f1": 1.0
-        },
-        {
-          "model": "SVM (RBF)",
-          "acc": 1.0,
-          "f1": 1.0
-        }
-      ],
-      "balance": {
-        "Low": 5,
-        "Medium": 5,
-        "High": 7
-      }
-    },
-    "failure": {
-      "label": "Falha de célula",
-      "source": "Prof. Tesolin",
-      "usecase": "prever falha da célula — manutenção preditiva (regressão logística)",
-      "n_rows": 20,
-      "target_name": "Failure",
-      "features": [
-        {
-          "key": "ActiveUsers",
-          "label": "Usuários ativos",
-          "unit": "",
-          "hard": [
-            0,
-            300
-          ],
-          "train": [
-            35.0,
-            156.0
-          ],
-          "decimals": 0
-        },
-        {
-          "key": "PRBUtilization",
-          "label": "PRB utilizado",
-          "unit": "%",
-          "hard": [
-            0,
-            100
-          ],
-          "train": [
-            22.0,
-            97.0
-          ],
-          "decimals": 0
-        },
-        {
-          "key": "AvgSINR",
-          "label": "SINR médio",
-          "unit": "dB",
-          "hard": [
-            -10,
-            40
-          ],
-          "train": [
-            14.0,
-            28.0
-          ],
-          "decimals": 0
-        },
-        {
-          "key": "TxPower",
-          "label": "Potência Tx",
-          "unit": "dBm",
-          "hard": [
-            0,
-            46
-          ],
-          "train": [
-            17.0,
-            28.0
-          ],
-          "decimals": 0
-        },
-        {
-          "key": "CellTemperature",
-          "label": "Temperatura da célula",
-          "unit": "°C",
-          "hard": [
-            -20,
-            90
-          ],
-          "train": [
-            31.0,
-            50.0
-          ],
-          "decimals": 0
-        },
-        {
-          "key": "PacketLoss",
-          "label": "Perda de pacotes",
-          "unit": "%",
-          "hard": [
-            0,
-            100
-          ],
-          "train": [
-            0.4,
-            7.0
-          ],
-          "decimals": 1
-        }
-      ],
-      "classes": [
-        {
-          "name": "No",
-          "display": "Normal",
-          "emoji": "🟢",
-          "sev": "good"
-        },
-        {
-          "name": "Yes",
-          "display": "Falha",
-          "emoji": "🔴",
-          "sev": "bad"
-        }
-      ],
-      "live_model": {
-        "features": [
-          "ActiveUsers",
-          "PRBUtilization",
-          "AvgSINR",
-          "TxPower",
-          "CellTemperature",
-          "PacketLoss"
-        ],
-        "mean": [
-          97.2,
-          70.0,
-          19.75,
-          23.0,
-          40.5,
-          3.06
-        ],
-        "std": [
-          36.68733,
-          23.85582,
-          4.38035,
-          3.43511,
-          5.76628,
-          2.1122
-        ],
-        "classes": [
-          "No",
-          "Yes"
-        ],
-        "coef": [
-          [
+            0.0,
             0.0,
             0.0,
             0.0,
@@ -775,93 +530,97 @@ const DSC = {
             0.0
           ],
           [
-            0.64751,
-            0.60989,
-            -0.60762,
-            0.67239,
-            0.62365,
-            0.7271
+            5.46677,
+            1.26291,
+            -8.1849,
+            1.01688,
+            -0.92724,
+            0.03045,
+            3.10548
           ]
         ],
         "intercept": [
           0.0,
-          -0.2052
+          0.15394
         ]
       },
       "scenarios": {
-        "No": {
-          "label": "🟢 Normal",
-          "hint": "classe normal",
+        "rru2": {
+          "label": "🟢 2 RRUs (normal)",
+          "hint": "operação normal",
           "values": {
-            "ActiveUsers": 35.0,
-            "PRBUtilization": 22.0,
-            "AvgSINR": 28.0,
-            "TxPower": 17.0,
-            "CellTemperature": 31.0,
-            "PacketLoss": 0.4
+            "RSRP": -87.0,
+            "RSRQ": -10.0,
+            "SINR": 31.0,
+            "PDSCH_MCS": 23.0,
+            "PUSCH_MCS": 14.0,
+            "PDSCH_PRBs": 128.0,
+            "throughput_DL": 290.0
           }
         },
-        "Yes": {
-          "label": "🔴 Falha",
-          "hint": "classe falha",
+        "rru1": {
+          "label": "🔴 1 RRU (defeito)",
+          "hint": "RRU perdida",
           "values": {
-            "ActiveUsers": 102.0,
-            "PRBUtilization": 80.0,
-            "AvgSINR": 18.0,
-            "TxPower": 24.0,
-            "CellTemperature": 41.0,
-            "PacketLoss": 3.0
+            "RSRP": -101.0,
+            "RSRQ": -10.0,
+            "SINR": 23.0,
+            "PDSCH_MCS": 19.0,
+            "PUSCH_MCS": 13.0,
+            "PDSCH_PRBs": 128.0,
+            "throughput_DL": 126.0
           }
         }
       },
       "start": {
-        "ActiveUsers": 35.0,
-        "PRBUtilization": 22.0,
-        "AvgSINR": 28.0,
-        "TxPower": 17.0,
-        "CellTemperature": 31.0,
-        "PacketLoss": 0.4
+        "RSRP": -87.0,
+        "RSRQ": -10.0,
+        "SINR": 31.0,
+        "PDSCH_MCS": 23.0,
+        "PUSCH_MCS": 14.0,
+        "PDSCH_PRBs": 128.0,
+        "throughput_DL": 290.0
       },
       "metrics_table": [
         {
-          "model": "Regressão Logística",
-          "acc": 0.95,
-          "f1": 0.9499
-        },
-        {
-          "model": "Árvore de Decisão",
-          "acc": 0.95,
-          "f1": 0.9499
-        },
-        {
-          "model": "Random Forest",
-          "acc": 0.95,
-          "f1": 0.9499
+          "model": "SVM (RBF)",
+          "acc": 0.9413,
+          "f1": 0.9413
         },
         {
           "model": "Gradient Boosting",
-          "acc": 0.95,
-          "f1": 0.9499
+          "acc": 0.9298,
+          "f1": 0.9298
+        },
+        {
+          "model": "Regressão Logística",
+          "acc": 0.9298,
+          "f1": 0.9297
+        },
+        {
+          "model": "Random Forest",
+          "acc": 0.9146,
+          "f1": 0.9146
         },
         {
           "model": "k-NN",
-          "acc": 0.95,
-          "f1": 0.9499
+          "acc": 0.8848,
+          "f1": 0.8848
         },
         {
-          "model": "SVM (RBF)",
-          "acc": 0.95,
-          "f1": 0.9499
+          "model": "Árvore de Decisão",
+          "acc": 0.8261,
+          "f1": 0.8238
         },
         {
           "model": "Naive Bayes",
-          "acc": 0.9,
-          "f1": 0.9
+          "acc": 0.6049,
+          "f1": 0.5861
         }
       ],
       "balance": {
-        "No": 10,
-        "Yes": 10
+        "rru2": 2218,
+        "rru1": 2148
       }
     }
   }
@@ -899,7 +658,7 @@ function setDataset(key){
   const n=$("#countSeg .on"); setCount(n?+n.dataset.n:3); updateFooter();
 }
 function updateSrc(){
-  $("#srcNote").innerHTML=`<span class="srcbadge src-prof">BASE DO PROFESSOR</span> <b>${D.label}</b> — ${D.usecase}. `+
+  $("#srcNote").innerHTML=`<span class="srcbadge src-prof">DADOS REAIS · SUTD</span> <b>${D.label}</b> — ${D.usecase}. `+
     `${D.n_rows} linhas · alvo <b>${D.target_name}</b> (${D.classes.map(c=>c.emoji+' '+c.display).join(' · ')}).`;
 }
 function updateExplain(){ $("#clsList").textContent=D.classes.map(c=>c.display).join(", "); }
@@ -988,9 +747,9 @@ function buildCount(){
   $("#countSeg").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>setCount(+b.dataset.n)));
 }
 function updateFooter(){
-  $("#footer").innerHTML=`<b>Protótipo de design</b> — card “Classificação” (família) do lab de RIC-IA. Usa os
-    datasets <b>rotulados pelo Prof. Tesolin</b> (Base Fonts RIC, valores e rótulos originais). Preditor ao vivo:
-    Regressão Logística interpretável; a tabela compara 7 classificadores. Faltam kNN/Naive Bayes/SVM (tabelas largas).`;
+  $("#footer").innerHTML=`<b>Caso do artigo</b> — Manutenção preditiva-rApp sobre os dados reais do <b>walk test SUTD</b> (Ngo et al. 2024).
+    Preditor ao vivo: Regressão Logística interpretável; a tabela compara 7 classificadores no
+    <b>split temporal 70:30</b> (recorte Instance). O campeão reproduz o XGBoost da Tabela 7 do artigo (~92,6%).`;
 }
 
 $("#themeBtn").addEventListener("click",()=>{
@@ -1008,11 +767,11 @@ const REPCODE=`from sklearn.linear_model import LogisticRegression
 model = LogisticRegression().fit(X, y)   # treina: aprende os pesos de cada classe
 model.predict_proba(X_nova)              # probabilidade de cada classe
 model.predict(X_nova)                    # a classe vencedora`;
-function draftP1(){const b=D.metrics_table[0];return `Para o problema "${D.usecase}", avaliei ${D.metrics_table.length} classificadores por validação cruzada estratificada, medindo Acurácia e F1-macro. O melhor foi ${b.model} (Acurácia ${(b.acc*100).toFixed(1)}%, F1 ${b.f1}). A Regressão Logística — interpretável e rápida — fica muito próxima do topo, sendo apropriada para um xApp near-RT que precisa explicar a decisão. O F1-macro equilibra o desempenho entre as classes, o que importa quando elas estão desbalanceadas; a Acurácia sozinha pode enganar nesse caso.`;}
-function draftP2(){return `A Regressão Logística é a irmã classificadora da regressão linear: soma os KPIs com pesos (s = β₀ + β·x) e passa o resultado por uma curva em "S" (sigmoide), transformando-o numa probabilidade entre 0 e 1. Com mais de duas classes, o softmax dá uma probabilidade para cada, somando 100%; vence a mais provável. O treino ajusta os pesos para que as probabilidades previstas batam com os rótulos reais (máxima verossimilhança). O principal hiperparâmetro é a força da regularização (C), que evita superajuste. Vantagens: rápida, interpretável (dá para ver qual KPI puxou a decisão) e devolve probabilidades calibráveis. Limitações: a fronteira de decisão é linear — problemas muito não lineares pedem árvores/SVM/redes —, e ela pode ir mal se as classes forem fortemente sobrepostas. Para o estado da célula, os KPIs separam bem as classes, o que a torna uma escolha adequada e explicável.`;}
-const REP={tec:"Classificação",badge:"🚦",fam:"aprendizado supervisionado",slug:()=>"classificacao-"+cur,
+function draftP1(){const b=D.metrics_table[0];return `Para o problema "${D.usecase}", avaliei ${D.metrics_table.length} classificadores num split temporal 70:30 (honesto para amostras a 2 Hz), medindo Acurácia e F1-macro. O melhor foi ${b.model} (Acurácia ${(b.acc*100).toFixed(1)}%, F1 ${b.f1}). A Regressão Logística — interpretável e rápida — fica muito próxima do topo, sendo apropriada para um xApp near-RT que precisa explicar a decisão. O F1-macro equilibra o desempenho entre as classes, o que importa quando elas estão desbalanceadas; a Acurácia sozinha pode enganar nesse caso.`;}
+function draftP2(){return `A Regressão Logística é a irmã classificadora da regressão linear: soma os KPIs com pesos (s = β₀ + β·x) e passa o resultado por uma curva em "S" (sigmoide), transformando-o numa probabilidade entre 0 e 1. Com mais de duas classes, o softmax dá uma probabilidade para cada, somando 100%; vence a mais provável. O treino ajusta os pesos para que as probabilidades previstas batam com os rótulos reais (máxima verossimilhança). O principal hiperparâmetro é a força da regularização (C), que evita superajuste. Vantagens: rápida, interpretável (dá para ver qual KPI puxou a decisão) e devolve probabilidades calibráveis. Limitações: a fronteira de decisão é linear — problemas muito não lineares pedem árvores/SVM/redes —, e ela pode ir mal se as classes forem fortemente sobrepostas. Aqui as KPMs de rádio (RSRP/RSRQ/SINR à frente) carregam a assinatura de cada classe, o que torna a logística adequada e explicável.`;}
+const REP={tec:"Manutenção preditiva",badge:"🛠️",fam:"aprendizado supervisionado · Manutenção preditiva-rApp",slug:()=>"manutencao-"+cur,
  resumo(){const b=D.metrics_table[0],lr=D.metrics_table.find(r=>r.model==="Regressão Logística");
-  return [`Classificamos <b>${D.target_name}</b> em ${D.classes.length} classes (${D.classes.map(c=>c.display).join(" / ")}) — base rotulada do professor, ${D.n_rows} linhas.`,
+  return [`Classificamos <b>${D.target_name}</b> em ${D.classes.length} classes (${D.classes.map(c=>c.display).join(" / ")}) — dados reais do walk test SUTD, ${D.n_rows} amostras.`,
    `Melhor modelo: <b>${b.model}</b> — F1 ${b.f1} · acurácia ${(b.acc*100).toFixed(1)}%.`,
    `A Regressão Logística (interpretável) marca F1 ${lr?lr.f1:"—"} — e ainda explica a decisão.`,
    `Lição: o F1 equilibra as classes; a acurácia sozinha engana com classes desbalanceadas.`];},
@@ -1024,11 +783,11 @@ const REP={tec:"Classificação",badge:"🚦",fam:"aprendizado supervisionado",s
  tabela(){const mx=Math.max(...D.metrics_table.map(r=>r.f1));return {head:["Modelo","Acurácia","F1-macro"],rows:D.metrics_table.map((r,i)=>({name:r.model,vals:[(r.acc*100).toFixed(1)+"%",r.f1.toFixed(3)],bar:mx>0?r.f1/mx:0,win:i===0}))};},
  exemplo(){const pr=classify(single),tc=topClass(pr),m=SEV[tc[0]];const f=D.features.map(x=>`${x.label} = ${single[x.key]}${x.unit?" "+x.unit:""}`).join("; ");return `${esc(f)} → classe <b>${m.emoji} ${m.display}</b> (confiança ${(tc[1]*100).toFixed(0)}%).`;},
  gloss(){return [["Acurácia","% de acertos no total"],["F1-macro","média que dá o mesmo peso a cada classe — justa com desbalanceio"],["Probabilidade","a confiança do modelo em cada classe (soma 100%)"],["Estratificada","validação que preserva a proporção das classes"]];},
- limites(){return [`Base pequena (${D.n_rows} linhas) — ótima para aprender, curta para produção.`,
-  `Os rótulos são do professor; num RIC real viriam de eventos medidos na rede.`,
-  `Próximo passo: classificar com <b>KPM real</b> (PRB/throughput por célula via E2).`];},
- py(){return `# Script da entrega — Classificação (${D.label})
-# Coloque ao lado o CSV do professor (colunas: ${D.features.map(f=>f.key).join(", ")}, ${D.target_name})
+ limites(){return [`Recorte <b>Instance</b> (1 amostra); a variante <i>sequence</i> (janela de 10) sobe mais, mas fica fora da abordagem designada.`,
+  `O <b>split temporal 70:30</b> evita o vazamento que o split aleatório causa a 2 Hz (senão a acurácia infla).`,
+  `Próximo passo: rodar o mesmo caso com <b>KPM real</b> (via E2) no console do painel.`];},
+ py(){return `# Script — Manutenção preditiva (${D.label}) · dados reais do walk test SUTD (Ngo et al. 2024)
+# CSV com colunas: ${D.features.map(f=>f.key).join(", ")}, ${D.target_name}
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -1119,7 +878,7 @@ $("#repPy")?.addEventListener("click",dlPy);
 $("#repPdf")?.addEventListener("click",()=>{$("#printarea").innerHTML='<div style="max-width:720px;margin:0 auto">'+reportBody()+"</div>";window.print();});
 
 /* ===== integração: embed no painel + compreensão + sistema real ===== */
-const LESSON="classificacao", NEXT="/lab/localizacao";
+const LESSON="manutencao", NEXT="/lab/clustering";
 const EMBED=new URLSearchParams(location.search).has("embed");
 if(EMBED){document.documentElement.classList.add("embed");
   try{const t=window.parent.document.documentElement.getAttribute("data-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}
@@ -1142,5 +901,4 @@ document.getElementById("compSend")?.addEventListener("click",async()=>{
   catch(e){msg.textContent=TT("comp.fail","Não deu para enviar daqui — anote e pergunte na aula.");}
 });
 </script>
-
 <script src="/static/lab-stepper.js"></script>

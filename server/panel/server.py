@@ -365,6 +365,12 @@ COMMANDS: dict[str, dict] = {
     # Coleta KPM com TRÁFEGO REAL: resiliente, 100% por evento (sem tempo), com
     # heartbeat ("não travou"), auto-retry e auto-revert do cpuset. Conclui sempre.
     "p2-kpm-real": {"cmd": ["./scripts/kpm_collect_real.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    # Testes de ML por caso de uso (trabalho final RIC-IA, Prof. Julio Tesolin):
+    # rodam o experimento scikit-learn sobre os dados REAIS do walk test SUTD e
+    # streamam a tabela de métricas (recorte Instance; GradientBoosting≈XGBoost).
+    "p2-ml-uetp": {"cmd": ["./scripts/p2_ml_uetp.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-ml-localizacao": {"cmd": ["./scripts/p2_ml_localizacao.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-ml-pm": {"cmd": ["./scripts/p2_ml_pm.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
 }
 
 _VALID_DISTANCES = {"none", "100m", "500m", "1km", "3km", "off"}
@@ -1013,6 +1019,17 @@ def lab_classificacao_page() -> FileResponse:
     return FileResponse(STATIC_DIR / "lab-classificacao.html", headers=NO_CACHE)
 
 
+# Casos do artigo (Ngo et al. 2024) sobre os dados reais do SUTD — classificadores.
+@app.get("/lab/localizacao")
+def lab_localizacao_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "lab-localizacao.html", headers=NO_CACHE)
+
+
+@app.get("/lab/manutencao")
+def lab_manutencao_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "lab-manutencao.html", headers=NO_CACHE)
+
+
 @app.get("/lab/clustering")
 def lab_clustering_page() -> FileResponse:
     return FileResponse(STATIC_DIR / "lab-clustering.html", headers=NO_CACHE)
@@ -1026,6 +1043,12 @@ def lab_anomalia_page() -> FileResponse:
 @app.get("/lab/pca")
 def lab_pca_page() -> FileResponse:
     return FileResponse(STATIC_DIR / "lab-pca.html", headers=NO_CACHE)
+
+
+# Projeto final: página de fechamento — escolher o caso, rodar o teste, gerar o relatório.
+@app.get("/lab/projeto")
+def lab_projeto_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "lab-projeto.html", headers=NO_CACHE)
 
 
 # Dúvidas do Lab de IA: aluno/professor envia "não entendi" com a pergunta;

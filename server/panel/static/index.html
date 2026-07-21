@@ -735,6 +735,9 @@
           <button class="test-p2" data-cmd="p2-test-e2-rc" data-i18n="t.p2_rc">Testar E2SM-RC (attach)</button>
           <button class="test-p2" data-cmd="p2-kpm-real" data-i18n="t.p2_kpm_real">Coletar KPM com tráfego (real — ideal 4 vCPU)</button>
           <button class="test-p2" data-cmd="p2-kpm-analytics" data-i18n="t.p2_analytics">Analisar dados KPM (CSV + KPI)</button>
+          <button class="test-p2" data-cmd="p2-ml-uetp" data-i18n="t.p2_ml_uetp">IA · Prever throughput (UE-TP)</button>
+          <button class="test-p2" data-cmd="p2-ml-localizacao" data-i18n="t.p2_ml_loc">IA · Localizar andar (Localization)</button>
+          <button class="test-p2" data-cmd="p2-ml-pm" data-i18n="t.p2_ml_pm">IA · Detectar RRU perdida (PM)</button>
           <div class="lock-note" data-i18n="rail.lock_p2">Ative o Projeto 2 no topo para rodar estes testes.</div>
         </div>
       </div>
@@ -1412,6 +1415,33 @@ const TEST_EXPLAIN = {
       'Sem UE gerando tráfego, o throughput vem ~0 — o script explica isso em vez de falhar.',
     ],
     concl: '✓ Fecha a cadeia Coleta→ETL→KPI→Decisão (aula06): o CSV é o insumo do UE-TP-rApp e do Módulo de Análise de Dados.',
+  },
+  'p2-ml-uetp': {
+    title: 'O que acabou de acontecer — UE-TP (previsão de throughput)',
+    items: [
+      'Treinou 8 regressores sobre os dados reais do walk test SUTD (4 cenários) para prever o throughput DL do UE a partir dos KPIs de rádio do instante — recorte <b>Instance</b>.',
+      'Mediu <b>RMSE, MAE e R²</b> num split temporal 80:20: o Gradient Boosting lidera (R² ~0,84) e o <b>MLP de 10 neurônios reproduz a DNN do artigo</b>.',
+      'É o caso do <b>UE-TP-rApp</b>: o modelo que um xApp near-RT consultaria para antecipar a taxa de cada UE.',
+    ],
+    concl: '✓ Reproduz a Tabela 4 de Ngo et al. 2024 (Instance) sobre dados reais — o R² 0,90 famoso é da variante *sequence*.',
+  },
+  'p2-ml-localizacao': {
+    title: 'O que acabou de acontecer — Localization (andar do UE)',
+    items: [
+      'Treinou 5 classificadores para dizer em qual <b>andar (4/5/6)</b> o UE está usando só as 7 KPMs de rádio que o RIC coleta — sem GPS.',
+      'Split temporal 70:30: o <b>Gradient Boosting (~XGBoost) acerta ~84%</b>, reproduzindo a Tabela 3 do artigo.',
+      'A saída alimentaria o gerenciamento de interferência e o Cell-TP-rApp.',
+    ],
+    concl: '✓ Reproduz a Tabela 3 (Instance); o LSTM 91,1% famoso é *sequence*, fora da abordagem designada.',
+  },
+  'p2-ml-pm': {
+    title: 'O que acabou de acontecer — Predictive Maintenance (RRU perdida)',
+    items: [
+      'Treinou 5 classificadores para detectar, pelo lado do UE, se a célula está com <b>2 RRUs (normal) ou 1 (defeito)</b> — mesmo quando o EMS acha que está tudo bem.',
+      'Split temporal 70:30: o <b>Gradient Boosting (~XGBoost) acerta ~92,5%</b>, reproduzindo a Tabela 7.',
+      'Se o modelo diz 1 e o inventário diz 2, dispara <b>alerta de manutenção</b>.',
+    ],
+    concl: '✓ Reproduz a Tabela 7 (Instance); a DNN 99,1% famosa é *sequence*.',
   },
 };
 function appendExplain(cmd) {

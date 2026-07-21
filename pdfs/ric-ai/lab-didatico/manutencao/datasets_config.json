@@ -1,0 +1,262 @@
+{
+  "family": "Manutenção preditiva",
+  "default": "rru",
+  "datasets": {
+    "rru": {
+      "label": "Manutenção preditiva — RRU perdida",
+      "source": "SUTD walk test (Ngo et al. 2024)",
+      "usecase": "detectar se a célula tem 2 RRUs ou 1 (defeito) pelo lado do UE — PM-rApp",
+      "n_rows": 4366,
+      "target_name": "RRUs ativas",
+      "features": [
+        {
+          "key": "RSRP",
+          "label": "RSRP (sinal)",
+          "unit": "dBm",
+          "hard": [
+            -125,
+            -55
+          ],
+          "train": [
+            -138.5,
+            -70.6
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "RSRQ",
+          "label": "RSRQ (qualidade)",
+          "unit": "dB",
+          "hard": [
+            -22,
+            -3
+          ],
+          "train": [
+            -25.7,
+            -10.2
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "SINR",
+          "label": "SINR",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            -12.9,
+            39.5
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PDSCH_MCS",
+          "label": "MCS (PDSCH)",
+          "unit": "",
+          "hard": [
+            0,
+            28
+          ],
+          "train": [
+            0.0,
+            28.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PUSCH_MCS",
+          "label": "MCS (PUSCH)",
+          "unit": "",
+          "hard": [
+            0,
+            28
+          ],
+          "train": [
+            0.0,
+            16.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PDSCH_PRBs",
+          "label": "PRBs (PDSCH)",
+          "unit": "",
+          "hard": [
+            0,
+            140
+          ],
+          "train": [
+            4.0,
+            129.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "throughput_DL",
+          "label": "Throughput DL",
+          "unit": "Mbps",
+          "hard": [
+            0,
+            600
+          ],
+          "train": [
+            0.0,
+            501.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "classes": [
+        {
+          "name": "rru2",
+          "display": "2 RRUs (normal)",
+          "emoji": "🟢",
+          "sev": "good"
+        },
+        {
+          "name": "rru1",
+          "display": "1 RRU (defeito)",
+          "emoji": "🔴",
+          "sev": "bad"
+        }
+      ],
+      "live_model": {
+        "features": [
+          "RSRP",
+          "RSRQ",
+          "SINR",
+          "PDSCH_MCS",
+          "PUSCH_MCS",
+          "PDSCH_PRBs",
+          "throughput_DL"
+        ],
+        "mean": [
+          -97.14755,
+          -10.86787,
+          23.01825,
+          18.77668,
+          12.60078,
+          127.73729,
+          183.96267
+        ],
+        "std": [
+          14.44512,
+          1.27157,
+          12.1937,
+          7.13933,
+          3.15833,
+          4.64043,
+          115.17527
+        ],
+        "classes": [
+          "rru1",
+          "rru2"
+        ],
+        "coef": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            5.46677,
+            1.26291,
+            -8.1849,
+            1.01688,
+            -0.92724,
+            0.03045,
+            3.10548
+          ]
+        ],
+        "intercept": [
+          0.0,
+          0.15394
+        ]
+      },
+      "scenarios": {
+        "rru2": {
+          "label": "🟢 2 RRUs (normal)",
+          "hint": "operação normal",
+          "values": {
+            "RSRP": -87.0,
+            "RSRQ": -10.0,
+            "SINR": 31.0,
+            "PDSCH_MCS": 23.0,
+            "PUSCH_MCS": 14.0,
+            "PDSCH_PRBs": 128.0,
+            "throughput_DL": 290.0
+          }
+        },
+        "rru1": {
+          "label": "🔴 1 RRU (defeito)",
+          "hint": "RRU perdida",
+          "values": {
+            "RSRP": -101.0,
+            "RSRQ": -10.0,
+            "SINR": 23.0,
+            "PDSCH_MCS": 19.0,
+            "PUSCH_MCS": 13.0,
+            "PDSCH_PRBs": 128.0,
+            "throughput_DL": 126.0
+          }
+        }
+      },
+      "start": {
+        "RSRP": -87.0,
+        "RSRQ": -10.0,
+        "SINR": 31.0,
+        "PDSCH_MCS": 23.0,
+        "PUSCH_MCS": 14.0,
+        "PDSCH_PRBs": 128.0,
+        "throughput_DL": 290.0
+      },
+      "metrics_table": [
+        {
+          "model": "SVM (RBF)",
+          "acc": 0.9413,
+          "f1": 0.9413
+        },
+        {
+          "model": "Gradient Boosting",
+          "acc": 0.9298,
+          "f1": 0.9298
+        },
+        {
+          "model": "Regressão Logística",
+          "acc": 0.9298,
+          "f1": 0.9297
+        },
+        {
+          "model": "Random Forest",
+          "acc": 0.9146,
+          "f1": 0.9146
+        },
+        {
+          "model": "k-NN",
+          "acc": 0.8848,
+          "f1": 0.8848
+        },
+        {
+          "model": "Árvore de Decisão",
+          "acc": 0.8261,
+          "f1": 0.8238
+        },
+        {
+          "model": "Naive Bayes",
+          "acc": 0.6049,
+          "f1": 0.5861
+        }
+      ],
+      "balance": {
+        "rru2": 2218,
+        "rru1": 2148
+      }
+    }
+  }
+}

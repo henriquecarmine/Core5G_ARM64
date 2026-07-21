@@ -207,7 +207,14 @@
     <div class="takeaway" id="takeaway"></div>
   </section>
 
-  <section class="card">
+    <section class="card">
+    <h2>🔍 Os modelos, um a um</h2>
+    <p class="sub">Todos recebem os mesmos KPIs (coletados via E2/KPM). O que muda é o que cada um <b>faz</b> com eles — clique para abrir.</p>
+    <div data-model-deepdive="pca"></div>
+  </section>
+  <script src="/static/lab-models.js"></script>
+
+<section class="card">
     <h2>📄 Relatório</h2>
     <p class="sub" data-i18n="report.sub">A entrega do trabalho, nas 3 partes, com o que você rodou preenchido. Edite na sua voz e baixe: PDF, Word e o script Python.</p>
     <button class="repbtn" id="openReport" style="margin-top:14px" data-i18n="report.btn">📄 Gerar relatório (PDF / Word / .py)</button>
@@ -762,7 +769,7 @@ $("#repPy")?.addEventListener("click",dlPy);
 $("#repPdf")?.addEventListener("click",()=>{$("#printarea").innerHTML='<div style="max-width:720px;margin:0 auto">'+reportBody()+"</div>";window.print();});
 
 /* ===== integração: embed no painel + compreensão + sistema real ===== */
-const LESSON="pca", NEXT="/lab";
+const LESSON="pca", NEXT="/lab/projeto";
 const EMBED=new URLSearchParams(location.search).has("embed");
 if(EMBED){document.documentElement.classList.add("embed");
   try{const t=window.parent.document.documentElement.getAttribute("data-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}

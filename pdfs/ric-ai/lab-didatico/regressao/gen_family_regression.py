@@ -14,11 +14,18 @@ from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import LeaveOneOut, KFold, cross_val_predict
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+
+# Na base didática (N=16) o MLP atinge max_iter sem convergir — esperado (e a
+# lição: rede neural tem fome de dados). Silencia só o aviso repetido.
+import warnings
+from sklearn.exceptions import ConvergenceWarning
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 SEED = 42
 BASE = Path(__file__).resolve().parent / "data"
@@ -59,6 +66,9 @@ def models():
         "Gradient Boosting": GradientBoostingRegressor(n_estimators=200, max_depth=2, learning_rate=0.05, random_state=SEED),
         "k-NN": make_pipeline(StandardScaler(), KNeighborsRegressor(n_neighbors=3)),
         "SVR (RBF)": make_pipeline(StandardScaler(), SVR(kernel="rbf", C=100, gamma="scale")),
+        "MLP (10 neurônios)": make_pipeline(
+            StandardScaler(),
+            MLPRegressor(hidden_layer_sizes=(10,), max_iter=3000, random_state=SEED)),
     }
 
 

@@ -1,0 +1,293 @@
+{
+  "family": "Localização",
+  "default": "andar",
+  "datasets": {
+    "andar": {
+      "label": "Localização — andar do UE",
+      "source": "SUTD walk test (Ngo et al. 2024)",
+      "usecase": "estimar o andar (4/5/6) do UE só com KPMs de rádio — Localization-rApp",
+      "n_rows": 6479,
+      "target_name": "Andar",
+      "features": [
+        {
+          "key": "RSRP",
+          "label": "RSRP (sinal)",
+          "unit": "dBm",
+          "hard": [
+            -125,
+            -55
+          ],
+          "train": [
+            -136.5,
+            -70.6
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "RSRQ",
+          "label": "RSRQ (qualidade)",
+          "unit": "dB",
+          "hard": [
+            -22,
+            -3
+          ],
+          "train": [
+            -30.7,
+            -10.2
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "SINR",
+          "label": "SINR",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            -16.4,
+            39.5
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PDSCH_MCS",
+          "label": "MCS (PDSCH)",
+          "unit": "",
+          "hard": [
+            0,
+            28
+          ],
+          "train": [
+            0.0,
+            28.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PUSCH_MCS",
+          "label": "MCS (PUSCH)",
+          "unit": "",
+          "hard": [
+            0,
+            28
+          ],
+          "train": [
+            0.0,
+            16.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PDSCH_PRBs",
+          "label": "PRBs (PDSCH)",
+          "unit": "",
+          "hard": [
+            0,
+            140
+          ],
+          "train": [
+            4.0,
+            129.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "throughput_DL",
+          "label": "Throughput DL",
+          "unit": "Mbps",
+          "hard": [
+            0,
+            600
+          ],
+          "train": [
+            0.0,
+            487.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "classes": [
+        {
+          "name": "andar4",
+          "display": "Andar 4",
+          "emoji": "4️⃣",
+          "sev": "good"
+        },
+        {
+          "name": "andar5",
+          "display": "Andar 5",
+          "emoji": "5️⃣",
+          "sev": "warn"
+        },
+        {
+          "name": "andar6",
+          "display": "Andar 6",
+          "emoji": "6️⃣",
+          "sev": "bad"
+        }
+      ],
+      "live_model": {
+        "features": [
+          "RSRP",
+          "RSRQ",
+          "SINR",
+          "PDSCH_MCS",
+          "PUSCH_MCS",
+          "PDSCH_PRBs",
+          "throughput_DL"
+        ],
+        "mean": [
+          -99.79398,
+          -11.38994,
+          17.53315,
+          16.91912,
+          11.99043,
+          127.09847,
+          142.06544
+        ],
+        "std": [
+          13.78042,
+          2.17073,
+          12.78104,
+          7.16362,
+          3.55421,
+          9.35075,
+          105.25926
+        ],
+        "classes": [
+          "andar4",
+          "andar5",
+          "andar6"
+        ],
+        "coef": [
+          [
+            -3.51558,
+            0.09943,
+            1.87588,
+            0.40256,
+            0.08871,
+            -0.15732,
+            0.28973
+          ],
+          [
+            5.26164,
+            -1.2568,
+            -1.50062,
+            -1.0824,
+            1.15427,
+            0.0507,
+            -3.50535
+          ],
+          [
+            -1.74605,
+            1.15737,
+            -0.37526,
+            0.67984,
+            -1.24298,
+            0.10662,
+            3.21562
+          ]
+        ],
+        "intercept": [
+          0.20877,
+          -0.4241,
+          0.21533
+        ]
+      },
+      "scenarios": {
+        "andar4": {
+          "label": "4️⃣ Andar 4",
+          "hint": "cobertura do 4º andar",
+          "values": {
+            "RSRP": -108.0,
+            "RSRQ": -11.0,
+            "SINR": 13.0,
+            "PDSCH_MCS": 14.0,
+            "PUSCH_MCS": 11.0,
+            "PDSCH_PRBs": 128.0,
+            "throughput_DL": 81.0
+          }
+        },
+        "andar5": {
+          "label": "5️⃣ Andar 5",
+          "hint": "cobertura do 5º andar",
+          "values": {
+            "RSRP": -93.0,
+            "RSRQ": -10.0,
+            "SINR": 18.0,
+            "PDSCH_MCS": 21.0,
+            "PUSCH_MCS": 14.0,
+            "PDSCH_PRBs": 128.0,
+            "throughput_DL": 123.0
+          }
+        },
+        "andar6": {
+          "label": "6️⃣ Andar 6",
+          "hint": "cobertura do 6º andar",
+          "values": {
+            "RSRP": -87.0,
+            "RSRQ": -10.0,
+            "SINR": 31.0,
+            "PDSCH_MCS": 23.0,
+            "PUSCH_MCS": 14.0,
+            "PDSCH_PRBs": 128.0,
+            "throughput_DL": 290.0
+          }
+        }
+      },
+      "start": {
+        "RSRP": -93.0,
+        "RSRQ": -10.0,
+        "SINR": 18.0,
+        "PDSCH_MCS": 21.0,
+        "PUSCH_MCS": 14.0,
+        "PDSCH_PRBs": 128.0,
+        "throughput_DL": 123.0
+      },
+      "metrics_table": [
+        {
+          "model": "Gradient Boosting",
+          "acc": 0.8442,
+          "f1": 0.8436
+        },
+        {
+          "model": "Random Forest",
+          "acc": 0.8303,
+          "f1": 0.8323
+        },
+        {
+          "model": "SVM (RBF)",
+          "acc": 0.8272,
+          "f1": 0.8271
+        },
+        {
+          "model": "k-NN",
+          "acc": 0.8175,
+          "f1": 0.8179
+        },
+        {
+          "model": "Regressão Logística",
+          "acc": 0.7938,
+          "f1": 0.7982
+        },
+        {
+          "model": "Árvore de Decisão",
+          "acc": 0.7861,
+          "f1": 0.7844
+        },
+        {
+          "model": "Naive Bayes",
+          "acc": 0.5368,
+          "f1": 0.4586
+        }
+      ],
+      "balance": {
+        "andar4": 2288,
+        "andar5": 1973,
+        "andar6": 2218
+      }
+    }
+  }
+}

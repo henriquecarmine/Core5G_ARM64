@@ -40,6 +40,20 @@ remote_exec() {
     ssh "${SSH_OPTS[@]}" "$REMOTE" "$@"
 }
 
+# server/.env é gitignored (só pins de imagem, sem segredos), então um clone novo
+# do repo não o tem — e o rsync do cmd_sync o lista explicitamente, abortando com
+# "rsync error 23" que não diz o que fazer. Recria a partir do .env.example, que
+# traz exatamente os mesmos valores.
+ensure_server_env() {
+    [ -f "$LOCAL_DIR/.env" ] && return 0
+    if [ ! -f "$LOCAL_DIR/.env.example" ]; then
+        echo "ERRO: $LOCAL_DIR/.env e $LOCAL_DIR/.env.example ausentes — clone incompleto." >&2
+        exit 1
+    fi
+    echo "==> $LOCAL_DIR/.env ausente (é gitignored); criando a partir de $LOCAL_DIR/.env.example"
+    cp "$LOCAL_DIR/.env.example" "$LOCAL_DIR/.env"
+}
+
 cmd_bootstrap() {
     echo "==> Enviando infra/server-bootstrap.sh e infra/core5g-panel.service para o servidor"
     rsync -az -e "ssh ${SSH_OPTS[*]}" infra/server-bootstrap.sh "$REMOTE:~/server-bootstrap.sh"
@@ -56,6 +70,7 @@ cmd_panel() {
 }
 
 cmd_sync() {
+    ensure_server_env
     echo "==> Sincronizando $LOCAL_DIR/ -> $REMOTE:~/$REMOTE_DIR"
     remote_exec "mkdir -p ~/$REMOTE_DIR"
     rsync -az -e "ssh ${SSH_OPTS[*]}" \

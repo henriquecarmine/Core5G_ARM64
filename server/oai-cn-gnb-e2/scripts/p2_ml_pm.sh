@@ -39,7 +39,7 @@ section "2. Treino + métricas (scikit-learn, split temporal 70:30)"
 step "treinando 5 classificadores instance-based e medindo Acc/Prec/Rec/F1…"
 if "$PY" -u "$EXP" --data "$DATA_DIR"; then
     summary "treinou os 5 classificadores da Tabela 7 e imprimiu as métricas" \
-            "Gradient Boosting (~XGBoost) reproduz o artigo (~92,5%)" ok
+            "MLP lidera (93,1%); Gradient Boosting (~XGBoost) reproduz o artigo (92,5% vs 92,6%)" ok
 else
     rc=$?
     err "o experimento falhou (rc=$rc) — o venv tem scikit-learn instalado?"

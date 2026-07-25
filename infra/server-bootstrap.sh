@@ -205,7 +205,7 @@ fi
 
 echo ""
 echo "=========================================="
-echo "6/6 - Guardrails de CPU (protege o box de 2 vCPUs)"
+echo "6/6 - Guardrails de CPU (protege o box de $(nproc) vCPUs)"
 echo "=========================================="
 # Defesa em profundidade (cgroup v2), para o lab E2 nunca derrubar o sistema:
 #  - oai-lab.slice com AllowedCPUs: FIXA o lab (gNB+UE+xApp) nos cores >= 1,

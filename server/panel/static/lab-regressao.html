@@ -856,6 +856,199 @@ const DSC = {
         }
       ]
     },
+    "energy_boosting": {
+      "label": "Energia · Consumo (boosting)",
+      "source": "Prof. Tesolin",
+      "usecase": "otimização de energia (variante boosting: + TxPower e CellTemperature)",
+      "n_rows": 24,
+      "features": [
+        {
+          "key": "ActiveUsers",
+          "label": "Usuários ativos",
+          "unit": "",
+          "hard": [
+            0,
+            300
+          ],
+          "train": [
+            16.0,
+            176.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "AvgSINR",
+          "label": "SINR médio",
+          "unit": "dB",
+          "hard": [
+            -10,
+            40
+          ],
+          "train": [
+            18.0,
+            27.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "PRBUtilization",
+          "label": "PRB utilizado",
+          "unit": "%",
+          "hard": [
+            0,
+            100
+          ],
+          "train": [
+            10.0,
+            96.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "TxPower",
+          "label": "Potência Tx",
+          "unit": "dBm",
+          "hard": [
+            0,
+            46
+          ],
+          "train": [
+            16.0,
+            25.0
+          ],
+          "decimals": 0
+        },
+        {
+          "key": "CellTemperature",
+          "label": "Temperatura da célula",
+          "unit": "°C",
+          "hard": [
+            0,
+            80
+          ],
+          "train": [
+            30.0,
+            42.0
+          ],
+          "decimals": 0
+        }
+      ],
+      "target": {
+        "key": "EnergyConsumption",
+        "unit": "kWh",
+        "min": 1.16,
+        "max": 4.08
+      },
+      "live_model": {
+        "features": [
+          "ActiveUsers",
+          "AvgSINR",
+          "PRBUtilization",
+          "TxPower",
+          "CellTemperature"
+        ],
+        "intercept": 4.5794,
+        "coef": {
+          "ActiveUsers": 0.0199,
+          "AvgSINR": -0.08167,
+          "PRBUtilization": -0.0005,
+          "TxPower": -0.12647,
+          "CellTemperature": 0.01292
+        }
+      },
+      "scenarios": {
+        "baixa": {
+          "label": "🌙 Carga baixa (hora 2)",
+          "hint": "carga baixa",
+          "values": {
+            "ActiveUsers": 16.0,
+            "AvgSINR": 27.0,
+            "PRBUtilization": 10.0,
+            "TxPower": 16.0,
+            "CellTemperature": 30.0
+          }
+        },
+        "media": {
+          "label": "🌆 Carga média (hora 20)",
+          "hint": "carga média",
+          "values": {
+            "ActiveUsers": 104.0,
+            "AvgSINR": 22.0,
+            "PRBUtilization": 60.0,
+            "TxPower": 21.0,
+            "CellTemperature": 36.0
+          }
+        },
+        "pico": {
+          "label": "🏙️ Pico (hora 15)",
+          "hint": "pico",
+          "values": {
+            "ActiveUsers": 176.0,
+            "AvgSINR": 18.0,
+            "PRBUtilization": 96.0,
+            "TxPower": 25.0,
+            "CellTemperature": 42.0
+          }
+        }
+      },
+      "start": {
+        "ActiveUsers": 104.0,
+        "AvgSINR": 22.0,
+        "PRBUtilization": 60.0,
+        "TxPower": 21.0,
+        "CellTemperature": 36.0
+      },
+      "metrics_table": [
+        {
+          "model": "Gradient Boosting",
+          "rmse": 0.058,
+          "mae": 0.043,
+          "r2": 0.997
+        },
+        {
+          "model": "Random Forest",
+          "rmse": 0.062,
+          "mae": 0.051,
+          "r2": 0.9966
+        },
+        {
+          "model": "SVR (RBF)",
+          "rmse": 0.079,
+          "mae": 0.065,
+          "r2": 0.9944
+        },
+        {
+          "model": "k-NN",
+          "rmse": 0.099,
+          "mae": 0.067,
+          "r2": 0.9914
+        },
+        {
+          "model": "Ridge",
+          "rmse": 0.112,
+          "mae": 0.086,
+          "r2": 0.9889
+        },
+        {
+          "model": "Regressão Linear",
+          "rmse": 0.116,
+          "mae": 0.084,
+          "r2": 0.988
+        },
+        {
+          "model": "MLP (10 neurônios)",
+          "rmse": 0.165,
+          "mae": 0.109,
+          "r2": 0.9758
+        },
+        {
+          "model": "Árvore de Decisão",
+          "rmse": 0.191,
+          "mae": 0.146,
+          "r2": 0.9675
+        }
+      ]
+    },
     "enriquecido": {
       "label": "Realista (sintético)",
       "source": "sintético (não linear)",

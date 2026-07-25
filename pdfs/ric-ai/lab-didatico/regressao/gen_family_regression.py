@@ -38,6 +38,7 @@ KPI = {
     "SINR":          {"label": "SINR",              "unit": "dB",  "hard": [-10, 40], "dec": 1},
     "PRBUtilization":{"label": "PRB utilizado",     "unit": "%",   "hard": [0, 100], "dec": 0},
     "TxPower":       {"label": "Potência Tx",       "unit": "dBm", "hard": [0, 46],  "dec": 0},
+    "CellTemperature": {"label": "Temperatura da célula", "unit": "°C", "hard": [0, 80], "dec": 0},
 }
 TARGET_UNIT = {"Throughput": "Mbps", "TrafficLoad": "", "EnergyConsumption": "kWh"}
 
@@ -51,6 +52,10 @@ DATASETS = [
     {"key": "energy", "label": "Energia · Consumo", "file": "energy_prediction.csv",
      "feat": ["ActiveUsers", "AvgSINR", "PRBUtilization"], "target": "EnergyConsumption",
      "source": "Prof. Tesolin", "usecase": "otimização de energia"},
+    {"key": "energy_boosting", "label": "Energia · Consumo (boosting)", "file": "energy_prediction_boosting.csv",
+     "feat": ["ActiveUsers", "AvgSINR", "PRBUtilization", "TxPower", "CellTemperature"],
+     "target": "EnergyConsumption", "source": "Prof. Tesolin",
+     "usecase": "otimização de energia (variante boosting: + TxPower e CellTemperature)"},
     {"key": "enriquecido", "label": "Realista (sintético)", "file": "uetp_enriched.csv",
      "feat": ["ActiveUsers", "SINR", "PRBUtilization"], "target": "Throughput",
      "source": "sintético (não linear)", "usecase": "versão realista p/ aprofundar"},

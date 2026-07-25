@@ -289,7 +289,7 @@ OAI nr-softmodem (RFSIM)
 |---|---|---|
 | `nr-gnb` / `nr-ue` (UERANSIM) | O-gNB monolítico (sem E2) + UE | N2, N3, NAS |
 | OAI `nr-softmodem` (Proj.2) | O-gNB com agente E2 | N2, N3, E2 |
-| `flexric` (Proj.2) | Near-RT RIC | E2, A1 |
+| `flexric` (Proj.2) | Near-RT RIC | E2 (**apenas** — sem A1; ver [Non-RT RIC](docs/non-rt-ric.md)) |
 | `amf` | 5GC CP — N2 termination | N2 (NGAP), N11 |
 | `smf` | 5GC CP — session management | N4 (PFCP), N11 |
 | `upf-a/b` | 5GC UP — user plane | N3 (GTP-U), N6 |

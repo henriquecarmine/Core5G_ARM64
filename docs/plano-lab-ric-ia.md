@@ -51,6 +51,9 @@ Todos realizados (v0.43.0 → 0.48.0); registro do que foi feito em cada um:
    (dados reais de KPM) além dos datasets sintéticos; conectar ao
    `xapp_ue_tp_moni.c` (EWMA hoje → modelo treinado). ⏳ **Opcional/futuro** — a
    ponte KPM→sklearn recomendada via **sidecar Python**, não porta C.
+   Ver [non-rt-ric.md](non-rt-ric.md): a regressão é função de **Non-RT RIC**, o
+   FlexRIC **não tem A1**, e nenhuma imagem do Non-RT RIC do O-RAN SC tem build
+   ARM64 — o caminho testado é rodar local em x86_64.
 5. **(Opcional) KNIME**: a disciplina usa KNIME (low-code); o mesmo fluxo pode
    ser reproduzido lá, com Python só quando necessário. ⏳ Não feito (opcional).
 

@@ -109,7 +109,7 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     if (proj === 'p2') {
       await page.click('#journey-btn');
       const jtotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
-      assert(jtotal === 16, `p2: jornada esperava 16 etapas, veio ${jtotal}`);
+      assert(jtotal === 17, `p2: jornada esperava 17 etapas (16 + a1real v0.56), veio ${jtotal}`);
       for (let i = 0; i < jtotal - 1; i++) await page.click('#tour-next');
       assert(errors.length === 0, `p2: pageerror na jornada: ${errors.join(' | ')}`);
       await page.click('#tour-exit');

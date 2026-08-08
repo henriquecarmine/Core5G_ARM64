@@ -36,6 +36,18 @@
     '.fs-edge.active::after{content:"";position:absolute;top:-2px;left:0;width:6px;height:6px;',
     '  border-radius:50%;background:#ffb84d;animation:fs-travel .8s linear infinite}',
     '.fs-result{margin-left:auto;padding-left:8px;font-weight:700;visibility:hidden}',
+    '.fs-node.hasinfo{cursor:pointer}',
+    '.fs-node.hasinfo:hover{border-color:#5c6370;color:#c9d1d9}',
+    '.fs-node.hasinfo i{font-style:normal;opacity:.55;margin-left:2px;font-size:9px}',
+    '.fs-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400}',
+    '.fs-pop{position:fixed;z-index:401;max-width:390px;background:#12141a;border:1px solid #3a3f48;',
+    '  border-radius:10px;padding:14px 16px;box-shadow:0 12px 34px rgba(0,0,0,.5);',
+    '  font-family:-apple-system,"Segoe UI",sans-serif;font-size:12.5px;color:#c9d1d9;line-height:1.5}',
+    '.fs-pop h4{margin:0 0 8px;font-size:13.5px;color:#e6e6e6}',
+    '.fs-pop .sec{font-size:9px;letter-spacing:.08em;color:#8a8f98;margin:9px 0 2px;text-transform:uppercase}',
+    '.fs-pop code{font-family:"SF Mono",Menlo,monospace;font-size:11px;color:#74c0fc;word-break:break-all}',
+    '.fs-pop .hint{margin-top:10px;padding-top:8px;border-top:1px solid #2c3038;color:#8a8f98;font-size:11px}',
+    '.fs-pop .x{position:absolute;top:8px;right:11px;cursor:pointer;color:#8a8f98;font-size:14px}',
     '.fs-result.ok{visibility:visible;color:#69db7c}',
     '.fs-result.fail{visibility:visible;color:#ff6b6b}',
     '@keyframes fs-travel{from{left:0}to{left:calc(100% - 6px)}}',
@@ -48,7 +60,7 @@
   // de interface entre nó i e i+1. triggers: linha que casa `re` avança o
   // fluxo até o nó `to` (cada gatilho dispara uma vez; ordem livre).
   var SCENES = [
-    { match: /^(test-registration|test-ng-setup|test-ue-connection)$/,
+    { name: "reg", match: /^(test-registration|test-ng-setup|test-ue-connection)$/,
       nodes: [{ id: 'ue', txt: '📱 UE' }, { id: 'gnb', txt: '📡 gNB' },
               { id: 'amf', txt: '🧭 AMF' }, { id: 'sec', txt: '🔐 AUSF/UDM' }],
       edges: ['N1', 'N2', 'SBI'],
@@ -57,7 +69,7 @@
         { re: /NGAP|NG Setup|InitialUE|\bAMF\b/i, to: 'amf' },
         { re: /AUSF|UDM|5G-AKA|\bAKA\b|autentic|authent/i, to: 'sec' },
       ] },
-    { match: /^(p2-test-e2-kpm(-traffic)?|p2-kpm-real)$/,
+    { name: "kpm", match: /^(p2-test-e2-kpm(-traffic)?|p2-kpm-real)$/,
       nodes: [{ id: 'gnb', txt: '📡 gNB (E2 agent)' }, { id: 'ric', txt: '🧠 FlexRIC' },
               { id: 'xapp', txt: '📈 xApp KPM' }, { id: 'store', txt: '💾 kpm log' }],
       edges: ['E2', 'E42', ''],
@@ -66,7 +78,7 @@
         { re: /SUBSCRIPTION|INDICATION|KPM/i, to: 'xapp' },
         { re: /\.log|\.csv|salv|grava|arquiv|collect/i, to: 'store' },
       ] },
-    { match: /^p2-test-e2-(rc|sm)$/,
+    { name: "rc", match: /^p2-test-e2-(rc|sm)$/,
       nodes: [{ id: 'gnb', txt: '📡 gNB (E2 agent)' }, { id: 'ric', txt: '🧠 FlexRIC' },
               { id: 'xapp', txt: '🎛 xApp' }, { id: 'ctl', txt: '⚙️ controle/SM' }],
       edges: ['E2', 'E42', ''],
@@ -75,7 +87,7 @@
         { re: /SUBSCRIPTION|INDICATION|Service Model|E2SM/i, to: 'xapp' },
         { re: /CONTROL|\bRC\b|aplicad|applied/i, to: 'ctl' },
       ] },
-    { match: /^p2-kpm-analytics$/,
+    { name: "analytics", match: /^p2-kpm-analytics$/,
       nodes: [{ id: 'raw', txt: '💾 kpm bruto' }, { id: 'etl', txt: '🧪 ETL' },
               { id: 'kpi', txt: '📐 KPIs' }, { id: 'viz', txt: '📊 série/decisão' }],
       edges: ['', '', ''],
@@ -84,7 +96,7 @@
         { re: /KPI|indicador|m[ée]dia|percentil/i, to: 'kpi' },
         { re: /CSV|sparkline|s[ée]rie|decis|relat/i, to: 'viz' },
       ] },
-    { match: /^p2-ml-/,
+    { name: "ml", match: /^p2-ml-/,
       nodes: [{ id: 'data', txt: '💾 dados SUTD' }, { id: 'train', txt: '🧮 treino' },
               { id: 'metr', txt: '📊 métricas' }],
       edges: ['', ''],
@@ -92,7 +104,7 @@
         { re: /trein|train|fit|Boost|Forest|MLP|model/i, to: 'train' },
         { re: /RMSE|R2|R²|acur|accur|matriz|F1|precision/i, to: 'metr' },
       ] },
-    { match: /^test-throughput$|throughput/i,
+    { name: "thp", match: /^test-throughput$|throughput/i,
       nodes: [{ id: 'ue', txt: '📱 UE' }, { id: 'gnb', txt: '📡 gNB' },
               { id: 'upf', txt: '🔀 UPF' }, { id: 'dn', txt: '🌐 DN (iperf3)' }],
       edges: ['N1', 'N3', 'N6'],
@@ -101,7 +113,7 @@
         { re: /iperf|Connecting|conectand/i, to: 'upf' },
         { re: /bits\/sec|Mbits|sender|receiver/i, to: 'dn' },
       ] },
-    { match: /^test-upf-failover$/,
+    { name: "failover", match: /^test-upf-failover$/,
       nodes: [{ id: 'ue', txt: '📱 UE' }, { id: 'upfa', txt: '🔀 UPF-A' },
               { id: 'cut', txt: '✂️ falha' }, { id: 'upfb', txt: '🔀 UPF-B' }],
       edges: ['N3', '', 'N3'],
@@ -110,7 +122,7 @@
         { re: /derrub|matando|parando|down|failover|stopping/i, to: 'cut' },
         { re: /UPF-B|upf-b|recuper|recover|voltou/i, to: 'upfb' },
       ] },
-    { match: /^(test-system-status|test-config-coherence|status)$/,
+    { name: "check", match: /^(test-system-status|test-config-coherence|status)$/,
       nodes: [{ id: 'ctn', txt: '🐳 containers' }, { id: 'net', txt: '🔗 rede/config' },
               { id: 'verd', txt: '📋 veredito' }],
       edges: ['', ''],
@@ -118,7 +130,7 @@
         { re: /rede|network|coer|coher|config|interface|N[234]\b/i, to: 'net' },
         { re: /resumo|resultado|conclus|veredito|summary|✅|❌/i, to: 'verd' },
       ] },
-    { match: /^api-subscriber$|assinante/i,
+    { name: "sub", match: /^api-subscriber$|assinante/i,
       nodes: [{ id: 'cred', txt: '📝 IMSI/K/OPC' }, { id: 'dbctl', txt: '⚙️ open5gs-dbctl' },
               { id: 'store', txt: '💾 MongoDB' }],
       edges: ['', ''],
@@ -126,7 +138,7 @@
         { re: /dbctl|docker exec|Adicionando|Removendo|Executando/i, to: 'dbctl' },
         { re: /inserid|adicionad|removid|sucesso|cadastrad|added|removed/i, to: 'store' },
       ] },
-    { match: /^api-channel$|canal/i,
+    { name: "chan", match: /^api-channel$|canal/i,
       nodes: [{ id: 'par', txt: '🎛 parâmetros' }, { id: 'ran', txt: '📡 UERANSIM (canal)' },
               { id: 'fx', txt: '🌐 efeito (ping)' }],
       edges: ['', ''],
@@ -134,7 +146,7 @@
         { re: /UERANSIM|aplicand|apply|\btc\b|netem|delay|loss/i, to: 'ran' },
         { re: /ping|t[úu]nel|efeito|icmp|\bms\b/i, to: 'fx' },
       ] },
-    { match: /^p2-test-a1$/,
+    { name: "a1", match: /^p2-test-a1$/,
       nodes: [{ id: 'pms', txt: '🧠 PMS (nonRT)' }, { id: 'type', txt: '📐 policy type' },
               { id: 'pol', txt: '📋 política' }, { id: 'sim', txt: '📡 a1-sim (nearRT)' }],
       edges: ['', '', 'A1'],
@@ -143,7 +155,7 @@
         { re: /criada via PMS|service core5g/i, to: 'pol' },
         { re: /presente no a1-sim|leitura de volta/i, to: 'sim' },
       ] },
-    { match: /demo-e2e|Demonstra[çc][ãa]o E2E/i,
+    { name: "demo", match: /demo-e2e|Demonstra[çc][ãa]o E2E/i,
       nodes: [{ id: 'ue', txt: '📱 UE' }, { id: 'gnb', txt: '📡 gNB' },
               { id: 'upf', txt: '🔀 UPF' }, { id: 'dn', txt: '🌐 internet' },
               { id: 'metr', txt: '📊 medição' }],
@@ -155,6 +167,81 @@
         { re: /throughput|iperf|bits\/sec|Mbits/i, to: 'metr' },
       ] },
   ];
+
+
+  // ---- Cartões didáticos: o que é · onde vive · o que tem dentro ----------
+  // (clique no chip da faixa; locais são os REAIS do servidor deste lab)
+  var INFOS = {
+    reg: {
+      ue:  { q: 'O celular simulado. Tudo começa nele: é quem pede acesso à rede.', o: 'container <b>ueransim</b> (processo nr-ue) · túnel uesimtun0', d: 'A identidade do assinante: IMSI (o "CPF" da linha) e a chave secreta K — os mesmos gravados no MongoDB.' },
+      gnb: { q: 'A antena simulada. Converte o rádio do UE em sinalização para o core.', o: 'container <b>ueransim</b> (gNB) · rede docker net-n2 = interface N2', d: 'A config da célula: PLMN (operadora), TAC (área) e o endereço do AMF a quem se reporta.' },
+      amf: { q: 'O "cérebro de mobilidade" do core: recebe o registro e coordena a autenticação.', o: 'container <b>open5gs-amf-containerized</b> · NGAP/SCTP porta 38412', d: 'O contexto de cada UE registrado: quem está conectado, em que área, com que sessão.' },
+      sec: { q: 'Os cofres de identidade: AUSF autentica, UDM/UDR guardam o perfil.', o: 'containers <b>open5gs-ausf/udm/udr</b> + MongoDB', d: 'As credenciais 5G-AKA (K/OPc) e o perfil do assinante — a prova de identidade acontece SEM a chave viajar pela rede.' },
+    },
+    kpm: {
+      gnb:  { q: 'O gNB real (OAI) com o agente E2 embutido — ele CONTA o que vê ao RIC.', o: 'processo nativo <b>nr-softmodem</b> · log em oai-cn-gnb-e2/logs/gnb_oai.log', d: 'Métricas por UE a cada ~1 s: throughput, PRBs em uso, atraso — a matéria-prima do KPM.' },
+      ric:  { q: 'O near-RT RIC (FlexRIC): roteia assinaturas e indicações entre gNB e xApps.', o: 'processo nativo <b>nearRT-RIC</b> · E2AP porta 36421/SCTP', d: 'As subscriptions ativas: quem pediu qual métrica, de qual gNB, com que período.' },
+      xapp: { q: 'O aplicativo que consome as métricas — a "inteligência" plugável do RIC.', o: 'xapp_kpm_moni (exemplo C do FlexRIC), no host', d: 'As INDICATIONs decodificadas: measName = valor, UE a UE — que ele escreve no log.' },
+      store:{ q: 'O momento do armazenamento: métricas viram ARQUIVO — nasce o dado bruto.', o: '<b>oai-cn-gnb-e2/logs/xapp_kpm_moni.log</b> (e kpm_timeseries.csv após o ETL)', d: 'Texto puro, 1 linha por medição — o "bronze" do nosso mini-lake, insumo da disciplina de dados.' },
+    },
+    rc: {
+      gnb:  { q: 'O gNB com agente E2 — desta vez recebendo COMANDOS, não só reportando.', o: 'processo nativo <b>nr-softmodem</b>', d: 'Os Service Models E2SM-RC: as "alavancas" que o RIC pode puxar (ex.: forçar um attach).' },
+      ric:  { q: 'O FlexRIC roteando o ciclo completo: observar E agir.', o: 'processo nativo <b>nearRT-RIC</b> · porta 36421', d: 'O par SUBSCRIPTION (ouvir) + CONTROL (mandar) da mesma sessão E2.' },
+      xapp: { q: 'O xApp de controle: decide e envia o comando de volta.', o: 'exemplos C do FlexRIC (xapp_kpm_rc)', d: 'A lógica se-então do loop rápido: métrica entra, comando sai — em menos de 1 s.' },
+      ctl:  { q: 'O efeito no RAN: o comando aplicado no gNB.', o: 'de volta ao <b>nr-softmodem</b>, via E2', d: 'A confirmação do CONTROL — o laço observar→decidir→agir fechado, visível no log.' },
+    },
+    analytics: {
+      raw: { q: 'O log KPM bruto — o que o xApp escreveu durante a coleta.', o: '<b>oai-cn-gnb-e2/logs/xapp_kpm_moni.log</b>', d: 'Linhas de texto "measName = valor unidade" — ilegível para análise; perfeito como matéria-prima.' },
+      etl: { q: 'A faxina: Extrair, Transformar, Carregar — texto vira tabela.', o: 'script <b>kpm_analytics.sh</b> (awk/python), no host', d: 'Parse de cada linha → série temporal estruturada (time, measName, valor, UE, slice).' },
+      kpi: { q: 'A agregação: milhares de amostras viram POUCOS números que informam decisão.', o: 'calculado em memória pelo script', d: 'Throughput médio/máx por UE, ocupação de PRB — os KPIs (aula 04 da disciplina!).' },
+      viz: { q: 'O resultado visível: a forma do tráfego no tempo.', o: '<b>logs/kpm_timeseries.csv</b> + sparkline ASCII no console', d: 'O CSV final — o mesmo insumo que alimentaria um UE-TP-rApp de verdade.' },
+    },
+    ml: {
+      data: { q: 'Medições REAIS de campo: o walk test 5G da universidade SUTD (Singapura).', o: 'servidor: <b>oai-cn-gnb-e2/scripts/ml/</b> · cópia aberta no repo: pdfs/02-ric-ai/casos-artigo/data/sutd/', d: 'CSVs com RSRP, RSRQ, SINR, PRB e throughput medidos andando pelos andares 4/5/6 — cada linha é um instante rotulado.' },
+      train:{ q: 'O treino: o modelo aprende o padrão que liga as medições ao alvo.', o: 'script <b>scripts/ml/*_experiment.py</b> (numpy puro, sem GPU), no host', d: 'Split temporal (passado treina, futuro testa — nunca o contrário!) e os modelos: Gradient Boosting, Random Forest, MLP…' },
+      metr: { q: 'O boletim do modelo: quão bem ele prevê o que nunca viu.', o: 'impresso no console (e salvo no Histórico do painel)', d: 'RMSE/R² (regressão) ou acurácia/matriz de confusão (classificação) — compare com a tabela do artigo NGO et al. 2024.' },
+    },
+    thp: {
+      ue:  { q: 'O celular simulado gerando tráfego de verdade.', o: 'container <b>ueransim</b> · túnel uesimtun0 (o "chip" com IP)', d: 'O cliente iperf3 empurrando bytes — como um download real.' },
+      gnb: { q: 'A antena: todo byte do UE passa por ela antes do core.', o: 'container <b>ueransim</b> (gNB)', d: 'O encapsulamento do tráfego rumo ao UPF (GTP-U, rede net-n3).' },
+      upf: { q: 'A "rodovia" do plano de usuário: encaminha pacotes, não os interpreta.', o: 'container <b>open5gs-upf-containerized-a</b> · redes N3/N6', d: 'As regras de encaminhamento da sessão PDU criadas pelo SMF via N4.' },
+      dn:  { q: 'O "resto da internet" do lab: o destino do tráfego.', o: 'container <b>open5gs-dn-containerized</b> · servidor iperf3', d: 'O medidor: conta os bits/s que chegaram — o throughput impresso no resultado.' },
+    },
+    failover: {
+      ue:   { q: 'O celular com uma sessão de dados ativa — a "vítima" do teste.', o: 'container <b>ueransim</b>', d: 'Tráfego contínuo que NÃO deveria cair quando o UPF morrer.' },
+      upfa: { q: 'O UPF titular, por onde o tráfego corre primeiro.', o: 'container <b>open5gs-upf-containerized-a</b>', d: 'A sessão PDU ativa — até o teste derrubá-lo de propósito.' },
+      cut:  { q: 'A falha proposital: o teste MATA o UPF-A para ver a rede reagir.', o: 'docker stop no upf-a (caos controlado)', d: 'O instante didático: resiliência não se assume, se TESTA.' },
+      upfb: { q: 'O reserva assume: CUPS permite trocar o plano de usuário sem derrubar o controle.', o: 'container <b>open5gs-upf-containerized-b</b>', d: 'A sessão re-ancorada — o tráfego volta por outro caminho.' },
+    },
+    check: {
+      ctn:  { q: 'A chamada de presença: quais containers estão de pé.', o: '<b>docker ps</b> no servidor', d: 'Estado e saúde de cada NF (running/healthy) — o primeiro suspeito de qualquer problema.' },
+      net:  { q: 'A vistoria das estradas: as redes docker que representam as interfaces 3GPP.', o: 'redes <b>net-n2/n3/n4/n6/sbi</b>', d: 'Cada rede = uma interface real (N2, N3…) — se a rede sumiu, a interface caiu.' },
+      verd: { q: 'O veredito: o resumo acionável da checagem.', o: 'impresso no console (e no Histórico)', d: 'OK/falha por item — o que um NOC olharia antes de escalar.' },
+    },
+    sub: {
+      cred: { q: 'A identidade do novo assinante que você digitou.', o: 'formulário do UE Lab → API do painel', d: 'IMSI (15 dígitos), chave K e OPc (32 hex cada) — o "contrato" da linha.' },
+      dbctl:{ q: 'O cartório: a ferramenta oficial do Open5GS para gravar assinantes.', o: 'script <b>add-subscriber.sh</b> → open5gs-dbctl dentro do container', d: 'O comando de INSERT validado — nada de mexer no banco na mão.' },
+      store:{ q: 'O banco de assinantes do core — o HSS/UDR na prática.', o: 'container <b>open5gs-mongodb-containerized</b> · collection subscribers', d: 'O documento JSON do assinante: IMSI, chaves, QoS — o que o AMF consulta no registro.' },
+    },
+    chan: {
+      par: { q: 'As condições de rádio que você escolheu simular (distância/interferência).', o: 'seletores do UE Lab → API do painel', d: 'Um par (distância, interferência) que vira parâmetros de rede reais.' },
+      ran: { q: 'A degradação aplicada: o lab usa controle de tráfego Linux para "piorar o ar".', o: '<b>tc/netem</b> dentro do container ueransim', d: 'Delay, perda e banda impostos ao túnel — física simulada com ferramentas de rede.' },
+      fx:  { q: 'A prova do efeito: o ping sente o canal novo.', o: 'ping do UE ao DN pelo túnel uesimtun0', d: 'O RTT antes × depois — a latência conta a história da distância.' },
+    },
+    a1: {
+      pms:  { q: 'O Non-RT RIC: a camada de POLÍTICAS (loop lento, > 1 s) que construímos em ARM64.', o: 'container <b>nonrt-policy-agent</b> · API REST :8081/a1-policy/v2', d: 'Os services e políticas A1 registrados — decisões de gestão, não comandos de rádio.' },
+      type: { q: 'O policy type: o CONTRATO da política — que campos ela pode ter.', o: '<b>server/nonrt-ric/testdata/policy_type.json</b> (o mesmo do lab do docente)', d: 'Um JSON Schema: scope (a quem se aplica) + qosObjectives (o que pedir). Política fora do schema é rejeitada.' },
+      pol:  { q: 'A política em si: uma INSTÂNCIA do contrato, com valores concretos.', o: 'criada via PUT no PMS → desce pelo A1', d: 'ueId + qosObjectives (ex.: priorityLevel) — "trate este usuário assim".' },
+      sim:  { q: 'O near-RT que recebe a política — aqui, um simulador (o FlexRIC não tem porta A1).', o: 'container <b>a1-sim-OSC</b> · :30001', d: 'O estado A1 do "near-RT": types e políticas aceitas — a prova de que a política DESCEU.' },
+    },
+    demo: {
+      ue:   { q: 'O celular simulado — protagonista da demonstração fim-a-fim.', o: 'container <b>ueransim</b>', d: 'Registro + sessão + tráfego, na sequência — a jornada completa em um clique.' },
+      gnb:  { q: 'A antena: rádio vira rede.', o: 'container <b>ueransim</b> (gNB)', d: 'N1/N2 para o controle, N3 para os dados.' },
+      upf:  { q: 'O plano de usuário encaminhando o tráfego da demo.', o: 'container <b>open5gs-upf-containerized-a</b>', d: 'A sessão PDU ativa da demonstração.' },
+      dn:   { q: 'A "internet" do lab: destino do ping e do iperf3.', o: 'container <b>open5gs-dn-containerized</b>', d: 'Conectividade real comprovada — não é mock.' },
+      metr: { q: 'A medição que fecha a demo: número, não promessa.', o: 'iperf3 no DN, resultado no relatório de passos', d: 'O throughput medido — a prova de que a rede 5G inteira funcionou.' },
+    },
+  };
 
   var ANSI = /\x1b\[[0-9;]*m/g;
   var mounts = {};            // nome -> elemento host
@@ -180,8 +267,13 @@
         els.edges.push(e);
       }
       var d = document.createElement('span');
-      d.className = 'fs-node';
+      d.className = 'fs-node' + (n.info ? ' hasinfo' : '');
       d.textContent = n.txt;
+      if (n.info) {
+        var ic = document.createElement('i'); ic.textContent = 'ⓘ'; d.appendChild(ic);
+        d.title = 'clique: o que é, onde vive e o que tem dentro';
+        (function (nn, dd) { dd.onclick = function () { openPop(nn, dd); }; })(n, d);
+      }
       strip.appendChild(d);
       els.nodes.push(d);
     });
@@ -200,7 +292,8 @@
     if (!cur) return;
     cur.pos = pos;
     cur.els.nodes.forEach(function (n, i) {
-      n.className = 'fs-node' + (i < pos ? ' done' : i === pos ? ' active' : '');
+      var base = 'fs-node' + (cur.scene.nodes[i].info ? ' hasinfo' : '');
+      n.className = base + (i < pos ? ' done' : i === pos ? ' active' : '');
     });
     cur.els.edges.forEach(function (e, i) {
       // aresta i liga nó i ao nó i+1
@@ -209,6 +302,7 @@
   }
 
   function begin(key, mountName) {
+    closePop();
     end0();                                    // fecha faixa de execução anterior
     var host = mounts[mountName];
     if (!host || !key) return;
@@ -217,6 +311,8 @@
       if (SCENES[i].match.test(String(key))) { scene = SCENES[i]; break; }
     }
     if (!scene) { host.innerHTML = ''; return; }
+    var inf = INFOS[scene.name] || {};
+    scene.nodes.forEach(function (n) { if (inf[n.id]) n.info = inf[n.id]; });
     cur = { scene: scene, host: host, els: render(scene, host), pos: 0, fired: [] };
     setPos(0);
   }
@@ -243,13 +339,15 @@
   function end(ok) {
     if (!cur) return;
     if (ok) {
-      cur.els.nodes.forEach(function (n) { n.className = 'fs-node done'; });
+      cur.els.nodes.forEach(function (n, i) {
+        n.className = 'fs-node' + (cur.scene.nodes[i].info ? ' hasinfo' : '') + ' done';
+      });
       cur.els.edges.forEach(function (e) { e.className = 'fs-edge done'; });
       cur.els.result.textContent = '✔';
       cur.els.result.className = 'fs-result ok';
     } else {
       var n = cur.els.nodes[cur.pos];
-      if (n) n.className = 'fs-node fail';
+      if (n) n.className = 'fs-node' + (cur.scene.nodes[cur.pos].info ? ' hasinfo' : '') + ' fail';
       var e = cur.els.edges[cur.pos - 1];
       if (e) e.className = 'fs-edge';
       cur.els.result.textContent = '✖';
@@ -259,6 +357,34 @@
   }
 
   function attach(name, el) { if (el) mounts[name] = el; }
+
+  // ---- popover didático: o que é · onde vive · o que tem dentro ----
+  var pop = null;
+  function closePop() {
+    if (pop) { pop.back.remove(); pop.card.remove(); pop = null; }
+  }
+  function openPop(node, anchorEl) {
+    closePop();
+    var back = document.createElement('div');
+    back.className = 'fs-back';
+    back.onclick = closePop;
+    var c = document.createElement('div');
+    c.className = 'fs-pop';
+    c.innerHTML = '<span class="x">✕</span><h4>' + node.txt + '</h4>'
+      + '<div class="sec">O que é</div><div>' + node.info.q + '</div>'
+      + '<div class="sec">Onde vive</div><div><code>' + node.info.o + '</code></div>'
+      + '<div class="sec">O que tem dentro</div><div>' + node.info.d + '</div>'
+      + '<div class="hint">💡 Enquanto o teste roda, o log abaixo é esta operação acontecendo — a faixa mostra POR ONDE o dado passa; o log mostra O QUE ele diz.</div>';
+    document.body.appendChild(back);
+    document.body.appendChild(c);
+    c.querySelector('.x').onclick = closePop;
+    var r = anchorEl.getBoundingClientRect();
+    var top = r.bottom + 8, left = Math.max(8, Math.min(r.left, window.innerWidth - 406));
+    if (top + c.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - c.offsetHeight - 8);
+    c.style.top = top + 'px'; c.style.left = left + 'px';
+    pop = { back: back, card: c };
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePop(); });
 
   injectCss();
   window.FlowStrip = { attach: attach, begin: begin, feed: feed, end: end };

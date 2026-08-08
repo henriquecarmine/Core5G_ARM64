@@ -248,6 +248,29 @@
     },
   };
 
+  // Tooltips das colunas dos datasets (passa o mouse no cabeçalho da amostra)
+  var COLTIPS = {
+    'Time': 'Instante da medição (série temporal — nunca embaralhar!)',
+    'NR-ARFCN': 'Canal de rádio 5G NR (número absoluto da frequência)',
+    'PCI': 'Physical Cell ID — identidade física da célula servidora',
+    '_oid': 'ID interno do registro (gerado na coleta)',
+    'RSRP': 'Potência do sinal de referência recebido (dBm) — quanto maior, melhor o sinal',
+    'RSRQ': 'Qualidade do sinal de referência (dB) — potência descontando interferência',
+    'SINR': 'Relação sinal/(interferência+ruído) (dB) — o quão "limpo" o canal está',
+    'PDSCH_MCS': 'Esquema de modulação/codificação no downlink (0-28: maior = mais bits/símbolo)',
+    'PUSCH_MCS': 'Esquema de modulação/codificação no uplink',
+    'PDSCH PRBs': 'Blocos de recurso (PRB) alocados no downlink — quanto do espectro o UE usa',
+    'PUSCH PRBs': 'Blocos de recurso alocados no uplink',
+    'throughput_DL': 'Vazão de dados no downlink — O ALVO da previsão UE-TP',
+    'C-RNTI': 'Identidade temporária do UE na célula',
+    'Corridor_tag': 'Marcação do trecho do corredor no walk test',
+    'lab_anom': 'Rótulo: houve anomalia induzida neste instante?',
+    'lab_bs': 'Rótulo: estação base do experimento',
+    'lab_inf': 'Rótulo: interferência ativa?',
+    'lab_1rr': 'Rótulo: cenário com apenas 1 RRU ligada',
+    'Label': 'Rótulo-alvo da classificação (ex.: andar / anomalia)',
+  };
+
   var ANSI = /\x1b\[[0-9;]*m/g;
   var mounts = {};            // nome -> elemento host
   var cur = null;             // execução ativa: {scene, host, els, pos, fired}
@@ -366,7 +389,7 @@
     return '<div class="sec">Fonte dos dados desta função</div><div class="fs-src">'
       + '<label><input type="radio" name="fsrc" value="default"> 1. Sugerida pelo servidor · <a href="#" class="see">👁 ver amostra</a></label>'
       + '<div class="exp">o dataset SUTD original (4 cenários do walk test) descrito no cartão acima — reproduz o artigo.</div>'
-      + '<pre class="smp" style="display:none;margin:5px 0 4px 20px;padding:7px 9px;background:#0d0e11;border:1px solid #2c3038;border-radius:6px;font-size:9.5px;line-height:1.45;color:#9aa4b2;overflow-x:auto;max-width:340px;white-space:pre"></pre>'
+      + '<div class="smp" style="display:none;margin:5px 0 4px 20px;max-width:345px;overflow-x:auto;border:1px solid #2c3038;border-radius:6px"></div>'
       + '<label><input type="radio" name="fsrc" value="custom"> 2. Meu CSV enviado <span class="st"></span></label>'
       + '<div class="exp">mesmas colunas do exemplo; seu CSV vira os 4 cenários. '
       + '<a href="/api/lab-data/sutd/example" download>⬇ baixe o exemplo aqui</a></div>'
@@ -397,10 +420,25 @@
     if (see) see.onclick = function (e) {
       e.preventDefault();
       if (smp.style.display === 'block') { smp.style.display = 'none'; return; }
-      smp.textContent = 'carregando…'; smp.style.display = 'block';
+      smp.innerHTML = '<div style="padding:6px 9px;color:#8a8f98;font-size:10px">carregando…</div>'; smp.style.display = 'block';
       fetch('/api/lab-data/' + key + '/example').then(function (r) { return r.text(); })
-        .then(function (txt) { smp.textContent = txt + '⋮ (primeiras linhas — o dataset completo tem 4 cenários no servidor)'; })
-        .catch(function () { smp.textContent = 'falhou ao carregar a amostra'; });
+        .then(function (txt) {
+          var lines = txt.trim().split('\n').filter(function (l) { return l.trim(); });
+          var cols = lines[0].split(',');
+          var html = '<table style="border-collapse:collapse;font-size:9px;font-family:\'SF Mono\',Menlo,monospace"><tr>'
+            + cols.map(function (c) {
+                var tip = COLTIPS[c.trim()] || 'coluna do dataset';
+                return '<th title="' + tip.replace(/"/g, '&quot;') + '" style="padding:4px 7px;background:#181b22;color:#74c0fc;border-bottom:1px solid #2c3038;white-space:nowrap;cursor:help;text-align:left">' + c + ' <span style="opacity:.4">ⓘ</span></th>';
+              }).join('') + '</tr>'
+            + lines.slice(1).map(function (l) {
+                return '<tr>' + l.split(',').map(function (v) {
+                  return '<td style="padding:3px 7px;color:#9aa4b2;border-bottom:1px solid #1c1f26;white-space:nowrap">' + v + '</td>';
+                }).join('') + '</tr>';
+              }).join('')
+            + '</table><div style="padding:5px 9px;color:#5c6370;font-size:9.5px">⋮ primeiras linhas · passe o mouse nos cabeçalhos · dataset completo: 4 cenários no servidor</div>';
+          smp.innerHTML = html;
+        })
+        .catch(function () { smp.innerHTML = '<div style="padding:6px 9px;color:#ff6b6b;font-size:10px">falhou ao carregar</div>'; });
     };
     file.onchange = function () {
       var fl = file.files && file.files[0]; if (!fl) return;

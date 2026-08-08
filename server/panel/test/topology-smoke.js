@@ -6,7 +6,7 @@
  * headless, stubando o fetch de /api/topology com os JSONs reais de
  * static/ — sem servidor nem login. Valida:
  *   - render sem pageerror;
- *   - 3 bandas CUPS (RAN, Plano de Controle, Plano de Usuário);
+ *   - bandas: P1=3 (RAN/CP/UP) · P2=5 (+ Non-RT RIC e near-RT O-RAN SC);
  *   - rótulos didáticos N1 e N11/Nsmf presentes (links e legenda);
  *   - links paralelos entre os mesmos nós (N1/N2 no P1) com offset;
  *   - os 4 modos de visualização e o tour re-renderizam sem erro.
@@ -75,7 +75,9 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       nodes: document.querySelectorAll('.node').length,
       legend: document.getElementById('legend').textContent,
     }));
-    assert(d.bands === 3, `${proj}: esperava 3 bandas CUPS, veio ${d.bands}`);
+    // P1: 3 bandas (RAN, CP, UP) · P2: 5 (+ Non-RT âmbar e O-RAN SC rosa, v0.53+)
+    const wantBands = proj === 'p2' ? 5 : 3;
+    assert(d.bands === wantBands, `${proj}: esperava ${wantBands} bandas, veio ${d.bands}`);
     assert(d.bandLabels.some(l => l.includes('PLANO DE CONTROLE')), `${proj}: banda plano de controle`);
     assert(d.bandLabels.some(l => l.includes('PLANO DE USUÁRIO')), `${proj}: banda plano de usuário`);
     assert(d.labels.includes('N1'), `${proj}: rótulo N1 presente`);

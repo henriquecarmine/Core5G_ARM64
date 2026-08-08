@@ -524,6 +524,8 @@ def topology_logs(proj: str = "p2") -> JSONResponse:
             {"title": "near-RT RIC", "comp": "ric", "lines": ric_lines},
             {"title": "Non-RT RIC (PMS · A1)", "comp": "nonrt-pms", "lines": _docker_logs("nonrt-policy-agent", 8)},
             {"title": "A1 Simulator (OSC)", "comp": "a1sim", "lines": _docker_logs("a1-sim-OSC", 6)},
+            {"title": "A1 Mediator (O-RAN SC · A1 real)", "comp": "a1mediator", "lines": _docker_logs("ric_a1mediator", 8)},
+            {"title": "dbaas (Redis · SDL)", "comp": "dbaas", "lines": _docker_logs("ric_dbaas", 5)},
             {"title": "AMF (Mobilidade)", "comp": "amf", "lines": _docker_logs("oai-amf", 10)},
             {"title": "SMF (Sessão)", "comp": "smf", "lines": _docker_logs("oai-smf", 8)},
             {"title": "AUSF (Autenticação)", "comp": "ausf", "lines": _docker_logs("oai-ausf", 8)},
@@ -713,6 +715,8 @@ LOG_SOURCES: list[dict] = [
     # Projeto 2 — Non-RT RIC (camada SMO, containers ARM64 próprios)
     {"key": "nonrt-pms", "label": "Non-RT RIC · PMS (políticas A1)", "container": "nonrt-policy-agent"},
     {"key": "a1-sim",    "label": "A1 Simulator (OSC) · near-RT sim", "container": "a1-sim-OSC"},
+    {"key": "a1mediator", "label": "A1 Mediator (O-RAN SC) · A1 real",  "container": "ric_a1mediator"},
+    {"key": "dbaas",      "label": "dbaas (Redis/SDL) · banco do RIC",  "container": "ric_dbaas"},
     # Projeto 2 — processos nativos (host), por arquivo de log
     {"key": "gnb", "label": "gNB (OAI RFSIM · E2 agent)", "file": "oai-cn-gnb-e2/logs/gnb_oai.log"},
     {"key": "ric", "label": "near-RT RIC (FlexRIC)",      "file": "oai-cn-gnb-e2/logs/nearRT-RIC.log"},

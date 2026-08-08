@@ -11,7 +11,7 @@
     --muted:#8a8f98; --accent:#e8590c; --green:#2f9e44; --yellow:#f59f00;
     --red:#e03131; --info:#4dabf7;
     --c-external:#4dabf7; --c-admin:#b197fc; --c-ran:#2f9e44; --c-core:#e8590c;
-    --c-core-cp:#1c7ed6; --c-core-up:#e8590c; --c-nonrt:#f59f00;
+    --c-core-cp:#1c7ed6; --c-core-up:#e8590c; --c-nonrt:#f59f00; --c-oransc:#f06595;
     --btn-bg:#21242b; --btn-hover:#262a32; --grid-dot:#23262e;
     --planned:#3a3f48; --plan-fg:#5a606b;
     --overlay:rgba(0,0,0,.72); --panel-glass:rgba(24,26,31,.82);
@@ -25,7 +25,7 @@
     --muted:#5d6570; --accent:#d9500a; --green:#2b8a3e; --yellow:#e67700;
     --red:#c92a2a; --info:#1971c2;
     --c-external:#1971c2; --c-admin:#7048e8; --c-ran:#2b8a3e; --c-core:#d9500a;
-    --c-core-cp:#1971c2; --c-core-up:#d9500a; --c-nonrt:#e67700;
+    --c-core-cp:#1971c2; --c-core-up:#d9500a; --c-nonrt:#e67700; --c-oransc:#d6336c;
     --btn-bg:#eef0f3; --btn-hover:#dfe3e9; --grid-dot:#d9dde3;
     --planned:#b9c0ca; --plan-fg:#98a0ab;
     --overlay:rgba(23,27,34,.45); --panel-glass:rgba(255,255,255,.92);
@@ -274,7 +274,7 @@ const svg = document.getElementById("diagram");
 // i18n: tradução com fallback no texto pt do JSON (pt = canônico; nós nunca usam o dict em pt)
 const trf = (k, fb) => { if (I18N.lang === "pt") return fb; const v = I18N.t(k); return v === k ? fb : v; };
 const sanit = x => x.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-const FLOW_IFACES = new Set(["RF","N1","N2","N11/Nsmf","E2","E42","N3","N4","N6","A1"]);
+const FLOW_IFACES = new Set(["RF","N1","N2","N11/Nsmf","E2","E42","N3","N4","N6","A1","SDL"]);
 const SECONDARY = new Set(["SBI","Nausf","Nudm","Nudr","SQL","Telemetria"]); // N11/Nsmf fica visível: didático (sessão PDU)
 const MODE_HINT_KEYS = { simplificado: "topo.hint_simple", tecnico: "topo.hint_tech", fluxo: "topo.hint_flow", troubleshooting: "topo.hint_ts" };
 
@@ -522,7 +522,7 @@ applyThemeIcon();
 // ---- #2 tour guiado pelas camadas (por projeto; textos nos dicionários i18n) ----
 const TOUR_LAYERS = PROJ==="p1"
   ? ["external","admin","ran","core-cp","core-up"]
-  : ["external","admin","ran","nonrt","core-cp","core-up"];
+  : ["external","admin","ran","nonrt","oransc","core-cp","core-up"];
 const TOUR = TOUR_LAYERS.map(layer => ({ layer }));
 let tourIdx=0;
 function showTour(i){
@@ -560,6 +560,7 @@ const JOURNEY_P2 = [
   { id:"collect", num:"5",  badge:"opt", nodes:["gnb","ric"],                      flow:[["gnb","ric"]] },
   { id:"act", num:"5.1",      badge:"opt", nodes:["gnb","ric","xapps"],             flow:[["xapps","ric"],["ric","gnb"]] },
   { id:"nonrt", num:"6",    badge:"opt", nodes:["nonrt-pms","a1sim","ric"],        flow:[["nonrt-pms","a1sim"],["nonrt-pms","ric"]] },
+  { id:"a1real", num:"6.1",  badge:"opt", nodes:["nonrt-pms","a1mediator","dbaas"],  flow:[["a1mediator","dbaas"]] },
   { id:"summary",  badge:"",    nodes:[],                                 flow:[], full:true },
 ];
 const JOURNEY_P1 = [

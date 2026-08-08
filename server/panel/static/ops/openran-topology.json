@@ -24,6 +24,11 @@
       "color": "#f59f00",
       "band": true
     },
+    "oransc": {
+      "label": "near-RT O-RAN SC — A1 real (Fase 2 em curso)",
+      "color": "#f06595",
+      "band": true
+    },
     "core-cp": {
       "label": "Core 5G — Plano de Controle (SBA)",
       "color": "#1c7ed6",
@@ -369,6 +374,36 @@
       "does": "A camada Non-RT (SMO) — o par LENTO do FlexRIC: enquanto o near-RT decide em 10 ms–1 s via E2, aqui as decisões levam > 1 s (treinar modelo, definir política) e descem pela interface A1. Gerencia políticas A1: cria, distribui e supervisiona nos near-RT configurados.",
       "from": "Recebe pedidos de política via API REST (/a1-policy/v2) — do painel, de rApps ou do projeto da disciplina (dry-run que virou real).",
       "to": "Desce as políticas pelo A1 aos simuladores (e, no futuro, a um near-RT com terminação A1 — Fase 2)."
+    },
+    {
+      "id": "dbaas",
+      "label": "ric_dbaas",
+      "role": "Banco (SDL)",
+      "sublabel": "Redis + Shared Data Layer",
+      "layer": "oransc",
+      "kind": "container",
+      "statusKey": "ric_dbaas",
+      "x": 60,
+      "y": 810,
+      "image": "core5g/ric-plt-dbaas:0.6.4-arm64 (build local da fonte)",
+      "from": "Recebe leituras/escritas do A1 Mediator (e, na pilha completa, de e2mgr/submgr) via SDL.",
+      "does": "A memória compartilhada do near-RT O-RAN SC: Redis com o módulo SDL — aqui vivem o R-NIB (inventário de E2 nodes), estado de subscriptions e o que o Mediator persiste. O banco que o Non-RT NÃO tem: o PMS guarda estado em memória/arquivo.",
+      "to": "Responde consultas dos componentes ric_* — o estado sobrevive a restarts deles (mas não ao seu próprio)."
+    },
+    {
+      "id": "a1mediator",
+      "label": "ric_a1mediator",
+      "role": "A1 real",
+      "sublabel": "terminação A1 (A1AP v2)",
+      "layer": "oransc",
+      "kind": "container",
+      "statusKey": "ric_a1mediator",
+      "x": 300,
+      "y": 810,
+      "image": "core5g/ric-plt-a1:3.2.2-arm64 (Go + RMR 4.9.4 patchada p/ ARM)",
+      "from": "Northbound: recebe políticas via REST /A1-P/v2 (a porta que o FlexRIC não tem).",
+      "does": "A terminação A1 DE VERDADE do near-RT O-RAN SC — primeiro pedaço da Fase 2, compilado da fonte em ARM64 (RMR com patch immintrin→atomic_fence). Valida policy types (schema), aceita instâncias e as distribui via RMR aos xApps.",
+      "to": "Persiste via SDL no ric_dbaas; na Fase 2 completa, e2term/e2mgr/submgr entram nesta banda e o gNB conecta na :36422."
     }
   ],
   "links": [
@@ -513,6 +548,20 @@
       "planned": true,
       "dashed": true,
       "detail": "Futuro: o FlexRIC não tem terminação A1 (docs/non-rt-ric.md §2.1). Fechar esta ponta = Fase 2 (near-RT O-RAN SC com A1 Mediator)."
+    },
+    {
+      "from": "a1mediator",
+      "to": "dbaas",
+      "iface": "SDL",
+      "detail": "Shared Data Layer sobre Redis — onde o estado A1 (types, políticas) vive. Testado: ciclo 5/5 em ARM64."
+    },
+    {
+      "from": "nonrt-pms",
+      "to": "a1mediator",
+      "iface": "A1",
+      "planned": true,
+      "dashed": true,
+      "detail": "Próximo passo: perfil oran do docente (application_configuration.oran.json) liga o PMS ao Mediator real — atenção à versão A1AP (/A1-P/v2)."
     }
   ],
   "interfaces_legend": [
@@ -579,6 +628,10 @@
     {
       "iface": "A1",
       "desc": "Políticas do Non-RT RIC (SMO) para o near-RT — horizonte > 1 s (criar/consultar/apagar políticas)."
+    },
+    {
+      "iface": "SDL",
+      "desc": "Shared Data Layer — estado compartilhado da pilha near-RT O-RAN SC sobre Redis (ric_dbaas)."
     }
   ]
 }

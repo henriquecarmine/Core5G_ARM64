@@ -3,7 +3,10 @@
 Material da **Disciplina 9: "Análise de Dados em Redes de Telecom"**
 (Prof. Dr. **Jonas Augusto Kunzler**, `jak@cesar.school`) — 24 h em 6 encontros,
 sobre o lab `oai-cn-gnb-nonrt-nearrt` do docente (caso **UE-TP / load-anomaly**),
-o mesmo eixo E2/KPM do nosso `server/oai-cn-gnb-e2`.
+o mesmo eixo E2/KPM do nosso `server/oai-cn-gnb-e2`. O repositório do professor
+(briefing, lab, plano de ensino) está vendorizado em
+[`external/cesar-school-repo/data/`](../../external/cesar-school-repo/data/) —
+ver [docs/repo-professor.md](../../docs/repo-professor.md).
 
 Fio condutor da disciplina:
 

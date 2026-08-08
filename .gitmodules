@@ -1,0 +1,3 @@
+[submodule "external/cesar-school-repo"]
+	path = external/cesar-school-repo
+	url = https://github.com/jakunzler/cesar-school-repo

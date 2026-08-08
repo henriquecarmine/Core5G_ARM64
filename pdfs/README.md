@@ -43,5 +43,9 @@ exercícios e checkpoints em `03-dados-telecom/trabalhos/`. Catálogo completo:
 
 ---
 
+O repositório oficial das disciplinas do Kunzler (briefings, labs, planos de
+ensino) está vendorizado como submódulo em `external/cesar-school-repo` — mapa
+completo em [docs/repo-professor.md](../docs/repo-professor.md).
+
 As traduções / notas didáticas por idioma (pt/en/es/fr) dos slides ficarão em
 subpastas por disciplina quando a fase de tradução dos slides rodar.

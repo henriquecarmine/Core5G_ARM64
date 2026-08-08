@@ -5,8 +5,10 @@ telemetria RAN** (caso UE-TP / load-anomaly, trilha offline).
 
 Entram aqui, conforme o projeto evoluir:
 
-- briefing e tema do grupo (PDFs/notas do docente: `docs/briefing-projeto.md` e
-  `docs/temas-grupos.md` do lab dele);
+- briefing e tema do grupo — no submódulo do professor:
+  [`briefing-projeto.md`](../../../external/cesar-school-repo/data/docs/briefing-projeto.md),
+  [`temas-grupos.md`](../../../external/cesar-school-repo/data/docs/temas-grupos.md) e
+  [`guia-aluno.md`](../../../external/cesar-school-repo/data/docs/guia-aluno.md);
 - ETL e análise (scripts/notebooks) sobre os artefatos KPM
   (`kpm_*.log` → JSONL/SQLite);
 - os ≥2 KPIs/KQIs, visualizações e a recomendação / política A1 em dry-run;

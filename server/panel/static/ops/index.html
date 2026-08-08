@@ -928,6 +928,7 @@
         <!-- Console inline -->
         <div id="lab-console-wrap">
           <div class="lab-section-title">Console</div>
+          <div id="flow-strip-lab"></div>
           <div id="lab-console"></div>
         </div>
 
@@ -944,6 +945,7 @@
 // setRunBadge (professor e aluno) e no loop do runOperation (modal).
 FlowStrip.attach('console', document.getElementById('flow-strip-console'));
 FlowStrip.attach('modal', document.getElementById('flow-strip-modal'));
+FlowStrip.attach('lab', document.getElementById('flow-strip-lab'));
 // ===== Utilitários =====
 function stripAnsi(s) {
   return s.replace(/\x1b\[[0-9;]*[mGKJHFABCDSTlu]/g, '');
@@ -1929,14 +1931,16 @@ document.getElementById('uelab-refresh-btn').addEventListener('click', e => load
 
 async function deleteUe(imsi, srcBtn) {
   if (!confirm(I18N.t('uelab.del_confirm', { imsi }))) return;
+  FlowStrip.begin('api-subscriber', 'lab');
   labAppendLine('Removendo ' + imsi + '...');
   loaderInc(); btnLoading(srcBtn, true);
   try {
     const resp = await fetch('/api/subscriber/' + imsi, { method: 'DELETE' });
     const text = await resp.text();
     stripAnsi(text).split('\n').forEach(l => labAppendLine(l));
+    FlowStrip.end(true);
     loadUeList();
-  } catch (e) { labAppendLine('[erro: ' + e + ']'); }
+  } catch (e) { labAppendLine('[erro: ' + e + ']'); FlowStrip.end(false); }
   finally { btnLoading(srcBtn, false); loaderDec(); }
 }
 
@@ -1953,6 +1957,7 @@ document.getElementById('lab-register-btn').addEventListener('click', async e =>
     amf: document.getElementById('lab-amf').value.trim(),
   };
   ueLab.labConsole.innerHTML = '';
+  FlowStrip.begin('api-subscriber', 'lab');
   labAppendLine(I18N.t('uelab.registering', { imsi }));
   await withLoader(e.currentTarget, async () => {
     try {
@@ -1962,8 +1967,9 @@ document.getElementById('lab-register-btn').addEventListener('click', async e =>
         body: JSON.stringify(payload),
       });
       await labStream(resp);
+      FlowStrip.end(true);
       loadUeList();
-    } catch (e) { labAppendLine('[erro: ' + e + ']'); }
+    } catch (e) { labAppendLine('[erro: ' + e + ']'); FlowStrip.end(false); }
   });
 });
 
@@ -1971,6 +1977,7 @@ document.getElementById('lab-register-btn').addEventListener('click', async e =>
 function labAppendLine(line) {
   const clean = stripAnsi(line).replace(/\r/g, '');
   if (!clean.trim()) return;
+  FlowStrip.feed(clean);
   const { html, color } = renderLogLine(line);
   const div = document.createElement('div');
   if (color) div.style.color = color;
@@ -2011,6 +2018,7 @@ document.getElementById('lab-run-btn').addEventListener('click', async ev => {
   if (isGuest) return;
   ueLab.labConsole.innerHTML = '';
   ueLab.resultCard.style.display = 'none';
+  FlowStrip.begin('test-throughput', 'lab');
   await withLoader(ev.currentTarget, async () => {
     const dist  = document.getElementById('lab-dist').value;
     const interf = document.getElementById('lab-interf').value;
@@ -2044,12 +2052,14 @@ document.getElementById('lab-run-btn').addEventListener('click', async ev => {
       showResult(lastResult.bw, lastResult.unit,
         'TCP sender · UE → DN · canal: ' + (conditions || 'ideal'));
     }
+    FlowStrip.end(!!lastResult);
   });
 });
 
 document.getElementById('lab-apply-btn').addEventListener('click', async ev => {
   if (isGuest) return;
   ueLab.labConsole.innerHTML = '';
+  FlowStrip.begin('api-channel', 'lab');
   await withLoader(ev.currentTarget, async () => {
     const dist  = document.getElementById('lab-dist').value;
     const interf = document.getElementById('lab-interf').value;
@@ -2058,18 +2068,21 @@ document.getElementById('lab-apply-btn').addEventListener('click', async ev => {
       body: JSON.stringify({ distance: dist, interference: interf }),
     });
     await labStream(resp);
+    FlowStrip.end(true);
   });
 });
 
 document.getElementById('lab-reset-btn').addEventListener('click', async ev => {
   if (isGuest) return;
   ueLab.labConsole.innerHTML = '';
+  FlowStrip.begin('api-channel', 'lab');
   await withLoader(ev.currentTarget, async () => {
     const resp = await fetch('/api/channel', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ distance: 'off', interference: 'none' }),
     });
     await labStream(resp);
+    FlowStrip.end(true);
     ueLab.resultCard.style.display = 'none';
   });
 });

@@ -9,7 +9,7 @@
 
 ## Objetivo
 
-Transformar o material do lab de IA (`pdfs/ric-ai/`) em um laboratório executável
+Transformar o material do lab de IA (`pdfs/02-ric-ai/`) em um laboratório executável
 de ML aplicado ao RIC — casando com a disciplina **"Aplicações de IA e ML em RIC"**
 (Prof. Julio Tesolin) e com o **UE-TP-rApp** (previsão de throughput por UE), o
 tema do grupo.
@@ -21,8 +21,8 @@ tema do grupo.
   `server/panel/vendor/wheels/` (fora do git; recriável por
   `server/panel/vendor/README.md`). **Instalado no venv automaticamente** pelo
   `infra/server-bootstrap.sh` (v0.47.0) — antes era passo manual.
-- **Datasets de treino** em `pdfs/ric-ai/Base Fonts RIC/` (hoje em PDF).
-- **Material didático**: `pdfs/ric-ai/MLRAN_A01.pdf` (Aula 01).
+- **Datasets de treino** em `pdfs/02-ric-ai/Base Fonts RIC/` (hoje em PDF).
+- **Material didático**: `pdfs/02-ric-ai/MLRAN_A01.pdf` (Aula 01).
 - **Pipeline de dados real**: `kpm_analytics.sh` → CSV (KPM → KPI), já pronto —
   fonte de dados *reais* quando o lab E2 rodar. Guia:
   [KPM-ANALYTICS.md](../server/oai-cn-gnb-e2/docs/KPM-ANALYTICS.md).
@@ -33,7 +33,7 @@ tema do grupo.
 Todos realizados (v0.43.0 → 0.48.0); registro do que foi feito em cada um:
 
 1. **Datasets PDF → CSV.** ✅ Feito — CSVs por técnica em
-   `pdfs/ric-ai/lab-didatico/<técnica>/data/` (via `parse_labels.py` + geradores).
+   `pdfs/02-ric-ai/lab-didatico/<técnica>/data/` (via `parse_labels.py` + geradores).
 2. **Pipeline Python starter** (`scikit-learn`), por caso de uso: carregar CSV →
    split → treinar → avaliar → comparar. ✅ Feito — cada aula treina 7–8 modelos e
    compara (RMSE/MAE/R² ou Acc/F1); os 3 casos do artigo rodam também como **testes
@@ -79,5 +79,5 @@ Todos realizados (v0.43.0 → 0.48.0); registro do que foi feito em cada um:
 
 ---
 
-Referências: [`pdfs/ric-ai/README.md`](../pdfs/ric-ai/README.md) ·
+Referências: [`pdfs/02-ric-ai/README.md`](../pdfs/02-ric-ai/README.md) ·
 [roadmap do README](../README.md) · [`server/panel/vendor/README.md`](../server/panel/vendor/README.md).

@@ -21,7 +21,7 @@ O venv do painel no servidor tem apenas **numpy + scipy + scikit-learn + joblib*
 (wheels aarch64 em `server/panel/vendor/`); **não tem pandas nem matplotlib**. Por
 isso estes scripts leem os CSVs com `numpy.genfromtxt` e **não geram figuras** — a
 saída é só a tabela de métricas, streamada linha a linha (`print(..., flush=True)`).
-As versões completas com pandas/figuras vivem em `pdfs/ric-ai/casos-artigo/`.
+As versões completas com pandas/figuras vivem em `pdfs/02-ric-ai/casos-artigo/`.
 
 ## Convenções (recorte Instance, honesto)
 

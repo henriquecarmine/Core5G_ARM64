@@ -1,39 +1,47 @@
-# pdfs/ — material do curso e do laboratório de IA
+# pdfs/ — material das disciplinas
 
-Slides e material de referência, organizados por trilha:
+Slides, trabalhos e material de referência, **uma pasta por disciplina**, em
+ordem cronológica:
 
-## `base/` — curso base de RIC
+| # | Pasta | Disciplina | Professor | Status |
+|---|-------|-----------|-----------|--------|
+| 01 | [`01-ric/`](01-ric/) | RAN Intelligent Controller | **Jonas A. Kunzler** | concluída |
+| 02 | [`02-ric-ai/`](02-ric-ai/) | Aplicações de IA e ML em RIC | **Julio Tesolin** | encerrada — material completo (A01–A06); **projeto final não implementado** |
+| 03 | [`03-dados-telecom/`](03-dados-telecom/) | Análise de Dados em Redes de Telecom | **Jonas A. Kunzler** | em andamento (ago/2026) |
 
-As aulas do curso do **Prof. Dr. Jonas A. Kunzler** (RAN Intelligent Controller):
+## `01-ric/` — RAN Intelligent Controller (Kunzler)
 
-| Aula | Tema |
-|------|------|
-| `aula01-retomada_interfaces_oran-2.pdf` | Retomada das interfaces O-RAN |
-| `aula02-oss_nonrt_nearrt_ric.pdf` | OSS · Non-RT / Near-RT RIC (artigo NGO et al. 2024) |
-| `aula03-interface_a1_seminarios.pdf` | Interface A1 · seminários |
-| `aula04-xapps_opensource.pdf` | xApps open source · pilha OAI + E2 (FlexRIC) |
-| `aula05-design_smo.pdf` | Design do SMO |
-| `aula06-testes_seminarios.pdf` | Testes · seminários |
-| `resumo_acesso_vm-ric.pdf` | Resumo de acesso à VM do lab |
+As 6 aulas do curso base de RIC (`aula01`–`aula06`: interfaces O-RAN, OSS/RICs,
+A1, xApps, SMO, testes) + resumo de acesso à VM do lab. Fonte histórica de boa
+parte da [bíblia](../core5g-arm64-bible.md) (§1).
 
-Fonte histórica de boa parte da [bíblia](../core5g-arm64-bible.md) (§1).
+## `02-ric-ai/` — Aplicações de IA e ML em RIC (Tesolin)
 
-## `ric-ai/` — laboratório de RIC com IA
+Aulas `MLRAN_A01`–`A06` (SON→RIC, supervisionado, não supervisionado, redes
+neurais/RNN/autoencoders, reforço/DQN, bio-inspirados, federado e Open RAN+ML),
+datasets por técnica de ML em `Base Fonts RIC/`, reproduções dos casos do artigo
+NGO et al. 2024 em `casos-artigo/` e o lab interativo do painel gerado por
+`lab-didatico/`. Catálogo completo: [`02-ric-ai/README.md`](02-ric-ai/README.md).
 
-Material de referência do **lab de RIC com Inteligência Artificial**
-(Near-RT / Non-RT RIC + **UE-TP-rApp**: previsão de throughput por UE) — o tema
-do grupo. Papers e slides sobre ML/IA aplicada ao RAN entram aqui.
-
-Aulas da disciplina do **Prof. Julio Tesolin** (`MLRAN_A01`–`A03`) e os datasets
-por técnica de ML (regressão, classificação, clustering, anomalia, PCA) em
-`Base Fonts RIC/`. Catálogo completo: [`ric-ai/README.md`](ric-ai/README.md).
-
-> Este lab é o próximo marco técnico do projeto; depende do upgrade para 4 vCPU
-> (ver [política de custos §3](../docs/POLITICA-DE-CUSTOS.md) e o roadmap no
-> [README](../README.md)). As wheels do scikit-learn aarch64 já estão
+> **Pendência:** implementar o **projeto final**
+> (`Trabalho final IA e ML Open Ran.pdf` — caso UE-TP).
+> O lab de IA depende do upgrade para 4 vCPU (ver
+> [política de custos §3](../docs/POLITICA-DE-CUSTOS.md) e o roadmap no
+> [README](../README.md)); as wheels do scikit-learn aarch64 já estão
 > vendorizadas em `server/panel/vendor/`.
+
+## `03-dados-telecom/` — Análise de Dados em Redes de Telecom (Kunzler)
+
+Disciplina 9 (6 encontros, 24 h, ago/2026): fontes de dados na rede
+(SMO/O1/E2/A1, PM/FM/KPM), lakes/warehouses, EDA/ETL, KPIs/KQIs e capacidade —
+com **projeto integrador (50%)** sobre a telemetria KPM do lab
+`oai-cn-gnb-nonrt-nearrt` (caso UE-TP / load-anomaly).
+
+Slides na raiz da pasta; projeto integrador em `03-dados-telecom/projeto/`;
+exercícios e checkpoints em `03-dados-telecom/trabalhos/`. Catálogo completo:
+[`03-dados-telecom/README.md`](03-dados-telecom/README.md).
 
 ---
 
 As traduções / notas didáticas por idioma (pt/en/es/fr) dos slides ficarão em
-subpastas por trilha quando a fase de tradução dos slides rodar.
+subpastas por disciplina quando a fase de tradução dos slides rodar.

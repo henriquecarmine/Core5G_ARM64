@@ -802,8 +802,8 @@
 
 <footer>
   <span style="width:1px"></span>
-  <span class="foot-center">Core5G_ARM64 v<span id="version-label">—</span> &nbsp;·&nbsp; UE-TP-rApp &nbsp;·&nbsp; CESAR School &nbsp;·&nbsp; Prof. Jonas A. Kunzler · Prof. Julio C. C. Tesolin</span>
-  <span class="foot-credit" data-i18n="login.credits">Coordenação Prof. Jonas A. Kunzler &nbsp;·&nbsp; mantido por Henrique Carmine</span>
+  <span class="foot-center">Core5G_ARM64 v<span id="version-label">—</span> &nbsp;·&nbsp; UE-TP-rApp &nbsp;·&nbsp; CESAR School</span>
+  <a href="#" class="foot-credit" id="credits-link" style="cursor:pointer;text-decoration:none;color:inherit" title="créditos">Coordenação Prof. Jonas A. Kunzler &nbsp;·&nbsp; mantido por Henrique Carmine</a>
 </footer>
 
 <!-- =================== UE Lab =================== -->
@@ -954,6 +954,28 @@ FlowStrip.attach('console', document.getElementById('flow-strip-console'));
 FlowStrip.attach('modal', document.getElementById('flow-strip-modal'));
 FlowStrip.attach('lab', document.getElementById('flow-strip-lab'));
 Energy.attach(document.getElementById('energy-btn'), false, document.getElementById('output'));
+// ---- Modal de créditos (rodapé) ----
+document.getElementById('credits-link').onclick = (e) => {
+  e.preventDefault();
+  const b = document.createElement('div'); b.className = 'en-back';
+  const m = document.createElement('div'); m.className = 'en-mod';
+  m.style.maxWidth = '420px'; m.style.textAlign = 'center';
+  m.innerHTML = '<span class="x" style="position:absolute;top:10px;right:14px;cursor:pointer;color:#8a8f98">✕</span>'
+    + '<div style="font-size:34px;font-weight:800;letter-spacing:-1px;margin:6px 0 2px"><span style="color:#8bc53f">cesar</span><span style="color:#e6e6e6">.school</span></div>'
+    + '<div style="font-size:10px;letter-spacing:.25em;color:#8a8f98;text-transform:uppercase;margin-bottom:16px">Centro de Estudos e Sistemas Avançados do Recife</div>'
+    + '<div style="border-top:1px solid #2c3038;padding-top:14px;font-size:13px;line-height:2">'
+    + '<div style="font-size:10px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase">Coordenação</div>'
+    + '<div><b>Prof. Dr. Jonas A. Kunzler</b> — RIC · Open RAN · Análise de Dados</div>'
+    + '<div><b>Prof. Julio C. C. Tesolin</b> — Aplicações de IA e ML em RIC</div>'
+    + '<div style="font-size:10px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin-top:10px">Desenvolvimento e manutenção</div>'
+    + '<div><b>Henrique Carmine</b></div>'
+    + '</div>'
+    + '<div style="margin-top:14px;font-size:10.5px;color:#5c6370">Core5G_ARM64 — lab Open RAN 100% ARM64 · UE-TP-rApp</div>';
+  const close = () => { b.remove(); m.remove(); };
+  b.onclick = close;
+  document.body.appendChild(b); document.body.appendChild(m);
+  m.querySelector('.x').onclick = close;
+};
 // ===== Utilitários =====
 function stripAnsi(s) {
   return s.replace(/\x1b\[[0-9;]*[mGKJHFABCDSTlu]/g, '');

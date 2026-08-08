@@ -439,5 +439,25 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePop(); });
 
   injectCss();
-  window.FlowStrip = { attach: attach, begin: begin, feed: feed, end: end };
+  // Briefing pré-teste: mini-topologia VIVA da cena (todas as arestas animando)
+  function preview(key, hostEl) {
+    var scene = null;
+    for (var i = 0; i < SCENES.length; i++) if (SCENES[i].match.test(String(key))) { scene = SCENES[i]; break; }
+    if (!scene) { hostEl.innerHTML = ''; return null; }
+    var inf = INFOS[scene.name] || {};
+    scene.nodes.forEach(function (n) { if (inf[n.id]) n.info = inf[n.id]; });
+    var els = render(scene, hostEl);
+    els.nodes.forEach(function (n, i) { n.className = 'fs-node' + (scene.nodes[i].info ? ' hasinfo' : '') + ' done'; });
+    els.edges.forEach(function (e) { e.className = 'fs-edge active'; });
+    els.result.textContent = '';
+    return scene;
+  }
+  function sceneInfo(key) {
+    var scene = null;
+    for (var i = 0; i < SCENES.length; i++) if (SCENES[i].match.test(String(key))) { scene = SCENES[i]; break; }
+    if (!scene) return [];
+    var inf = INFOS[scene.name] || {};
+    return scene.nodes.map(function (n) { return { txt: n.txt, o: (inf[n.id] || {}).o || '' }; });
+  }
+  window.FlowStrip = { attach: attach, begin: begin, feed: feed, end: end, preview: preview, sceneInfo: sceneInfo };
 })();

@@ -944,7 +944,7 @@
 </div>
 
 <script src="i18n.js"></script>
-<script src="/static/ops/flow-strip.js?v=0.58.0"></script>
+<script src="/static/ops/flow-strip.js?v=0.61.0"></script>
 <script src="/static/ops/energy.js?v=0.60.0"></script>
 <script>
 // FlowStrip (percurso dos dados): faixa minimalista sobre o console e sobre o
@@ -1597,6 +1597,42 @@ async function withLoader(btn, fn) {
   finally { btnLoading(btn, false); loaderDec(); }
 }
 
+// ===== Briefing pré-teste: cabeçalho + o que vai fazer + mini-topologia viva
+// + scripts/dados (onde roda) + ▶ Iniciar. Reusa o CSS do modal ⚡ (en-*).
+let _pf = null;
+function pfClose() { if (_pf) { _pf.b.remove(); _pf.m.remove(); _pf = null; } }
+function preflight(cmd, srcBtn) {
+  if (isGuest) return;
+  pfClose();
+  const ex = EXPLAIN[cmd];
+  const what = ex
+    ? '<ul style="margin:4px 0 0 18px;padding:0">' + ex.items.slice(0, 3).map(i => '<li style="margin:3px 0">' + i + '</li>').join('') + '</ul>'
+    : 'Executa <code>' + cmd + '</code> no servidor e streama a saída neste console.';
+  const onde = (window.FlowStrip && FlowStrip.sceneInfo(cmd) || []).filter(n => n.o);
+  const ondeHtml = onde.length
+    ? '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:10px 0 3px">Onde roda (scripts · dados · containers)</div>'
+      + onde.map(n => '<div style="margin:2px 0;font-size:11px">' + n.txt + ' — <code style="color:#74c0fc;font-size:10.5px">' + n.o + '</code></div>').join('')
+    : '';
+  const b = document.createElement('div'); b.className = 'en-back'; b.onclick = pfClose;
+  const m = document.createElement('div'); m.className = 'en-mod';
+  m.innerHTML = '<span class="x" style="position:absolute;top:10px;right:14px;cursor:pointer;color:#8a8f98">✕</span>'
+    + '<h3>🧪 ' + prettyCmd(cmd) + '</h3>'
+    + '<div class="sub">' + (ex ? ex.title.replace('O que acabou de acontecer — ', '') : cmd) + ' · o percurso abaixo é AO VIVO durante a execução</div>'
+    + '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:8px 0 3px">O que este teste vai fazer</div>'
+    + '<div style="font-size:12px">' + what + '</div>'
+    + '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:10px 0 3px">Por onde os dados vão correr (clique nos nós ⓘ)</div>'
+    + '<div id="pf-topo"></div>' + ondeHtml
+    + '<div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end">'
+    + '<button id="pf-cancel" style="background:#21242b;border:1px solid #2c3038;color:#8a8f98;padding:7px 14px;border-radius:7px;cursor:pointer">Cancelar</button>'
+    + '<button id="pf-go" style="background:#2f9e44;border:none;color:#fff;font-weight:700;padding:7px 18px;border-radius:7px;cursor:pointer">▶ Iniciar teste</button></div>';
+  document.body.appendChild(b); document.body.appendChild(m);
+  _pf = { b, m };
+  if (window.FlowStrip) FlowStrip.preview(cmd, m.querySelector('#pf-topo'));
+  m.querySelector('.x').onclick = pfClose;
+  m.querySelector('#pf-cancel').onclick = pfClose;
+  m.querySelector('#pf-go').onclick = () => { pfClose(); runCommand(cmd, srcBtn); };
+}
+
 async function runCommand(cmd, srcBtn) {
   if (isGuest) return;
   // Feedback imediato: spinner no botão (ou estado 'loading' no toggle) + barra global.
@@ -1630,12 +1666,12 @@ async function runCommand(cmd, srcBtn) {
   }
 }
 
-buttons.forEach(b => b.addEventListener('click', () => runCommand(b.dataset.cmd, b)));
+buttons.forEach(b => b.addEventListener('click', () => preflight(b.dataset.cmd, b)));
 toggleButtons.forEach(b => {
   setToggleState(b, false);
   b.addEventListener('click', () => runCommand(b.dataset.state === 'on' ? b.dataset.down : b.dataset.up, b));
 });
-document.getElementById('diag-test-btn').addEventListener('click', e => runCommand(document.getElementById('diag-test-select').value, e.currentTarget));
+document.getElementById('diag-test-btn').addEventListener('click', e => preflight(document.getElementById('diag-test-select').value, e.currentTarget));
 document.getElementById('clear-btn').addEventListener('click', () => { output.innerHTML = ''; });
 document.getElementById('copy-btn').addEventListener('click', async () => {
   try {

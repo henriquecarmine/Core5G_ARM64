@@ -610,7 +610,7 @@ const I18N_DICTS = {
     'topo.journey.p2.act.title': 'Ação no RAN / RU — near-RT RIC (E2/RC)',
     'topo.journey.p2.act.caption': 'OPCIONAL — e é aqui que o RIC ATUA na RU. Os xApps leem os KPMs (E42) e decidem; o near-RT RIC envia controle de volta ao gNB pela E2 (E2SM-RC): escalonamento, handover, alocação de PRB, slice, potência. No O-RAN real o comando desce gNB→DU→RU pelo fronthaul aberto (7.2); aqui o rádio é simulado (RFSIM) no gNB, mas o laço observar→decidir→agir é o mesmo. Escala: 10 ms a 1 s.',
     'topo.journey.p2.nonrt.title': 'Non-RT RIC / rApp (A1 / O1)',
-    'topo.journey.p2.nonrt.caption': 'IMPLEMENTADO (ARM64 nativo): o PMS — Non-RT RIC — decide em horizonte > 1 s e desce políticas pela interface A1: no lab, aos simuladores near-RT (links sólidos). O tracejado até o FlexRIC é a terminação A1 que falta (Fase 2, near-RT O-RAN SC). É onde os rApps viverão: treinam com o histórico e guiam o near-RT — o loop lento sobre o loop rápido.
+    'topo.journey.p2.nonrt.caption': 'IMPLEMENTADO (ARM64 nativo): o PMS — Non-RT RIC — decide em horizonte > 1 s e desce políticas pela interface A1: no lab, aos simuladores near-RT (links sólidos). O tracejado até o FlexRIC é a terminação A1 que falta (Fase 2, near-RT O-RAN SC). É onde os rApps viverão: treinam com o histórico e guiam o near-RT — o loop lento sobre o loop rápido.',
     'topo.journey.p1.start.title': 'UE e gNB ligam (UERANSIM)',
     'topo.journey.p1.start.caption': 'O UERANSIM sobe o gNB e o UE simulados no MESMO container — o rádio é interno. A partir daqui o UE se registra e abre a sessão de dados.',
     'topo.journey.p1.n2.title': 'gNB ↔ Core — plano de controle',
@@ -1236,7 +1236,7 @@ const I18N_DICTS = {
     'topo.journey.p2.act.title': 'Acting on the RAN / RU — near-RT RIC (E2/RC)',
     'topo.journey.p2.act.caption': 'OPTIONAL — and this is where the RIC ACTS on the RU. The xApps read the KPMs (E42) and decide; the near-RT RIC sends control back to the gNB over E2 (E2SM-RC): scheduling, handover, PRB allocation, slice, power. In real O-RAN the command flows gNB→DU→RU over the open fronthaul (7.2); here the radio is simulated (RFSIM) inside the gNB, but the observe→decide→act loop is the same. Timescale: 10 ms to 1 s.',
     'topo.journey.p2.nonrt.title': 'Non-RT RIC / rApp (A1 / O1)',
-    'topo.journey.p2.nonrt.caption': 'IMPLEMENTED (native ARM64): the PMS — Non-RT RIC — decides on a > 1 s horizon and pushes policies over the A1 interface: in this lab, to the near-RT simulators (solid links). The dashed line to FlexRIC is the missing A1 termination (Phase 2, O-RAN SC near-RT). This is where rApps will live: they train on history and guide the near-RT — the slow loop above the fast loop.
+    'topo.journey.p2.nonrt.caption': 'IMPLEMENTED (native ARM64): the PMS — Non-RT RIC — decides on a > 1 s horizon and pushes policies over the A1 interface: in this lab, to the near-RT simulators (solid links). The dashed line to FlexRIC is the missing A1 termination (Phase 2, O-RAN SC near-RT). This is where rApps will live: they train on history and guide the near-RT — the slow loop above the fast loop.',
     'topo.journey.p1.start.title': 'UE and gNB power on (UERANSIM)',
     'topo.journey.p1.start.caption': 'UERANSIM brings up the simulated gNB and UE in the SAME container — the radio is internal. From here the UE registers and opens a data session.',
     'topo.journey.p1.n2.title': 'gNB ↔ Core — control plane',

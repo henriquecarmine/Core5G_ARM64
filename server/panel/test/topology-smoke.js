@@ -19,7 +19,7 @@ const puppeteer = require('puppeteer-core');
 const path = require('path');
 const fs = require('fs');
 
-const STATIC = path.resolve(__dirname, '..', 'static');
+const STATIC = path.resolve(__dirname, '..', 'static', 'ops');
 const PAGE = 'file://' + path.join(STATIC, 'topology.html');
 const SHOTS = path.resolve(__dirname, 'screenshots');
 const P2 = fs.readFileSync(path.join(STATIC, 'openran-topology.json'), 'utf8');

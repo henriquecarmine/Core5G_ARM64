@@ -355,8 +355,8 @@ UE                  gNB              AMF          AUSF    UDM    SMF    UPF
     ├── ueransim/               # docker-compose.yaml separado (gNB+UE simulados)
     ├── logs/                   # bind mounts de log por NF (gerado em runtime)
     ├── panel/                  # painel de controle web SERVER-SIDE (roda na própria AWS)
-    │   ├── server.py           # backend FastAPI — chama scripts locais, sem SSH
-    │   ├── static/index.html   # UI (igual ao client/, sem sync/sync-oai/bootstrap)
+    │   ├── server.py           # bootstrap FastAPI (auth + aula ao vivo) — camadas em core/ops/lab.py
+    │   ├── static/{ops,lab}/   # UI em duas camadas: operação (index/topologia) × aulas do lab
     │   ├── requirements.txt
     │   └── .venv/              # criado pelo bootstrap, não versionado
     └── oai-cn-gnb-e2/          # Projeto 2 — OAI 5GC + gNB + FlexRIC + xApps

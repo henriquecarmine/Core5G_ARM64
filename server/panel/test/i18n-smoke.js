@@ -65,7 +65,7 @@ const EXPECT = {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.evaluateOnNewDocument(() => { try { localStorage.setItem('c5g-lang', 'es'); } catch {} });
-  await page.goto('file://' + path.join(STATIC, 'index.html'), { waitUntil: 'domcontentloaded' });
+  await page.goto('file://' + path.join(STATIC, 'ops', 'index.html'), { waitUntil: 'domcontentloaded' });
   await new Promise(r => setTimeout(r, 400));
   const tb = await page.evaluate(() => ({
     panel: document.querySelector('h1 [data-i18n="topbar.panel"]').textContent,

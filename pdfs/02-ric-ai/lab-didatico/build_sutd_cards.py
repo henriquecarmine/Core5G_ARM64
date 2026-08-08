@@ -7,7 +7,7 @@ de texto controladas + injetando o datasets_config.json de cada uma.
 Gera, por slug:
   <slug>/card-<slug>.tpl.html         (template com __DSC_JSON__, p/ provenance)
   <slug>/card-<slug>.html             (DSC injetado — artefato)
-  server/panel/static/lab-<slug>.html (card + "← Painel" + lab-stepper.js)
+  server/panel/static/lab/lab-<slug>.html (card + "← Painel" + lab-stepper.js)
 
 Rode `gen_sutd_labs.py` antes (produz os datasets_config.json).
 """
@@ -17,12 +17,12 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SRC_TPL = HERE / "classificacao" / "card-classificacao.tpl.html"
-STATIC = HERE.parent.parent.parent / "server" / "panel" / "static"
+STATIC = HERE.parent.parent.parent / "server" / "panel" / "static" / "lab"
 
 BACKLINK = ('      <a href="/" style="display:inline-block;margin-bottom:10px;'
             'font-size:.8rem;font-weight:600;color:var(--accent);'
             'text-decoration:none">← Painel</a>\n')
-STEPPER = '\n<script src="/static/lab-stepper.js"></script>\n'
+STEPPER = '\n<script src="/static/lab/lab-stepper.js"></script>\n'
 
 
 def repls(slug):

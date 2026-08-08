@@ -19,7 +19,7 @@ from pathlib import Path
 NODE_W, NODE_H = 184, 66            # tamanho do card em topology.html
 PAD_X, PAD_TOP, PAD_BOT = 24, 30, 14  # padding das bandas no render
 
-STATIC = Path(__file__).resolve().parent.parent / "static"
+STATIC = Path(__file__).resolve().parent.parent / "static" / "ops"
 DEFAULT = [STATIC / "openran-topology.json", STATIC / "openran-topology-p1.json"]
 
 

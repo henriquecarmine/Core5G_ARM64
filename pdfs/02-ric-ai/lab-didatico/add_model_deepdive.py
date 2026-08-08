@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent  # repo root
-STATIC = ROOT / "server" / "panel" / "static"
+STATIC = ROOT / "server" / "panel" / "static" / "lab"
 TPL = Path(__file__).resolve().parent / "classificacao" / "card-classificacao.tpl.html"
 
 # arquivo -> lista de modelos daquela aula (ordem = a da tabela)
@@ -28,7 +28,7 @@ SECTION = """  <section class="card">
     <p class="sub">Todos recebem os mesmos KPIs (coletados via E2/KPM). O que muda é o que cada um <b>faz</b> com eles — clique para abrir.</p>
     <div data-model-deepdive="__LIST__"></div>
   </section>
-  <script src="/static/lab-models.js"></script>
+  <script src="/static/lab/lab-models.js"></script>
 
 """
 REPORT_H2 = "<h2>📄 Relatório</h2>"

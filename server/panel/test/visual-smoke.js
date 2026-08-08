@@ -17,7 +17,7 @@ const puppeteer = require('puppeteer-core');
 const path = require('path');
 const fs = require('fs');
 
-const INDEX = 'file://' + path.resolve(__dirname, '..', 'static', 'index.html');
+const INDEX = 'file://' + path.resolve(__dirname, '..', 'static', 'ops', 'index.html');
 const SHOTS = path.resolve(__dirname, 'screenshots');
 
 function findChrome() {

@@ -44,14 +44,18 @@ que mostra KPM ao vivo); a operacional **nunca** conhece a didática.
 
 ## 3. Fases
 
-### Fase A — separar sem mudar comportamento
+### Fase A — separar sem mudar comportamento ✅ (v0.50.0, 08/08/2026)
 
-- `server.py` → dois módulos (blueprints Flask): `ops.py` e `lab.py`;
-  `server.py` vira só bootstrap/auth. **Nenhuma rota muda.**
-- `static/` → `static/ops/` e `static/lab/` (com redirects/aliases dos
-  caminhos atuais). `index.html` fatiado: shell de operação separado das
-  páginas de aula.
-- Critério de pronto: painel idêntico ao olho; diff de rotas vazio.
+- `server.py` → `core.py` (infra compartilhada, sem rotas) + `ops.py` e
+  `lab.py` (APIRouters); `server.py` vira bootstrap/auth/sala de aula.
+  **Nenhuma rota mudou.**
+- `static/` → `static/ops/` (index, topologia, JSONs) e `static/lab/`
+  (aulas + js do lab); `login.html` e `i18n.js` seguem compartilhados na
+  raiz. Geradores (`lab-didatico/`) e testes atualizados para os novos
+  caminhos.
+- Critério cumprido: **diff de rotas vazio** (50 = 50, verificado por
+  introspecção do app) + smoke de 28 endpoints autenticados OK +
+  `check-topology.py` OK.
 
 ### Fase B — a lacuna operacional: logs
 

@@ -274,7 +274,7 @@ const svg = document.getElementById("diagram");
 // i18n: tradução com fallback no texto pt do JSON (pt = canônico; nós nunca usam o dict em pt)
 const trf = (k, fb) => { if (I18N.lang === "pt") return fb; const v = I18N.t(k); return v === k ? fb : v; };
 const sanit = x => x.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-const FLOW_IFACES = new Set(["RF","N2","E2","E42","N3","N4","N6","A1"]);
+const FLOW_IFACES = new Set(["RF","N1","N2","N11/Nsmf","E2","E42","N3","N4","N6","A1"]);
 const SECONDARY = new Set(["SBI","Nausf","Nudm","Nudr","SQL","Telemetria"]); // N11/Nsmf fica visível: didático (sessão PDU)
 const MODE_HINT_KEYS = { simplificado: "topo.hint_simple", tecnico: "topo.hint_tech", fluxo: "topo.hint_flow", troubleshooting: "topo.hint_ts" };
 

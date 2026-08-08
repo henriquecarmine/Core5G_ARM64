@@ -14,6 +14,9 @@ RIC com Inteligência Artificial (Near-RT / Non-RT RIC), incluindo o **UE-TP-rAp
 | **`MLRAN_A01.pdf`** | 135 | Ementa + introdução/motivação (SON → RIC, Near-RT × Non-RT, xApp × rApp, NWDAF, "do modelo aos dados") + fundamentos de IA. Ferramentas: **KNIME** (low-code) + **Python** (`scikit-learn` / `pytorch` / `tensorflow`). |
 | **`MLRAN_A02.pdf`** | 98 | Revisão + **Aprendizado supervisionado**: Regressão e Classificação. |
 | **`MLRAN_A03.pdf`** | 155 | **Proposta do Projeto Final** + Classificação + **Aprendizado não supervisionado**. |
+| **`MLRAN_A04.pdf`** | 260 | Não supervisionado (continuação): **PCA** + **Redes Neurais** (Perceptron → MLP → DNN → CNN) e configuração de Deep Learning no KNIME (conda/Keras). |
+| **`MLRAN_A05.pdf`** | 167 | **RNN/LSTM** (séries temporais, ARIMA), **Autoencoders/VAE** (aprendizado por representação, detecção de anomalias) e **Aprendizado por Reforço**: agente/recompensa, **MDP**, Q-Learning, DQN, Policy Gradient & Actor-Critic (PPO); início de bio-inspirados + **Algoritmos Genéticos**. Práticas KNIME (RNN multivariada, autoencoder p/ anomalia). |
+| **`MLRAN_A06.pdf`** | 307 | **DQN** + Gêmeos Digitais, **algoritmos bio-inspirados** (GA, PSO, ACO + comparação de meta-heurísticas), **Aprendizado Federado** (FedAvg, FedProx, hierárquico, segurança/privacidade) e **Open RAN e ML**: workflow de modelos (coleta→treino→validação→publicação→inferência→monitoramento), loops de controle e os cenários de deployment 1.1–1.5 (Non-RT/Near-RT/O-CU-DU). |
 
 Avaliação da disciplina: aplicar **2 técnicas de ML** a um caso de uso (traffic
 steering, espectro dinâmico, otimização de energia, manutenção preditiva,

@@ -28,8 +28,8 @@ UE_LOG="$LOG_DIR/ue_oai.log"
 # (CPUQuota) e prioridade baixa (Nice). Mesmo num pico, o SO reserva CPU para
 # sshd/painel/dockerd (Nice 0) e o lab degrada em vez de congelar.
 # Override por ambiente: GNB_CPUQUOTA / UE_CPUQUOTA / RAN_NICE.
-GNB_CPUQUOTA="${GNB_CPUQUOTA:-120%}"
-UE_CPUQUOTA="${UE_CPUQUOTA:-60%}"
+GNB_CPUQUOTA="${GNB_CPUQUOTA:-75%}"
+UE_CPUQUOTA="${UE_CPUQUOTA:-75%}"
 RAN_NICE="${RAN_NICE:-10}"
 # Nota: 'Nice' não é propriedade de scope (só de service). Para scopes usamos
 # CPUQuota (teto rígido) + CPUWeight (prioridade cgroup, default 100) e aplicamos

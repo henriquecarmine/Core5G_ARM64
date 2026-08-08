@@ -73,7 +73,7 @@ echo "Iniciando nearRT-RIC ($RIC_BIN) em $RIC_IP (libs: $FLEXRIC_LIB)..."
 # serviço). Unit com $$ evita colisão com scope anterior que ainda finaliza.
 if command -v systemd-run >/dev/null 2>&1; then
     sudo nohup systemd-run --scope -q --unit="oai-flexric-$$" --slice=oai-lab.slice \
-        -p CPUWeight=40 "$RIC_BIN" "${RIC_ARGS[@]}" > "$RIC_LOG" 2>&1 &
+        -p CPUWeight=40 -p CPUQuota=75% "$RIC_BIN" "${RIC_ARGS[@]}" > "$RIC_LOG" 2>&1 &
 else
     nohup "$RIC_BIN" "${RIC_ARGS[@]}" > "$RIC_LOG" 2>&1 &
 fi

@@ -51,7 +51,7 @@ resolve_xapp() {
 }
 
 kill_stale_xapps() {
-    pkill -f "/xapp_" 2>/dev/null || true
+    pkill -9 -f "/xapp_" 2>/dev/null || true
     sleep 1
 }
 

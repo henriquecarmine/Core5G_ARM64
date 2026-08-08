@@ -41,10 +41,10 @@ fi
 mkdir -p "$LOG_DIR"
 
 kill_stale_xapps() {
-    pkill -f "/xapp_" 2>/dev/null || true
-    pkill -f "xapp_kpm_moni" 2>/dev/null || true
-    pkill -f "xapp_rc_moni" 2>/dev/null || true
-    pkill -f "xapp_oran_moni" 2>/dev/null || true
+    pkill -9 -f "/xapp_" 2>/dev/null || true
+    pkill -9 -f "xapp_kpm_moni" 2>/dev/null || true
+    pkill -9 -f "xapp_rc_moni" 2>/dev/null || true
+    pkill -9 -f "xapp_oran_moni" 2>/dev/null || true
     sleep 1
 }
 

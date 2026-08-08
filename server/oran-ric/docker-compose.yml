@@ -9,7 +9,6 @@ services:
     networks:
       ric_network:
         ipv4_address: 10.0.2.12
-    restart: unless-stopped
 
   a1mediator:
     image: "core5g/ric-plt-a1:${A1_VER:-3.2.2}-arm64"
@@ -31,7 +30,6 @@ services:
     networks:
       ric_network:
         ipv4_address: 10.0.2.16
-    restart: unless-stopped
 
 networks:
   ric_network:

@@ -522,6 +522,8 @@ def topology_logs(proj: str = "p2") -> JSONResponse:
         sections = [
             {"title": "gNB (E2 Agent)", "comp": "gnb", "lines": gnb_lines},
             {"title": "near-RT RIC", "comp": "ric", "lines": ric_lines},
+            {"title": "Non-RT RIC (PMS · A1)", "comp": "nonrt-pms", "lines": _docker_logs("nonrt-policy-agent", 8)},
+            {"title": "A1 Simulator (OSC)", "comp": "a1sim", "lines": _docker_logs("a1-sim-OSC", 6)},
             {"title": "AMF (Mobilidade)", "comp": "amf", "lines": _docker_logs("oai-amf", 10)},
             {"title": "SMF (Sessão)", "comp": "smf", "lines": _docker_logs("oai-smf", 8)},
             {"title": "AUSF (Autenticação)", "comp": "ausf", "lines": _docker_logs("oai-ausf", 8)},
@@ -708,6 +710,9 @@ LOG_SOURCES: list[dict] = [
     {"key": "oai-nrf",   "label": "NRF (OAI) · registro de NFs",    "container": "oai-nrf"},
     {"key": "oai-ext-dn","label": "DN externo (OAI) · iperf3",      "container": "oai-ext-dn"},
     {"key": "mysql",     "label": "MySQL · assinantes (OAI)",       "container": "mysql"},
+    # Projeto 2 — Non-RT RIC (camada SMO, containers ARM64 próprios)
+    {"key": "nonrt-pms", "label": "Non-RT RIC · PMS (políticas A1)", "container": "nonrt-policy-agent"},
+    {"key": "a1-sim",    "label": "A1 Simulator (OSC) · near-RT sim", "container": "a1-sim-OSC"},
     # Projeto 2 — processos nativos (host), por arquivo de log
     {"key": "gnb", "label": "gNB (OAI RFSIM · E2 agent)", "file": "oai-cn-gnb-e2/logs/gnb_oai.log"},
     {"key": "ric", "label": "near-RT RIC (FlexRIC)",      "file": "oai-cn-gnb-e2/logs/nearRT-RIC.log"},

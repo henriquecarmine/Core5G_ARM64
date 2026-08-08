@@ -142,7 +142,7 @@
       "image": "FlexRIC nearRT-RIC (nativo)",
       "from": "Recebe o E2 SETUP e as indicações (KPM/RC) do gNB via E2.",
       "does": "Controlador near-real-time: carrega os Service Models e hospeda os xApps que monitoram/controlam o RAN.",
-      "to": "Entrega os dados aos xApps (E42) e pode enviar comandos de controle de volta ao gNB (E2).",
+      "to": "Entrega os dados aos xApps (E42) e pode enviar comandos de controle de volta ao gNB (E2). Não tem terminação A1: a ligação com o Non-RT RIC (tracejada) é a lacuna que a Fase 2 fecha — hoje as políticas A1 descem do PMS aos simuladores.",
       "ports": "E2AP: 36421/36422 · SCTP",
       "network": "loopback",
       "ip": "127.0.0.1",

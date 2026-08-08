@@ -1434,6 +1434,17 @@ const TEST_EXPLAIN = {
     ],
     concl: '✓ Fecha a cadeia Coleta→ETL→KPI→Decisão (aula06): o CSV é o insumo do UE-TP-rApp e do Módulo de Análise de Dados.',
   },
+  'p2-test-a1': {
+    title: 'O que acabou de acontecer — ciclo A1 (non-RT → near-RT)',
+    items: [
+      '<b>PMS vivo</b>: o A1 Policy Management Service (camada <b>Non-RT/SMO</b>, imagem ARM64 própria) respondeu e listou os 3 near-RT configurados.',
+      '<b>Policy type</b>: o tipo de política (schema JSON) foi carregado no simulador e o PMS o <b>sincronizou</b> — supervisão periódica nonRT ← nearRT.',
+      '<b>Política desceu pelo A1</b>: criada via <code>/a1-policy/v2</code> no PMS e <b>confirmada dentro do a1-sim</b> — o caminho A1 de verdade, não um mock.',
+      'Horizonte &gt; 1 s: é o loop <b>lento</b> do O-RAN (treinar/decidir no SMO, guiar o near-RT) — o rápido (10 ms–1 s) é o E2 do FlexRIC ao lado.',
+      'O near-RT aqui é <b>simulador</b>: o FlexRIC não tem terminação A1 (link tracejado na Topologia). Fechar a ponta = Fase 2 (near-RT O-RAN SC).',
+    ],
+    concl: '✓ Non-RT (SMO) → A1 → near-RT demonstrado ao vivo — a camada de políticas que faltava na pilha, em ARM64 nativo.',
+  },
   'p2-ml-uetp': {
     title: 'O que acabou de acontecer — UE-TP (previsão de throughput)',
     items: [

@@ -134,7 +134,7 @@
         { re: /UERANSIM|aplicand|apply|\btc\b|netem|delay|loss/i, to: 'ran' },
         { re: /ping|t[úu]nel|efeito|icmp|\bms\b/i, to: 'fx' },
       ] },
-    { match: /^p3-test-a1$/,
+    { match: /^p2-test-a1$/,
       nodes: [{ id: 'pms', txt: '🧠 PMS (nonRT)' }, { id: 'type', txt: '📐 policy type' },
               { id: 'pol', txt: '📋 política' }, { id: 'sim', txt: '📡 a1-sim (nearRT)' }],
       edges: ['', '', 'A1'],

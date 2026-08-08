@@ -202,7 +202,7 @@
       viz: { q: 'O resultado visível: a forma do tráfego no tempo.', o: '<b>logs/kpm_timeseries.csv</b> + sparkline ASCII no console', d: 'O CSV final — o mesmo insumo que alimentaria um UE-TP-rApp de verdade.' },
     },
     ml: {
-      data: { dataKey: 'sutd', q: 'Medições REAIS de campo: o walk test 5G da universidade SUTD (Singapura).', o: 'servidor: <b>oai-cn-gnb-e2/scripts/ml/</b> · cópia aberta no repo: pdfs/02-ric-ai/casos-artigo/data/sutd/', d: 'CSVs com RSRP, RSRQ, SINR, PRB e throughput medidos andando pelos andares 4/5/6 — cada linha é um instante rotulado.' },
+      data: { dataKey: 'sutd', q: 'Medições REAIS de campo: o walk test 5G da universidade SUTD (Singapura) — material da disciplina \u201cAplicações de IA e ML em RIC\u201d do Prof. Julio Cesar Cardoso Tesolin (CESAR School).', o: 'servidor: <b>oai-cn-gnb-e2/scripts/ml/</b> · cópia aberta no repo: pdfs/02-ric-ai/casos-artigo/data/sutd/', d: 'CSVs com RSRP, RSRQ, SINR, PRB e throughput medidos andando pelos andares 4/5/6 — cada linha é um instante rotulado.' },
       train:{ q: 'O treino: o modelo aprende o padrão que liga as medições ao alvo.', o: 'script <b>scripts/ml/*_experiment.py</b> (numpy puro, sem GPU), no host', d: 'Split temporal (passado treina, futuro testa — nunca o contrário!) e os modelos: Gradient Boosting, Random Forest, MLP…' },
       metr: { q: 'O boletim do modelo: quão bem ele prevê o que nunca viu.', o: 'impresso no console (e salvo no Histórico do painel)', d: 'RMSE/R² (regressão) ou acurácia/matriz de confusão (classificação) — compare com a tabela do artigo NGO et al. 2024.' },
     },
@@ -435,7 +435,7 @@
                   return '<td style="padding:3px 7px;color:#9aa4b2;border-bottom:1px solid #1c1f26;white-space:nowrap">' + v + '</td>';
                 }).join('') + '</tr>';
               }).join('')
-            + '</table><div style="padding:5px 9px;color:#5c6370;font-size:9.5px">⋮ primeiras linhas · passe o mouse nos cabeçalhos · dataset completo: 4 cenários no servidor</div>';
+            + '</table><div style="padding:5px 9px;color:#5c6370;font-size:9.5px">⋮ primeiras linhas · passe o mouse nos cabeçalhos · 4 cenários no servidor · disciplina do Prof. Julio Cesar Cardoso Tesolin</div>';
           smp.innerHTML = html;
         })
         .catch(function () { smp.innerHTML = '<div style="padding:6px 9px;color:#ff6b6b;font-size:10px">falhou ao carregar</div>'; });

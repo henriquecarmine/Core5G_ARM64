@@ -1,6 +1,6 @@
 # ric-ai/ — material do laboratório de RIC com IA
 
-Material da disciplina **"Aplicações de IA e ML em RIC"** (Prof. **Julio Tesolin**,
+Material da disciplina **"Aplicações de IA e ML em RIC"** (Prof. **Julio Cesar Cardoso Tesolin**,
 `jcct@cesar.school`) e as bases de dados dos casos de uso — a fundação do lab de
 RIC com Inteligência Artificial (Near-RT / Non-RT RIC), incluindo o **UE-TP-rApp**
 (previsão de throughput por UE), o tema do grupo.

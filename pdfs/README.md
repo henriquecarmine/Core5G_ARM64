@@ -6,7 +6,7 @@ ordem cronológica:
 | # | Pasta | Disciplina | Professor | Status |
 |---|-------|-----------|-----------|--------|
 | 01 | [`01-ric/`](01-ric/) | RAN Intelligent Controller | **Jonas A. Kunzler** | concluída |
-| 02 | [`02-ric-ai/`](02-ric-ai/) | Aplicações de IA e ML em RIC | **Julio Tesolin** | encerrada — material completo (A01–A06); **projeto final não implementado** |
+| 02 | [`02-ric-ai/`](02-ric-ai/) | Aplicações de IA e ML em RIC | **Julio Cesar Cardoso Tesolin** | encerrada — material completo (A01–A06); **projeto final não implementado** |
 | 03 | [`03-dados-telecom/`](03-dados-telecom/) | Análise de Dados em Redes de Telecom | **Jonas A. Kunzler** | em andamento (ago/2026) |
 
 ## `01-ric/` — RAN Intelligent Controller (Kunzler)

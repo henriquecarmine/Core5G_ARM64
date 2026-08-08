@@ -141,6 +141,11 @@ gunzip -c dist/nonrt-a1sim-2.8.0-arm64.tar.gz | docker load
 `docker save/load` preserva a imagem byte a byte — o que passou no smoke
 local é o que roda no Graviton. (`colima stop` libera a RAM do Mac depois.)
 
+> **Executado no SERVIDOR em 08/08/2026:** tarballs enviados (rsync, 245 MB),
+> `docker load`, stack no ar e **smoke 7/7 verde no Graviton** — PMS healthy,
+> política criada e confirmada no simulador. Consumo com tudo rodando:
+> ~1,1 GiB RAM. O `deploy.sh sync` passou a levar `nonrt-ric/` junto.
+>
 > **Executado em 08/08/2026 (Mac M-series, colima 4 CPU/4 GB):** build OK após
 > 2 ajustes de pipeline (suíte de testes exige S3 → `-Dmaven.test.skip=true`,
 > registrados 232/233 testes passando em ARM64; fabric8 docker-maven-plugin →

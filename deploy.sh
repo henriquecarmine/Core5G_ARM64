@@ -73,11 +73,12 @@ cmd_sync() {
     ensure_server_env
     echo "==> Sincronizando $LOCAL_DIR/ -> $REMOTE:~/$REMOTE_DIR"
     remote_exec "mkdir -p ~/$REMOTE_DIR"
-    rsync -az -e "ssh ${SSH_OPTS[*]}" \
+    rsync -az -e "ssh ${SSH_OPTS[*]}" --exclude nonrt-ric/src \
         "$LOCAL_DIR/docker-compose.yml" "$LOCAL_DIR/.env" "$LOCAL_DIR/.env.example" \
         "$LOCAL_DIR/configs" "$LOCAL_DIR/scripts" "$LOCAL_DIR/overrides" "$LOCAL_DIR/ueransim" \
+        "$LOCAL_DIR/nonrt-ric" \
         "$REMOTE:~/$REMOTE_DIR/"
-    remote_exec "chmod +x ~/$REMOTE_DIR/scripts/*.sh"
+    remote_exec "chmod +x ~/$REMOTE_DIR/scripts/*.sh ~/$REMOTE_DIR/nonrt-ric/*.sh 2>/dev/null || chmod +x ~/$REMOTE_DIR/scripts/*.sh"
 }
 
 cmd_sync_oai() {

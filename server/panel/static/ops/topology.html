@@ -85,6 +85,7 @@
 
   /* bandas de plano (CUPS): retângulo de fundo por camada com band:true no JSON */
   .band { pointer-events:none; fill-opacity:var(--band-fill); stroke-opacity:var(--band-stroke); }
+  .jnum { font-size:11px; font-weight:800; fill:#1c2129; }
   .band-label { font-size:11px; font-weight:700; letter-spacing:.09em; opacity:.9; }
 
   .link { stroke-width:1.6; fill:none; }
@@ -359,6 +360,23 @@ function render(){
     const t=el("text",{x:mx,y:my+3.5,"text-anchor":"middle",class:"link-label"+(tourDim?" tour-dim":"")},gT); t.textContent=lk.iface;
   });
 
+  // Jornada: badge numerado (1, 2, 2.1…) da etapa ativa — no meio do 1º link,
+  // ou no canto do nó quando a etapa não tem fluxo (ex.: "recebe IP").
+  if(journeyStep && !journeyStep.full && journeyStep.num){
+    let bx, by;
+    if(journeyStep.links.length){
+      const L=journeyStep.links[0], a=nodeById(L.dir[0]), b=nodeById(L.dir[1]);
+      if(a&&b){ const ca=center(a), cb=center(b); bx=(ca.x+cb.x)/2; by=(ca.y+cb.y)/2-26; }
+    } else if(journeyStep.nodes.length){
+      const n=nodeById(journeyStep.nodes[0]); if(n){ bx=n.x+NODE_W-4; by=n.y-4; }
+    }
+    if(bx!==undefined){
+      el("circle",{cx:bx,cy:by,r:13,fill:"#f59f00",stroke:"var(--bg)","stroke-width":2.5},gT);
+      const bt=el("text",{x:bx,y:by+4,"text-anchor":"middle",class:"jnum"},gT);
+      bt.textContent=journeyStep.num;
+    }
+  }
+
   TOPO.nodes.forEach(n=>{
     const tourDim = (tourLayer && n.layer!==tourLayer) || (journeyStep && !journeyStep.full && !journeyStep.nodes.includes(n.id));
     const g=el("g",{class:"node"+(n.planned?" planned":"")+(tourDim?" tour-dim":"")},gN); g.dataset.id=n.id;
@@ -525,36 +543,36 @@ document.getElementById("tour-exit").onclick=()=>journeyStep?endJourney():endTou
 // ---- Jornada do UE: visita guiada seguindo o pacote, passo a passo (P1 e P2) ----
 // flow: [origem, destino] ou [origem, destino, iface] p/ desambiguar links paralelos.
 const JOURNEY_P2 = [
-  { id:"start",    badge:"",    nodes:["ue"],                             flow:[] },
-  { id:"radio",    badge:"req", nodes:["ue","gnb"],                       flow:[["ue","gnb"]] },
-  { id:"n2",       badge:"req", nodes:["gnb","amf"],                      flow:[["gnb","amf"]] },
-  { id:"register", badge:"req", nodes:["ue","gnb","amf"],                 flow:[["ue","amf"]] },
-  { id:"nrf",      badge:"req", nodes:["nrf","amf","smf","ausf","udm","udr"], flow:[["amf","nrf"],["ausf","nrf"],["udm","nrf"],["udr","nrf"],["smf","nrf"]] },
-  { id:"auth",     badge:"req", nodes:["amf","ausf","udm","udr","mysql"], flow:[["amf","ausf"],["ausf","udm"],["udm","udr"],["udr","mysql"]] },
-  { id:"session",  badge:"req", nodes:["amf","smf"],                      flow:[["amf","smf"]] },
-  { id:"cups",     badge:"req", nodes:["smf","upf"],                      flow:[["smf","upf"]] },
-  { id:"ip",       badge:"req", nodes:["ue"],                             flow:[] },
-  { id:"uplink",   badge:"req", nodes:["ue","gnb","upf"],                 flow:[["ue","gnb"],["gnb","upf"]] },
-  { id:"egress",   badge:"req", nodes:["upf","ext-dn"],                   flow:[["upf","ext-dn"]] },
-  { id:"downlink", badge:"",    nodes:["ext-dn","upf","gnb","ue"],        flow:[["ext-dn","upf"],["upf","gnb"],["gnb","ue"]] },
-  { id:"collect",  badge:"opt", nodes:["gnb","ric"],                      flow:[["gnb","ric"]] },
-  { id:"act",      badge:"opt", nodes:["gnb","ric","xapps"],             flow:[["xapps","ric"],["ric","gnb"]] },
-  { id:"nonrt",    badge:"opt", nodes:["ric","xapps"],                    flow:[] },
+  { id:"start", num:"1",    badge:"",    nodes:["ue"],                             flow:[] },
+  { id:"radio", num:"2",    badge:"req", nodes:["ue","gnb"],                       flow:[["ue","gnb"]] },
+  { id:"n2", num:"2",       badge:"req", nodes:["gnb","amf"],                      flow:[["gnb","amf"]] },
+  { id:"register", num:"2.1", badge:"req", nodes:["ue","gnb","amf"],                 flow:[["ue","amf"]] },
+  { id:"nrf", num:"2.2",      badge:"req", nodes:["nrf","amf","smf","ausf","udm","udr"], flow:[["amf","nrf"],["ausf","nrf"],["udm","nrf"],["udr","nrf"],["smf","nrf"]] },
+  { id:"auth", num:"2.3",     badge:"req", nodes:["amf","ausf","udm","udr","mysql"], flow:[["amf","ausf"],["ausf","udm"],["udm","udr"],["udr","mysql"]] },
+  { id:"session", num:"3",  badge:"req", nodes:["amf","smf"],                      flow:[["amf","smf"]] },
+  { id:"cups", num:"3.1",     badge:"req", nodes:["smf","upf"],                      flow:[["smf","upf"]] },
+  { id:"ip", num:"3.2",       badge:"req", nodes:["ue"],                             flow:[] },
+  { id:"uplink", num:"4",   badge:"req", nodes:["ue","gnb","upf"],                 flow:[["ue","gnb"],["gnb","upf"]] },
+  { id:"egress", num:"4.1",   badge:"req", nodes:["upf","ext-dn"],                   flow:[["upf","ext-dn"]] },
+  { id:"downlink", num:"4.2", badge:"",    nodes:["ext-dn","upf","gnb","ue"],        flow:[["ext-dn","upf"],["upf","gnb"],["gnb","ue"]] },
+  { id:"collect", num:"5",  badge:"opt", nodes:["gnb","ric"],                      flow:[["gnb","ric"]] },
+  { id:"act", num:"5.1",      badge:"opt", nodes:["gnb","ric","xapps"],             flow:[["xapps","ric"],["ric","gnb"]] },
+  { id:"nonrt", num:"6",    badge:"opt", nodes:["nonrt-pms","a1sim","ric"],        flow:[["nonrt-pms","a1sim"],["nonrt-pms","ric"]] },
   { id:"summary",  badge:"",    nodes:[],                                 flow:[], full:true },
 ];
 const JOURNEY_P1 = [
-  { id:"start",    badge:"",    nodes:["ueransim"],                       flow:[] },
-  { id:"n2",       badge:"req", nodes:["ueransim","amf"],                 flow:[["ueransim","amf","N2"]] },
-  { id:"register", badge:"req", nodes:["ueransim","amf"],                 flow:[["ueransim","amf","N1"]] },
-  { id:"nrf",      badge:"req", nodes:["nrf","amf","smf","ausf","udm","udr","nssf","pcf","scp"], flow:[["amf","nrf"],["smf","nrf"],["ausf","nrf"],["udm","nrf"],["udr","nrf"],["nssf","nrf"],["pcf","nrf"],["scp","nrf"]] },
-  { id:"auth",     badge:"req", nodes:["amf","ausf","udm","udr","mongodb","nssf"], flow:[["amf","ausf"],["ausf","udm"],["udm","udr"],["udr","mongodb"],["amf","nssf"]] },
-  { id:"session",  badge:"req", nodes:["amf","smf","pcf","bsf"],          flow:[["amf","smf"],["smf","pcf"],["pcf","bsf"]] },
-  { id:"cups",     badge:"req", nodes:["smf","upf-a"],                    flow:[["smf","upf-a"]] },
-  { id:"ip",       badge:"req", nodes:["ueransim"],                       flow:[] },
-  { id:"uplink",   badge:"req", nodes:["ueransim","upf-a"],              flow:[["ueransim","upf-a"]] },
-  { id:"egress",   badge:"req", nodes:["upf-a","dn"],                     flow:[["upf-a","dn"]] },
-  { id:"downlink", badge:"",    nodes:["dn","upf-a","ueransim"],          flow:[["dn","upf-a"],["upf-a","ueransim"]] },
-  { id:"failover", badge:"opt", nodes:["smf","upf-a","upf-b","dn"],       flow:[["smf","upf-b"],["upf-b","dn"]] },
+  { id:"start", num:"1",    badge:"",    nodes:["ueransim"],                       flow:[] },
+  { id:"n2", num:"2",       badge:"req", nodes:["ueransim","amf"],                 flow:[["ueransim","amf","N2"]] },
+  { id:"register", num:"2.1", badge:"req", nodes:["ueransim","amf"],                 flow:[["ueransim","amf","N1"]] },
+  { id:"nrf", num:"2.2",      badge:"req", nodes:["nrf","amf","smf","ausf","udm","udr","nssf","pcf","scp"], flow:[["amf","nrf"],["smf","nrf"],["ausf","nrf"],["udm","nrf"],["udr","nrf"],["nssf","nrf"],["pcf","nrf"],["scp","nrf"]] },
+  { id:"auth", num:"2.3",     badge:"req", nodes:["amf","ausf","udm","udr","mongodb","nssf"], flow:[["amf","ausf"],["ausf","udm"],["udm","udr"],["udr","mongodb"],["amf","nssf"]] },
+  { id:"session", num:"3",  badge:"req", nodes:["amf","smf","pcf","bsf"],          flow:[["amf","smf"],["smf","pcf"],["pcf","bsf"]] },
+  { id:"cups", num:"3.1",     badge:"req", nodes:["smf","upf-a"],                    flow:[["smf","upf-a"]] },
+  { id:"ip", num:"3.2",       badge:"req", nodes:["ueransim"],                       flow:[] },
+  { id:"uplink", num:"4",   badge:"req", nodes:["ueransim","upf-a"],              flow:[["ueransim","upf-a"]] },
+  { id:"egress", num:"4.1",   badge:"req", nodes:["upf-a","dn"],                     flow:[["upf-a","dn"]] },
+  { id:"downlink", num:"4.2", badge:"",    nodes:["dn","upf-a","ueransim"],          flow:[["dn","upf-a"],["upf-a","ueransim"]] },
+  { id:"failover", num:"5", badge:"opt", nodes:["smf","upf-a","upf-b","dn"],       flow:[["smf","upf-b"],["upf-b","dn"]] },
   { id:"summary",  badge:"",    nodes:[],                                 flow:[], full:true },
 ];
 const JOURNEY = PROJ==="p1" ? JOURNEY_P1 : JOURNEY_P2;
@@ -562,7 +580,7 @@ let journeyIdx=0;
 const BADGE_COL={req:"#2f9e44",opt:"#1c7ed6"};
 function buildJStep(s){
   const nodes=new Set(s.nodes); (s.flow||[]).forEach(([a,b])=>{nodes.add(a);nodes.add(b);});
-  return { nodes:[...nodes], full:!!s.full,
+  return { nodes:[...nodes], full:!!s.full, num:s.num||null,
     links:(s.flow||[]).map(([a,b,iface])=>({k:[a,b].sort().join("|"), iface:iface||null, dir:[a,b]})) };
 }
 function showJourney(i){
@@ -570,7 +588,8 @@ function showJourney(i){
   const s=JOURNEY[journeyIdx]; tourLayer=null; journeyStep=buildJStep(s);
   const ttl=I18N.t(`topo.journey.${PROJ}.${s.id}.title`), cap=I18N.t(`topo.journey.${PROJ}.${s.id}.caption`);
   const badge=s.badge?`<span class="chip" style="background:${BADGE_COL[s.badge]}">${I18N.t("topo.journey.badge_"+s.badge)}</span>`:"";
-  document.getElementById("tour-title").innerHTML=badge+ttl;
+  const numChip=s.num?`<span class="chip" style="background:#f59f00;color:#1c2129">${s.num}</span>`:"";
+  document.getElementById("tour-title").innerHTML=numChip+badge+ttl;
   document.getElementById("tour-caption").textContent=cap;
   document.getElementById("tour-step").textContent=`${journeyIdx+1} / ${JOURNEY.length}`;
   render();

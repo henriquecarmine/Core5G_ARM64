@@ -48,6 +48,11 @@
     '.fs-pop code{font-family:"SF Mono",Menlo,monospace;font-size:11px;color:#74c0fc;word-break:break-all}',
     '.fs-pop .hint{margin-top:10px;padding-top:8px;border-top:1px solid #2c3038;color:#8a8f98;font-size:11px}',
     '.fs-pop .x{position:absolute;top:8px;right:11px;cursor:pointer;color:#8a8f98;font-size:14px}',
+    '.fs-src label{display:flex;gap:6px;align-items:baseline;margin:5px 0 1px;cursor:pointer;color:#c9d1d9}',
+    '.fs-src .exp{margin-left:20px;color:#8a8f98;font-size:11px}',
+    '.fs-src a{color:#74c0fc}',
+    '.fs-src .st{margin-left:8px;font-size:11px;color:#69db7c}',
+    '.fs-src input[type=file]{margin:4px 0 0 20px;font-size:11px;color:#8a8f98;max-width:330px}',
     '.fs-result.ok{visibility:visible;color:#69db7c}',
     '.fs-result.fail{visibility:visible;color:#ff6b6b}',
     '@keyframes fs-travel{from{left:0}to{left:calc(100% - 6px)}}',
@@ -197,7 +202,7 @@
       viz: { q: 'O resultado visível: a forma do tráfego no tempo.', o: '<b>logs/kpm_timeseries.csv</b> + sparkline ASCII no console', d: 'O CSV final — o mesmo insumo que alimentaria um UE-TP-rApp de verdade.' },
     },
     ml: {
-      data: { q: 'Medições REAIS de campo: o walk test 5G da universidade SUTD (Singapura).', o: 'servidor: <b>oai-cn-gnb-e2/scripts/ml/</b> · cópia aberta no repo: pdfs/02-ric-ai/casos-artigo/data/sutd/', d: 'CSVs com RSRP, RSRQ, SINR, PRB e throughput medidos andando pelos andares 4/5/6 — cada linha é um instante rotulado.' },
+      data: { dataKey: 'sutd', q: 'Medições REAIS de campo: o walk test 5G da universidade SUTD (Singapura).', o: 'servidor: <b>oai-cn-gnb-e2/scripts/ml/</b> · cópia aberta no repo: pdfs/02-ric-ai/casos-artigo/data/sutd/', d: 'CSVs com RSRP, RSRQ, SINR, PRB e throughput medidos andando pelos andares 4/5/6 — cada linha é um instante rotulado.' },
       train:{ q: 'O treino: o modelo aprende o padrão que liga as medições ao alvo.', o: 'script <b>scripts/ml/*_experiment.py</b> (numpy puro, sem GPU), no host', d: 'Split temporal (passado treina, futuro testa — nunca o contrário!) e os modelos: Gradient Boosting, Random Forest, MLP…' },
       metr: { q: 'O boletim do modelo: quão bem ele prevê o que nunca viu.', o: 'impresso no console (e salvo no Histórico do painel)', d: 'RMSE/R² (regressão) ou acurácia/matriz de confusão (classificação) — compare com a tabela do artigo NGO et al. 2024.' },
     },
@@ -356,6 +361,51 @@
     cur = null;   // faixa fica visível com o desfecho até a próxima execução
   }
 
+  // ---- Fonte dos dados (funções de ML): sugerida × CSV do professor -------
+  function srcHtml() {
+    return '<div class="sec">Fonte dos dados desta função</div><div class="fs-src">'
+      + '<label><input type="radio" name="fsrc" value="default"> 1. Sugerida pelo servidor</label>'
+      + '<div class="exp">o dataset SUTD original (4 cenários do walk test) descrito no cartão acima — reproduz o artigo.</div>'
+      + '<label><input type="radio" name="fsrc" value="custom"> 2. Meu CSV enviado <span class="st"></span></label>'
+      + '<div class="exp">mesmas colunas do exemplo; seu CSV vira os 4 cenários. '
+      + '<a href="/api/lab-data/sutd/example" download>⬇ baixe o exemplo aqui</a></div>'
+      + '<input type="file" accept=".csv">'
+      + '</div>';
+  }
+  function wireSrc(card, key) {
+    var radios = card.querySelectorAll('input[name=fsrc]');
+    var file = card.querySelector('input[type=file]');
+    var st = card.querySelector('.st');
+    function refresh() {
+      fetch('/api/lab-data/' + key).then(function (r) { return r.json(); }).then(function (d) {
+        radios.forEach(function (r) { r.checked = (r.value === d.source); });
+        radios[1].disabled = !d.has_custom;
+        st.textContent = d.has_custom ? (d.source === 'custom' ? '● em uso' : '(enviado)') : '';
+      }).catch(function () {});
+    }
+    radios.forEach(function (r) {
+      r.onchange = function () {
+        fetch('/api/lab-data/' + key + '/source', { method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: r.value }) })
+          .then(function (resp) { if (!resp.ok) return resp.json().then(function (e) { alert(e.detail || 'sem permissão'); }); })
+          .then(refresh);
+      };
+    });
+    file.onchange = function () {
+      var fl = file.files && file.files[0]; if (!fl) return;
+      st.textContent = 'enviando…';
+      fl.text().then(function (txt) {
+        return fetch('/api/lab-data/' + key + '/upload', { method: 'POST',
+          headers: { 'Content-Type': 'text/csv' }, body: txt });
+      }).then(function (resp) {
+        if (!resp.ok) return resp.json().then(function (e) { st.textContent = ''; alert(e.detail || 'falhou'); });
+        refresh();
+      });
+    };
+    refresh();
+  }
+
   function attach(name, el) { if (el) mounts[name] = el; }
 
   // ---- popover didático: o que é · onde vive · o que tem dentro ----
@@ -374,10 +424,12 @@
       + '<div class="sec">O que é</div><div>' + node.info.q + '</div>'
       + '<div class="sec">Onde vive</div><div><code>' + node.info.o + '</code></div>'
       + '<div class="sec">O que tem dentro</div><div>' + node.info.d + '</div>'
+      + (node.info.dataKey ? srcHtml() : '')
       + '<div class="hint">💡 Enquanto o teste roda, o log abaixo é esta operação acontecendo — a faixa mostra POR ONDE o dado passa; o log mostra O QUE ele diz.</div>';
     document.body.appendChild(back);
     document.body.appendChild(c);
     c.querySelector('.x').onclick = closePop;
+    if (node.info.dataKey) wireSrc(c, node.info.dataKey);
     var r = anchorEl.getBoundingClientRect();
     var top = r.bottom + 8, left = Math.max(8, Math.min(r.left, window.innerWidth - 406));
     if (top + c.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - c.offsetHeight - 8);

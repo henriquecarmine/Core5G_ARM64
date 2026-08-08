@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Iterator
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, StreamingResponse
 
 from core import (
     GUEST_USER,
@@ -819,6 +819,95 @@ def add_subscriber(payload: dict, request: Request) -> StreamingResponse:
     )
 
 
+
+# ---- Fonte de dados dos labs de ML: sugerida (servidor) × CSV do professor --
+# O upload substitui os 4 cenários SUTD (os wrappers p2_ml_*.sh honram
+# SUTD_DIR); o exemplo para download vem do dataset real. Professor-only
+# para mudar; qualquer um pode consultar/baixar o exemplo.
+LABDATA_DIR = SERVER_DIR / "panel_uploads" / "labdata" / "sutd"
+SUTD_DEFAULT_DIR = SERVER_DIR / "oai-cn-gnb-e2" / "data" / "sutd"
+SUTD_SCENARIOS = ["Lvl4_AllRRUOn_Anomaly_label.csv", "Lvl5_AllRRUOn_Anomaly_label.csv",
+                  "Lvl6_AllRRUOn_Anomaly_label.csv", "Lvl6_1RRUOn_Anomaly_label.csv"]
+_LABDATA_STATE = SERVER_DIR / "panel_uploads" / "labdata" / "state.json"
+
+
+def _labdata_state() -> dict:
+    try:
+        return json.loads(_LABDATA_STATE.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _labdata_save(st: dict) -> None:
+    _LABDATA_STATE.parent.mkdir(parents=True, exist_ok=True)
+    _LABDATA_STATE.write_text(json.dumps(st))
+
+
+def _only_professor(request: Request) -> None:
+    user, _ = current_session(request)
+    if user is None or user == GUEST_USER:
+        raise HTTPException(403, "Somente o professor pode mudar a fonte de dados.")
+
+
+@router.get("/api/lab-data/sutd")
+def labdata_status() -> JSONResponse:
+    st = _labdata_state()
+    return JSONResponse({
+        "source": st.get("sutd", "default"),
+        "has_custom": (LABDATA_DIR / SUTD_SCENARIOS[0]).exists(),
+    })
+
+
+@router.get("/api/lab-data/sutd/example")
+def labdata_example() -> PlainTextResponse:
+    """Modelo de CSV: cabeçalho + primeiras linhas do dataset real."""
+    src = SUTD_DEFAULT_DIR / SUTD_SCENARIOS[0]
+    try:
+        lines = src.read_text(errors="replace").splitlines()[:6]
+    except OSError:
+        raise HTTPException(404, "dataset sugerido não encontrado no servidor")
+    return PlainTextResponse("\n".join(lines) + "\n", headers={
+        "Content-Disposition": "attachment; filename=exemplo_sutd.csv",
+        "Content-Type": "text/csv"})
+
+
+@router.post("/api/lab-data/sutd/source")
+def labdata_source(payload: dict, request: Request) -> JSONResponse:
+    _only_professor(request)
+    source = payload.get("source")
+    if source not in ("default", "custom"):
+        raise HTTPException(400, "source deve ser default|custom")
+    if source == "custom" and not (LABDATA_DIR / SUTD_SCENARIOS[0]).exists():
+        raise HTTPException(400, "nenhum CSV enviado ainda")
+    st = _labdata_state(); st["sutd"] = source; _labdata_save(st)
+    return JSONResponse({"ok": True, "source": source})
+
+
+@router.post("/api/lab-data/sutd/upload")
+async def labdata_upload(request: Request) -> JSONResponse:
+    """Corpo cru text/csv (sem multipart — sem dependência nova). O MESMO CSV
+    vira os 4 cenários — didático: seus dados, mesma metodologia."""
+    _only_professor(request)
+    body = await request.body()
+    if len(body) > 8_000_000:
+        raise HTTPException(413, "CSV grande demais (limite 8 MB)")
+    try:
+        text = body.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(400, "arquivo não é texto UTF-8 — envie um .csv")
+    rows = [l for l in text.splitlines() if l.strip()]
+    if len(rows) < 10 or "," not in rows[0]:
+        raise HTTPException(400, "CSV inválido: preciso de cabeçalho com vírgulas e ≥10 linhas (baixe o exemplo)")
+    ncols = rows[0].count(",")
+    if any(abs(r.count(",") - ncols) > 0 for r in rows[1:5]):
+        raise HTTPException(400, "número de colunas inconsistente nas primeiras linhas")
+    LABDATA_DIR.mkdir(parents=True, exist_ok=True)
+    for name in SUTD_SCENARIOS:
+        (LABDATA_DIR / name).write_text(text)
+    st = _labdata_state(); st["sutd"] = "custom"; _labdata_save(st)
+    return JSONResponse({"ok": True, "rows": len(rows) - 1, "source": "custom"})
+
+
 @router.post("/api/run/{command}")
 def run_command(command: str, request: Request) -> StreamingResponse:
     by = ensure_can_run(request)
@@ -828,7 +917,11 @@ def run_command(command: str, request: Request) -> StreamingResponse:
         return StreamingResponse(
             iter([f"{srv_msg('unknown_cmd', lang)}: {command}\n"]), media_type="text/plain"
         )
+    env = None
+    if command.startswith("p2-ml-") and _labdata_state().get("sutd") == "custom":
+        env = os.environ.copy()
+        env["SUTD_DIR"] = str(LABDATA_DIR)
     return StreamingResponse(
-        tee_to_live(stream_command(spec["cmd"], spec["cwd"], lang=lang), command, by, cmd=command),
+        tee_to_live(stream_command(spec["cmd"], spec["cwd"], env=env, lang=lang), command, by, cmd=command),
         media_type="text/plain",
     )

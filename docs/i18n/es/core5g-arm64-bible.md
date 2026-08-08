@@ -1,4 +1,4 @@
-<!-- sync: e36a3f4e -->
+<!-- sync: 95a1e8b1 -->
 > 🌐 Traducción al **español** del documento canónico en portugués [`core5g-arm64-bible.md`](../../../core5g-arm64-bible.md). Todos los idiomas: [INDEX](INDEX.md) · sincronización verificada por `docs/i18n/check-parity.py`.
 
 # Core5G ARM64 — Biblia del Proyecto
@@ -359,8 +359,8 @@ UE                  gNB              AMF          AUSF    UDM    SMF    UPF
     ├── ueransim/               # docker-compose.yaml separado (gNB+UE simulados)
     ├── logs/                   # bind mounts de log por NF (gerado em runtime)
     ├── panel/                  # painel de controle web SERVER-SIDE (roda na própria AWS)
-    │   ├── server.py           # backend FastAPI — chama scripts locais, sem SSH
-    │   ├── static/index.html   # UI (igual ao client/, sem sync/sync-oai/bootstrap)
+    │   ├── server.py           # bootstrap FastAPI (auth + clase en vivo) — capas en core/ops/lab.py
+    │   ├── static/{ops,lab}/   # UI en dos capas: operación (index/topología) × lecciones del lab
     │   ├── requirements.txt
     │   └── .venv/              # criado pelo bootstrap, não versionado
     └── oai-cn-gnb-e2/          # Projeto 2 — OAI 5GC + gNB + FlexRIC + xApps

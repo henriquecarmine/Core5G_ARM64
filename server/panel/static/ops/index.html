@@ -947,6 +947,10 @@
 <script src="/static/ops/flow-strip.js?v=0.61.7"></script>
 <script src="/static/ops/energy.js?v=0.61.3"></script>
 <script>
+// Robustez file:// (smoke do CI): sem os módulos /static/, viram no-ops —
+// a página (i18n, topbar, console) segue funcional.
+window.FlowStrip = window.FlowStrip || { attach(){}, begin(){}, feed(){}, end(){}, preview(){ return null; }, sceneInfo(){ return []; } };
+window.Energy = window.Energy || { attach(){}, begin(){}, end(){}, _open(){} };
 // FlowStrip (percurso dos dados): faixa minimalista sobre o console e sobre o
 // log do modal de operação — os hooks vivem em pushRunHeader/appendLine/
 // setRunBadge (professor e aluno) e no loop do runOperation (modal).

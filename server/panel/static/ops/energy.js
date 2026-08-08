@@ -8,7 +8,9 @@
 (function () {
   'use strict';
   var CSS = [
-    '.en-btn{opacity:.30;transition:all .3s;cursor:default}',
+    '.en-btn{opacity:.45;transition:all .3s;cursor:default;flex:0 0 auto!important;',
+    '  background:none!important;border:none!important;padding:2px 6px!important;',
+    '  font-size:16px;line-height:1;width:auto!important;min-width:0!important;color:#8a8f98}',
     '.en-btn.lit{opacity:1;cursor:pointer;color:#f59f00!important;text-shadow:0 0 8px rgba(245,159,0,.5)}',
     '.en-back{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500}',
     '.en-mod{position:fixed;z-index:501;top:50%;left:50%;transform:translate(-50%,-50%);',

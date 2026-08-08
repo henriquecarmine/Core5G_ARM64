@@ -617,7 +617,7 @@ load();
 setInterval(async()=>{ try{ const r=await fetch("/api/topology?proj="+PROJ,{cache:"no-store"});
   if(r.ok){ const d=await r.json(); TOPO.live_status=d.live_status; await loadGnbStats(); render(); } }catch(e){} },10000);
 </script>
-<script src="/static/ops/energy.js?v=0.61.2"></script>
+<script src="/static/ops/energy.js?v=0.61.3"></script>
 <script>Energy.attach(document.getElementById("energy-btn"), true);</script>
 </body>
 </html>

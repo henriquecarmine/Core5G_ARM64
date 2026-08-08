@@ -1,0 +1,21 @@
+# dbaas (ric-plt-dbaas 0.6.4) — ARM64 nativo, da fonte.
+# Runtime oficial já é redis alpine (multi-arch); só o estágio de build usava
+# base bldr amd64. Aqui: golang:alpine constrói o redismodule + sdlcli.
+FROM golang:1.21-alpine AS build-env
+# bash: shebang do autogen.sh; pkgconf: expande PKG_CHECK_MODULES no autoreconf;
+# cpputest: o configure exige o módulo mesmo sem rodar a suíte
+RUN apk add --no-cache git build-base automake autoconf libtool bash pkgconf cpputest
+COPY src/dbaas/redismodule /redismodule
+WORKDIR /redismodule
+# configure gerado usa construções que o ash do alpine não entende → bash em tudo
+RUN bash ./autogen.sh && CONFIG_SHELL=/bin/bash bash ./configure --disable-unit-test-memcheck && make install
+ARG SDLGO_TAG=v0.10.0
+RUN git clone --depth 1 --branch ${SDLGO_TAG} https://github.com/o-ran-sc/ric-plt-sdlgo /sdlgo \
+    && cd /sdlgo && go build -o /usr/local/bin/sdlcli cmd/sdlcli/main.go
+
+FROM redis:6.2.14-alpine3.18
+RUN apk --no-cache add openssl musl-utils busybox
+COPY --from=build-env /usr/local/libexec/redismodule/libredismodule.so /usr/local/libexec/redismodule/libredismodule.so
+COPY --from=build-env /usr/local/bin/sdlcli /usr/local/bin/
+WORKDIR /data
+CMD ["redis-server", "--loadmodule", "/usr/local/libexec/redismodule/libredismodule.so"]

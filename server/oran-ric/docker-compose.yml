@@ -1,0 +1,42 @@
+# Fase 2 — subconjunto A1-REAL: dbaas + A1 Mediator (ric-plt-a1), ARM64 nativo.
+# Rede e IPs idênticos ao vendor/oran-sc-ric + overlay do Prof. Kunzler, para a
+# futura pilha E2 completa (e2term/e2mgr/submgr) encaixar sem mudar nada aqui.
+services:
+  dbaas:
+    image: "core5g/ric-plt-dbaas:${DBAAS_VER:-0.6.4}-arm64"
+    container_name: ric_dbaas
+    hostname: dbaas
+    networks:
+      ric_network:
+        ipv4_address: 10.0.2.12
+    restart: unless-stopped
+
+  a1mediator:
+    image: "core5g/ric-plt-a1:${A1_VER:-3.2.2}-arm64"
+    container_name: ric_a1mediator
+    hostname: a1mediator
+    depends_on:
+      - dbaas
+    environment:
+      - USE_FAKE_SDL=True
+      - DBAAS_SERVICE_HOST=10.0.2.12
+      - DBAAS_PORT_6379_TCP_ADDR=10.0.2.12
+      - DBAAS_PORT_6379_TCP_PORT=6379
+      - RMR_SEED_RT=/opt/route/a1-routes.rt
+      - RMR_SRC_ID=10.0.2.16
+    ports:
+      - "${A1MEDIATOR_HOST_PORT:-10000}:10000"
+    volumes:
+      - ./a1-routes.rt:/opt/route/a1-routes.rt:ro
+    networks:
+      ric_network:
+        ipv4_address: 10.0.2.16
+    restart: unless-stopped
+
+networks:
+  ric_network:
+    name: oran-sc-ric_ric_network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.2.0/24

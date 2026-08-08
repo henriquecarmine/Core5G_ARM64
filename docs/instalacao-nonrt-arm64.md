@@ -183,6 +183,51 @@ docker compose ps                     # estado dos 4 containers
   docente** (`FASE2_ORAN_SC_A1.md`: near-RT O-RAN SC com `ric_a1mediator`,
   E2 na :36422, gNB `nr-softmodem-oran-sc`) — porte grande, avaliar depois.
 - **Candidatos de próxima iteração**: gateway + control panel (Angular/nginx,
-  mesmos moldes de build); testes `p3-*` no painel (camada operacional) com
-  cena FlowStrip própria (`PMS → A1 → sim → 💾`); rApp Python do §6 do
-  non-rt-ric.md apontando para este PMS.
+  mesmos moldes de build); rApp Python do §6 do non-rt-ric.md apontando para
+  este PMS.
+
+## 9. Fase 2 — A1 REAL: o near-RT do O-RAN SC em ARM64 (`server/oran-ric/`)
+
+A Fase 2 do docente (`FASE2_ORAN_SC_A1.md`) troca o FlexRIC pelo near-RT do
+O-RAN SC (`vendor/oran-sc-ric`, base srsRAN + **overlay próprio que adiciona o
+`ric_a1mediator`**) — é ela que fecha `nonRT → A1 → nearRT` de verdade. As
+imagens `ric-plt-*` do nexus3 são **amd64 puro** (mesmo padrão de sempre), e a
+dependência-chave da pilha inteira é a **RMR** (lib C de mensageria), publicada
+só como `.deb` amd64.
+
+**Porte incremental — subconjunto A1-real primeiro** (`server/oran-ric/`):
+
+| Componente | Fonte/tag | Como portou |
+|---|---|---|
+| `ric_dbaas` | `ric-plt-dbaas` 0.6.4 | runtime já é `redis:6.2-alpine` (multi-arch); `redismodule` (autotools) + `sdlcli` (Go) buildados em `golang:alpine` |
+| `ric_a1mediator` | `ric-plt-a1` 3.2.2 (Go) | **RMR 4.9.4 compilada da fonte** (cmake) + Go arm64; runtime ubuntu com a `librmr` copiada |
+
+```bash
+cd server/oran-ric
+./build_arm64.sh      # clona fontes pinadas; retagueia com os nomes nexus3
+./up_oran_a1.sh       # dbaas (10.0.2.12) + a1mediator (10.0.2.16, :10000)
+./test_a1_real.sh     # healthcheck → type 20011 → política → leitura → limpeza
+```
+
+Decisões que importam: rede/IPs **idênticos ao lab do docente**
+(`oran-sc-ric_ric_network`, 10.0.2.0/24) e `docker tag` com os nomes nexus3 —
+quando a pilha E2 completa (`e2term` C++, `e2mgr`/`submgr` Go) for portada, o
+`vendor/oran-sc-ric` + overlay dele rodam **sem alteração**. O type de teste é
+o **20011** porque é a janela RMR do `a1-routes.rt` do docente. Ligação
+PMS→mediator: `application_configuration.oran.json` (perfil oran), padrão
+`up_nonrt_ric_oran.sh` do lab dele.
+
+> **Executado em 08/08/2026 (Mac M-series, colima):** build OK após 4 iterações
+> — todas documentadas nos Dockerfiles: (1–3) toolchain alpine no `redismodule`
+> (shebang bash, `configure` exige bash, `pkg.m4`+cpputest); (4) **o único
+> problema de arquitetura real: a RMR 4.9.4 inclui `<immintrin.h>` (x86) e usa
+> `_mm_lfence()`** — patch com `__atomic_thread_fence(__ATOMIC_ACQUIRE)`
+> guardado por `__x86_64__`. Smoke **5/5**: healthcheck → type 20011 →
+> política → leitura → limpeza. Descoberta de API: o mediator Go 3.2.2 fala
+> **A1AP v2 (`/A1-P/v2/…`)** — na ligação do PMS, conferir o adapter
+> (o `baseUrl` do perfil oran do docente usa `/a1-p/`; validar na integração).
+
+**Fora deste subconjunto (roadmap):** `e2term` (C++/ASN.1/SCTP — o porte
+difícil), `e2mgr`/`submgr`/`appmgr` (Go+RMR, mesmos moldes do a1mediator),
+`rtmgr_sim`/`xapp_runner` (Dockerfiles locais do vendor) e o gNB recompilado
+(`nr-softmodem-oran-sc`, E2 na :36422) — este último é build OAI no servidor.

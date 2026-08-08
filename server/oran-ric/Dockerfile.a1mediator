@@ -1,0 +1,39 @@
+# A1 Mediator (ric-plt-a1 3.2.2) — ARM64 nativo, da fonte.
+# O oficial usa base bldr amd64 + Go amd64 + RMR .deb amd64 (só existe amd64).
+# Aqui: Go arm64 + RMR 4.9.4 compilado da fonte (cmake), app Go idêntico.
+FROM ubuntu:20.04 AS build
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates git wget build-essential cmake && update-ca-certificates
+ARG GOVERSION=1.18.5
+RUN wget -nv https://dl.google.com/go/go${GOVERSION}.linux-arm64.tar.gz \
+    && tar -C /usr/local -xf go${GOVERSION}.linux-arm64.tar.gz && rm go*.gz
+ENV PATH=/usr/local/go/bin:$PATH
+# RMR da fonte (a lib C de mensageria de TODA a pilha ric-plt)
+ARG RMR_VER=4.9.4
+RUN git clone --depth 1 --branch ${RMR_VER} https://github.com/o-ran-sc/ric-plt-lib-rmr /rmr
+# Porte ARM64: a 4.9.4 inclui <immintrin.h> (intrínsecos x86) incondicionalmente
+# e usa só _mm_lfence() (barreira de load). No ARM, a barreira equivalente é
+# __atomic_thread_fence(__ATOMIC_ACQUIRE) — patch guardado por __x86_64__.
+RUN grep -rl 'immintrin.h' /rmr/src | while read -r f; do \
+      sed -i 's|#include <immintrin.h>|#if defined(__x86_64__)\n#include <immintrin.h>\n#else\n#define _mm_lfence() __atomic_thread_fence(__ATOMIC_ACQUIRE)\n#endif|' "$f"; \
+    done
+RUN cd /rmr && mkdir .build && cd .build \
+    && cmake .. -DDEV_PKG=1 && make -j"$(nproc)" install && ldconfig
+COPY src/a1 /ws
+WORKDIR /ws
+RUN go build -o /ws/a1bin cmd/a1.go
+
+FROM ubuntu:20.04
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=build /usr/local/lib/librmr* /usr/local/lib/
+RUN ldconfig && mkdir -p /opt/a1-mediator && chmod -R 755 /opt/a1-mediator
+COPY --from=build /ws/a1bin /opt/a1-mediator/a1
+COPY --from=build /ws/config/config.yaml /opt/a1-mediator/
+COPY --from=build /ws/a1-entrypoint.sh /opt/a1-mediator/
+WORKDIR /opt/a1-mediator
+ENV CFG_FILE=/opt/a1-mediator/config.yaml
+ENV A1_CONFIG_FILE=/opt/a1-mediator/config.yaml
+RUN chmod 755 /opt/a1-mediator/a1-entrypoint.sh
+ENTRYPOINT ["/opt/a1-mediator/a1-entrypoint.sh"]

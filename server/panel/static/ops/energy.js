@@ -126,18 +126,19 @@
     end: function (ok) {
       if (last) { last.ok = ok; last.dur = (Date.now() - last.t0) / 1000; }
       if (btn) btn.classList.add('lit');   // o raio ACENDE após o teste
-      // mini-tabela automática no console, honesta em relação AO teste
-      if (out && last && last.dur > 1) {
+      // mini-linha automática no console — SÓ para testes com cena didática
+      // (toggles/infra passam pelo runCommand mas não são testes; sem cena = sem energia)
+      var isTest = window.FlowStrip && FlowStrip.sceneInfo && FlowStrip.sceneInfo(last && last.cmd || '').length > 0;
+      if (out && last && last.dur > 1 && isTest) {
         fetchData().then(function (d) {
           var t = last.dur, p = d.power;
           var eN1 = (p.vcpus * p.n1.max * t / 3600).toFixed(2);
           var eX = (p.vcpus * p.x86.max * t / 3600).toFixed(2);
           var div = document.createElement('div');
-          div.style.cssText = 'margin:8px 0;padding:8px 12px;border:1px solid #4d3a14;border-radius:8px;background:#f59f0011;font-size:11.5px;color:#c9d1d9';
-          div.innerHTML = '⚡ <b style="color:#f59f00">Energia deste teste (' + Math.round(t) + 's, teto @100% CPU):</b> '
-            + 'N1 ≈ <b style="color:#69db7c">' + eN1 + ' Wh</b> · x86 equivalente ≈ ' + eX + ' Wh '
-            + '→ <b style="color:#69db7c">economia ~52%</b> <span style="color:#5c6370">(estimado por literatura — o x86 não roda aqui; fórmulas: 📐 no ⚡)</span> '
-            + '<a href="#" style="color:#74c0fc" onclick="Energy._open();return false">ver tabela completa</a>';
+          div.style.cssText = 'margin:4px 0;padding:3px 10px;border-left:2px solid #f59f00;font-size:10.5px;color:#8a8f98';
+          div.innerHTML = '⚡ ' + Math.round(t) + 's · N1 ≈ <b style="color:#69db7c">' + eN1 + ' Wh</b> · x86 eq. ≈ ' + eX + ' Wh · <b style="color:#69db7c">−52%</b> '
+            + '<span style="color:#5c6370">(estimado; teto@100%)</span> · '
+            + '<a href="#" style="color:#74c0fc" onclick="Energy._open();return false">tabela ⚡</a>';
           out.appendChild(div);
           out.scrollTop = out.scrollHeight;
         }).catch(function () {});

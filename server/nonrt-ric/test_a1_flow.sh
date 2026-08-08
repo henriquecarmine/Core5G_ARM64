@@ -25,9 +25,14 @@ for r in ric1 ric2 ric3; do
 done
 
 echo "== 3. policy type 1 → a1-sim-OSC =="
-curl -sf -X PUT "$SIM_OSC/a1-p/policytypes/1" \
-    -H 'Content-Type: application/json' -d @testdata/policy_type.json >/dev/null \
-    && ok "type 1 carregado no simulador" || fail "PUT do policy type no simulador"
+# Idempotente: o sim OSC responde 400 ao re-PUT de type existente.
+if curl -sf "$SIM_OSC/a1-p/policytypes" | grep -q 1; then
+    ok "type 1 já estava no simulador"
+else
+    curl -sf -X PUT "$SIM_OSC/a1-p/policytypes/1" \
+        -H 'Content-Type: application/json' -d @testdata/policy_type.json >/dev/null \
+        && ok "type 1 carregado no simulador" || fail "PUT do policy type no simulador"
+fi
 
 echo "== 4. PMS sincroniza o type (supervisão periódica; até ~90 s) =="
 for i in $(seq 1 30); do
@@ -46,7 +51,8 @@ curl -sf -X PUT "$PMS/a1-policy/v2/policies" \
     && ok "política core5g-smoke-001 criada via PMS" || fail "criação da política"
 
 echo "== 6. política chegou no simulador (nonRT → A1 → nearRT-sim) =="
-curl -sf "$SIM_OSC/a1-p/policies" | grep -q core5g-smoke-001 \
+# API OSC: políticas vivem SOB o type (/a1-p/policytypes/{id}/policies)
+curl -sf "$SIM_OSC/a1-p/policytypes/1/policies" | grep -q core5g-smoke-001 \
     && ok "core5g-smoke-001 presente no a1-sim-OSC" || fail "política não chegou ao simulador"
 curl -sf "$PMS/a1-policy/v2/policies/core5g-smoke-001" | grep -q ue-smoke \
     && ok "leitura de volta via PMS confere" || fail "GET da política no PMS"

@@ -111,6 +111,43 @@ O teste percorre o ciclo completo de política A1 e diz onde parou se falhar:
 Saída final esperada:
 `✔ Caminho A1 completo: PMS (nonRT) → A1 → simulador (nearRT), em ARM64 nativo.`
 
+## 5b. Alternativa: compilar no Mac (arm64) e transferir as imagens
+
+Quando o servidor estiver desligado (política de custos) ou sem folga de CPU,
+dá para construir **num Mac Apple Silicon** — mesma arquitetura — e levar as
+imagens prontas. Runtime usado: **colima** (VM Linux arm64 leve, sem Docker
+Desktop):
+
+```bash
+brew install colima docker
+colima start --cpu 4 --memory 4 --disk 30
+cd server/nonrt-ric
+./build_arm64.sh                      # mesmas imagens, linux/arm64
+./up_nonrt.sh && ./test_a1_flow.sh    # smoke completo LOCAL antes de subir
+./down_nonrt.sh
+
+# empacota (~200–400 MB) e transfere
+mkdir -p dist
+docker save core5g/nonrt-a1pms:2.9.0-arm64 | gzip > dist/nonrt-a1pms-2.9.0-arm64.tar.gz
+docker save core5g/nonrt-a1sim:2.8.0-arm64 | gzip > dist/nonrt-a1sim-2.8.0-arm64.tar.gz
+scp -i <chave.pem> dist/*.tar.gz ubuntu@<host>:~/server/nonrt-ric/dist/
+
+# no servidor: carrega e sobe (sem compilar nada lá)
+gunzip -c dist/nonrt-a1pms-2.9.0-arm64.tar.gz | docker load
+gunzip -c dist/nonrt-a1sim-2.8.0-arm64.tar.gz | docker load
+./up_nonrt.sh && ./test_a1_flow.sh
+```
+
+`docker save/load` preserva a imagem byte a byte — o que passou no smoke
+local é o que roda no Graviton. (`colima stop` libera a RAM do Mac depois.)
+
+> **Executado em 08/08/2026 (Mac M-series, colima 4 CPU/4 GB):** build OK após
+> 2 ajustes de pipeline (suíte de testes exige S3 → `-Dmaven.test.skip=true`,
+> registrados 232/233 testes passando em ARM64; fabric8 docker-maven-plugin →
+> `-Ddocker.skip=true`) e **smoke A1 7/7 verde** — política criada no PMS e
+> confirmada dentro do a1-sim-OSC. Tarballs: `dist/nonrt-a1pms-…tar.gz`
+> (198 MB) + `dist/nonrt-a1sim-…tar.gz` (47 MB), prontos para o `scp`.
+
 ## 6. Operação
 
 ```bash
@@ -123,6 +160,7 @@ docker compose ps                     # estado dos 4 containers
 
 | Sintoma | Causa provável | Ação |
 |---|---|---|
+| Maven falha em `S3ObjectStoreTest` | o pom ignora `-DskipTests` e roda a suíte (233 testes); esse exige S3 | já resolvido no Dockerfile (`-Dmaven.test.skip=true`). Registro: 232/233 testes passaram em ARM64 nativo na 1ª tentativa |
 | Maven falha baixando deps | sem saída p/ Maven Central | conferir rede/proxy; rerodar (cache retoma) |
 | `COPY .../target/*.jar` não casa | build Maven falhou antes | ver log do estágio `build` |
 | PMS `unhealthy` | config JSON inválida / porta ocupada | `docker logs nonrt-policy-agent`; `ss -ltn | grep 8081` |

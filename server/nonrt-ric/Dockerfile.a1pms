@@ -14,7 +14,12 @@ ARG PMS_TAG=2.9.0
 FROM maven:3.9-eclipse-temurin-17 AS build
 COPY src/a1pms /src
 WORKDIR /src
-RUN mvn -q -DskipTests package
+# maven.test.skip (não -DskipTests): o pom deste projeto executa a suíte mesmo
+# com skipTests, e o S3ObjectStoreTest exige um S3 que não existe no build.
+# (Registro: na 1ª tentativa, 232/233 testes passaram em ARM64 nativo.)
+# docker.skip: o pom amarra o fabric8 docker-maven-plugin ao package (montaria
+# a imagem DELES, amd64, dentro do Maven) — a imagem aqui é deste Dockerfile.
+RUN mvn -q -Dmaven.test.skip=true -Ddocker.skip=true package
 
 FROM eclipse-temurin:17-jdk AS jre-build
 RUN $JAVA_HOME/bin/jlink \

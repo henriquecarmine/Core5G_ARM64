@@ -570,6 +570,10 @@
       "desc": "Acesso web do painel (TLS)."
     },
     {
+      "iface": "Proxy",
+      "desc": "Reverse proxy do Caddy para o painel (127.0.0.1:8765) — TLS termina no Caddy."
+    },
+    {
       "iface": "N1",
       "desc": "NAS — sinalização lógica UE↔AMF (viaja via gNB, dentro do N2)."
     },
@@ -622,16 +626,16 @@
       "desc": "Coleta de métricas do painel (leve, sem Prometheus)."
     },
     {
-      "iface": "A1 / O1",
-      "desc": "Políticas (Non-RT RIC) e gerência (SMO) — não implementados."
-    },
-    {
       "iface": "A1",
       "desc": "Políticas do Non-RT RIC (SMO) para o near-RT — horizonte > 1 s (criar/consultar/apagar políticas)."
     },
     {
       "iface": "SDL",
       "desc": "Shared Data Layer — estado compartilhado da pilha near-RT O-RAN SC sobre Redis (ric_dbaas)."
+    },
+    {
+      "iface": "O1",
+      "desc": "Gerência SMO (config/PM/FM) — ainda não implementada neste lab; os dados de PM hoje saem via E2/KPM para arquivo."
     }
   ]
 }

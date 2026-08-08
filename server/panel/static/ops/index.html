@@ -775,6 +775,7 @@
         <svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
         <span data-i18n="btn.copy">copiar</span>
       </button>
+      <button id="energy-btn" class="en-btn" title="Eficiência ARM × x86 — acende após um teste">⚡</button>
       <button id="clear-btn" data-i18n-title="btn.clear" title="limpar">
         <svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
         <span data-i18n="btn.clear">limpar</span>
@@ -944,6 +945,7 @@
 
 <script src="i18n.js"></script>
 <script src="/static/ops/flow-strip.js?v=0.58.0"></script>
+<script src="/static/ops/energy.js?v=0.59.0"></script>
 <script>
 // FlowStrip (percurso dos dados): faixa minimalista sobre o console e sobre o
 // log do modal de operação — os hooks vivem em pushRunHeader/appendLine/
@@ -951,6 +953,7 @@
 FlowStrip.attach('console', document.getElementById('flow-strip-console'));
 FlowStrip.attach('modal', document.getElementById('flow-strip-modal'));
 FlowStrip.attach('lab', document.getElementById('flow-strip-lab'));
+Energy.attach(document.getElementById('energy-btn'));
 // ===== Utilitários =====
 function stripAnsi(s) {
   return s.replace(/\x1b\[[0-9;]*[mGKJHFABCDSTlu]/g, '');
@@ -1290,6 +1293,7 @@ function applyLiveEvent(ev) {
   if (ev.type === 'begin') {
     pushRunHeader('👁 ' + prettyCmd(ev.label) + (ev.by ? '  ·  ' + ev.by : ''));
     FlowStrip.begin(ev.label, 'console');
+    Energy.begin(ev.label);
   } else if (ev.type === 'line') {
     const parts = String(ev.text == null ? '' : ev.text).split('\n');
     parts.forEach((seg, i) => { if (i === parts.length - 1 && seg === '') return; appendLine(seg); });
@@ -1297,6 +1301,7 @@ function applyLiveEvent(ev) {
     const badge = output.querySelector('.run-header:last-of-type .run-badge');
     if (badge) setRunBadge(badge, ev.status === 'ok' ? 'ok' : 'error', I18N.t(ev.status === 'ok' ? 'st.done_short' : 'st.error'));
     FlowStrip.end(ev.status === 'ok');
+    Energy.end(ev.status === 'ok');
   }
   // 'nav' é refletido pelo snapshot da sessão (updateAlunoBanner).
 }
@@ -1602,19 +1607,22 @@ async function runCommand(cmd, srcBtn) {
   setStatus('running', I18N.t('st.running', { cmd }));
   const badge = pushRunHeader(cmd);
   FlowStrip.begin(cmd, 'console');
+  Energy.begin(cmd);
   try {
     const resp = await fetch('/api/run/' + cmd, { method: 'POST' });
-    if (resp.status === 403) { appendLine(await resp.text()); setStatus('error', I18N.t('st.blocked')); setRunBadge(badge, 'error', I18N.t('st.blocked')); FlowStrip.end(false); return; }
+    if (resp.status === 403) { appendLine(await resp.text()); setStatus('error', I18N.t('st.blocked')); setRunBadge(badge, 'error', I18N.t('st.blocked')); FlowStrip.end(false); Energy.end(false); return; }
     await streamToConsole(resp);
     setStatus('ok', I18N.t('st.done', { cmd }));
     setRunBadge(badge, 'ok', I18N.t('st.done_short'));
     FlowStrip.end(true);
+    Energy.end(true);
     appendExplain(cmd);
     appendLogLinks(cmd);   // atalho "ver logs" p/ testes que produzem logs
   } catch (e) {
     appendLine('[erro: ' + e + ']'); setStatus('error', I18N.t('st.error'));
     setRunBadge(badge, 'error', I18N.t('st.error'));
     FlowStrip.end(false);
+    Energy.end(false);
   } finally {
     setRunning(false);
     if (srcBtn && !srcBtn.dataset.toggle) btnLoading(srcBtn, false);

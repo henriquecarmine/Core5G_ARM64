@@ -193,6 +193,7 @@
     <svg viewBox="0 0 24 24"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg> <span data-i18n="topo.journey.btn">Jornada do UE</span>
   </button>
   <div id="lang-menu" title="Idioma"></div>
+  <button class="btn en-btn" id="energy-btn" title="Eficiência ARM × x86 (tabela com fontes)">⚡ N1×x86</button>
   <button class="btn" id="theme-btn" title="Alternar tema claro/escuro">◐</button>
   <div class="modes spacer">
     <button data-mode="simplificado" data-i18n="topo.mode_simple">Simplificado</button>
@@ -616,5 +617,7 @@ load();
 setInterval(async()=>{ try{ const r=await fetch("/api/topology?proj="+PROJ,{cache:"no-store"});
   if(r.ok){ const d=await r.json(); TOPO.live_status=d.live_status; await loadGnbStats(); render(); } }catch(e){} },10000);
 </script>
+<script src="/static/ops/energy.js?v=0.59.0"></script>
+<script>Energy.attach(document.getElementById("energy-btn"), true);</script>
 </body>
 </html>

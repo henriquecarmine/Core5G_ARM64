@@ -1,0 +1,134 @@
+{
+ "v": 1,
+ "updated": "2026-08-08",
+ "rows": [
+  {
+   "label": "a. Economia de energia (mesmo trabalho)",
+   "n1": "≈ 2,4 W/vCPU @100%",
+   "x86": "≈ 4,9–5,0 W/vCPU",
+   "delta": "−50%",
+   "src": "[5][6]"
+  },
+  {
+   "label": "b. Trabalho na mesma energia (perf/W)",
+   "n1": "≈ 2,4× por joule",
+   "x86": "1× (base)",
+   "delta": "+140%",
+   "src": "[3][5]"
+  },
+  {
+   "label": "c. Eficiência energética média (operações típicas)",
+   "n1": "compute · web · build",
+   "x86": "1× (base)",
+   "delta": "+110%",
+   "src": "[1][5][6]"
+  },
+  {
+   "label": "f. Processamento de dados (por vCPU)",
+   "n1": "SPEC MT +27% · streaming ~+20%",
+   "x86": "1× (base)",
+   "delta": "≈ +20%",
+   "src": "[3][4][10]"
+  }
+ ],
+ "extras": [
+  {
+   "label": "💰 Preço/hora (tabela us-east-1)",
+   "n1": "t4g.xlarge $0,134",
+   "x86": "m5.xlarge $0,192",
+   "delta": "−30%",
+   "src": "[2]"
+  },
+  {
+   "label": "🌱 Carbono (proporcional à energia)",
+   "n1": "≈ metade por trabalho",
+   "x86": "1× (base)",
+   "delta": "−50%",
+   "src": "[6]"
+  },
+  {
+   "label": "🧪 Portabilidade vivida NESTE lab",
+   "n1": "232/233 testes do PMS O-RAN SC passaram em ARM64 sem mudar código",
+   "x86": "referência",
+   "delta": "99,6%",
+   "src": "medido hoje"
+  }
+ ],
+ "verdict": {
+  "n1": 84.3,
+  "x86": 60.1,
+  "pesos": "Pesos: energia 0,35 · perf/W 0,30 · perf bruta 0,20 · ecossistema 0,15 — N1 = 0,35×95 + 0,30×92 + 0,20×72 + 0,15×60 = 84,3 · x86 = 0,35×50 + 0,30×45 + 0,20×78 + 0,15×90 = 60,1 (o x86 VENCE em perf bruta single-thread e ecossistema — e ainda assim perde no agregado)",
+  "conclusao": "Para cargas como este lab Open RAN (multi-container, throughput-bound), o N1 entrega ~metade da energia pelo mesmo trabalho e ~2,4× de trabalho por joule. A vitória não é universal: o x86 da geração mantém vantagens em single-thread (turbo 3,5+ GHz), AVX-512/INT8 e maturidade de ecossistema — e Ice Lake/EPYC 7 nm encurtaram a distância depois."
+ },
+ "resumo70": "O ARM (RISC) usa instruções de tamanho fixo: decodificadores simples, pequenos e econômicos. O x86 (CISC) carrega décadas de compatibilidade — instruções de tamanho variável exigem decodificação complexa e microcódigo, um “imposto” pago em silício e watts a cada ciclo. No N1, cada vCPU é núcleo físico (sem SMT), em 7 nm, num projeto nascido no celular, onde cada miliwatt importa. O x86 ainda vence em clocks altos e AVX-512 — pagando caro em energia.",
+ "caveats": [
+  "coluna x86 é ESTIMADA por literatura — o x86 não roda nesta máquina",
+  "vCPU ≠ core: 1 vCPU N1 = núcleo físico; 1 vCPU m5 = hyperthread (é como a AWS precifica)",
+  "watts são modelados (Teads/CCF/Boavizta convergem em 1,7–2,4×), não medição RAPL do chip",
+  "o claim oficial de “60% menos energia” nasceu no Graviton3; para o N1 usamos as medições independentes (~50%)",
+  "janela 2019–21 (7 nm vs 14 nm): Ice Lake e EPYC 7 nm reduziram a diferença; AVX-512/encoding sem porte ARM invertem o quadro",
+  "t4g é burstable (créditos de CPU) — números derivam do par m6g/m5 de mesma microarquitetura"
+ ],
+ "sources": [
+  {
+   "n": 1,
+   "title": "AWS Graviton — Sustainability (oficial)",
+   "url": "https://aws.amazon.com/ec2/graviton/graviton-sustainability",
+   "side": "arm"
+  },
+  {
+   "n": 2,
+   "title": "AWS — Anúncio M6g/C6g/R6g (até 40% price/perf)",
+   "url": "https://aws.amazon.com/about-aws/whats-new/2019/12/announcing-new-amazon-ec2-m6g-c6g-and-r6g-instances-powered-by-next-generation-arm-based-aws-graviton2-processors",
+   "side": "arm"
+  },
+  {
+   "n": 3,
+   "title": "AnandTech — Graviton2 vs AMD & Intel (SPEC2017)",
+   "url": "https://www.anandtech.com/show/15578/cloud-clash-amazon-graviton2-arm-against-intel-and-amd/7",
+   "side": "arm"
+  },
+  {
+   "n": 4,
+   "title": "Phoronix — Graviton2 64 N1 cores vs Xeon/EPYC",
+   "url": "https://www.phoronix.com/review/amazon-graviton2-benchmarks",
+   "side": "arm"
+  },
+  {
+   "n": 5,
+   "title": "Teads Eng. — EC2 power consumption (m6g 2,39 vs m5 4,98 W/vCPU)",
+   "url": "https://medium.com/teads-engineering/estimating-aws-ec2-instances-power-consumption-c9745e347959",
+   "side": "neutro"
+  },
+  {
+   "n": 6,
+   "title": "Cloud Carbon Footprint — metodologia/coeficientes",
+   "url": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+   "side": "neutro"
+  },
+  {
+   "n": 7,
+   "title": "arXiv 2106.06242 — x265 sem porte: ARM até 8× mais lento",
+   "url": "https://arxiv.org/abs/2106.06242",
+   "side": "x86"
+  },
+  {
+   "n": 8,
+   "title": "Cribl — single-thread: m5zn +65% price/perf",
+   "url": "https://cribl.io/blog/comparing-intel-amd-and-graviton2/",
+   "side": "x86"
+  },
+  {
+   "n": 9,
+   "title": "ServeTheHome — Ice Lake m6i +29–50% (cripto/INT8)",
+   "url": "https://www.servethehome.com/aws-ec2-m6-instance-intel-ice-lake-and-graviton-2-acceleration-matters/",
+   "side": "x86"
+  },
+  {
+   "n": 10,
+   "title": "Redpanda — comparação data-driven (~+20% real em dados)",
+   "url": "https://www.redpanda.com/blog/aws-graviton-2-arm-vs-x86-comparison",
+   "side": "neutro"
+  }
+ ]
+}

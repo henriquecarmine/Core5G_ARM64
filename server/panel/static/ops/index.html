@@ -621,6 +621,7 @@
     <div id="demo-body">
       <div id="demo-steps"></div>
       <div id="demo-log-wrap">
+        <div id="flow-strip-modal" style="padding:8px 14px 0"></div>
         <div id="demo-log-label" data-i18n="demo.log_label">logs do servidor</div>
         <div id="demo-log"></div>
       </div>
@@ -774,6 +775,7 @@
         <span data-i18n="btn.clear">limpar</span>
       </button>
     </div>
+    <div id="flow-strip-console"></div>
     <div id="output" data-i18n="console.ready">Pronto. Clique em um comando à esquerda ou abra o UE Lab.</div>
     <style>
       #lab-view{display:flex;flex-direction:column;flex:1;min-height:480px}
@@ -935,7 +937,13 @@
 </div>
 
 <script src="i18n.js"></script>
+<script src="/static/ops/flow-strip.js"></script>
 <script>
+// FlowStrip (percurso dos dados): faixa minimalista sobre o console e sobre o
+// log do modal de operação — os hooks vivem em pushRunHeader/appendLine/
+// setRunBadge (professor e aluno) e no loop do runOperation (modal).
+FlowStrip.attach('console', document.getElementById('flow-strip-console'));
+FlowStrip.attach('modal', document.getElementById('flow-strip-modal'));
 // ===== Utilitários =====
 function stripAnsi(s) {
   return s.replace(/\x1b\[[0-9;]*[mGKJHFABCDSTlu]/g, '');
@@ -1274,12 +1282,14 @@ let _liveSeq = 0, _liveTimer = null;
 function applyLiveEvent(ev) {
   if (ev.type === 'begin') {
     pushRunHeader('👁 ' + prettyCmd(ev.label) + (ev.by ? '  ·  ' + ev.by : ''));
+    FlowStrip.begin(ev.label, 'console');
   } else if (ev.type === 'line') {
     const parts = String(ev.text == null ? '' : ev.text).split('\n');
     parts.forEach((seg, i) => { if (i === parts.length - 1 && seg === '') return; appendLine(seg); });
   } else if (ev.type === 'end') {
     const badge = output.querySelector('.run-header:last-of-type .run-badge');
     if (badge) setRunBadge(badge, ev.status === 'ok' ? 'ok' : 'error', I18N.t(ev.status === 'ok' ? 'st.done_short' : 'st.error'));
+    FlowStrip.end(ev.status === 'ok');
   }
   // 'nav' é refletido pelo snapshot da sessão (updateAlunoBanner).
 }
@@ -1323,6 +1333,7 @@ async function loadVersion() {
 
 // ===== Console principal =====
 function appendLine(line) {
+  FlowStrip.feed(line);
   const { html, color } = renderLogLine(line);
   const div = document.createElement('div');
   if (color) div.style.color = color;
@@ -1572,17 +1583,20 @@ async function runCommand(cmd, srcBtn) {
   setRunning(true);
   setStatus('running', I18N.t('st.running', { cmd }));
   const badge = pushRunHeader(cmd);
+  FlowStrip.begin(cmd, 'console');
   try {
     const resp = await fetch('/api/run/' + cmd, { method: 'POST' });
-    if (resp.status === 403) { appendLine(await resp.text()); setStatus('error', I18N.t('st.blocked')); setRunBadge(badge, 'error', I18N.t('st.blocked')); return; }
+    if (resp.status === 403) { appendLine(await resp.text()); setStatus('error', I18N.t('st.blocked')); setRunBadge(badge, 'error', I18N.t('st.blocked')); FlowStrip.end(false); return; }
     await streamToConsole(resp);
     setStatus('ok', I18N.t('st.done', { cmd }));
     setRunBadge(badge, 'ok', I18N.t('st.done_short'));
+    FlowStrip.end(true);
     appendExplain(cmd);
     appendLogLinks(cmd);   // atalho "ver logs" p/ testes que produzem logs
   } catch (e) {
     appendLine('[erro: ' + e + ']'); setStatus('error', I18N.t('st.error'));
     setRunBadge(badge, 'error', I18N.t('st.error'));
+    FlowStrip.end(false);
   } finally {
     setRunning(false);
     if (srcBtn && !srcBtn.dataset.toggle) btnLoading(srcBtn, false);
@@ -2128,9 +2142,10 @@ async function runOperation() {
   demoRerunBtn.style.display = 'none';
   setSelectorEnabled(false);
   const spinner = demoAddStep('run', _op.spinnerLabel || 'Processando…', 'Executando no servidor — aguarde.');
+  FlowStrip.begin(_op.endpoint, 'modal');
   try {
     const resp = await fetch(_op.endpoint, { method: 'POST' });
-    if (resp.status === 403) { spinner.remove(); demoAddStep('fail', 'Sem permissão', 'Usuário guest não pode executar esta ação.'); }
+    if (resp.status === 403) { spinner.remove(); demoAddStep('fail', 'Sem permissão', 'Usuário guest não pode executar esta ação.'); FlowStrip.end(false); }
     else {
       const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
       while (true) {
@@ -2139,6 +2154,7 @@ async function runOperation() {
         while ((idx = buf.indexOf('\n')) >= 0) {
           const raw = buf.slice(0, idx); buf = buf.slice(idx + 1);
           const line = raw.trim();
+          FlowStrip.feed(raw);
           if (line.startsWith('PHASE|')) {
             spinner.querySelector('.t').textContent = line.slice(6);
           } else if (line.startsWith('STEP|')) {
@@ -2149,6 +2165,7 @@ async function runOperation() {
             demoSummaryEl.className = ok ? 'ok' : 'fail';
             demoSummaryEl.textContent = ok ? (_op.doneOk || trf('op.done', '✓ Concluído.')) : (_op.doneFail || trf('op.fail_generic', '✕ A operação não concluiu — veja o passo que falhou.'));
             demoSummaryEl.style.display = 'block';
+            FlowStrip.end(ok);
           } else if (line) {
             // saída crua do servidor → painel de logs ao vivo
             const cls = line.startsWith('$ ') ? 'cmd' : line.startsWith('[processo encerrado') ? 'end' : '';
@@ -2159,6 +2176,7 @@ async function runOperation() {
     }
   } catch (e) {
     demoAddStep('fail', trf('op.conn_err', 'Erro de conexão'), e.message, spinner);
+    FlowStrip.end(false);
   }
   spinner.remove();
   if (_op.allowRerun) demoRerunBtn.style.display = '';

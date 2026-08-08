@@ -68,6 +68,11 @@ cada NF está dizendo**, não só se está de pé.
   no blueprint, sem Loki/Grafana.
 - Loki/Grafana/Prometheus (Nível 1 do blueprint) só se sobrar recurso — reavaliar
   contra a [política de custos](POLITICA-DE-CUSTOS.md) depois da Fase A.
+- ✅ **MVP do "modo fluxo" entregue (v0.51.0)**: `static/ops/flow-strip.js` —
+  faixa animada do percurso dos dados (nós · interfaces · 💾 · ✔/✖) sobre o
+  console e o modal, cenas por comando, gatilhos regex no stream existente,
+  espelhada ao vivo aos alunos. V2: eventos estruturados `FLOW|/STORE|/RESULT|`
+  no `testlog.sh`; V3: cena por JSON ao lado da topologia.
 
 ### Fase C — reorganizar a didática (futuro, não agora)
 

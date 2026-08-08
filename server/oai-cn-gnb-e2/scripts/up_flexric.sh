@@ -67,7 +67,16 @@ RIC_ARGS=(-p "$FLEXRIC_LIB")
 RIC_ARGS+=(-a "$RIC_IP")
 
 echo "Iniciando nearRT-RIC ($RIC_BIN) em $RIC_IP (libs: $FLEXRIC_LIB)..."
-nohup "$RIC_BIN" "${RIC_ARGS[@]}" > "$RIC_LOG" 2>&1 &
+# Scope PRÓPRIO do systemd (como o gNB): fora do cgroup de quem chamou — um
+# restart do core5g-panel NÃO derruba mais o RIC ("E2 lab caindo toda hora":
+# nohup não muda cgroup, e KillMode=control-group extermina os filhos do
+# serviço). Unit com $$ evita colisão com scope anterior que ainda finaliza.
+if command -v systemd-run >/dev/null 2>&1; then
+    sudo nohup systemd-run --scope -q --unit="oai-flexric-$$" --slice=oai-lab.slice \
+        -p CPUWeight=40 "$RIC_BIN" "${RIC_ARGS[@]}" > "$RIC_LOG" 2>&1 &
+else
+    nohup "$RIC_BIN" "${RIC_ARGS[@]}" > "$RIC_LOG" 2>&1 &
+fi
 RIC_PID=$!
 sleep 2
 

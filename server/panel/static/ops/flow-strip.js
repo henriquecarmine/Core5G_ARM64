@@ -364,8 +364,9 @@
   // ---- Fonte dos dados (funções de ML): sugerida × CSV do professor -------
   function srcHtml() {
     return '<div class="sec">Fonte dos dados desta função</div><div class="fs-src">'
-      + '<label><input type="radio" name="fsrc" value="default"> 1. Sugerida pelo servidor</label>'
+      + '<label><input type="radio" name="fsrc" value="default"> 1. Sugerida pelo servidor · <a href="#" class="see">👁 ver amostra</a></label>'
       + '<div class="exp">o dataset SUTD original (4 cenários do walk test) descrito no cartão acima — reproduz o artigo.</div>'
+      + '<pre class="smp" style="display:none;margin:5px 0 4px 20px;padding:7px 9px;background:#0d0e11;border:1px solid #2c3038;border-radius:6px;font-size:9.5px;line-height:1.45;color:#9aa4b2;overflow-x:auto;max-width:340px;white-space:pre"></pre>'
       + '<label><input type="radio" name="fsrc" value="custom"> 2. Meu CSV enviado <span class="st"></span></label>'
       + '<div class="exp">mesmas colunas do exemplo; seu CSV vira os 4 cenários. '
       + '<a href="/api/lab-data/sutd/example" download>⬇ baixe o exemplo aqui</a></div>'
@@ -392,6 +393,15 @@
           .then(refresh);
       };
     });
+    var see = card.querySelector('.see'), smp = card.querySelector('.smp');
+    if (see) see.onclick = function (e) {
+      e.preventDefault();
+      if (smp.style.display === 'block') { smp.style.display = 'none'; return; }
+      smp.textContent = 'carregando…'; smp.style.display = 'block';
+      fetch('/api/lab-data/' + key + '/example').then(function (r) { return r.text(); })
+        .then(function (txt) { smp.textContent = txt + '⋮ (primeiras linhas — o dataset completo tem 4 cenários no servidor)'; })
+        .catch(function () { smp.textContent = 'falhou ao carregar a amostra'; });
+    };
     file.onchange = function () {
       var fl = file.files && file.files[0]; if (!fl) return;
       st.textContent = 'enviando…';

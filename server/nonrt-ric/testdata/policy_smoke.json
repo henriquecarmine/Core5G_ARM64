@@ -1,0 +1,15 @@
+{
+  "ric_id": "ric1",
+  "policy_id": "core5g-smoke-001",
+  "service_id": "core5g",
+  "policytype_id": "1",
+  "policy_data": {
+    "scope": {
+      "ueId": "ue-smoke",
+      "qosId": "qos-smoke"
+    },
+    "qosObjectives": {
+      "priorityLevel": 10
+    }
+  }
+}

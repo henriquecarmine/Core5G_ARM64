@@ -1,0 +1,5 @@
+{
+  "service_id": "core5g",
+  "keep_alive_interval_seconds": 0,
+  "callback_url": ""
+}

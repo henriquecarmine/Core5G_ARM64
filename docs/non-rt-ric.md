@@ -4,6 +4,14 @@
 > só o Near-RT (FlexRIC sobre E2). Este documento registra a lacuna, corrige uma
 > afirmação errada da bíblia, e traz um caminho de instalação **testado** — que
 > não roda no servidor ARM.
+>
+> **Atualização (08/08/2026):** o bloqueio ARM64 do §3 foi contornado
+> **construindo as imagens da fonte, nativamente** (os serviços são Java/Python —
+> o amd64-only era só o CI do O-RAN SC). Par mínimo A1 (PMS 2.9.0 + A1
+> Simulator 2.8.0) pronto em [`server/nonrt-ric/`](../server/nonrt-ric/),
+> espelhando a Fase 1 do lab do Prof. Kunzler. Runbook completo:
+> [instalacao-nonrt-arm64.md](instalacao-nonrt-arm64.md). Os §§4–5 abaixo
+> (caminho x86 local e limites do FlexRIC sem A1) permanecem válidos.
 
 ## 1. Por que isto importa
 

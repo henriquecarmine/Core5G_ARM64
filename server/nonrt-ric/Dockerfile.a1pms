@@ -1,0 +1,46 @@
+# A1 Policy Management Service (O-RAN SC nonRT RIC) — build ARM64 NATIVO.
+#
+# As imagens oficiais do Release K são amd64 puro (docs/non-rt-ric.md §3), mas
+# o serviço é Java: nada no código é específico de arquitetura. Este Dockerfile
+# reproduz o oficial da tag 2.9.0 (jlink + slim) com duas diferenças:
+#   1. estágio Maven embutido — não precisa de JDK/Maven no host;
+#   2. UID SANO (1000) — o UID 120957 da imagem oficial estoura a faixa de
+#      subuid de podman rootless (docs/non-rt-ric.md §4.1).
+#
+# Contexto de build: server/nonrt-ric/ (fonte clonada pelo build_arm64.sh em
+# src/a1pms, pinada na tag). Uso: ./build_arm64.sh
+ARG PMS_TAG=2.9.0
+
+FROM maven:3.9-eclipse-temurin-17 AS build
+COPY src/a1pms /src
+WORKDIR /src
+RUN mvn -q -DskipTests package
+
+FROM eclipse-temurin:17-jdk AS jre-build
+RUN $JAVA_HOME/bin/jlink \
+      --add-modules ALL-MODULE-PATH \
+      --strip-debug --no-man-pages --no-header-files --compress=2 \
+      --output /customjre
+
+FROM debian:12-slim
+ENV JAVA_HOME=/jre
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+COPY --from=jre-build /customjre $JAVA_HOME
+
+ARG user=nonrtric
+ARG userid=1000
+RUN groupadd -g $userid $user && useradd -m -u $userid -g $user $user && \
+    mkdir -p /var/log/policy-agent /var/policy-management-service \
+             /opt/app/policy-agent/etc/cert /opt/app/policy-agent/data
+
+WORKDIR /opt/app/policy-agent
+COPY --from=build /src/config/application.yaml                config/application.yaml
+COPY --from=build /src/config/application_configuration.json  data/application_configuration.json_example
+COPY --from=build /src/config/keystore.jks                    etc/cert/keystore.jks
+COPY --from=build /src/config/truststore.jks                  etc/cert/truststore.jks
+COPY --from=build /src/target/a1policymanagementservice-*.jar policy-agent.jar
+RUN chown -R $user:$user /opt/app/policy-agent /var/log/policy-agent /var/policy-management-service
+
+USER ${user}
+EXPOSE 8081 8433
+CMD ["java", "-jar", "/opt/app/policy-agent/policy-agent.jar"]

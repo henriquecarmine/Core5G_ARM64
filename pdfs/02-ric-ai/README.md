@@ -107,4 +107,4 @@ throughput, energia…), organizadas por técnica de ML.
 > **testes no servidor + aulas**. Plano original:
 > [`docs/plano-lab-ric-ia.md`](../../docs/plano-lab-ric-ia.md).
 >
-> Curso base (as 6 aulas do Prof. Jonas): [`../base/`](../base/).
+> Curso base (as 6 aulas do Prof. Jonas): [`../01-ric/`](../01-ric/).

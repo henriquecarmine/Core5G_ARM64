@@ -35,7 +35,10 @@ adicionar à pasta*.
 
 - **Projeto integrador (50%)** — pipeline + KPIs + apresentação/defesa na Aula 06
   → [`projeto/`](projeto/)
-- **Exercícios individuais na plataforma (30%)** — `#data/aula01` … `#data/aula06`
+- **Exercícios individuais na plataforma (30%)** —
+  [cesar-activities → `#data`](https://cesar-activities-cxapa2g7ia-rj.a.run.app/#data),
+  fluxos `#data/aula01` … `#data/aula06` (concluir em ritmo semanal; briefing:
+  [`briefing-plataforma.md`](../../external/cesar-school-repo/data/docs/briefing-plataforma.md))
   → [`trabalhos/`](trabalhos/)
 - **Engajamento técnico e checkpoints (20%)** — estudos de caso, checkpoints e
   defesa individual

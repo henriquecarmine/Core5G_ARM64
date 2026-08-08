@@ -82,6 +82,12 @@ COMMANDS: dict[str, dict] = {
     "p2-ml-uetp": {"cmd": ["./scripts/p2_ml_uetp.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-ml-localizacao": {"cmd": ["./scripts/p2_ml_localizacao.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-ml-pm": {"cmd": ["./scripts/p2_ml_pm.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    # Projeto 3 — Non-RT RIC em ARM64 nativo (server/nonrt-ric/, imagens locais
+    # via docker load; ver docs/instalacao-nonrt-arm64.md). Leve: roda junto de
+    # P1/P2, por isso fora do switch exclusivo.
+    "p3-up-nonrt": {"cmd": ["./up_nonrt.sh"], "cwd": SERVER_DIR / "nonrt-ric"},
+    "p3-down-nonrt": {"cmd": ["./down_nonrt.sh"], "cwd": SERVER_DIR / "nonrt-ric"},
+    "p3-test-a1": {"cmd": ["./test_a1_flow.sh"], "cwd": SERVER_DIR / "nonrt-ric"},
 }
 
 _VALID_DISTANCES = {"none", "100m", "500m", "1km", "3km", "off"}
@@ -266,6 +272,7 @@ def read_group_status(states: dict[str, dict]) -> dict[str, str]:
         "p1-ran": group_of(lambda n: n == "ueransim"),
         "p2-core": group_of(lambda n: n == "oai-amf"),
         "p2-e2lab": "on" if (process_running("nr-softmodem") or process_running("nearRT-RIC")) else "off",
+        "p3-nonrt": group_of(lambda n: n == "nonrt-policy-agent"),
     }
 
 

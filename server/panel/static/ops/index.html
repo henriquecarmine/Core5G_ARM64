@@ -583,6 +583,19 @@
       </button>
     </div>
   </div>
+  <!-- Non-RT RIC (A1): independente e leve — roda junto de P1 ou P2, por isso
+       não tem botão "ativar" exclusivo; só o toggle. Imagens ARM64 próprias. -->
+  <div class="proj-card" data-proj-card="p3">
+    <div class="pc-head">
+      <div class="pc-title"><span class="pc-dot"></span><span data-i18n="pc.p3_title">Non-RT RIC · A1</span><span class="pc-desc" data-i18n="pc.p3_desc">políticas A1 (ARM64 nativo)</span></div>
+    </div>
+    <div class="pc-servers">
+      <button class="toggle-btn" data-toggle="p3-nonrt" data-up="p3-up-nonrt" data-down="p3-down-nonrt" data-label="Non-RT" data-i18n-title="pc.p3_toggle_title" title="A1 Policy Management Service + 3 A1 Simulators — leve (~0,5 GB), roda junto de P1/P2">
+        <div class="toggle-main"><span>PMS + A1 sims</span><span class="toggle-dot"></span></div>
+        <div class="toggle-sub" data-i18n="pc.p3_sub">políticas A1 (nonRT → nearRT)</div>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== RAN ao vivo (P2): PHY/MAC reais do gNB em sparklines ===== -->
@@ -744,6 +757,11 @@
       </div>
 
       <!-- ===== Logs (comum aos dois) ===== -->
+      <div class="rail-group" id="nonrt-group">
+        <div class="rail-group-label" data-i18n="rail.nonrt_group">Non-RT RIC · A1</div>
+        <button data-cmd="p3-test-a1" data-i18n="t.p3_a1" data-i18n-title="t.p3_a1_title" title="Ciclo completo: política criada no PMS (nonRT) desce pelo A1 e é confirmada no simulador (nearRT)">▶ Testar ciclo A1 (política → simulador)</button>
+      </div>
+
       <div class="rail-group" id="logs-group">
         <div class="rail-group-label" data-i18n="rail.logs_group">Logs &amp; Diagnóstico</div>
         <select id="log-service"></select>

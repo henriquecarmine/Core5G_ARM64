@@ -945,7 +945,7 @@
 
 <script src="i18n.js"></script>
 <script src="/static/ops/flow-strip.js?v=0.58.0"></script>
-<script src="/static/ops/energy.js?v=0.59.0"></script>
+<script src="/static/ops/energy.js?v=0.60.0"></script>
 <script>
 // FlowStrip (percurso dos dados): faixa minimalista sobre o console e sobre o
 // log do modal de operação — os hooks vivem em pushRunHeader/appendLine/
@@ -953,7 +953,7 @@
 FlowStrip.attach('console', document.getElementById('flow-strip-console'));
 FlowStrip.attach('modal', document.getElementById('flow-strip-modal'));
 FlowStrip.attach('lab', document.getElementById('flow-strip-lab'));
-Energy.attach(document.getElementById('energy-btn'));
+Energy.attach(document.getElementById('energy-btn'), false, document.getElementById('output'));
 // ===== Utilitários =====
 function stripAnsi(s) {
   return s.replace(/\x1b\[[0-9;]*[mGKJHFABCDSTlu]/g, '');

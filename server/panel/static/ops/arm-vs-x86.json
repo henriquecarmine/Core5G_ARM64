@@ -29,6 +29,13 @@
    "x86": "1× (base)",
    "delta": "≈ +20%",
    "src": "[3][4][10]"
+  },
+  {
+   "label": "g. Próxima geração (Graviton3)",
+   "n1": "até 60% menos energia (claim oficial) · +25% perf",
+   "x86": "Ice Lake reduziu p/ −29–50% em cripto/INT8 [9]",
+   "delta": "trajetória ↑",
+   "src": "[1][9]"
   }
  ],
  "extras": [
@@ -130,5 +137,18 @@
    "url": "https://www.redpanda.com/blog/aws-graviton-2-arm-vs-x86-comparison",
    "side": "neutro"
   }
- ]
+ ],
+ "power": {
+  "vcpus": 4,
+  "n1": {
+   "idle": 0.27,
+   "max": 2.39
+  },
+  "x86": {
+   "idle": 1.15,
+   "max": 4.98
+  },
+  "src": "[5]"
+ },
+ "formulas_url": "https://github.com/henriquecarmine/Core5G_ARM64/blob/main/docs/formulas-energia.md"
 }

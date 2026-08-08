@@ -43,7 +43,7 @@
   ].join('\n');
   var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
 
-  var DATA = null, btn = null, last = null, modal = null;
+  var DATA = null, btn = null, last = null, modal = null, out = null;
 
   function fetchData() {
     if (DATA) return Promise.resolve(DATA);
@@ -53,6 +53,11 @@
   function fmtDur(s) { return s >= 60 ? Math.floor(s / 60) + 'min ' + Math.round(s % 60) + 's' : Math.round(s) + 's'; }
 
   function render(d, tele) {
+    function watts(cfg, u) { return cfg ? (DATA.power.vcpus * (cfg.idle + (cfg.max - cfg.idle) * u / 100)) : 0; }
+    var cpu = tele && tele.host && tele.host.cpu_pct != null ? tele.host.cpu_pct : null;
+    var liveW = cpu !== null && d.power
+      ? '⚡ AGORA (CPU ' + cpu + '%): N1 ≈ <b style="color:#69db7c">' + watts(d.power.n1, cpu).toFixed(1) + ' W</b> · x86 equivalente ≈ <b style="color:#8a8f98">' + watts(d.power.x86, cpu).toFixed(1) + ' W</b> <span class="est">interp. linear Teads ' + d.power.src + '</span>'
+      : '';
     var runLine = last
       ? 'Teste: <b>' + last.cmd + '</b> · duração medida: <b>' + fmtDur(last.dur) + '</b> · concluído ' + (last.ok ? '✔' : '✖')
       : 'Nenhum teste nesta sessão ainda — valores de referência.';
@@ -82,6 +87,7 @@
     return '<span class="x">✕</span>'
       + '<h3>⚡ Eficiência — Arm Neoverse N1 (este servidor) × x86_64 (mesma geração)</h3>'
       + '<div class="sub">' + runLine + ' · AWS t4g.xlarge: 4 núcleos físicos N1 · 16 GB · vs m5.xlarge (Xeon Cascade Lake, 4 vCPU = 2 núcleos+SMT)</div>'
+      + (liveW ? '<div class="sub" style="font-size:12px">' + liveW + '</div>' : '')
       + '<table class="en-t"><tr><th>Indicador</th><th>N1 (ARM)</th><th>x86_64</th><th>Δ</th></tr>'
       + rows
       + '<tr><td>d. RAM no processo</td>' + ramRow + '</tr>'
@@ -90,7 +96,7 @@
       + '<div class="en-why" id="en-why"><span>📖 Por que o ARM é mais eficiente? (clique)</span>'
       + '<div class="body">' + d.resumo70 + '</div></div>'
       + '<div class="en-cav">⚖️ Honestidade metodológica: ' + d.caveats.join(' · ') + '</div>'
-      + '<div class="en-src">Fontes: ' + srcs + '</div>';
+      + '<div class="en-src">Fontes: ' + srcs + ' · <a href="' + d.formulas_url + '" target="_blank" rel="noopener">📐 Fórmulas item a item (docs/formulas-energia.md)</a></div>';
   }
 
   function close() { if (modal) { modal.b.remove(); modal.m.remove(); modal = null; } }
@@ -111,8 +117,8 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
 
   window.Energy = {
-    attach: function (el, alwaysLit) {
-      btn = el;
+    attach: function (el, alwaysLit, consoleEl) {
+      btn = el; out = consoleEl || null;
       if (alwaysLit) { btn.classList.add('lit'); }
       btn.onclick = function () { if (btn.classList.contains('lit')) open(); };
     },
@@ -120,6 +126,23 @@
     end: function (ok) {
       if (last) { last.ok = ok; last.dur = (Date.now() - last.t0) / 1000; }
       if (btn) btn.classList.add('lit');   // o raio ACENDE após o teste
+      // mini-tabela automática no console, honesta em relação AO teste
+      if (out && last && last.dur > 1) {
+        fetchData().then(function (d) {
+          var t = last.dur, p = d.power;
+          var eN1 = (p.vcpus * p.n1.max * t / 3600).toFixed(2);
+          var eX = (p.vcpus * p.x86.max * t / 3600).toFixed(2);
+          var div = document.createElement('div');
+          div.style.cssText = 'margin:8px 0;padding:8px 12px;border:1px solid #4d3a14;border-radius:8px;background:#f59f0011;font-size:11.5px;color:#c9d1d9';
+          div.innerHTML = '⚡ <b style="color:#f59f00">Energia deste teste (' + Math.round(t) + 's, teto @100% CPU):</b> '
+            + 'N1 ≈ <b style="color:#69db7c">' + eN1 + ' Wh</b> · x86 equivalente ≈ ' + eX + ' Wh '
+            + '→ <b style="color:#69db7c">economia ~52%</b> <span style="color:#5c6370">(estimado por literatura — o x86 não roda aqui; fórmulas: 📐 no ⚡)</span> '
+            + '<a href="#" style="color:#74c0fc" onclick="Energy._open();return false">ver tabela completa</a>';
+          out.appendChild(div);
+          out.scrollTop = out.scrollHeight;
+        }).catch(function () {});
+      }
     },
+    _open: function () { open(); },
   };
 })();

@@ -520,7 +520,9 @@ document.getElementById("theme-btn").onclick=()=>{
 applyThemeIcon();
 
 // ---- #2 tour guiado pelas camadas (por projeto; textos nos dicionários i18n) ----
-const TOUR_LAYERS = ["external","admin","ran","core-cp","core-up"];
+const TOUR_LAYERS = PROJ==="p1"
+  ? ["external","admin","ran","core-cp","core-up"]
+  : ["external","admin","ran","nonrt","core-cp","core-up"];
 const TOUR = TOUR_LAYERS.map(layer => ({ layer }));
 let tourIdx=0;
 function showTour(i){

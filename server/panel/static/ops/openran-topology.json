@@ -1,218 +1,584 @@
 {
   "_comment": "Topologia REAL do servidor Core5G_ARM64 (Projeto 2: OAI 5GC + gNB RFSIM + E2 + FlexRIC). Inventário de docker ps / docker network / ps aux / ss / systemd. NÃO é uma Open RAN genérica. CUPS: o core é dividido em core-cp (plano de controle, azul) e core-up (plano de usuário, laranja).",
   "_como_atualizar": "Para adicionar um componente: crie um objeto em 'nodes' com id único, layer (external|admin|ran|core-cp|core-up), kind (container|native|systemd|external), role (1 palavra), statusKey (container=nome; native=proc:<padrão>; systemd=svc:<unit>), e os campos from/does/to. Posicione com x,y (canvas 1300x900; card 184x66). Adicione links em 'links' com iface (nome curto). planned:true deixa cinza. Layers com band:true ganham um retângulo de fundo englobando seus nós (não deixe bandas se sobrepor). Padronize ports como 'IFACE: porta/PROTO · ...'. Valide com o verificador geométrico (nenhum link pode atravessar card de terceiro). O endpoint /api/topology sobrepõe status ao vivo.",
-  "canvas": { "w": 1300, "h": 900 },
+  "canvas": {
+    "w": 1300,
+    "h": 900
+  },
   "layers": {
-    "external":  { "label": "Usuário / Admin",                    "color": "#4dabf7" },
-    "admin":     { "label": "Acesso & Administração",             "color": "#b197fc" },
-    "ran":       { "label": "RAN + RIC (host nativo)",            "color": "#2f9e44", "band": true },
-    "core-cp":   { "label": "Core 5G — Plano de Controle (SBA)",  "color": "#1c7ed6", "band": true },
-    "core-up":   { "label": "Core 5G — Plano de Usuário",         "color": "#e8590c", "band": true }
+    "external": {
+      "label": "Usuário / Admin",
+      "color": "#4dabf7"
+    },
+    "admin": {
+      "label": "Acesso & Administração",
+      "color": "#b197fc"
+    },
+    "ran": {
+      "label": "RAN + RIC (host nativo)",
+      "color": "#2f9e44",
+      "band": true
+    },
+    "nonrt": {
+      "label": "Non-RT RIC (SMO) — políticas A1 · ARM64 nativo",
+      "color": "#f59f00",
+      "band": true
+    },
+    "core-cp": {
+      "label": "Core 5G — Plano de Controle (SBA)",
+      "color": "#1c7ed6",
+      "band": true
+    },
+    "core-up": {
+      "label": "Core 5G — Plano de Usuário",
+      "color": "#e8590c",
+      "band": true
+    }
   },
   "nodes": [
     {
-      "id": "user", "label": "Usuário / Admin", "role": "Acesso", "sublabel": "navegador",
-      "layer": "external", "kind": "external", "x": 590, "y": 24,
+      "id": "user",
+      "label": "Usuário / Admin",
+      "role": "Acesso",
+      "sublabel": "navegador",
+      "layer": "external",
+      "kind": "external",
+      "x": 590,
+      "y": 24,
       "from": "Pessoa operando o laboratório pelo navegador.",
       "does": "Acessa o painel web por HTTPS; admin controla, guest só observa.",
       "to": "Envia requisições ao Caddy (porta 443).",
-      "ports": "—", "network": "internet", "ip": "—", "statusKey": null, "planned": false
+      "ports": "—",
+      "network": "internet",
+      "ip": "—",
+      "statusKey": null,
+      "planned": false
     },
     {
-      "id": "caddy", "label": "Caddy", "role": "Proxy", "sublabel": "reverse proxy + TLS",
-      "layer": "admin", "kind": "systemd", "x": 470, "y": 120,
+      "id": "caddy",
+      "label": "Caddy",
+      "role": "Proxy",
+      "sublabel": "reverse proxy + TLS",
+      "layer": "admin",
+      "kind": "systemd",
+      "x": 470,
+      "y": 120,
       "image": "caddy v2 (systemd)",
       "from": "Recebe as requisições HTTPS do navegador (443).",
       "does": "Termina o TLS e autentica (cookie de sessão admin/guest).",
       "to": "Encaminha para o painel em 127.0.0.1:8765 (proxy reverso).",
-      "ports": "HTTPS: 443/TCP · HTTP: 80/TCP", "network": "host", "ip": "0.0.0.0",
-      "statusKey": "svc:caddy", "planned": false
+      "ports": "HTTPS: 443/TCP · HTTP: 80/TCP",
+      "network": "host",
+      "ip": "0.0.0.0",
+      "statusKey": "svc:caddy",
+      "planned": false
     },
     {
-      "id": "panel", "label": "core5g-panel", "role": "Painel", "sublabel": "FastAPI + observabilidade",
-      "layer": "admin", "kind": "systemd", "x": 710, "y": 120,
+      "id": "panel",
+      "label": "core5g-panel",
+      "role": "Painel",
+      "sublabel": "FastAPI + observabilidade",
+      "layer": "admin",
+      "kind": "systemd",
+      "x": 710,
+      "y": 120,
       "image": "uvicorn/FastAPI v0.10.0 (systemd)",
       "from": "Recebe as chamadas do navegador (via Caddy) e lê o estado do host.",
       "does": "Telemetria leve (/proc + docker stats), logs, controle do lab e cadastro de UE — sem Prometheus/Grafana.",
       "to": "Executa scripts locais e consulta o Docker/containers do Core.",
-      "ports": "HTTP: 8765/TCP", "network": "loopback", "ip": "127.0.0.1",
-      "statusKey": "svc:core5g-panel", "planned": false
+      "ports": "HTTP: 8765/TCP",
+      "network": "loopback",
+      "ip": "127.0.0.1",
+      "statusKey": "svc:core5g-panel",
+      "planned": false
     },
-
     {
-      "id": "ue", "label": "nr-uesoftmodem", "role": "Celular", "sublabel": "UE simulado (RFSIM)",
-      "layer": "ran", "kind": "native", "x": 60, "y": 240,
+      "id": "ue",
+      "label": "nr-uesoftmodem",
+      "role": "Celular",
+      "sublabel": "UE simulado (RFSIM)",
+      "layer": "ran",
+      "kind": "native",
+      "x": 60,
+      "y": 240,
       "image": "OAI nr-uesoftmodem (nativo, 51 PRB)",
       "from": "É o assinante: IMSI 208950000000032, slice SST=222/SD=123.",
       "does": "Simula um celular 5G — registra na rede (NAS/N1) e abre sessão de dados.",
       "to": "Fala com o gNB por rádio simulado (RFSIM); a sinalização N1 segue ao AMF via gNB; o tráfego sai pela sessão PDU.",
-      "ports": "—", "network": "RFSIM → gNB", "ip": "—",
-      "statusKey": "proc:nr-uesoftmodem", "planned": false
+      "ports": "—",
+      "network": "RFSIM → gNB",
+      "ip": "—",
+      "statusKey": "proc:nr-uesoftmodem",
+      "planned": false
     },
     {
-      "id": "gnb", "label": "nr-softmodem (gNB)", "role": "Antena", "sublabel": "CU+DU+RU sim + E2 Agent",
-      "layer": "ran", "kind": "native", "x": 300, "y": 330,
+      "id": "gnb",
+      "label": "nr-softmodem (gNB)",
+      "role": "Antena",
+      "sublabel": "CU+DU+RU sim + E2 Agent",
+      "layer": "ran",
+      "kind": "native",
+      "x": 300,
+      "y": 330,
       "image": "OAI nr-softmodem (nativo, RFSIM, 51 PRB)",
       "from": "Recebe o rádio do UE (RFSIM) e a sinalização do Core (N2).",
       "does": "Estação rádio-base 5G (gNB monolítico). Embute o Agente E2 que expõe métricas/controle ao RIC.",
       "to": "Registra no AMF (N2), transporta o NAS do UE (N1), reporta ao RIC (E2) e encaminha dados ao UPF (N3).",
-      "ports": "N2: 38412/SCTP · N3: 2152/UDP · E2: SCTP", "network": "demo-oai (host 192.168.70.129)", "ip": "192.168.70.129",
-      "statusKey": "proc:nr-softmodem", "planned": false
+      "ports": "N2: 38412/SCTP · N3: 2152/UDP · E2: SCTP",
+      "network": "demo-oai (host 192.168.70.129)",
+      "ip": "192.168.70.129",
+      "statusKey": "proc:nr-softmodem",
+      "planned": false
     },
     {
-      "id": "ric", "label": "nearRT-RIC", "role": "Inteligência", "sublabel": "FlexRIC (Near-RT RIC)",
-      "layer": "ran", "kind": "native", "x": 300, "y": 500,
+      "id": "ric",
+      "label": "nearRT-RIC",
+      "role": "Inteligência",
+      "sublabel": "FlexRIC (Near-RT RIC)",
+      "layer": "ran",
+      "kind": "native",
+      "x": 300,
+      "y": 500,
       "image": "FlexRIC nearRT-RIC (nativo)",
       "from": "Recebe o E2 SETUP e as indicações (KPM/RC) do gNB via E2.",
       "does": "Controlador near-real-time: carrega os Service Models e hospeda os xApps que monitoram/controlam o RAN.",
       "to": "Entrega os dados aos xApps (E42) e pode enviar comandos de controle de volta ao gNB (E2).",
-      "ports": "E2AP: 36421/36422 · SCTP", "network": "loopback", "ip": "127.0.0.1",
-      "statusKey": "proc:nearRT-RIC", "planned": false
+      "ports": "E2AP: 36421/36422 · SCTP",
+      "network": "loopback",
+      "ip": "127.0.0.1",
+      "statusKey": "proc:nearRT-RIC",
+      "planned": false
     },
     {
-      "id": "xapps", "label": "xApps", "role": "Apps", "sublabel": "kpm · rc · gtp · ue_tp",
-      "layer": "ran", "kind": "native", "x": 60, "y": 500,
+      "id": "xapps",
+      "label": "xApps",
+      "role": "Apps",
+      "sublabel": "kpm · rc · gtp · ue_tp",
+      "layer": "ran",
+      "kind": "native",
+      "x": 60,
+      "y": 500,
       "image": "FlexRIC xApps (nativo, sob demanda)",
       "from": "Assinam métricas do RIC (E2SM-KPM) via API E42.",
       "does": "Aplicações de RAN. Inclui o UE-TP-rApp (xapp_ue_tp_moni): estima o throughput por UE (EWMA).",
       "to": "Exibem/relatam as métricas; podem disparar controle (E2SM-RC) pelo RIC.",
-      "ports": "E42: →RIC", "network": "loopback", "ip": "127.0.0.1",
+      "ports": "E42: →RIC",
+      "network": "loopback",
+      "ip": "127.0.0.1",
       "comment_status": "xApps são sob demanda (encerram no 1º evento, ~2s). O nó reflete a DISPONIBILIDADE da plataforma: verde quando o RIC está no ar — não um xApp persistente (que nunca há).",
-      "statusKey": "proc:nearRT-RIC", "planned": false
+      "statusKey": "proc:nearRT-RIC",
+      "planned": false
     },
-
     {
-      "id": "amf", "label": "oai-amf", "role": "Mobilidade", "sublabel": "AMF",
-      "layer": "core-cp", "kind": "container", "x": 600, "y": 260,
+      "id": "amf",
+      "label": "oai-amf",
+      "role": "Mobilidade",
+      "sublabel": "AMF",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 600,
+      "y": 260,
       "image": "oaisoftwarealliance/oai-amf:v2.2.1",
       "from": "Recebe o gNB e o UE pela interface N2 (NGAP) e o NAS do UE (N1).",
       "does": "Porta de entrada do Core: trata registro, autenticação e mobilidade do UE.",
       "to": "Chama o AUSF (autenticação) e o SMF (sessão, N11) via SBI; descobre NFs no NRF.",
-      "ports": "N2: 38412/SCTP · SBI: 80/TCP", "network": "demo-oai-public-net", "ip": "192.168.70.132",
-      "statusKey": "oai-amf", "planned": false
+      "ports": "N2: 38412/SCTP · SBI: 80/TCP",
+      "network": "demo-oai-public-net",
+      "ip": "192.168.70.132",
+      "statusKey": "oai-amf",
+      "planned": false
     },
     {
-      "id": "nrf", "label": "oai-nrf", "role": "Descoberta", "sublabel": "NRF",
-      "layer": "core-cp", "kind": "container", "x": 830, "y": 260,
+      "id": "nrf",
+      "label": "oai-nrf",
+      "role": "Descoberta",
+      "sublabel": "NRF",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 830,
+      "y": 260,
       "image": "oaisoftwarealliance/oai-nrf:v2.2.1",
       "from": "Todos os NFs se registram aqui ao subir (SBI).",
       "does": "Catálogo central — diz a cada função onde encontrar as outras.",
       "to": "Responde às consultas de descoberta de NF (AMF, SMF, AUSF, UDM, UDR).",
-      "ports": "SBI: 80/TCP · 8080/TCP", "network": "demo-oai-public-net", "ip": "192.168.70.130",
-      "statusKey": "oai-nrf", "planned": false
+      "ports": "SBI: 80/TCP · 8080/TCP",
+      "network": "demo-oai-public-net",
+      "ip": "192.168.70.130",
+      "statusKey": "oai-nrf",
+      "planned": false
     },
     {
-      "id": "udm", "label": "oai-udm", "role": "Credenciais", "sublabel": "UDM",
-      "layer": "core-cp", "kind": "container", "x": 1060, "y": 260,
+      "id": "udm",
+      "label": "oai-udm",
+      "role": "Credenciais",
+      "sublabel": "UDM",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 1060,
+      "y": 260,
       "image": "oaisoftwarealliance/oai-udm:v2.2.1",
       "from": "Consultado pelo AUSF (auth) e pelo AMF/SMF (perfil do assinante).",
       "does": "Gera os vetores de autenticação e a lógica de assinante.",
       "to": "Lê os dados persistidos no UDR.",
-      "ports": "SBI: 80/TCP · 8080/TCP", "network": "demo-oai-public-net", "ip": "192.168.70.137",
-      "statusKey": "oai-udm", "planned": false
+      "ports": "SBI: 80/TCP · 8080/TCP",
+      "network": "demo-oai-public-net",
+      "ip": "192.168.70.137",
+      "statusKey": "oai-udm",
+      "planned": false
     },
     {
-      "id": "smf", "label": "oai-smf", "role": "Sessão", "sublabel": "SMF",
-      "layer": "core-cp", "kind": "container", "x": 600, "y": 400,
+      "id": "smf",
+      "label": "oai-smf",
+      "role": "Sessão",
+      "sublabel": "SMF",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 600,
+      "y": 400,
       "image": "oaisoftwarealliance/oai-smf:v2.2.1",
       "from": "Acionado pelo AMF quando o UE pede uma sessão de dados (N11/Nsmf).",
       "does": "Cria e gerencia a sessão PDU e decide as regras de encaminhamento.",
       "to": "Programa o UPF pela interface N4 (PFCP) — é o elo de controle do CUPS.",
-      "ports": "N4: 8805/UDP · SBI: 80/TCP", "network": "demo-oai-public-net", "ip": "192.168.70.133",
-      "statusKey": "oai-smf", "planned": false
+      "ports": "N4: 8805/UDP · SBI: 80/TCP",
+      "network": "demo-oai-public-net",
+      "ip": "192.168.70.133",
+      "statusKey": "oai-smf",
+      "planned": false
     },
     {
-      "id": "ausf", "label": "oai-ausf", "role": "Autenticação", "sublabel": "AUSF",
-      "layer": "core-cp", "kind": "container", "x": 830, "y": 400,
+      "id": "ausf",
+      "label": "oai-ausf",
+      "role": "Autenticação",
+      "sublabel": "AUSF",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 830,
+      "y": 400,
       "image": "oaisoftwarealliance/oai-ausf:v2.2.1",
       "from": "Recebe do AMF o pedido de autenticação do UE (SBI).",
       "does": "Executa o 5G-AKA: valida o desafio/resposta com os vetores do UDM.",
       "to": "Pede os vetores ao UDM e devolve o resultado ao AMF. (auth-events ao UDM OK no v2.2.1.)",
-      "ports": "SBI: 80/TCP · 8080/TCP", "network": "demo-oai-public-net", "ip": "192.168.70.138",
-      "statusKey": "oai-ausf", "planned": false
+      "ports": "SBI: 80/TCP · 8080/TCP",
+      "network": "demo-oai-public-net",
+      "ip": "192.168.70.138",
+      "statusKey": "oai-ausf",
+      "planned": false
     },
     {
-      "id": "udr", "label": "oai-udr", "role": "Repositório", "sublabel": "UDR",
-      "layer": "core-cp", "kind": "container", "x": 1060, "y": 400,
+      "id": "udr",
+      "label": "oai-udr",
+      "role": "Repositório",
+      "sublabel": "UDR",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 1060,
+      "y": 400,
       "image": "oaisoftwarealliance/oai-udr:v2.2.1",
       "from": "Consultado pelo UDM (SBI).",
       "does": "Camada de acesso aos dados do assinante (perfil, chaves, slices).",
       "to": "Lê e grava no banco MySQL.",
-      "ports": "SBI: 80/TCP · 8080/TCP", "network": "demo-oai-public-net", "ip": "192.168.70.136",
-      "statusKey": "oai-udr", "planned": false
+      "ports": "SBI: 80/TCP · 8080/TCP",
+      "network": "demo-oai-public-net",
+      "ip": "192.168.70.136",
+      "statusKey": "oai-udr",
+      "planned": false
     },
     {
-      "id": "mysql", "label": "mysql", "role": "Banco", "sublabel": "DB de assinantes",
-      "layer": "core-cp", "kind": "container", "x": 1060, "y": 540,
+      "id": "mysql",
+      "label": "mysql",
+      "role": "Banco",
+      "sublabel": "DB de assinantes",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 1060,
+      "y": 540,
       "image": "mysql:9.6.0",
       "from": "Acessado pelo UDR via SQL.",
       "does": "Guarda os assinantes: IMSI, chaves K/OPc, slices, dados de auth (oai_db).",
       "to": "Devolve os registros consultados ao UDR.",
-      "ports": "SQL: 3306/TCP · 33060/TCP", "network": "demo-oai-public-net", "ip": "192.168.70.131",
-      "statusKey": "mysql", "planned": false
+      "ports": "SQL: 3306/TCP · 33060/TCP",
+      "network": "demo-oai-public-net",
+      "ip": "192.168.70.131",
+      "statusKey": "mysql",
+      "planned": false
     },
-
     {
-      "id": "upf", "label": "oai-upf", "role": "Dados", "sublabel": "UPF (simple_switch, v2.2.1)",
-      "layer": "core-up", "kind": "container", "x": 600, "y": 660,
+      "id": "upf",
+      "label": "oai-upf",
+      "role": "Dados",
+      "sublabel": "UPF (simple_switch, v2.2.1)",
+      "layer": "core-up",
+      "kind": "container",
+      "x": 600,
+      "y": 660,
       "image": "oaisoftwarealliance/oai-upf:v2.2.1",
       "from": "Recebe o tráfego do gNB (N3) e as regras do SMF (N4).",
       "does": "Plano de usuário (CUPS): encaminha os pacotes do UE para a internet sem passar pelas NFs de controle (datapath simple_switch).",
       "to": "Sai para a Data Network (N6, com NAT). Roda no ARM64 (imagem oficial multi-arch). O UE pega IP 12.1.1.x e navega quando há CPU para o nrUE (ver guia PROJETO2-CPU-E-USERPLANE.md). Alternativa portada neste projeto: oai-upf-vpp arm64 (dataplane VPP, via Vectorscan).",
-      "ports": "N3: 2152/UDP · N4: 8805/UDP · N6: IP fwd", "network": "demo-oai", "ip": "192.168.70.134",
-      "statusKey": "oai-upf", "planned": false
+      "ports": "N3: 2152/UDP · N4: 8805/UDP · N6: IP fwd",
+      "network": "demo-oai",
+      "ip": "192.168.70.134",
+      "statusKey": "oai-upf",
+      "planned": false
     },
     {
-      "id": "ext-dn", "label": "oai-ext-dn", "role": "Internet", "sublabel": "Data Network (DN)",
-      "layer": "core-up", "kind": "container", "x": 900, "y": 660,
+      "id": "ext-dn",
+      "label": "oai-ext-dn",
+      "role": "Internet",
+      "sublabel": "Data Network (DN)",
+      "layer": "core-up",
+      "kind": "container",
+      "x": 900,
+      "y": 660,
       "image": "oaisoftwarealliance/trf-gen-cn5g:latest",
       "from": "Recebe o tráfego de dados do UE depois do UPF (N6).",
       "does": "Simula a internet / rede externa (gerador de tráfego para testes).",
       "to": "Destino final do plano de usuário — fecha o caminho UE→internet.",
-      "ports": "—", "network": "oai-public-core", "ip": "192.168.73.135",
-      "statusKey": "oai-ext-dn", "planned": false
+      "ports": "—",
+      "network": "oai-public-core",
+      "ip": "192.168.73.135",
+      "statusKey": "oai-ext-dn",
+      "planned": false
+    },
+    {
+      "id": "a1sim",
+      "label": "A1 Simulators",
+      "role": "near-RT (sim)",
+      "sublabel": "OSC · STD · STD-v2",
+      "layer": "nonrt",
+      "kind": "container",
+      "statusKey": "a1-sim-OSC",
+      "x": 60,
+      "y": 700,
+      "image": "core5g/nonrt-a1sim:2.8.0-arm64 (build local da fonte)",
+      "from": "Recebem políticas A1 do PMS, cada um falando uma versão do protocolo (OSC 2.1.0, STD 1.1.3, STD 2.0.0).",
+      "does": "Simulam a terminação A1 de um near-RT RIC: aceitam policy types e instâncias, validam contra o schema e guardam o estado.",
+      "to": "Devolvem ao PMS a confirmação de que a política desceu — o lado 'nearRT' do teste ▶ Testar ciclo A1."
+    },
+    {
+      "id": "nonrt-pms",
+      "label": "Non-RT RIC (PMS)",
+      "role": "Políticas",
+      "sublabel": "A1 Policy Management",
+      "layer": "nonrt",
+      "kind": "container",
+      "statusKey": "nonrt-policy-agent",
+      "x": 300,
+      "y": 700,
+      "image": "core5g/nonrt-a1pms:2.9.0-arm64 (O-RAN SC 2.9.0, build local da fonte)",
+      "does": "A camada Non-RT (SMO): gerencia políticas A1 em horizonte > 1 s — cria, distribui e supervisiona políticas nos near-RT RICs configurados.",
+      "from": "Recebe pedidos de política via API REST (/a1-policy/v2) — do painel, de rApps ou do projeto da disciplina (dry-run que virou real).",
+      "to": "Desce as políticas pelo A1 aos simuladores (e, no futuro, a um near-RT com terminação A1 — Fase 2)."
     }
   ],
   "links": [
-    { "from": "user",  "to": "caddy", "iface": "HTTPS",      "detail": "TLS na porta 443." },
-    { "from": "caddy", "to": "panel", "iface": "Proxy",      "detail": "Reverse proxy → 127.0.0.1:8765." },
-    { "from": "panel", "to": "amf",   "iface": "Telemetria", "detail": "Coleta via docker stats + /proc (observabilidade leve).", "dashed": true },
-
-    { "from": "ue",    "to": "gnb",   "iface": "RF",   "detail": "Rádio simulado (RFSIM) entre UE e gNB." },
-    { "from": "ue",    "to": "amf",   "iface": "N1",   "detail": "NAS — registro/autenticação do UE direto com o AMF; interface LÓGICA: viaja encapsulada no N2, via gNB.", "dashed": true },
-    { "from": "gnb",   "to": "amf",   "iface": "N2",   "detail": "NGAP sobre SCTP :38412 — sinalização RAN↔Core." },
-    { "from": "gnb",   "to": "ric",   "iface": "E2",   "detail": "E2AP sobre SCTP — métricas (KPM) e controle (RC)." },
-    { "from": "xapps", "to": "ric",   "iface": "E42",  "detail": "API do FlexRIC entre xApp e RIC." },
-    { "from": "gnb",   "to": "upf",   "iface": "N3",   "detail": "GTP-U (plano de usuário): UE → gNB → UPF → DN." },
-
-    { "from": "amf",   "to": "nrf",   "iface": "SBI",  "detail": "Registro e descoberta de NFs (HTTP/2)." },
-    { "from": "smf",   "to": "nrf",   "iface": "SBI",  "detail": "Registro e descoberta (HTTP/2)." },
-    { "from": "ausf",  "to": "nrf",   "iface": "SBI",  "detail": "Registro e descoberta (HTTP/2)." },
-    { "from": "udm",   "to": "nrf",   "iface": "SBI",  "detail": "Registro e descoberta (HTTP/2)." },
-    { "from": "udr",   "to": "nrf",   "iface": "SBI",  "detail": "Registro e descoberta (HTTP/2)." },
-    { "from": "amf",   "to": "ausf",  "iface": "Nausf","detail": "AMF pede a autenticação do UE ao AUSF." },
-    { "from": "amf",   "to": "smf",   "iface": "N11/Nsmf", "detail": "AMF aciona a criação da sessão PDU no SMF — interface lógica N11 do 3GPP, realizada pelo serviço SBI Nsmf." },
-    { "from": "ausf",  "to": "udm",   "iface": "Nudm", "detail": "Vetores de auth + auth-events (5G-AKA) — OK no v2.2.1." },
-    { "from": "udm",   "to": "udr",   "iface": "Nudr", "detail": "Dados do assinante." },
-    { "from": "udr",   "to": "mysql", "iface": "SQL",  "detail": "Consultas ao banco oai_db." },
-    { "from": "smf",   "to": "upf",   "iface": "N4",   "detail": "PFCP :8805 — o plano de controle programa o plano de usuário (CUPS)." },
-    { "from": "upf",   "to": "ext-dn","iface": "N6",   "detail": "Saída para a Data Network (NAT)." }
+    {
+      "from": "user",
+      "to": "caddy",
+      "iface": "HTTPS",
+      "detail": "TLS na porta 443."
+    },
+    {
+      "from": "caddy",
+      "to": "panel",
+      "iface": "Proxy",
+      "detail": "Reverse proxy → 127.0.0.1:8765."
+    },
+    {
+      "from": "panel",
+      "to": "amf",
+      "iface": "Telemetria",
+      "detail": "Coleta via docker stats + /proc (observabilidade leve).",
+      "dashed": true
+    },
+    {
+      "from": "ue",
+      "to": "gnb",
+      "iface": "RF",
+      "detail": "Rádio simulado (RFSIM) entre UE e gNB."
+    },
+    {
+      "from": "ue",
+      "to": "amf",
+      "iface": "N1",
+      "detail": "NAS — registro/autenticação do UE direto com o AMF; interface LÓGICA: viaja encapsulada no N2, via gNB.",
+      "dashed": true
+    },
+    {
+      "from": "gnb",
+      "to": "amf",
+      "iface": "N2",
+      "detail": "NGAP sobre SCTP :38412 — sinalização RAN↔Core."
+    },
+    {
+      "from": "gnb",
+      "to": "ric",
+      "iface": "E2",
+      "detail": "E2AP sobre SCTP — métricas (KPM) e controle (RC)."
+    },
+    {
+      "from": "xapps",
+      "to": "ric",
+      "iface": "E42",
+      "detail": "API do FlexRIC entre xApp e RIC."
+    },
+    {
+      "from": "gnb",
+      "to": "upf",
+      "iface": "N3",
+      "detail": "GTP-U (plano de usuário): UE → gNB → UPF → DN."
+    },
+    {
+      "from": "amf",
+      "to": "nrf",
+      "iface": "SBI",
+      "detail": "Registro e descoberta de NFs (HTTP/2)."
+    },
+    {
+      "from": "smf",
+      "to": "nrf",
+      "iface": "SBI",
+      "detail": "Registro e descoberta (HTTP/2)."
+    },
+    {
+      "from": "ausf",
+      "to": "nrf",
+      "iface": "SBI",
+      "detail": "Registro e descoberta (HTTP/2)."
+    },
+    {
+      "from": "udm",
+      "to": "nrf",
+      "iface": "SBI",
+      "detail": "Registro e descoberta (HTTP/2)."
+    },
+    {
+      "from": "udr",
+      "to": "nrf",
+      "iface": "SBI",
+      "detail": "Registro e descoberta (HTTP/2)."
+    },
+    {
+      "from": "amf",
+      "to": "ausf",
+      "iface": "Nausf",
+      "detail": "AMF pede a autenticação do UE ao AUSF."
+    },
+    {
+      "from": "amf",
+      "to": "smf",
+      "iface": "N11/Nsmf",
+      "detail": "AMF aciona a criação da sessão PDU no SMF — interface lógica N11 do 3GPP, realizada pelo serviço SBI Nsmf."
+    },
+    {
+      "from": "ausf",
+      "to": "udm",
+      "iface": "Nudm",
+      "detail": "Vetores de auth + auth-events (5G-AKA) — OK no v2.2.1."
+    },
+    {
+      "from": "udm",
+      "to": "udr",
+      "iface": "Nudr",
+      "detail": "Dados do assinante."
+    },
+    {
+      "from": "udr",
+      "to": "mysql",
+      "iface": "SQL",
+      "detail": "Consultas ao banco oai_db."
+    },
+    {
+      "from": "smf",
+      "to": "upf",
+      "iface": "N4",
+      "detail": "PFCP :8805 — o plano de controle programa o plano de usuário (CUPS)."
+    },
+    {
+      "from": "upf",
+      "to": "ext-dn",
+      "iface": "N6",
+      "detail": "Saída para a Data Network (NAT)."
+    },
+    {
+      "from": "nonrt-pms",
+      "to": "a1sim",
+      "iface": "A1",
+      "detail": "Políticas A1 (criar/consultar/apagar) — o ciclo completo do teste ▶ Testar ciclo A1 (7 passos)."
+    },
+    {
+      "from": "nonrt-pms",
+      "to": "ric",
+      "iface": "A1",
+      "planned": true,
+      "dashed": true,
+      "detail": "Futuro: o FlexRIC não tem terminação A1 (docs/non-rt-ric.md §2.1). Fechar esta ponta = Fase 2 (near-RT O-RAN SC com A1 Mediator)."
+    }
   ],
   "interfaces_legend": [
-    { "iface": "HTTPS",      "desc": "Acesso web do painel (TLS)." },
-    { "iface": "N1",         "desc": "NAS — sinalização lógica UE↔AMF (viaja via gNB, dentro do N2)." },
-    { "iface": "N2",         "desc": "NGAP/SCTP — controle gNB↔AMF." },
-    { "iface": "N3",         "desc": "GTP-U — dados gNB↔UPF (plano de usuário)." },
-    { "iface": "N4",         "desc": "PFCP — SMF programa o UPF (CUPS: controle → dados)." },
-    { "iface": "N6",         "desc": "UPF↔Internet/DN (saída do plano de usuário)." },
-    { "iface": "N11/Nsmf",   "desc": "AMF↔SMF — pedido de sessão PDU (interface lógica N11; serviço SBI Nsmf)." },
-    { "iface": "E2",         "desc": "E2AP/SCTP — gNB↔near-RT RIC (KPM/RC)." },
-    { "iface": "E42",        "desc": "xApp↔RIC (assinatura de Service Models)." },
-    { "iface": "SBI",        "desc": "Interface HTTP/2 entre os NFs do Core (plano de controle)." },
-    { "iface": "Nausf/Nudm/Nudr", "desc": "Serviços SBI específicos (auth, dados de assinante)." },
-    { "iface": "SQL",        "desc": "UDR↔MySQL (dados de assinante)." },
-    { "iface": "RF",         "desc": "Rádio simulado (RFSIM) UE↔gNB." },
-    { "iface": "Telemetria", "desc": "Coleta de métricas do painel (leve, sem Prometheus)." },
-    { "iface": "A1 / O1",    "desc": "Políticas (Non-RT RIC) e gerência (SMO) — não implementados." }
+    {
+      "iface": "HTTPS",
+      "desc": "Acesso web do painel (TLS)."
+    },
+    {
+      "iface": "N1",
+      "desc": "NAS — sinalização lógica UE↔AMF (viaja via gNB, dentro do N2)."
+    },
+    {
+      "iface": "N2",
+      "desc": "NGAP/SCTP — controle gNB↔AMF."
+    },
+    {
+      "iface": "N3",
+      "desc": "GTP-U — dados gNB↔UPF (plano de usuário)."
+    },
+    {
+      "iface": "N4",
+      "desc": "PFCP — SMF programa o UPF (CUPS: controle → dados)."
+    },
+    {
+      "iface": "N6",
+      "desc": "UPF↔Internet/DN (saída do plano de usuário)."
+    },
+    {
+      "iface": "N11/Nsmf",
+      "desc": "AMF↔SMF — pedido de sessão PDU (interface lógica N11; serviço SBI Nsmf)."
+    },
+    {
+      "iface": "E2",
+      "desc": "E2AP/SCTP — gNB↔near-RT RIC (KPM/RC)."
+    },
+    {
+      "iface": "E42",
+      "desc": "xApp↔RIC (assinatura de Service Models)."
+    },
+    {
+      "iface": "SBI",
+      "desc": "Interface HTTP/2 entre os NFs do Core (plano de controle)."
+    },
+    {
+      "iface": "Nausf/Nudm/Nudr",
+      "desc": "Serviços SBI específicos (auth, dados de assinante)."
+    },
+    {
+      "iface": "SQL",
+      "desc": "UDR↔MySQL (dados de assinante)."
+    },
+    {
+      "iface": "RF",
+      "desc": "Rádio simulado (RFSIM) UE↔gNB."
+    },
+    {
+      "iface": "Telemetria",
+      "desc": "Coleta de métricas do painel (leve, sem Prometheus)."
+    },
+    {
+      "iface": "A1 / O1",
+      "desc": "Políticas (Non-RT RIC) e gerência (SMO) — não implementados."
+    },
+    {
+      "iface": "A1",
+      "desc": "Políticas do Non-RT RIC (SMO) para o near-RT — horizonte > 1 s (criar/consultar/apagar políticas)."
+    }
   ]
 }

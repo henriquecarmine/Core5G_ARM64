@@ -1604,7 +1604,7 @@ function pfClose() { if (_pf) { _pf.b.remove(); _pf.m.remove(); _pf = null; } }
 function preflight(cmd, srcBtn) {
   if (isGuest) return;
   pfClose();
-  const ex = EXPLAIN[cmd];
+  const ex = TEST_EXPLAIN[cmd];
   const what = ex
     ? '<ul style="margin:4px 0 0 18px;padding:0">' + ex.items.slice(0, 3).map(i => '<li style="margin:3px 0">' + i + '</li>').join('') + '</ul>'
     : 'Executa <code>' + cmd + '</code> no servidor e streama a saída neste console.';

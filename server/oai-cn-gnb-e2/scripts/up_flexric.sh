@@ -67,24 +67,29 @@ RIC_ARGS=(-p "$FLEXRIC_LIB")
 RIC_ARGS+=(-a "$RIC_IP")
 
 echo "Iniciando nearRT-RIC ($RIC_BIN) em $RIC_IP (libs: $FLEXRIC_LIB)..."
-# Scope PRÓPRIO do systemd (como o gNB): fora do cgroup de quem chamou — um
-# restart do core5g-panel NÃO derruba mais o RIC ("E2 lab caindo toda hora":
-# nohup não muda cgroup, e KillMode=control-group extermina os filhos do
-# serviço). Unit com $$ evita colisão com scope anterior que ainda finaliza.
+# SERVIÇO transiente, não --scope: com --scope o cliente `systemd-run` ficava
+# no cgroup do painel e, num restart do core5g-panel, o SIGTERM chegava nele —
+# que repassava ao scope e derrubava o RIC junto (queda de 09/08, 'Signal 15').
+# Sem --scope, o RIC nasce filho do PID 1, fora de qualquer cgroup do painel.
+: > "$RIC_LOG"
 if command -v systemd-run >/dev/null 2>&1; then
-    sudo nohup systemd-run --scope -q --unit="oai-flexric-$$" --slice=oai-lab.slice \
-        -p CPUWeight=40 -p CPUQuota=75% "$RIC_BIN" "${RIC_ARGS[@]}" > "$RIC_LOG" 2>&1 &
+    sudo systemctl stop oai-flexric.service 2>/dev/null || true
+    sudo systemctl reset-failed oai-flexric.service 2>/dev/null || true
+    sudo systemd-run -q --collect --unit=oai-flexric --slice=oai-lab.slice \
+        -p CPUWeight=40 -p CPUQuota=75% \
+        -p "StandardOutput=append:$RIC_LOG" -p "StandardError=append:$RIC_LOG" \
+        "$RIC_BIN" "${RIC_ARGS[@]}"
 else
     nohup "$RIC_BIN" "${RIC_ARGS[@]}" > "$RIC_LOG" 2>&1 &
 fi
-RIC_PID=$!
 sleep 2
 
-if ! kill -0 "$RIC_PID" 2>/dev/null; then
+if ! pgrep -x "nearRT-RIC" >/dev/null 2>&1; then
     echo "ERRO: nearRT-RIC falhou ao iniciar. Ver: $RIC_LOG"
     tail -20 "$RIC_LOG" 2>/dev/null || true
     exit 1
 fi
+RIC_PID="$(pgrep -x nearRT-RIC | head -1)"
 
 echo "nearRT-RIC PID: $RIC_PID"
 echo "Log: $RIC_LOG"

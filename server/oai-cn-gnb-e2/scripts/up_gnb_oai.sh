@@ -31,21 +31,21 @@ UE_LOG="$LOG_DIR/ue_oai.log"
 GNB_CPUQUOTA="${GNB_CPUQUOTA:-75%}"
 UE_CPUQUOTA="${UE_CPUQUOTA:-75%}"
 RAN_NICE="${RAN_NICE:-10}"
-# Nota: 'Nice' não é propriedade de scope (só de service). Para scopes usamos
-# CPUQuota (teto rígido) + CPUWeight (prioridade cgroup, default 100) e aplicamos
-# a prioridade do escalonador via o comando 'nice' como prefixo do processo.
+# SERVIÇO transiente, não --scope: com --scope o processo cliente `systemd-run`
+# fica no cgroup de quem chamou (o painel) e, num restart do core5g-panel, o
+# SIGTERM do KillMode=control-group chega nele — que REPASSA ao scope e derruba
+# gNB/UE/RIC "educadamente" (queda de 09/08: logs com 'Caught SIGTERM ... Bye').
+# Sem --scope, o systemd-run só pede ao PID 1 para iniciar o serviço e retorna:
+# o softmodem nasce filho do systemd, fora de QUALQUER cgroup do painel.
+# Bônus: service aceita Nice= como propriedade (scope não aceitava).
+HAVE_SD=0
 if command -v systemd-run >/dev/null 2>&1; then
-    # --slice=oai-lab.slice: teto AGREGADO de 180% (90% dos 2 vcores) p/ todo o lab;
-    # mesmo que gNB+UE+xApp queiram mais, a slice os limita JUNTOS, deixando CPU
-    # livre p/ o sistema (ver guardrails em infra/server-bootstrap.sh).
-    # Dentro do teto da slice, o gNB tem peso MAIOR (60) que o nrUE (20): o gNB
-    # RFSIM precisa de ~1 core p/ não quebrar o timing do E2; o UE fica com a
-    # sobra. Assim o lab cabe em 150% sem estrangular o gNB.
-    CAP_GNB=(systemd-run --scope -q --unit=oai-gnb --slice=oai-lab.slice -p "CPUQuota=${GNB_CPUQUOTA}" -p "CPUWeight=60" nice -n "${RAN_NICE}")
-    CAP_UE=(systemd-run --scope -q --unit=oai-nrue --slice=oai-lab.slice -p "CPUQuota=${UE_CPUQUOTA}" -p "CPUWeight=20" nice -n "${RAN_NICE}")
+    HAVE_SD=1
+    # --slice=oai-lab.slice: teto AGREGADO p/ todo o lab (guardrails em
+    # infra/server-bootstrap.sh); dentro dele o gNB tem peso MAIOR (60) que o
+    # nrUE (20): o gNB RFSIM precisa de ~1 core p/ não quebrar o timing do E2.
+    SD_COMMON=(systemd-run -q --collect --slice=oai-lab.slice -p "Nice=${RAN_NICE}" -p "WorkingDirectory=$BUILD_DIR")
 else
-    CAP_GNB=(nice -n "${RAN_NICE}")
-    CAP_UE=(nice -n "${RAN_NICE}")
     echo "AVISO: systemd-run ausente — só nice, sem teto rígido de CPU."
 fi
 
@@ -97,37 +97,45 @@ fi
 # Parar instâncias anteriores se existirem
 pkill -f "nr-softmodem" 2>/dev/null || true
 pkill -f "nr-uesoftmodem" 2>/dev/null || true
-# Limpa scopes do systemd de execuções anteriores (evita "unit already exists")
-sudo systemctl reset-failed oai-gnb.scope oai-nrue.scope 2>/dev/null || true
-sudo systemctl stop oai-gnb.scope oai-nrue.scope 2>/dev/null || true
+# Limpa units de execuções anteriores (evita "unit already exists"); os .scope
+# são legado de antes da migração scope→service e saem daqui numa próxima poda.
+sudo systemctl stop oai-gnb.service oai-nrue.service oai-gnb.scope oai-nrue.scope 2>/dev/null || true
+sudo systemctl reset-failed oai-gnb.service oai-nrue.service oai-gnb.scope oai-nrue.scope 2>/dev/null || true
 sleep 2
 
-echo "Iniciando gNB em background (conf: $GNB_CONF, NRB=$GNB_NRB, f=$GNB_DL_FREQ Hz)..."
-cd "$BUILD_DIR"
+echo "Iniciando gNB como serviço transiente (conf: $GNB_CONF, NRB=$GNB_NRB, f=$GNB_DL_FREQ Hz)..."
 echo "  (teto CPU: ${GNB_CPUQUOTA}, Nice ${RAN_NICE} — protege a instância contra freeze)"
-sudo nohup "${CAP_GNB[@]}" ./nr-softmodem -O "$GNB_CONF" \
-    --gNBs.[0].min_rxtxtime 6 \
-    --rfsim \
-    "${E2_SM_ARGS[@]}" \
-    > "$GNB_LOG" 2>&1 &
-GNB_PID=$!
-echo "  gNB PID: $GNB_PID (logs: $GNB_LOG)"
+: > "$GNB_LOG"
+if [ "$HAVE_SD" = 1 ]; then
+    sudo "${SD_COMMON[@]}" --unit=oai-gnb -p "CPUQuota=${GNB_CPUQUOTA}" -p "CPUWeight=60" \
+        -p "StandardOutput=append:$GNB_LOG" -p "StandardError=append:$GNB_LOG" \
+        "$BUILD_DIR/nr-softmodem" -O "$GNB_CONF" \
+        --gNBs.[0].min_rxtxtime 6 \
+        --rfsim \
+        "${E2_SM_ARGS[@]}"
+else
+    cd "$BUILD_DIR"
+    sudo nohup nice -n "${RAN_NICE}" ./nr-softmodem -O "$GNB_CONF" \
+        --gNBs.[0].min_rxtxtime 6 --rfsim "${E2_SM_ARGS[@]}" > "$GNB_LOG" 2>&1 &
+fi
 
 echo "Aguardando gNB estabilizar..."
 for i in $(seq 1 10); do
     sleep 1
-    if ! kill -0 "$GNB_PID" 2>/dev/null; then
-        echo "ERRO: gNB morreu durante a inicialização (PID $GNB_PID)."
+    if ! pgrep -x "nr-softmodem" >/dev/null 2>&1; then
+        echo "ERRO: gNB morreu durante a inicialização."
         echo "      Verifique memória disponível (free -h) e o log: $GNB_LOG"
         exit 1
     fi
 done
+GNB_PID="$(pgrep -x nr-softmodem | head -1)"
+echo "  gNB PID: $GNB_PID (logs: $GNB_LOG)"
 
 UE_PID=""
 if [ "${SKIP_UE:-0}" = "1" ]; then
     echo "SKIP_UE=1 — nrUE omitido (libera ~438 MB para gNB + Core no t4g.micro)."
 else
-    echo "Iniciando nrUE em background..."
+    echo "Iniciando nrUE como serviço transiente..."
     if [ "$GNB_NRB" = "106" ]; then
         UE_RF_ARGS=(--rfsim -r 106 --numerology 1 --band 78 -C 3619200000 --ssb 516)
     elif [ "$GNB_NRB" = "51" ]; then
@@ -135,11 +143,20 @@ else
     else
         UE_RF_ARGS=(--rfsim -r "$GNB_NRB" --numerology 1 --band 78 -C "$GNB_DL_FREQ")
     fi
-    sudo nohup "${CAP_UE[@]}" ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \
-        "${UE_RF_ARGS[@]}" \
-        > "$UE_LOG" 2>&1 &
-    UE_PID=$!
-    echo "  nrUE PID: $UE_PID (logs: $UE_LOG)"
+    : > "$UE_LOG"
+    if [ "$HAVE_SD" = 1 ]; then
+        sudo "${SD_COMMON[@]}" --unit=oai-nrue -p "CPUQuota=${UE_CPUQUOTA}" -p "CPUWeight=20" \
+            -p "StandardOutput=append:$UE_LOG" -p "StandardError=append:$UE_LOG" \
+            "$BUILD_DIR/nr-uesoftmodem" -O "$OAI_DIR/scripts/ue.conf" \
+            "${UE_RF_ARGS[@]}"
+    else
+        cd "$BUILD_DIR"
+        sudo nohup nice -n "${RAN_NICE}" ./nr-uesoftmodem -O "$OAI_DIR/scripts/ue.conf" \
+            "${UE_RF_ARGS[@]}" > "$UE_LOG" 2>&1 &
+    fi
+    sleep 1
+    UE_PID="$(pgrep -x nr-uesoftmodem | head -1 || true)"
+    echo "  nrUE PID: ${UE_PID:-?} (logs: $UE_LOG)"
 fi
 
 echo ""

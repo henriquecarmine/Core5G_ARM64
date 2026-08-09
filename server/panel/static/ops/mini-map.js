@@ -16,18 +16,20 @@
   ].join('\n');
   var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
 
-  // cena → projeto + nós acesos + fluxos (sentido do dado) no mapa real
+  // cena → projeto + nós acesos + fluxos (sentido do dado) no mapa real.
+  // Fluxo = [origem, destino, rótulo?]; sem rótulo, usa o iface do link do mapa.
+  // note = "onde vive" quando o fluxo sozinho não conta a história.
   var MMAP = {
     reg:       { proj: 'p1', nodes: ['ueransim','amf','ausf','udm'], flows: [['ueransim','amf'],['amf','ausf'],['ausf','udm']] },
     kpm:       { proj: 'p2', nodes: ['gnb','ric','xapps'], flows: [['gnb','ric'],['ric','xapps']] },
     rc:        { proj: 'p2', nodes: ['gnb','ric','xapps'], flows: [['gnb','ric'],['ric','xapps'],['ric','gnb']] },
-    analytics: { proj: 'p2', nodes: ['xapps','panel'], flows: [['xapps','panel']] },
-    ml:        { proj: 'p2', nodes: ['panel'], flows: [] },
+    analytics: { proj: 'p2', nodes: ['xapps','panel'], flows: [['xapps','panel','CSV/logs']], note: 'xApps escrevem as métricas; o painel lê e desenha' },
+    ml:        { proj: 'p2', nodes: ['panel'], flows: [], note: 'treino roda no host do painel · dados SUTD no disco do servidor' },
     thp:       { proj: 'p1', nodes: ['ueransim','upf-a','dn'], flows: [['ueransim','upf-a'],['upf-a','dn']] },
-    failover:  { proj: 'p1', nodes: ['ueransim','upf-a','upf-b','dn'], flows: [['ueransim','upf-a'],['ueransim','upf-b'],['upf-b','dn']] },
-    check:     { proj: 'p1', nodes: ['amf','smf','upf-a','nrf'], flows: [] },
-    sub:       { proj: 'p1', nodes: ['mongodb'], flows: [] },
-    chan:      { proj: 'p1', nodes: ['ueransim','dn'], flows: [['ueransim','dn']] },
+    failover:  { proj: 'p1', nodes: ['ueransim','upf-a','upf-b','dn'], flows: [['ueransim','upf-a'],['ueransim','upf-b','N3'],['upf-b','dn']] },
+    check:     { proj: 'p1', nodes: ['amf','smf','upf-a','nrf'], flows: [], note: 'consultas SBI/HTTP às 4 funções acesas' },
+    sub:       { proj: 'p1', nodes: ['mongodb'], flows: [], note: 'os assinantes vivem no MongoDB do core' },
+    chan:      { proj: 'p1', nodes: ['ueransim','dn'], flows: [['ueransim','dn','N3+N6']] },
     a1:        { proj: 'p2', nodes: ['nonrt-pms','a1sim'], flows: [['nonrt-pms','a1sim']] },
     demo:      { proj: 'p1', nodes: ['ueransim','upf-a','dn'], flows: [['ueransim','upf-a'],['upf-a','dn'],['dn','upf-a']] },
   };
@@ -58,29 +60,51 @@
       s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" rx="14" fill="' + c + '" fill-opacity=".05" stroke="' + c + '" stroke-opacity=".35"/>';
       s += '<text x="' + (x0 + 14) + '" y="' + (y0 + 20) + '" font-family="-apple-system,sans-serif" font-size="14" font-weight="600" fill="' + c + '" fill-opacity=".75">' + esc(ly.label || k) + '</text>';
     }
-    // fluxos (por baixo dos nós acesos): linha + seta no sentido do dado + pacote animado
     var byId = {}; topo.nodes.forEach(function (n) { byId[n.id] = n; });
+    var FONT = 'font-family="-apple-system,sans-serif"';
+    var flowKey = {}; mm.flows.forEach(function (f) { flowKey[f[0] + '>' + f[1]] = 1; });
+    var isFlow = function (a, b) { return flowKey[a + '>' + b] || flowKey[b + '>' + a]; };
+
+    // TODAS as interfaces do mapa (E2, A1, N1...), esmaecidas, com nome no meio —
+    // as do fluxo ativo são puladas aqui e redesenhadas acesas logo abaixo.
+    (topo.links || []).forEach(function (l) {
+      var a = byId[l.from], b = byId[l.to]; if (!a || !b) return;
+      if (isFlow(l.from, l.to)) return;
+      var ca = center(a), cb = center(b);
+      var op = l.planned ? '.35' : '.8';
+      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="#3a4048" stroke-width="1.5" opacity="' + op + '"' + (l.dashed || l.planned ? ' stroke-dasharray="7 6"' : '') + '/>';
+      if (l.iface) s += '<text x="' + ((ca.x + cb.x) / 2) + '" y="' + ((ca.y + cb.y) / 2 - 6) + '" text-anchor="middle" ' + FONT + ' font-size="12" fill="#7d8590" stroke="#0d0e11" stroke-width="4" paint-order="stroke">' + esc(l.iface) + '</text>';
+    });
+
+    // fluxo ativo: linha âmbar + seta no sentido do dado + NOME da interface + pacote
     mm.flows.forEach(function (f) {
       var a = byId[f[0]], b = byId[f[1]]; if (!a || !b) return;
       var ca = center(a), cb = center(b);
-      s += '<line class="mm-flow" x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="#f59f00" stroke-width="3" opacity=".55"/>';
+      var link = (topo.links || []).filter(function (l) {
+        return (l.from === f[0] && l.to === f[1]) || (l.from === f[1] && l.to === f[0]);
+      })[0];
+      s += '<line class="mm-flow" x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="#f59f00" stroke-width="3" opacity=".6"/>';
       var mx = (ca.x + cb.x) / 2, my = (ca.y + cb.y) / 2;
       var ang = (Math.atan2(cb.y - ca.y, cb.x - ca.x) * 180 / Math.PI).toFixed(1);
       s += '<polygon class="mm-flow" points="0,-8 16,0 0,8" fill="#f59f00" opacity=".9" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
+      var flabel = f[2] || (link && link.iface);
+      if (flabel) s += '<text x="' + mx + '" y="' + (my - 14) + '" text-anchor="middle" ' + FONT + ' font-size="16" font-weight="700" fill="#ffb84d" stroke="#0d0e11" stroke-width="5" paint-order="stroke">' + esc(flabel) + '</text>';
       if (live) {
         var dur = (Math.hypot(cb.x - ca.x, cb.y - ca.y) / 220 + 0.6).toFixed(2);
         s += '<circle r="7" fill="#ffb84d"><animate attributeName="cx" from="' + ca.x + '" to="' + cb.x + '" dur="' + dur + 's" repeatCount="indefinite"/><animate attributeName="cy" from="' + ca.y + '" to="' + cb.y + '" dur="' + dur + 's" repeatCount="indefinite"/></circle>';
       }
     });
-    // nós: TODOS com nome — apagados em cinza discreto, acesos em âmbar destacado
+    // nós: TODOS com nome — apagados em cinza legível, acesos em âmbar destacado
     topo.nodes.forEach(function (n) {
       var on = hi[n.id];
       s += '<rect x="' + n.x + '" y="' + n.y + '" width="184" height="66" rx="9" fill="'
-        + (on ? '#2b2313' : '#181b22') + '" stroke="' + (on ? '#f59f00' : '#262a33') + '" stroke-width="' + (on ? 3 : 1) + '"/>';
-      s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="' + (on ? 17 : 14) + '" font-weight="' + (on ? 700 : 400) + '" fill="' + (on ? '#ffb84d' : '#6b7280') + '">' + esc(n.label || n.id) + '</text>';
+        + (on ? '#2b2313' : '#181b22') + '" stroke="' + (on ? '#f59f00' : '#2c313b') + '" stroke-width="' + (on ? 3 : 1) + '"/>';
+      s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" ' + FONT + ' font-size="' + (on ? 18 : 15) + '" font-weight="' + (on ? 700 : 500) + '" fill="' + (on ? '#ffb84d' : '#9aa1ab') + '">' + esc(n.label || n.id) + '</text>';
     });
     s += '</svg>';
-    host.innerHTML = '<div class="mm-head"><b>◉</b> onde está rodando — mapa do projeto (' + mm.proj.toUpperCase() + ') · setas = sentido dos dados <span style="margin-left:auto">▾</span></div>' + s;
+    host.innerHTML = '<div class="mm-head"><b>◉</b> onde está rodando — mapa do projeto (' + mm.proj.toUpperCase() + ') · setas = sentido dos dados'
+      + (mm.note ? ' · <span style="color:#c9974d">' + mm.note + '</span>' : '')
+      + ' <span style="margin-left:auto">▾</span></div>' + s;
     host.querySelector('.mm-head').onclick = function () { host.classList.toggle('closed'); };
     host.style.display = 'block';
   }

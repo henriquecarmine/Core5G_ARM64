@@ -343,6 +343,7 @@
     scene.nodes.forEach(function (n) { if (inf[n.id]) n.info = inf[n.id]; });
     cur = { scene: scene, host: host, els: render(scene, host), pos: 0, fired: [] };
     setPos(0);
+    if (mountName === 'console' && window.MiniMap) MiniMap.begin(scene.name);
   }
 
   function feed(line) {
@@ -373,6 +374,7 @@
       cur.els.edges.forEach(function (e) { e.className = 'fs-edge done'; });
       cur.els.result.textContent = '✔';
       cur.els.result.className = 'fs-result ok';
+      if (window.MiniMap) MiniMap.end(true);
     } else {
       var n = cur.els.nodes[cur.pos];
       if (n) n.className = 'fs-node' + (cur.scene.nodes[cur.pos].info ? ' hasinfo' : '') + ' fail';
@@ -380,6 +382,7 @@
       if (e) e.className = 'fs-edge';
       cur.els.result.textContent = '✖';
       cur.els.result.className = 'fs-result fail';
+      if (window.MiniMap) MiniMap.end(false);
     }
     cur = null;   // faixa fica visível com o desfecho até a próxima execução
   }
@@ -500,6 +503,10 @@
     els.result.textContent = '';
     return scene;
   }
+  function sceneName(key) {
+    for (var i = 0; i < SCENES.length; i++) if (SCENES[i].match.test(String(key))) return SCENES[i].name;
+    return null;
+  }
   function sceneInfo(key) {
     var scene = null;
     for (var i = 0; i < SCENES.length; i++) if (SCENES[i].match.test(String(key))) { scene = SCENES[i]; break; }
@@ -507,5 +514,5 @@
     var inf = INFOS[scene.name] || {};
     return scene.nodes.map(function (n) { return { txt: n.txt, o: (inf[n.id] || {}).o || '' }; });
   }
-  window.FlowStrip = { attach: attach, begin: begin, feed: feed, end: end, preview: preview, sceneInfo: sceneInfo };
+  window.FlowStrip = { attach: attach, begin: begin, feed: feed, end: end, preview: preview, sceneInfo: sceneInfo, sceneName: sceneName };
 })();

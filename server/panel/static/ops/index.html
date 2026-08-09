@@ -782,6 +782,7 @@
       </button>
     </div>
     <div id="flow-strip-console"></div>
+    <div id="mini-map-console" style="display:none"></div>
     <div id="output" data-i18n="console.ready">Pronto. Clique em um comando à esquerda ou abra o UE Lab.</div>
     <style>
       #lab-view{display:flex;flex-direction:column;flex:1;min-height:480px}
@@ -944,19 +945,22 @@
 </div>
 
 <script src="../i18n.js"></script>
-<script src="/static/ops/flow-strip.js?v=0.61.7"></script>
+<script src="/static/ops/flow-strip.js?v=0.62.1"></script>
 <script src="/static/ops/energy.js?v=0.61.3"></script>
+<script src="/static/ops/mini-map.js?v=0.62.1"></script>
 <script>
 // Robustez file:// (smoke do CI): sem os módulos /static/, viram no-ops —
 // a página (i18n, topbar, console) segue funcional.
 window.FlowStrip = window.FlowStrip || { attach(){}, begin(){}, feed(){}, end(){}, preview(){ return null; }, sceneInfo(){ return []; } };
 window.Energy = window.Energy || { attach(){}, begin(){}, end(){}, _open(){} };
+window.MiniMap = window.MiniMap || { attach(){}, preview(){}, begin(){}, end(){} };
 // FlowStrip (percurso dos dados): faixa minimalista sobre o console e sobre o
 // log do modal de operação — os hooks vivem em pushRunHeader/appendLine/
 // setRunBadge (professor e aluno) e no loop do runOperation (modal).
 FlowStrip.attach('console', document.getElementById('flow-strip-console'));
 FlowStrip.attach('modal', document.getElementById('flow-strip-modal'));
 FlowStrip.attach('lab', document.getElementById('flow-strip-lab'));
+MiniMap.attach('console', document.getElementById('mini-map-console'));
 Energy.attach(document.getElementById('energy-btn'), false, document.getElementById('output'));
 // ---- Modal de créditos (rodapé) ----
 document.getElementById('credits-link').onclick = (e) => {
@@ -1654,6 +1658,8 @@ function preflight(cmd, srcBtn) {
   document.body.appendChild(b); document.body.appendChild(m);
   _pf = { b, m };
   if (window.FlowStrip) FlowStrip.preview(cmd, m.querySelector('#pf-topo'));
+  const pfmm = document.createElement('div'); m.querySelector('#pf-topo').after(pfmm);
+  if (window.MiniMap && window.FlowStrip.sceneName) MiniMap.preview(FlowStrip.sceneName(cmd), pfmm);
   m.querySelector('.x').onclick = pfClose;
   m.querySelector('#pf-cancel').onclick = pfClose;
   m.querySelector('#pf-go').onclick = () => { pfClose(); runCommand(cmd, srcBtn); };

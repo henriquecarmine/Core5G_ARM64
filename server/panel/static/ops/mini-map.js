@@ -40,12 +40,13 @@
       .then(function (d) { TOPO[proj] = d; return d; });
   }
   function center(n) { return { x: n.x + 92, y: n.y + 33 }; }
+  function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 
   function draw(host, mm, topo, live) {
     var W = (topo.canvas && topo.canvas.w) || 1300, H = (topo.canvas && topo.canvas.h) || 900;
     var hi = {}; mm.nodes.forEach(function (id) { hi[id] = 1; });
     var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
-    // bandas esmaecidas
+    // bandas: cor da camada bem suave + nome, para o mapa ser reconhecível de longe
     for (var k in (topo.layers || {})) {
       var ly = topo.layers[k]; if (!ly.band) continue;
       var ns = topo.nodes.filter(function (n) { return n.layer === k; }); if (!ns.length) continue;
@@ -53,25 +54,30 @@
       var y0 = Math.min.apply(0, ns.map(function (n) { return n.y; })) - 30;
       var x1 = Math.max.apply(0, ns.map(function (n) { return n.x + 184; })) + 24;
       var y1 = Math.max.apply(0, ns.map(function (n) { return n.y + 66; })) + 14;
-      s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" rx="14" fill="#161920" stroke="#22262e"/>';
+      var c = ly.color || '#22262e';
+      s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" rx="14" fill="' + c + '" fill-opacity=".05" stroke="' + c + '" stroke-opacity=".35"/>';
+      s += '<text x="' + (x0 + 14) + '" y="' + (y0 + 20) + '" font-family="-apple-system,sans-serif" font-size="14" font-weight="600" fill="' + c + '" fill-opacity=".75">' + esc(ly.label || k) + '</text>';
     }
-    // fluxos (por baixo dos nós acesos): linha + pacote animado no sentido do dado
+    // fluxos (por baixo dos nós acesos): linha + seta no sentido do dado + pacote animado
     var byId = {}; topo.nodes.forEach(function (n) { byId[n.id] = n; });
     mm.flows.forEach(function (f) {
       var a = byId[f[0]], b = byId[f[1]]; if (!a || !b) return;
       var ca = center(a), cb = center(b);
-      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="#f59f00" stroke-width="3" opacity=".55"/>';
+      s += '<line class="mm-flow" x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="#f59f00" stroke-width="3" opacity=".55"/>';
+      var mx = (ca.x + cb.x) / 2, my = (ca.y + cb.y) / 2;
+      var ang = (Math.atan2(cb.y - ca.y, cb.x - ca.x) * 180 / Math.PI).toFixed(1);
+      s += '<polygon class="mm-flow" points="0,-8 16,0 0,8" fill="#f59f00" opacity=".9" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
       if (live) {
         var dur = (Math.hypot(cb.x - ca.x, cb.y - ca.y) / 220 + 0.6).toFixed(2);
         s += '<circle r="7" fill="#ffb84d"><animate attributeName="cx" from="' + ca.x + '" to="' + cb.x + '" dur="' + dur + 's" repeatCount="indefinite"/><animate attributeName="cy" from="' + ca.y + '" to="' + cb.y + '" dur="' + dur + 's" repeatCount="indefinite"/></circle>';
       }
     });
-    // nós: apagados em cinza, acesos em âmbar com rótulo
+    // nós: TODOS com nome — apagados em cinza discreto, acesos em âmbar destacado
     topo.nodes.forEach(function (n) {
       var on = hi[n.id];
       s += '<rect x="' + n.x + '" y="' + n.y + '" width="184" height="66" rx="9" fill="'
-        + (on ? '#2b2313' : '#181b22') + '" stroke="' + (on ? '#f59f00' : '#22262e') + '" stroke-width="' + (on ? 3 : 1) + '"/>';
-      if (on) s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="20" font-weight="700" fill="#ffb84d">' + (n.label || n.id) + '</text>';
+        + (on ? '#2b2313' : '#181b22') + '" stroke="' + (on ? '#f59f00' : '#262a33') + '" stroke-width="' + (on ? 3 : 1) + '"/>';
+      s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="' + (on ? 17 : 14) + '" font-weight="' + (on ? 700 : 400) + '" fill="' + (on ? '#ffb84d' : '#6b7280') + '">' + esc(n.label || n.id) + '</text>';
     });
     s += '</svg>';
     host.innerHTML = '<div class="mm-head"><b>◉</b> onde está rodando — mapa do projeto (' + mm.proj.toUpperCase() + ') · setas = sentido dos dados <span style="margin-left:auto">▾</span></div>' + s;
@@ -91,8 +97,10 @@
     begin: function (sceneName) { show(sceneName, hosts.console, true); },
     end: function (ok) {
       var h = hosts.console; if (!h || !h.innerHTML) return;
-      h.querySelectorAll('circle').forEach(function (c) { c.remove(); });   // congela: fim do fluxo
-      h.querySelectorAll('line').forEach(function (l) { l.setAttribute('stroke', ok ? '#2f9e44' : '#e03131'); });
+      var c = ok ? '#2f9e44' : '#e03131';
+      h.querySelectorAll('circle').forEach(function (x) { x.remove(); });   // congela: fim do fluxo
+      h.querySelectorAll('line.mm-flow').forEach(function (l) { l.setAttribute('stroke', c); });
+      h.querySelectorAll('polygon.mm-flow').forEach(function (p) { p.setAttribute('fill', c); });
     },
   };
 })();

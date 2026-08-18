@@ -5,9 +5,16 @@ ordem cronológica:
 
 | # | Pasta | Disciplina | Professor | Status |
 |---|-------|-----------|-----------|--------|
+| 00 | [`00-interfaces-oran/`](00-interfaces-oran/) | Interfaces e Protocolos ORAN | **Jonas A. Kunzler** | mar–abr/2026 (só aula01) |
 | 01 | [`01-ric/`](01-ric/) | RAN Intelligent Controller | **Jonas A. Kunzler** | concluída |
 | 02 | [`02-ric-ai/`](02-ric-ai/) | Aplicações de IA e ML em RIC | **Julio Cesar Cardoso Tesolin** | encerrada — material completo (A01–A06); **projeto final não implementado** |
 | 03 | [`03-dados-telecom/`](03-dados-telecom/) | Análise de Dados em Redes de Telecom | **Jonas A. Kunzler** | em andamento (ago/2026) |
+
+## `00-interfaces-oran/` — Interfaces e Protocolos ORAN (Kunzler)
+
+A primeira disciplina de Open RAN da especialização (mar–abr/2026): motivação,
+arquitetura, Open Fronthaul, RIC/xApps e IA. Só a **aula01** (`motivacao_oran`)
+foi compartilhada como PDF; as demais foram só apresentadas em aula.
 
 ## `01-ric/` — RAN Intelligent Controller (Kunzler)
 

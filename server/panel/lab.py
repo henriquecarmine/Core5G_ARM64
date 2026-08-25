@@ -6,8 +6,9 @@ canal de dúvidas aluno→professor. Consome o `core` (sessão) e, no navegador,
 as APIs da camada operacional (ex.: testes de ML ao vivo via /api/run) — a
 operacional nunca importa daqui.
 
-Fase C (futuro): hub por disciplina, espelhando pdfs/01-ric · 02-ric-ai ·
-03-dados-telecom, com as aulas como conteúdo plugável por trilha.
+Fase C (v0.64.0): Estudos por cadeira — hub `/lab/estudo/{n}` e aulas
+`/lab/estudo/{n}/aula/{k}` renderizados de JSON plugável em
+static/lab/estudos/ (ver docs/estudos-por-cadeira.md).
 """
 from __future__ import annotations
 
@@ -84,6 +85,23 @@ def lab_pca_page() -> FileResponse:
 @router.get("/lab/projeto")
 def lab_projeto_page() -> FileResponse:
     return FileResponse(LAB_DIR / "lab-projeto.html", headers=NO_CACHE)
+
+
+# Fase C — Estudos por cadeira. Conteúdo plugável: static/lab/estudos/index.json
+# (catálogo: 4 cadeiras, exercícios, os 7 temas) + <id>.json por aula
+# (extraído dos slides). Duas páginas genéricas leem o caminho e renderizam.
+@router.get("/lab/estudo/{n}")
+def lab_estudo_page(n: int) -> FileResponse:
+    if n not in (1, 2, 3, 4):
+        raise HTTPException(404, "estudo inexistente")
+    return FileResponse(LAB_DIR / "lab-estudo.html", headers=NO_CACHE)
+
+
+@router.get("/lab/estudo/{n}/aula/{k}")
+def lab_aula_page(n: int, k: int) -> FileResponse:
+    if n not in (1, 2, 4) or not (1 <= k <= 6):
+        raise HTTPException(404, "aula inexistente")
+    return FileResponse(LAB_DIR / "lab-aula.html", headers=NO_CACHE)
 
 
 # Dúvidas do Lab de IA: aluno/professor envia "não entendi" com a pergunta;

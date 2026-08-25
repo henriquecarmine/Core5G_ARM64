@@ -1,0 +1,93 @@
+{
+  "id": "e1a01",
+  "n": 1,
+  "titulo": "Revisão 5G e Telco Cloud: motivação para Open RAN",
+  "slide": "aula01-motivacao_oran.pdf",
+  "resumo": "Esta primeira aula revisa a base que o Open RAN vai abrir: o sistema 5G do 3GPP (UE, NG-RAN e 5GC), o split CU/DU do gNB, as interfaces N1 a N6 e a arquitetura baseada em serviços do núcleo. Depois mostra como NFV, containers e Kubernetes transformam o núcleo em Telco Cloud e termina com uma demonstração fim a fim usando core containerizado e UERANSIM. O fio condutor é o vendor lock-in da RAN tradicional, que é a motivação central para as interfaces abertas que estudaremos nas próximas aulas.",
+  "objetivos": [
+    "Explicar a arquitetura do 5GS em três partes (UE, NG-RAN e 5GC) e o papel de cada uma.",
+    "Identificar as interfaces N1, N2, N3, N4 e N6 e o protocolo que roda em cada uma.",
+    "Descrever o split CU/DU do gNB e a interface F1 conforme o 3GPP TS 38.401.",
+    "Comparar NFV com Cloud-Native e reconhecer por que o 5GC usa SBA com HTTP/2 e JSON.",
+    "Argumentar por que o vendor lock-in da RAN tradicional motiva a arquitetura aberta do Open RAN."
+  ],
+  "conceitos": [
+    {
+      "t": "Arquitetura do 5GS: UE, NG-RAN e 5GC",
+      "d": "O sistema 5G (5GS) tem três partes. O UE (User Equipment) é o dispositivo do usuário, formado por Mobile Station mais USIM; a NG-RAN (Next Generation Radio Access Network) cuida do acesso rádio e da mobilidade, com o gNB como nó principal; e o 5GC (5G Core) faz controle, autenticação, políticas e roteamento, representado esquematicamente por AMF/UPF. O UE fala com o gNB pela interface de rádio NR-Uu e o gNB fala com o núcleo pelo ponto de referência NG, que agrupa as interfaces N2 e N3."
+    },
+    {
+      "t": "Releases 3GPP e os serviços eMBB, URLLC e mMTC",
+      "d": "O 5G nasce no Release 15 (congelado em 2018/2019) e evolui pelos Releases 16, 17 e 18, este último já chamado 5G-Advanced com IA/ML e XR. Os três eixos de serviço do IMT-2020 são eMBB (enhanced Mobile Broadband, taxas maiores, até 1 Gbps em ambientes internos), URLLC (Ultra-Reliable Low-Latency Communication, confiabilidade de 99,999% e latência fim a fim de dezenas de ms) e mMTC (massive Machine-Type Communication, densidades altíssimas de dispositivos IoT). Os cenários de 6G (comunicação imersiva, IA nativa, sensoriamento, conectividade ubíqua) são extensões desses três eixos."
+    },
+    {
+      "t": "Vendor lock-in na RAN tradicional",
+      "d": "Na RAN tradicional as interfaces entre RU (Radio Unit), DU (Distributed Unit) e CU (Central Unit) são proprietárias, então RU de um fabricante não conversa com DU de outro e o operador fica preso a um único fornecedor por site ou por camada. Sem especificação pública não há competição por componente, o que leva a CAPEX e OPEX altos, inovação lenta e ciclos longos de upgrade. Também fica difícil introduzir IA/ML, automação ou slicing na borda de forma padronizada. Essa é a motivação central do Open RAN: interfaces abertas permitem multi-vendor e desagregação."
+    },
+    {
+      "t": "NG-RAN, gNB e split CU/DU (TS 38.401 e interface F1)",
+      "d": "O 3GPP TS 38.401 define a arquitetura da NG-RAN: o gNB é o nó que conecta o UE ao 5GC e pode ser monolítico ou dividido em gNB-CU e um ou mais gNB-DU. A CU concentra RRC (Radio Resource Control) e PDCP (Packet Data Convergence Protocol), cuida de controle de recursos, mobilidade e sessão e pode ficar centralizada na nuvem; a DU roda RLC, MAC e parte da PHY, com processamento de tempo real perto da antena. CU e DU se ligam pela interface F1 (F1-C para controle e F1-U para usuário, TS 38.473). Entre gNBs existe a interface Xn, usada para handover e dual connectivity."
+    },
+    {
+      "t": "CUPS: separação de plano de controle e plano de usuário",
+      "d": "CUPS (Control and User Plane Separation) é um princípio herdado do 4G e refinado no 5G: a sinalização (AMF, SMF) fica separada do encaminhamento de pacotes (UPF). Com isso o operador escala cada plano de forma independente, coloca o UPF na borda perto do usuário para reduzir latência e evolui partes da rede sem interromper o serviço. No nosso lab isso aparece quando dois UPFs (UPF-A e UPF-B) servem o mesmo SMF."
+    },
+    {
+      "t": "SBA: arquitetura baseada em serviços com HTTP/2 e JSON",
+      "d": "No 5GC os componentes são Network Functions (NFs) que expõem e consomem serviços por Service-Based Interfaces (SBI), substituindo as conexões ponto a ponto do EPC. A comunicação é RESTful sobre HTTP/2 com corpo JSON, em três padrões: Query (GET em um recurso, como buscar dados de autenticação no UDM), Subscription (POST criando uma assinatura de eventos) e Notification (o produtor chama um callback no consumidor). Isso traz modularidade e reusabilidade, e o desenho stateless permite escalar e reiniciar NFs sem perder contexto crítico."
+    },
+    {
+      "t": "Funções de rede (NFs) do 5GC",
+      "d": "No plano de controle: AMF (Access and Mobility Management Function) gerencia registro e conexão do UE; SMF (Session Management Function) gerencia sessões PDU e comanda o UPF; AUSF (Authentication Server Function) autentica o usuário; UDM (Unified Data Management) é o equivalente ao HSS do 4G; UDR (Unified Data Repository) guarda os dados de assinante; NRF (Network Repository Function) registra e descobre NFs; PCF (Policy Control Function) aplica políticas; NSSF (Network Slice Selection Function) escolhe o slice. No plano de usuário, o UPF (User Plane Function) é o gateway entre a RAN e a rede de dados. O core Open5GS do P1 roda exatamente esse conjunto."
+    },
+    {
+      "t": "Interfaces N1, N2, N3, N4, N6, N9 e N11",
+      "d": "N1 liga UE e AMF e transporta NAS (Non-Access Stratum: registro e sessão), passando de forma transparente pela RAN. N2 liga NG-RAN e AMF com NG-AP (NG Application Protocol) sobre SCTP, é a sinalização de controle. N3 liga NG-RAN e UPF com GTP-U sobre UDP/IP, o túnel do plano de usuário; N9 usa o mesmo GTP-U entre UPFs. N4 liga SMF e UPF com PFCP (Packet Forwarding Control Protocol); N6 é a saída do UPF para a Data Network; e N11 é a SBI entre AMF e SMF. N2 e N3 são as interfaces principais entre RAN e núcleo (TS 23.501)."
+    },
+    {
+      "t": "NSA versus SA: as duas opções de implantação",
+      "d": "NSA (Non-Stand Alone) usa a rádio NR junto com LTE e o EPC do 4G: o en-gNB conecta ao eNB via X2 e o núcleo continua sendo o do 4G, então só há serviços 4G com capacidades de rádio NR. Também é chamado EN-DC (E-UTRA-NR Dual Connectivity) ou Option 3. SA (Stand-Alone) conecta o NR diretamente ao 5GC, com gNBs ligados entre si por Xn e ao núcleo por NG; só nessa configuração o conjunto completo de serviços 5G (slicing, edge, NFV) está disponível. Nossos labs P1 e P2 são SA."
+    },
+    {
+      "t": "Telco Cloud: NFV, Cloud-Native, containers e Kubernetes",
+      "d": "NFV (Network Function Virtualization, padronizado pela ETSI) coloca funções de rede em VMs, desacoplando o software do hardware proprietário. Cloud-Native vai além: microserviços em containers (Docker) orquestrados por Kubernetes, com deploy, escala e upgrade independentes por função; essas funções são as CNFs (Cloud-Native Network Functions). Telco Cloud é a convergência dos dois para operadores, e no O-RAN a infraestrutura que hospeda O-CU, O-DU e RIC chama-se O-Cloud, gerenciada pelo SMO pela interface O2. Os benefícios são rollout mais rápido, melhor uso de CPU e memória e operação automatizada com menos erro humano."
+    },
+    {
+      "t": "Core e RAN open-source: Open5GS, free5GC, OAI, UERANSIM e srsRAN",
+      "d": "Três núcleos dominam laboratório e ensino: Open5GS (5GC e EPC em C, AGPLv3, boa latência de plano de controle), free5GC (5GC em Go, Apache 2.0, modular e leve) e OAI CN5G (C/C++, ecossistema completo com gNB). Para a RAN, srsRAN oferece pilha completa L1 a L3 com split CU/DU e O-RAN 7.2; OAI nr-softmodem traz gNB com L1/L2 reais ou RFsimulator; e UERANSIM simula gNB mais UE em C++ sem PHY real, ideal para testar registro, PDU Session e as interfaces N2 (NGAP) e N3 (GTP-U). A demonstração E2E da aula usa Open5GS containerizado com UERANSIM, exatamente a combinação do nosso P1."
+    },
+    {
+      "t": "Motivação e benefícios da arquitetura aberta (Open RAN)",
+      "d": "Os novos casos de uso do 5G esbarram na RAN fechada: slicing na RAN exige APIs padronizadas, edge exige coordenação aberta entre RAN e núcleo, e IA/automação via RIC (RAN Intelligent Controller) precisa das interfaces A1, E2 e O1 para ler métricas e aplicar políticas. O Open RAN responde com interoperabilidade multi-vendor, desagregação RU/DU/CU com fronthaul aberto (O-RAN 7.2) e um ecossistema de rApps e xApps de terceiros. Os benefícios esperados são redução de custo por competição, flexibilidade operacional (atualização por componente, CI/CD) e controle programável com Near-RT RIC e Non-RT RIC."
+    }
+  ],
+  "formulas": [],
+  "onde": {
+    "scene": "reg",
+    "texto": "No P1 esse fluxo inteiro roda em containers: o UE do UERANSIM registra pelo gNB (N2/NG-AP) no AMF do Open5GS, que consulta AUSF/UDM/UDR via SBI, e a PDU Session sai pelo UPF (N3/N6)."
+  },
+  "exercicios": [
+    "test-system-status",
+    "test-config-coherence",
+    "test-ng-setup",
+    "test-registration",
+    "test-ue-connection",
+    "test-throughput",
+    "test-upf-failover"
+  ],
+  "quiz": [
+    {
+      "q": "Quais são as duas interfaces principais entre NG-RAN e 5GC e que protocolo roda em cada uma?",
+      "a": "N2, entre gNB e AMF, com NG-AP sobre SCTP para a sinalização de controle; e N3, entre gNB e UPF, com GTP-U sobre UDP/IP para o túnel do plano de usuário. No lab, test-ng-setup exercita o N2 e test-ue-connection exercita o N3."
+    },
+    {
+      "q": "O que é vendor lock-in na RAN tradicional e por que ele motiva o Open RAN?",
+      "a": "É o operador ficar preso a um único fornecedor porque as interfaces entre RU, DU e CU são proprietárias, sem especificação pública, o que elimina competição por componente e encarece CAPEX e OPEX. O Open RAN responde padronizando essas interfaces (fronthaul aberto, E2, A1, O1) para permitir multi-vendor e desagregação."
+    },
+    {
+      "q": "Como o AMF descobre o AUSF e o UDM em uma arquitetura baseada em serviços?",
+      "a": "Pela SBA: cada NF se registra no NRF (Network Repository Function) e o AMF consulta o NRF via SBI (HTTP/2 com JSON) para descobrir quem produz o serviço, depois chama o AUSF e o UDM diretamente com requisições REST. É isso que o painel verifica em test-system-status."
+    }
+  ],
+  "fontes": "Slides 3-14 (plano da aula e material de apoio), 15-32 (5GS, Releases 3GPP, serviços 5G e cenários 6G), 34-40 (vendor lock-in, NG-RAN TS 38.401, split CU/DU, CUPS), 43-71 (SBA, NFs do 5GC, interfaces N1 a N11, pilhas de protocolo, NR, NSA/SA, Telco Cloud), 72-90 (Open5GS, free5GC, OAI, srsRAN, UERANSIM e demo E2E), 91-100 (desafios da RAN tradicional e motivação Open RAN), 101-102 (referências)."
+}

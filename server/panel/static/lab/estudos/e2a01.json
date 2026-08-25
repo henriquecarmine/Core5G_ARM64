@@ -1,0 +1,129 @@
+{
+  "id": "e2a01",
+  "n": 1,
+  "titulo": "Retomada das interfaces O-RAN e lab Open5GS/UERANSIM",
+  "slide": "aula01-retomada_interfaces_oran-2.pdf",
+  "resumo": "Esta aula abre a disciplina de RIC retomando o que você viu na Disciplina 5: a arquitetura do 5G System (SBA, NFs, interfaces N1 a N11), a NG-RAN com split CU/DU e a proposta da O-RAN com SMO, Non-RT RIC, Near-RT RIC e as interfaces A1, E2, O1 e O2. Depois fechamos com o laboratório Open5GS + UERANSIM, lendo gnb.yaml e ue.yaml linha a linha e mapeando o que o lab cobre (N2, N3, registro, PDU Session) e o que ainda falta (E2, RIC, xApps).",
+  "objetivos": [
+    "Revisar a arquitetura 5GC baseada em serviços e o papel de cada NF (AMF, SMF, UPF, AUSF, UDM, UDR, NRF)",
+    "Distinguir as interfaces 3GPP N1, N2, N3, N4, N6 e N11 pelo protocolo e pelo par de entidades que conectam",
+    "Posicionar SMO, Non-RT RIC e Near-RT RIC na arquitetura O-RAN e associar cada um às interfaces A1, E2, O1 e O2",
+    "Explicar o laço fechado observar, decidir e agir com seus horizontes temporais (near-RT de 10 ms a 1 s; non-RT acima de 1 s)",
+    "Validar N1, N2 e N3 no lab Open5GS/UERANSIM, conferindo a coerência entre gnb.yaml, ue.yaml e o assinante no core"
+  ],
+  "conceitos": [
+    {
+      "t": "Arquitetura 5GC baseada em serviços (SBA) e CUPS",
+      "d": "O núcleo 5G (5GC, 5G Core) é uma Service-Based Architecture: os componentes são Network Functions (NFs) que expõem serviços umas às outras por um framework comum em HTTP/2 + JSON, com três padrões de interação: Query (GET de um recurso), Subscription (POST criando uma assinatura) e Notification (POST em um callback). O princípio CUPS (Control and User Plane Separation) separa plano de controle e plano de usuário, o que deixa a operadora escalar cada plano de forma independente. Na TS 23.501 o desenho é sempre o mesmo: plano de usuário embaixo (UE, RAN, UPF, DN) e plano de controle em cima."
+    },
+    {
+      "t": "Funções de rede (NFs) do 5GC",
+      "d": "No plano de controle: AMF (Access and Mobility Management Function) gerencia registro e conexão do UE; AUSF (Authentication Server Function) autentica o assinante; UDM (Unified Data Management) é o equivalente ao HSS do 4G e HLR do 2G; UDR (Unified Data Repository) guarda os dados de assinante; NRF (Network Repository Function) registra e descobre NFs; SMF (Session Management Function) cria sessões e comanda o UPF; PCF (Policy Control Function) aplica políticas; NSSF seleciona slice; NEF expõe capacidades; CHF faz cobrança. No plano de usuário: UPF (User Plane Function) é o gateway entre a RAN e a Data Network; N3IWF e TNGF fazem interworking com acesso não 3GPP. No nosso P1 o Open5GS sobe justamente AMF, SMF, UPF, AUSF, UDM, UDR e NRF."
+    },
+    {
+      "t": "Interfaces de referência N1, N2, N3, N4, N6, N9 e N11",
+      "d": "N1 liga UE e AMF e carrega NAS (Non-Access Stratum: registro e sessão), transportado por dentro da RAN sem interface IP própria. N2 liga NG-RAN e AMF com NGAP (NG Application Protocol) sobre SCTP e concentra a sinalização de controle. N3 liga NG-RAN e UPF com GTP-U, o túnel do plano de usuário. N4 liga SMF e UPF com PFCP (Packet Forwarding Control Protocol), que programa as regras de encaminhamento no UPF. N6 é a saída do UPF para a Data Network (internet, IMS), N9 é GTP-U entre UPFs e N11 é a SBI (Service Based Interface) entre AMF e SMF. Guarde a regra: N2 é controle, N3 é dado, N4 configura o túnel de N3."
+    },
+    {
+      "t": "NG-RAN, gNB e split CU/DU (TS 38.401)",
+      "d": "NG-RAN é o conjunto de nós de rádio que ligam o UE ao 5GC; o nó principal é o gNB (5G Node B), que fala NR-Uu com o UE e NG (N2 e N3) com o core. O gNB pode ser monolítico ou desagregado em gNB-CU (Central Unit, com RRC e PDCP, controle de recursos, mobilidade e sessão, pode ficar na nuvem) e gNB-DU (Distributed Unit, com RLC, MAC e PHY, processamento de tempo real perto da antena). CU e DU se conectam pela interface F1 (F1-C e F1-U, TS 38.473); a CU ainda pode se dividir em CU-CP e CU-UP pela E1, e gNBs vizinhos usam Xn para handover e dual connectivity."
+    },
+    {
+      "t": "Motivação da Open RAN e o papel da O-RAN Alliance",
+      "d": "A RAN tradicional vem fechada e acoplada ao fornecedor (hardware, software e integração num pacote só). A Open RAN propõe desagregar e virtualizar (vRAN) e abrir interfaces para interoperar entre fornecedores, o que traz concorrência, flexibilidade operacional e automação com IA no controle, que é onde entra o RIC. A O-RAN Alliance, fundada em 2018 por operadoras e fornecedores, complementa o 3GPP em vez de substituí-lo: o 3GPP define NG-RAN, 5GC, E1, F1, Xn, N2 e N3; a O-RAN especifica Open Fronthaul, E2, A1, O1 e O2 por Working Groups (WG2/WG3 cuidam dos RICs, A1 e E2). Os quatro princípios são desagregação (CU/DU/RU, split 7.2x), RICs com controle em laço fechado, virtualização (O-Cloud) e interfaces abertas."
+    },
+    {
+      "t": "SMO, Non-RT RIC e Near-RT RIC",
+      "d": "O SMO (Service Management and Orchestration) orquestra serviços, gerencia O1 e O2 e cuida de FCAPS (falhas, configuração, contabilidade, desempenho e segurança) e do ciclo de vida. Dentro do SMO vive o Non-RT RIC, que hospeda rApps, trabalha em laços acima de 1 s e publica políticas e intents para o Near-RT RIC pela A1. O Near-RT RIC roda fora do SMO, hospeda xApps como microsserviços, fala E2 com O-CU e O-DU em laços entre 10 ms e 1 s e precisa de mitigação de conflitos quando várias xApps mexem no mesmo objeto da RAN. No nosso P2 o FlexRIC faz o papel de Near-RT RIC e o serviço A1 simula o Non-RT RIC."
+    },
+    {
+      "t": "Interfaces O-RAN: E2, A1, O1 e O2",
+      "d": "E2 conecta o Near-RT RIC aos nós RAN (O-CU, O-DU, O-eNB) para telemetria e controle em near-RT: o protocolo E2AP faz setup, subscription, indication e control, e os modelos de serviço E2SM definem o conteúdo, como KPM (medições) e RC (RAN Control); o transporte é SCTP, o mesmo do NGAP na N2. A1 conecta Non-RT RIC e Near-RT RIC para políticas em JSON, enrichment information e orientação de longo prazo, via A1AP sobre REST/HTTP. O1 conecta o SMO aos elementos RAN para OAM e FCAPS com NETCONF/YANG (na figura do O-RAN SC aparecem O1 Adapter, SDNC/SDNR, VES Collector e Kafka). O2 conecta o SMO à O-Cloud para provisionar a infraestrutura virtualizada com Kubernetes ou OpenStack."
+    },
+    {
+      "t": "Controle em laço fechado e horizontes temporais",
+      "d": "O laço fechado da O-RAN é: observar pela E2 ou O1, decidir numa xApp ou rApp e agir pela E2 ou A1. Em uma frase: RAN gera dados, RIC decide, RAN recebe a decisão. O horizonte temporal separa os controladores: o Near-RT RIC atua entre 10 ms e 1 s (gestão de sessão, load balancing, scheduling policy, slicing com KPMs de CU e MAC) e o Non-RT RIC acima de 1 s até horas (políticas, modelos, planejamento com KPMs de infraestrutura). Laços de tempo real abaixo de 10 ms (beamforming, scheduling por TTI) e abaixo de 1 ms (modulação, amostras I/Q) ficam dentro do gNB e não são cobertos pela O-RAN. Lembre: A1 define o que buscar, E2 executa como reagir."
+    },
+    {
+      "t": "Workflow de IA/ML na O-RAN",
+      "d": "A O-RAN descreve seis fases: coleta e processamento de dados, treino offline, validação e publicação, deployment (imagem de xApp/rApp ou artefato via O1), execução/inferência e operações contínuas (monitorar drift, retreinar, rollback). Os dados vêm de KPIs KPM pela E2, alarmes e PM pela O1 e contexto de política pela A1, agregados em data lakes do operador. O treino é quase sempre offline por custo e estabilidade, a validação inclui regressão contra KPIs-chave e o catálogo versionado evita modelo fantasma em campo. A inferência online tem de respeitar a latência do laço em que roda. A escolha do algoritmo segue dados, latência, risco e governança, e não a moda do modelo."
+    },
+    {
+      "t": "Lab Open5GS + UERANSIM: topologia Docker e N1/N2/N3",
+      "d": "O lab do professor sobe o core (SBI em 10.10.0.0/16) e o UERANSIM em redes Docker separadas: N2 em 10.20.0.0/16 (AMF e gNB, NGAP sobre SCTP porta 38412), N3 em 10.30.0.0/16 (gNB e UPF, GTP-U UDP 2152), N4 em 10.40.0.0/16 (PFCP), N6 em 10.50.0.0/16 e a sub-rede do UE 10.60.0.0/16 na interface uesimtun0. Sobe-se sempre o core antes do UERANSIM porque as redes são compartilhadas. Na N2 o gNB abre a associação SCTP e envia NGSetupRequest com PLMN, TAC e slices; o AMF responde NGSetupResponse e o log mostra NG Setup procedure is successful. Depois vêm Initial UE Message, Registration e PDU Session, sempre NGAP carregando NAS. O ping -I uesimtun0 8.8.8.8 comprova o caminho UE, UPF e N6."
+    },
+    {
+      "t": "gnb.yaml e ue.yaml: campos e checklist de coerência",
+      "d": "No gnb.yaml, mcc e mnc formam o PLMN da célula, tac é o Tracking Area Code, nci e idLength identificam a célula no NG Setup, linkIp e ngapIp são o bind SCTP da N2, gtpIp é o bind GTP-U da N3, amfConfigs aponta o AMF (10.20.0.11:38412) e slices define o SST. No ue.yaml, supi é o IMSI, key e op são as credenciais 5G-AKA que precisam bater com o UDM, gnbSearchList precisa ser igual ao ngapIp do gNB, sessions define DNN (internet) e slice da PDU Session, e ciphering EA0 desliga a cifra NAS (ok para demo, nunca para produção). O checklist antes do up_ran.sh: core Up com core_net-n2 e core_net-n3, PLMN 001/01 igual em gNB, UE e assinante, gnbSearchList igual ao ngapIp, DNN internet no UE e no perfil do Open5GS, SST 1 em gNB e UE; nos logs, NG Setup OK, UE REGISTERED e IP em uesimtun0."
+    },
+    {
+      "t": "Troubleshooting e limitações do lab",
+      "d": "Sintoma e causa provável: network core_net-n2 not found indica core não iniciado; NG Setup falha ou slice-not-supported aponta PLMN, TAC ou SST divergentes entre gnb.yaml e AMF; UE sem IP é assinante ausente no MongoDB/WebUI; registrado mas ping falha manda olhar UPF, PFCP e rota N6. As limitações são claras: Uu simulado com gNB e UE no mesmo container, sem O-RU e O-DU; sem E2, Near-RT RIC nem xApps (só 3GPP N2/N3); sem Open Fronthaul; poucos UEs; segurança relaxada; e dependência frágil de ordem de subida e IPs fixos no Docker. É exatamente essa lacuna de E2 e RIC que a pilha OAI + FlexRIC do Projeto 2 vem preencher."
+    }
+  ],
+  "formulas": [
+    {
+      "nome": "Laço do Near-RT RIC",
+      "expr": "10 ms < T_loop < 1 s",
+      "vars": "T_loop: período do laço de controle entre observar via E2 e agir via E2",
+      "unidade": "ms a s",
+      "quando": "Dimensionar xApps (KPM, RC, load balancing, scheduling policy, slicing); no P2 é o ciclo FlexRIC e xApp"
+    },
+    {
+      "nome": "Laço do Non-RT RIC",
+      "expr": "T_loop > 1 s (até horas)",
+      "vars": "T_loop: período do laço de políticas e modelos publicados via A1 por rApps",
+      "unidade": "s a h",
+      "quando": "Políticas, planejamento e treino de ML no SMO; no P2 é o serviço A1"
+    },
+    {
+      "nome": "Laços de tempo real (fora do escopo O-RAN)",
+      "expr": "T_loop < 10 ms (MAC/PHY) e T_loop < 1 ms (amostras I/Q)",
+      "vars": "T_loop: período de decisões de scheduling, beamforming e modulação dentro do gNB",
+      "unidade": "ms",
+      "quando": "Lembrar que o RIC não controla decisões por TTI; isso fica na DU/RU"
+    },
+    {
+      "nome": "Laço fechado O-RAN em uma frase",
+      "expr": "RAN → (dados via E2/O1) → RIC → (decisão via E2/A1) → RAN",
+      "vars": "Observabilidade, inteligência (xApp ou rApp) e ação",
+      "unidade": "",
+      "quando": "Sempre que for explicar o que uma xApp faz de ponta a ponta"
+    },
+    {
+      "nome": "Portas do lab P1",
+      "expr": "N2: SCTP 38412 (NGAP); N3: UDP 2152 (GTP-U, TEID por PDU Session)",
+      "vars": "TEID: Tunnel Endpoint Identifier do túnel GTP-U",
+      "unidade": "porta",
+      "quando": "Filtrar capturas: tcpdump -i any 'sctp and port 38412' e udp.port == 2152 no Wireshark"
+    }
+  ],
+  "onde": {
+    "scene": "reg",
+    "texto": "No P1, o gNB do UERANSIM fecha o NG Setup na N2 com o AMF do Open5GS, o UE se registra via NAS (N1) com AUSF e UDM e o SMF programa o túnel GTP-U da N3 no UPF via PFCP (N4)."
+  },
+  "exercicios": [
+    "status",
+    "test-system-status",
+    "test-ng-setup",
+    "test-registration",
+    "test-config-coherence",
+    "test-ue-connection",
+    "test-throughput"
+  ],
+  "quiz": [
+    {
+      "q": "Qual interface e qual protocolo transportam o NGSetupRequest do gNB para o AMF, e em que porta ele aparece no lab?",
+      "a": "Interface N2, protocolo NGAP sobre SCTP, porta 38412 do AMF (10.20.0.11 no lab). O log de sucesso é NG Setup procedure is successful."
+    },
+    {
+      "q": "Quem programa o túnel GTP-U da N3 no UPF, por qual interface e por qual protocolo? Por que isso explica o caso em que N2 está OK mas o ping falha?",
+      "a": "O SMF, pela N4, usando PFCP, depois de ser acionado pelo AMF via N11. Se o registro passou mas o ping falha, a sinalização N2 está boa e o problema está no plano de usuário: regras PFCP no UPF, DNN/APN da sessão ou rota de saída em N6."
+    },
+    {
+      "q": "Diferencie Near-RT RIC e Non-RT RIC pelo horizonte temporal, pela interface que cada um usa e pelo tipo de aplicação que hospeda.",
+      "a": "Near-RT RIC atua entre 10 ms e 1 s, fala E2 (E2AP + E2SM como KPM e RC) com O-CU/O-DU e hospeda xApps. Non-RT RIC atua acima de 1 s, vive no SMO, fala A1 com o Near-RT RIC e hospeda rApps para políticas, intent e ML de longo prazo. A1 define o que buscar; E2 executa como reagir."
+    }
+  ],
+  "fontes": "Páginas 1-95 lidas; conteúdo didático extraído principalmente de 15-53 (redes móveis, 5GC, NG-RAN, O-RAN, RIC), 55-70 (A1, E2, O1, O2, laço fechado, IA/ML) e 73-91 (lab Open5GS/UERANSIM, gnb.yaml, ue.yaml, troubleshooting, limitações, avaliação)."
+}

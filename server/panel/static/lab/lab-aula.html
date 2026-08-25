@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aula · Core5G_ARM64</title>
+<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.64.0">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <a href="/" class="back">← Painel</a> <span class="sep">·</span> <a id="back-estudo" href="/lab" class="back">Estudo</a>
+      <div class="eyebrow" id="eyebrow">Aula</div>
+      <h1 id="h1">…</h1>
+      <p class="lead" id="lead"></p>
+    </div>
+    <div class="topright"><button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button></div>
+  </div>
+
+  <div class="card"><h2>🎯 O que você vai aprender</h2><ul class="obj" id="obj"></ul></div>
+
+  <h2 class="section-h">Conceitos, na ordem dos slides</h2>
+  <div class="conceitos" id="conceitos"></div>
+
+  <div id="formulas"></div>
+
+  <div class="card"><h2>🛰️ Onde isso roda no nosso lab</h2><p id="onde-txt"></p><div class="mm" id="mm"></div></div>
+
+  <div class="card"><h2>🎛️ Exercícios</h2><p class="sub" id="ex-sub"></p><div class="exlist" id="ex"></div></div>
+
+  <div class="card"><h2>❓ Quiz de fixação</h2><div class="quiz" id="quiz"></div></div>
+
+  <div class="nav" id="nav"></div>
+  <footer id="footer"></footer>
+</div>
+
+<script src="/static/ops/mini-map.js?v=0.64.0"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const EMBED=new URLSearchParams(location.search).has("embed");
+const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const GH="https://github.com/henriquecarmine/Core5G_ARM64/blob/main/";
+const M=location.pathname.match(/\/lab\/estudo\/(\d)\/aula\/(\d+)/)||[];
+const N=parseInt(M[1]||"4",10), K=parseInt(M[2]||"1",10);
+const withEmbed=u=>u+(EMBED?(u.includes("?")?"&":"?")+"embed=1":"");
+
+if(EMBED){document.documentElement.classList.add("embed");
+  try{const th=window.parent.document.documentElement.getAttribute("data-theme");if(th)document.documentElement.setAttribute("data-theme",th);}catch(e){}}
+$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('a[href^="/lab"]');
+  if(a&&EMBED){const u=a.getAttribute("href");if(u&&!u.includes("embed=1")){e.preventDefault();location.href=withEmbed(u);}}},true);
+
+function runBtn(cmd,label){
+  if(EMBED) return `<button class="runb" data-cmd="${esc(cmd)}" title="${esc(cmd)}">▶ ${esc(label)}</button>`;
+  return `<a class="runb ghost" href="/" title="abra o painel e rode pelo menu da esquerda">▶ ${esc(label)} <small>(no painel)</small></a>`;
+}
+
+async function main(){
+  const idx=await (await fetch("/static/lab/estudos/index.json",{cache:"no-store"})).json();
+  const e=idx.estudos.find(x=>x.n===N);
+  const id=e.aulas[K-1];
+  const a=await (await fetch(`/static/lab/estudos/${id}.json`,{cache:"no-store"})).json();
+  document.title=`Aula ${a.n} · ${a.titulo}`;
+  try{if(EMBED)window.parent.postMessage({c5gLab:{title:`Estudo ${e.n} · Aula ${a.n}`}},location.origin);}catch(x){}
+  $("#back-estudo").textContent=`Estudo ${e.n}: ${e.titulo}`; $("#back-estudo").href=`/lab/estudo/${e.n}`;
+  $("#eyebrow").textContent=`Estudo ${e.n} · ${e.titulo} · Aula ${a.n} · ${e.prof}`;
+  $("#h1").textContent=a.titulo; $("#lead").textContent=a.resumo;
+  $("#obj").innerHTML=a.objetivos.map(o=>`<li>${esc(o)}</li>`).join("");
+  $("#conceitos").innerHTML=a.conceitos.map((c,i)=>`<div class="conc"><div class="cn">${i+1}</div><div><h3>${esc(c.t)}</h3><p>${esc(c.d)}</p></div></div>`).join("");
+  if(a.formulas&&a.formulas.length){
+    $("#formulas").innerHTML=`<h2 class="section-h">Fórmulas e métricas desta aula</h2><div class="forms">${a.formulas.map(f=>`
+      <div class="form"><div class="fn">${esc(f.nome)} ${f.unidade?`<span class="u">[${esc(f.unidade)}]</span>`:""}</div>
+        <code>${esc(f.expr)}</code>
+        ${f.vars?`<p><b>onde</b> ${esc(f.vars)}</p>`:""}
+        ${f.quando?`<p><b>para quê</b> ${esc(f.quando)}</p>`:""}</div>`).join("")}</div>`;
+  }
+  $("#onde-txt").textContent=a.onde.texto;
+  try{ if(window.MiniMap) MiniMap.preview(a.onde.scene,$("#mm")); }catch(x){}
+  $("#ex-sub").innerHTML=a.exercicios.length
+    ?`Os comandos abaixo exercitam esta aula na RAN de verdade (bancada ${esc(idx.bancadas[e.bancada]||e.bancada)}).`
+    :"Esta aula é conceitual: não tem exercício no console.";
+  $("#ex").innerHTML=a.exercicios.map(c=>runBtn(c,idx.comandos[c]||c)).join("");
+  document.querySelectorAll("button.runb").forEach(b=>b.addEventListener("click",()=>{
+    try{window.parent.postMessage({c5gLab:{runCmd:b.dataset.cmd}},location.origin);}catch(x){}}));
+  $("#quiz").innerHTML=a.quiz.map((q,i)=>`<details class="q"><summary>${i+1}. ${esc(q.q)}</summary><p>${esc(q.a)}</p></details>`).join("");
+  const prev=K>1?`/lab/estudo/${e.n}/aula/${K-1}`:null, next=K<e.aulas.length?`/lab/estudo/${e.n}/aula/${K+1}`:null;
+  $("#nav").innerHTML=`${prev?`<a class="navb" href="${prev}">◂ Aula ${K-1}</a>`:"<span></span>"}<a class="navb" href="/lab/estudo/${e.n}">Voltar ao Estudo ${e.n}</a>${next?`<a class="navb primary" href="${next}">Aula ${K+1} ▸</a>`:"<span></span>"}`;
+  $("#footer").innerHTML=`Fonte: <a href="${GH}${esc(e.pdfs)}/${esc(a.slide)}" target="_blank" rel="noopener">${esc(a.slide)}</a> (${esc(a.fontes)}) · ${esc(e.prof)} · CESAR School. O conteúdo foi extraído dos slides e adaptado ao laboratório; os exercícios rodam na RAN do painel.`;
+}
+main().catch(err=>{$("#h1").textContent="não consegui carregar esta aula";$("#lead").textContent=String(err);});
+</script>
+</body>
+</html>

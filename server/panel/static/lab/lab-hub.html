@@ -48,6 +48,14 @@
   .reset{background:none;border:none;color:var(--ink-3);font-size:.8rem;cursor:pointer;text-decoration:underline}
 
   /* trilhas rápida/estudo */
+  /* Estudos por cadeira (Fase C): 4 cards no topo do hub */
+  .estudos{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:22px}
+  .estudo-card{display:flex;flex-direction:column;gap:5px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);padding:12px 14px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);transition:.15s}
+  .estudo-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .estudo-card .en{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  .estudo-card .et{font-weight:730;font-size:.95rem;line-height:1.2}
+  .estudo-card .ep{font-size:.78rem;color:var(--ink-3)}
+  .estudo-card.cur{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
   .tracks{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}
   @media (max-width:640px){.tracks{grid-template-columns:1fr}}
   .track{border:1px solid var(--line);border-radius:var(--r);padding:20px;background:var(--surface);position:relative;overflow:hidden}
@@ -114,6 +122,8 @@
     <button class="reset" id="resetBtn" data-i18n="hub.reset">zerar progresso</button>
   </div>
 
+  <div class="estudos" id="estudos"></div>
+
   <div class="tracks">
     <div class="track fast">
       <h3 data-i18n="hub.fast.t">⚡ Trilha rápida</h3>
@@ -172,6 +182,13 @@ const $=(s,r=document)=>r.querySelector(s);
 const load=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){return {};}};
 const save=(p)=>{try{localStorage.setItem(KEY,JSON.stringify(p));}catch(e){}};
 const LIVE=AULAS.filter(a=>!a.soon);
+// Estudos por cadeira: os 4 cards vêm do catálogo (static/lab/estudos/index.json).
+// Esta trilha (Lab de IA) é o Estudo 3; os outros abrem o hub de cada cadeira.
+fetch("/static/lab/estudos/index.json",{cache:"no-store"}).then(r=>r.json()).then(idx=>{
+  const el=document.getElementById("estudos"); if(!el) return;
+  el.innerHTML=idx.estudos.map(e=>`<a class="estudo-card ${e.id==='e3'?'cur':''}" href="/lab/estudo/${e.n}">
+    <span class="en">Estudo ${e.n} · ${e.bancada.toUpperCase()}</span><span class="et">${e.icon} ${e.titulo}</span><span class="ep">${e.prof}</span></a>`).join("");
+}).catch(()=>{});
 
 function famBadge(f){return f==="sup"?'<span class="fambadge fam-sup">'+T("fam.sup")+'</span>':f==="nsup"?'<span class="fambadge fam-nsup">'+T("fam.nsup")+'</span>':"";}
 

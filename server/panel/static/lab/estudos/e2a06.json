@@ -1,0 +1,99 @@
+{
+  "id": "e2a06",
+  "n": 6,
+  "titulo": "Validação do lab E2, dados KPM e encerramento",
+  "slide": "aula06-testes_seminarios.pdf",
+  "resumo": "Aula de encerramento da disciplina: pela manhã os grupos apresentam o Projeto 2 (lab OAI + FlexRIC via E2) e, depois, o professor fecha o módulo. O fechamento compara o que validamos no lab com o que o artigo NGO validou em campo (campus SUTD), consolida padrões de sucesso e de falha na depuração do E2 e mostra que o log KPM produzido pelo xApp já é telemetria: dado bruto que vira KPI por uma cadeia de coleta, ETL e indicador.",
+  "objetivos": [
+    "Avaliar um seminário de Projeto 2 pelos cinco critérios: evidências, E2/KPM, extensão, reprodutibilidade e limitações.",
+    "Distinguir o que foi validado no lab (E2 SETUP, subscription, INDICATION) do que o NGO validou em campo (acurácia, R², economia de energia).",
+    "Diagnosticar falhas de E2 com o checklist final: ordem de subida, porta 36421, versão E2AP/E2SM, tráfego de UE e libkpm_sm.so.",
+    "Ler o log do xApp KPM como série temporal com tags (timestamp, measName, valor, dimensões, fonte).",
+    "Descrever a cadeia do dado bruto ao KPI e situar onde os dados moram em FlexRIC, OSC e SMO."
+  ],
+  "conceitos": [
+    {
+      "t": "Seminários do Projeto 2: os cinco critérios",
+      "d": "Cada grupo tem 20 minutos mais perguntas para apresentar o lab OAI + FlexRIC (pilha obrigatória: núcleo OAI, gNB RFSIM e FlexRIC como Near-RT RIC). A nota olha cinco critérios: P1 demonstração com evidências (logs ou vídeo do core, gNB, FlexRIC e xApp), P2 a cadeia E2 completa (associação, subscription e INDICATION KPM ou RC), P3 extensão (xApp customizado, RC ou service model próprio no mesmo lab), P4 reprodutibilidade (README, scripts e plano de testes) e P5 limitações e segurança (RFSIM, versões E2AP/E2SM, superfície de ataque do E2 no near-RT). O-RAN SC, Non-RT OSC e SMO ficam fora da nota: foram referência na Aula 05."
+    },
+    {
+      "t": "Trilha de laboratórios e arco pedagógico",
+      "d": "Em seis encontros a turma subiu um núcleo 5G SA (Open5GS e OAI), trocou de RAN de software (UERANSIM, srsRAN ZMQ e OAI RFSIM), ligou o FlexRIC por E2 com E2SM-KPM/RC e viu A1 e SMO como conceito. O Projeto 1 (Aula 03) era leitura de Polese e NGO com foco na interface A1; o Projeto 2 (Aula 06) é implementação com E2, subscriptions e KPM, entregue como demo mais relatório reprodutível. O arco vai de entender O-RAN a operar um trecho da pilha de código aberto. No mapa mental: SMO com O1/O2, Non-RT RIC com rApps e A1, Near-RT RIC com FlexRIC, xApps e E2, e RAN + Core com OAI, RFSIM, UPF-VPP e slice 222/123."
+    },
+    {
+      "t": "Validação em campo versus lab: benchmark SUTD do NGO",
+      "d": "O artigo NGO (seção 6) validou rApps em um campus real da SUTD com métricas de negócio: Localization-rApp com cerca de 90% de acurácia de andar, UE-TP-rApp com R² de 0,90 na previsão sequencial de throughput, ES-rApp com cerca de 65% de economia de energia simulada por ano, além de KPM-xApp via proxy FlexRIC e coleta contínua VES para InfluxDB. No nosso lab a RAN é OAI RFSIM, o E2 é nativo do OAI com FlexRIC na porta 36421, o dataset de ML vem só do KPM E2SM e a validação é técnica: E2 SETUP, INDICATION e reprodutibilidade. Saber nomear essa diferença é parte da competência esperada de vocês."
+    },
+    {
+      "t": "O que validamos de fato no Projeto 2",
+      "d": "Validamos a arquitetura O-RAN near-RT ponta a ponta: Core, gNB OAI, FlexRIC e xApp. Validamos E2SM-KPM (Key Performance Measurement) e E2SM-RC (RAN Control) com SETUP, subscription e INDICATION filtrados na slice SST 222 / SD 123, e o ciclo de vida do xApp (deploy, subscribe, operate) com test_e2_kpm.sh. Não validamos O-RAN SC, A1 real, SMO/O1 nem RAN comercial, e isso deve estar escrito nas limitações de todo relatório."
+    },
+    {
+      "t": "Padrões que funcionaram nos labs",
+      "d": "A ordem de subida importa: Core, depois FlexRIC, depois gNB, depois xApp, como faz up_e2_lab.sh; se o gNB sobe antes do RIC, o E2 SETUP não acontece. Antes de mexer no RIC, confira a saúde do núcleo: NRF respondendo, sessão N4 entre SMF e UPF e ping do UE. Para o FlexRIC, use a flexric-lib sincronizada, a slice 222/123 e os scripts test_e2_kpm.sh e verify_e2_lab.sh. A evidência mínima aceitável é log de E2 SETUP mais INDICATION e um README com os comandos exatos."
+    },
+    {
+      "t": "Padrões de problema e checklist de depuração E2",
+      "d": "Sintomas recorrentes e causas: E2 node = 0 ou SETUP falhando vem de ordem de subida errada, Near-RT RIC parado ou porta 36421 bloqueada; subscription aceita mas sem KPM vem de UE sem tráfego, filtro de slice errado ou KPM_TRAFFIC=1 esquecido; RIC caindo no KPM vem de libkpm_sm.so ausente (rode sync_flexric_lib.sh); e o clássico 'funciona na minha máquina' é README incompleto (critério P4). O checklist final tem seis pontos: UE com internet (ping -I oaitun_ue1 8.8.8.8)? E2 SETUP no log do gNB? Mesma versão E2AP/E2SM-KPM no OAI e no RIC? Subscription aceita com ID no log do xApp? Tráfego gerado (KPM_TRAFFIC=1, iperf3)? Ferramentas: verify_e2_lab.sh, test_e2_sm.sh e os logs em logs/."
+    },
+    {
+      "t": "Telemetria KPM como insumo analítico",
+      "d": "O test_e2_kpm.sh executa o xapp_kpm_moni via FlexRIC na slice SST=222 / SD=123, gera tráfego opcional com KPM_TRAFFIC=1 e grava logs/xapp_kpm_lab.log com medidas como DRB.UEThpDl/Ul (throughput por UE), RRU.PrbTot* (uso de PRB, Physical Resource Block) e DRB.PdcpSduVolume* (volume PDCP). O fluxo E2 é RIC Subscription seguida de RIC INDICATION periódica (cerca de 1 s). Isso ainda não é um warehouse: é telemetria bruta em texto, mas é exatamente o insumo que um processo analítico futuro vai consumir. Mesma rede, lentes diferentes: control plane (RIC) e data plane analítico (SMO/BI)."
+    },
+    {
+      "t": "Estrutura implícita do registro de log",
+      "d": "Cada linha do log do xApp esconde um evento de série temporal com tags: timestamp (instante da INDICATION), measName (por exemplo DRB.UEThpUl), valor na unidade do E2SM (kbps, %, Mb), dimensões (UE, célula, S-NSSAI 222/123) e fonte (gNB OAI, FlexRIC, xApp). Modelar o log assim é o primeiro passo para carregar os dados em um banco de séries temporais e cruzar com outras fontes."
+    },
+    {
+      "t": "Onde os dados moram: FlexRIC, OSC e SMO",
+      "d": "No FlexRIC a persistência é só o log ou stdout do xApp, sem TSDB nativo; no nosso lab isso é logs/xapp_kpm_lab.log. No OSC Near-RT existe a RNIB em Redis (ric_dbaas), mas ela guarda inventário de nós E2, não histórico de KPI. No SMO/O1 do OSC o caminho é VES (Vendor-Enhanced Event Stream) para Kafka, InfluxDB e Grafana, que é também o que o NGO usou em produção (VES Collector para InfluxDB). O pipeline integrado tem dois fluxos que convergem no InfluxDB: KPM via E2 e xApp, e eventos VES via SMO e Kafka."
+    },
+    {
+      "t": "Modelagem de dados: medida, dimensão, granularidade e esquema",
+      "d": "Medida (measurement) é um contador ou gauge padronizado, o measName do E2SM-KPM. Dimensão (tag ou label) é o que filtra e agrupa: UE, célula, slice, PLMN. A granularidade temporal muda por fonte: PM de O1 vem a cada 15 minutos, KPM de E2 a cada 1 segundo, e alinhar isso é o ponto crítico do ETL. Os esquemas também diferem (E2SM-KPM do O-RAN, VES JSON do SMO, tabelas PM do 3GPP), então normalize antes de calcular KPI."
+    },
+    {
+      "t": "Do dado bruto ao KPI: a cadeia em cinco passos",
+      "d": "Coleta (E2 INDICATION, PM O1, logs), ingestão em arquivos, InfluxDB ou Kafka, ETL/EDA (limpeza, gaps, outliers), indicador (KPI operacional, KQI, QoE) e decisão (xApp, política A1, dimensionamento). Tripathi e Shah descrevem isso como loops de controle. O exercício mental do lab: pegar um trecho de xapp_kpm_lab.log, extrair time, measName, value, UE e slice, plotar DRB.UEThpUl contra o tempo com e sem KPM_TRAFFIC e definir um KPI como 'throughput UL médio por UE em 30 s'. Esse é o workflow da disciplina de Análise de Dados em Redes de Telecom."
+    },
+    {
+      "t": "Lições do NGO, desafios de Polese e OSS versus comercial",
+      "d": "NGO seção 7: software livre (OSC, FlexRIC, SD-RAN) já permite prototipar O-RAN, mas poucos gNBs comerciais expõem E2 (daí o proxy FlexRIC), integrar Non-RT, Near-RT e SMO ainda é engenharia pesada e rApps de ML só geram valor com dados de campo e pipeline MLOps. Polese lista o que permanece: fragmentação de versões das interfaces E2/A1/O1/O2/R1, segurança (superfície E2/A1, supply chain, RBAC multi-tenant), testbeds caros com RF real, adoção em produção e governança de modelos de IA nativa. Contraste OSS versus comercial: reprodutível e hackable contra SLA, suporte e certificação; a competência que fica é ler a arquitetura de Polese e validar hipóteses em OSS antes do piloto. A nota do módulo: Projeto 1 40%, Projeto 2 40%, participação e plataforma 20%."
+    }
+  ],
+  "formulas": [
+    {
+      "nome": "KPI throughput UL médio por UE (exemplo do exercício mental)",
+      "expr": "KPI_UL(UE, janela) = (1/N) × Σ DRB.UEThpUl(t_i), para as N INDICATIONs do UE dentro da janela de 30 s",
+      "vars": "DRB.UEThpUl(t_i) = throughput de uplink do UE reportado na INDICATION i; N = número de amostras na janela (cerca de 30, a ~1 s por amostra)",
+      "unidade": "kbps",
+      "quando": "Slide 46, passo 3: ao definir um KPI a partir do log xapp_kpm_lab.log; é o tipo de indicador que p2-kpm-analytics extrai do log."
+    }
+  ],
+  "onde": {
+    "scene": "analytics",
+    "texto": "No P2 o xapp_kpm_moni recebe as INDICATIONs do gNB OAI via FlexRIC e grava logs/xapp_kpm_lab.log; o p2-kpm-analytics faz o ETL desse log até o KPI de throughput (slide 46)."
+  },
+  "exercicios": [
+    "p2-test-e2-sm",
+    "p2-test-e2-kpm",
+    "p2-test-e2-kpm-traffic",
+    "p2-kpm-analytics",
+    "p2-test-e2-rc"
+  ],
+  "quiz": [
+    {
+      "q": "A subscription foi aceita, mas o xApp não mostra nenhuma medida KPM. Quais são as causas mais prováveis?",
+      "a": "UE sem tráfego (rode com KPM_TRAFFIC=1 ou iperf3), filtro de slice diferente de SST 222 / SD 123, ou libkpm_sm.so ausente no RIC (rode sync_flexric_lib.sh). Confira também se a versão E2AP/E2SM-KPM é a mesma no OAI e no FlexRIC."
+    },
+    {
+      "q": "Por que a ordem Core, FlexRIC, gNB, xApp importa no up_e2_lab.sh?",
+      "a": "O gNB faz o E2 SETUP na subida, apontando para a porta 36421 do Near-RT RIC. Se o FlexRIC ainda não está de pé, o SETUP falha e o RIC mostra E2 node = 0; o xApp só faz sentido depois que existe um nó E2 associado."
+    },
+    {
+      "q": "Em que sentido o log do xapp_kpm_moni já é um dado de série temporal, e o que falta para virar KPI?",
+      "a": "Cada linha traz timestamp, measName (ex.: DRB.UEThpUl), valor na unidade E2SM e dimensões (UE, célula, S-NSSAI 222/123). Falta a cadeia: ingestão (arquivo, InfluxDB), ETL para limpar gaps e outliers e alinhar granularidade, e a definição do indicador, por exemplo throughput UL médio por UE em 30 s."
+    }
+  ],
+  "fontes": "p. 3-9 (agenda, escopo e critérios dos seminários), 21-25 (objetivos, trilha, arco, mapa mental), 27-33 (benchmark SUTD, lab vs campo, validação, padrões e checklist E2), 36-47 (telemetria KPM, log, pipeline, modelagem, cadeia até KPI, exercício mental, SMO), 48-53 (lições NGO, Polese, OSS vs comercial, nota, próximos passos), 55-56 (referências)"
+}

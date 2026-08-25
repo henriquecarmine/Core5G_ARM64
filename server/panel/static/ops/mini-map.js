@@ -42,6 +42,9 @@
     chan:      { proj: 'p1', nodes: ['ueransim','dn'], flows: [['ueransim','dn','N3+N6']] },
     a1:        { proj: 'p2', nodes: ['panel','nonrt-pms','a1sim'], flows: [['panel','nonrt-pms','REST (política JSON)'],['nonrt-pms','a1sim']],
                  note: 'a política nasce num JSON do repo e desce até o RAN simulado' },
+    tema:      { proj: 'p2', nodes: ['xapps','panel'], flows: [['xapps','panel','KPM (jsonl/csv)']],
+                 ghost: [['ue','gnb','rádio (RFSIM)'],['gnb','ric'],['ric','xapps']],
+                 note: 'o KPM nasceu no rádio: gNB → E2 → xApp → arquivo; os 2 indicadores do tema saem aqui no painel (política A1 só em dry-run)' },
     demo:      { proj: 'p1', nodes: ['ueransim','upf-a','dn'], flows: [['ueransim','upf-a'],['upf-a','dn'],['dn','upf-a']] },
   };
   var TOPO = { p1: null, p2: null }, hosts = {};

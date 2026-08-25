@@ -1,0 +1,175 @@
+{
+  "id": "e4a03",
+  "n": 3,
+  "titulo": "EDA, ETL e visualização de dados de rede",
+  "slide": "aula03-eda_etl_visualizacao.pdf",
+  "resumo": "Nesta aula você percorre o caminho do dado bruto ao gráfico acionável: ingestão em bronze (JSONL), tipagem e controle de qualidade em silver (SQLite), análise exploratória por fase e um KPI preliminar em gold. O estudo de caso de jammers narrowband em 5G (Varotto et al., WIFS 2024) mostra que o mesmo ciclo coleta, ingestão, processamento e consumo vale para um sensor de espectro. Tudo isso alimenta o Checkpoint 1: 2 consultas, 2 plots e um README com linhagem.",
+  "objetivos": [
+    "Situar EDA e ETL no ciclo fonte, ingestão, armazenamento, transformação, indicador, análise, visualização e decisão (DIKW).",
+    "Aplicar o padrão medallion (bronze, silver, gold) sobre a amostra KPM UE-TP com fases baseline, stress e recovery.",
+    "Inspecionar qualidade de dados: completude, consistência, unicidade, validade, atualidade, ausentes (MCAR, MAR, MNAR) e outliers.",
+    "Descrever distribuições por fase com média, mediana, p95, min, max e contagem de zeros e correlacionar PRB, throughput e delay sem afirmar causalidade.",
+    "Produzir gráficos auditáveis (título, unidades, janela, agregação, fonte) e documentar a linhagem bronze, silver, plot no README do CP1."
+  ],
+  "conceitos": [
+    {
+      "t": "Ciclo de análise e pirâmide DIKW",
+      "d": "O fio condutor da disciplina é fonte, ingestão, armazenamento, transformação, indicador, análise, visualização e decisão. Na pirâmide DIKW (Data, Information, Knowledge, Wisdom), dado é o que a rede emite (KPM E2, PM O1, logs, iperf); informação são séries limpas e agregados com contexto temporal; conhecimento são hipóteses testáveis, como carga UL gera anomalia de PRB ou throughput, e modelos simples com MAD e limiares; sabedoria é a recomendação ou política com governança. A Aula 03 trabalha o degrau de dado para informação."
+    },
+    {
+      "t": "Medallion: bronze, silver e gold",
+      "d": "Medallion é uma convenção de camadas, não uma norma O-RAN. Bronze guarda o bruto com timestamp de ingestão (kpm.jsonl, uma linha por amostra KPM, schema-on-read); silver harmoniza em UTC, unidades, IDs, deduplicação e pseudonimização (kpm.sqlite com tabelas runs e kpm_samples tipadas); gold traz KPIs, scores e decision.json para painéis e rApps. No envelope JSONL os campos de controle run_id, phase, sample_index e ingested_at valem tanto quanto as métricas RRU.PrbTotUl, DRB.UEThpUl e DRB.RlcSduDelayDl."
+    },
+    {
+      "t": "ETL versus ELT e as etapas do ETL",
+      "d": "ETL (Extract, Transform, Load) transforma antes de carregar: alta governança na entrada, schema-on-write, dados prontos no data warehouse, bom para KPIs rígidos e painel de NOC (Network Operations Center). ELT (Extract, Load, Transform) carrega o bruto no lake e transforma no consumo: schema-on-read, reprocessamento e treino de ML mais fáceis. Na amostra M09 as etapas são Extract (ler kpm.jsonl ou kpm.sqlite), Validate (schema, nulos, domínio, 3 KPMs, fases esperadas, UTC), Transform (to_datetime, parse JSON, features), Load (CSV ou Parquet em derived/) e QC registrado em etl_qc.json com contagens e drops."
+    },
+    {
+      "t": "EDA (Análise Exploratória de Dados)",
+      "d": "EDA, Exploratory Data Analysis, é a exploração inicial de um conjunto de dados para compreender estrutura, identificar padrões, detectar anomalias e formular hipóteses testáveis antes de cravar KPIs ou modelos. Usa estatística e visualização, mas não substitui o julgamento do analista: não é dashboard final nem prova de causalidade, é evidência documentada. No KPM as hipóteses do projeto são: PRB no stress é sistematicamente maior que no baseline; delay cresce com a carga; throughput extremo no recovery é artefato de medição e não sucesso de vazão."
+    },
+    {
+      "t": "Dados ausentes: MCAR, MAR e MNAR",
+      "d": "MCAR (Missing Completely At Random) é a falta independente do valor, como um pacote de log corrompido ao acaso. MAR (Missing At Random) depende de outra variável observada, como métrica só reportada quando o UE está em RRC Connected. MNAR (Missing Not At Random) depende do próprio valor, como o KPM que some exatamente quando há jamming ou falha grave. Na amostra UE-TP as métricas estão presentes, mas zeros em Delay podem ser valor real ou ausência semântica: documente a interpretação."
+    },
+    {
+      "t": "Dimensões mínimas de qualidade",
+      "d": "Cinco perguntas guiam o QC: completude (faltam amostras ou campos? a amostra tem 100 pontos, 20 baseline, 60 stress, 20 recovery), consistência (tipos e unidades coerentes, UTC em ingested_at, nomes KPM estáveis), unicidade (duplicatas pela chave lógica run_id, phase e sample_index), validade (valores no domínio esperado, PRB perto de 2 no baseline e de 99 no stress) e atualidade (janela e atraso de ingestão, aqui lab RFSIM e não NOC ao vivo). Confira as contagens por fase contra db_summary.json."
+    },
+    {
+      "t": "Estatística descritiva e distribuições por fase",
+      "d": "A análise univariada olha uma variável por vez: histograma e boxplot de PRB, throughput e delay separados por fase, com média, mediana, p95, min, max e contagem de zeros. Cada agregação conta outra história: a média de DRB.UEThpUl no stress fica em torno de 7,8 x 10^4 enquanto a mediana no recovery segue perto de 3,7, sinal de cauda longa. Como baseline e stress mudam a distribuição (estacionariedade fraca), trate cada fase como um regime e nunca misture sem agregar."
+    },
+    {
+      "t": "Outliers: documentar antes de apagar",
+      "d": "No recovery o DRB.UEThpUl chega a cerca de 1,7 x 10^5 no máximo com mediana ainda perto de 3,7. Antes de remover, pergunte: erro de escala ou unidade? amostra residual do stress? reinício de contador? As opções são sinalizar com flag, winsorizar na feature ou excluir com justificativa no README. Em RFSIM o outlier pode ser artefato de medição; em RF e jamming o outlier pode ser o próprio sinal de interesse. Nunca remova sem causa documentada."
+    },
+    {
+      "t": "Análise bivariada e correlação sem causalidade",
+      "d": "A análise bivariada cruza duas variáveis: tabelas cruzadas no churn (churn por tipo de contrato ou tenure) e dispersão PRB x Thp e PRB x Delay no KPM. A correlação de Pearson mede associação linear, mas amostra curta, RFSIM e fases distintas exigem prudência: declare o limite da amostra e a incerteza. Correlação não é causalidade; a hipótese vira conhecimento só quando confirmada ou refutada com plot ou SQL e registrada no README."
+    },
+    {
+      "t": "Séries temporais: três tempos, granularidade e UTC",
+      "d": "Há três tempos distintos: evento na rede, coleta na exportação e ingestão no armazenamento. Granularidades diferem (PM O1 a cada 15 min, KPM E2 a cada 1 s) e não se misturam sem agregar. Armadilhas: gap não é zero, reinício de contador, mudança de granularidade, misturar horário local com UTC, correlacionar fontes dessincronizadas e downsampling sem documentar a regra. Na amostra use sample_index como eixo ordenado quando o relógio do Indication não estiver no payload, e declare timezone, unidade e granularidade no README."
+    },
+    {
+      "t": "Mesmo ciclo com sensor PHY: OFDM, SSB e jammer narrowband",
+      "d": "O artigo de Varotto et al. detecta jammer narrowband no SSB (Synchronization Signal Block, com PSS, SSS e PBCH) usando ML binário sobre espectrogramas: com SCS de 30 kHz bastam 240 subportadoras, cerca de 7,2 MHz, para derrubar uma célula n78 de 100 MHz, porque OFDM depende de ortogonalidade e sincronismo. SNR e BER médios falham, pois o jammer quase não move a banda principal. O pipeline é o mesmo medallion: IQ do USRP em bronze, PSD em log e PCA em silver, classe jammer e alerta WIPS (Wireless Intrusion Prevention System) em gold. CNN chega perto de 100 por cento em 38 ms, KNN com PCA a 99,98 por cento em 8 ms e SVM com PCA a 98,7 por cento em 0,11 ms: latência de inferência define o consumo operacional."
+    },
+    {
+      "t": "Visualização: que gráfico para que pergunta",
+      "d": "Todo plot precisa de título informativo, eixos com unidades, janela temporal, fonte do dado, granularidade e se o valor é média, percentil ou máximo; sem isso o gráfico não é auditável no CP1. Escolha pela pergunta: histograma ou boxplot por fase para distribuição e cauda; série contra sample_index para gaps, saltos e mudança de regime; dispersão PRB x Thp ou PRB x Delay para associação; espectrograma frequência x tempo x log PSD para energia anômala no espectro. Poucos gráficos acionáveis valem mais que widgets decorativos, e qualidade documentada vale mais que gráfico bonito sem metadados."
+    }
+  ],
+  "formulas": [
+    {
+      "nome": "Média aritmética",
+      "expr": "media = (1/n) * soma(x_i), i = 1..n",
+      "vars": "x_i amostras da métrica na fase; n número de amostras (20 baseline, 60 stress, 20 recovery)",
+      "unidade": "a da métrica, declarada no README (valores RFSIM diferem de produção)",
+      "quando": "Contraste baseline x stress; sensível a outliers, compare sempre com a mediana"
+    },
+    {
+      "nome": "Mediana",
+      "expr": "mediana = valor central da amostra ordenada (p50)",
+      "vars": "amostra ordenada da métrica por fase",
+      "unidade": "a da métrica",
+      "quando": "Medida robusta de posição; no recovery a mediana de Thp fica perto de 3,7 enquanto o máximo passa de 10^5"
+    },
+    {
+      "nome": "Desvio padrão",
+      "expr": "s = raiz( soma((x_i - media)^2) / (n - 1) )",
+      "vars": "x_i amostras; media da fase; n amostras",
+      "unidade": "a da métrica",
+      "quando": "Dispersão na análise univariada; junto da média descreve a fase quando não há cauda longa"
+    },
+    {
+      "nome": "Percentil p95",
+      "expr": "p95 = valor abaixo do qual estão 95% das amostras",
+      "vars": "amostra ordenada da métrica por fase",
+      "unidade": "a da métrica",
+      "quando": "Cauda de delay e throughput; agregação que conta outra história em relação à média"
+    },
+    {
+      "nome": "Mínimo, máximo e contagem de zeros",
+      "expr": "min = menor x_i; max = maior x_i; zeros = contagem(x_i = 0)",
+      "vars": "x_i amostras por fase",
+      "unidade": "a da métrica; zeros em contagem",
+      "quando": "Validade de domínio (PRB perto de 2 no baseline, 99 no stress) e ausência semântica (zeros em Delay)"
+    },
+    {
+      "nome": "IQR e cerca do boxplot",
+      "expr": "IQR = Q3 - Q1; suspeito se x < Q1 - 1,5*IQR ou x > Q3 + 1,5*IQR",
+      "vars": "Q1 percentil 25; Q3 percentil 75",
+      "unidade": "a da métrica",
+      "quando": "Boxplot por fase; candidatos a outlier que devem ser documentados antes de qualquer remoção"
+    },
+    {
+      "nome": "z-score",
+      "expr": "z = (x - media) / desvio",
+      "vars": "x amostra; media e desvio da fase",
+      "unidade": "adimensional",
+      "quando": "Distância de uma amostra à média em desvios; frágil com cauda longa, prefira MAD"
+    },
+    {
+      "nome": "MAD (desvio absoluto mediano)",
+      "expr": "MAD = mediana(|x - mediana(x)|); z_robusto = 0,6745 * (x - mediana) / MAD",
+      "vars": "x amostras da fase; mediana da fase",
+      "unidade": "a da métrica; z_robusto adimensional",
+      "quando": "Modelo simples de anomalia com limiar (DIKW, conhecimento); robusto ao Thp extremo do recovery"
+    },
+    {
+      "nome": "Correlação de Pearson",
+      "expr": "r = cov(x,y) / (s_x * s_y), com -1 <= r <= 1",
+      "vars": "x e y duas métricas pareadas por sample_index (PRB x Thp, PRB x Delay); s_x e s_y desvios",
+      "unidade": "adimensional",
+      "quando": "Análise bivariada; associação linear sem afirmar causalidade, declarando o limite da amostra"
+    },
+    {
+      "nome": "Recurso de rádio e largura do SSB",
+      "expr": "RE = 1 subportadora x 1 símbolo; PRB ≈ 12 subportadoras x slot; largura_SSB = 240 x SCS = 240 x 30 kHz ≈ 7,2 MHz",
+      "vars": "RE Resource Element; PRB Physical Resource Block; SCS espaçamento entre subportadoras",
+      "unidade": "kHz e MHz",
+      "quando": "Ligar RRU.PrbTotUl (ocupação) à causa no espectro; tamanho do alvo do jammer narrowband"
+    },
+    {
+      "nome": "Espectrograma e transformação log",
+      "expr": "PSD = |FFT_m(iq)|^2 com m = 1024; espectrograma = n x m = 100 x 1024; feature = -log(x + epsilon)",
+      "vars": "iq amostras IQ do USRP; m tamanho da FFT; n janelas empilhadas (cerca de 0,8 ms); epsilon evita log(0)",
+      "unidade": "log PSD (adimensional)",
+      "quando": "Ingestão e transform do caso jammers antes de PCA (8 PCs ≈ 98% da variância) e KNN, SVM ou CNN"
+    }
+  ],
+  "onde": {
+    "scene": "tema",
+    "texto": "No P2 o p2-kpm-real grava o bronze (log KPM do agente E2 via FlexRIC), o p2-kpm-analytics tipa em CSV e calcula KPIs (silver e gold) e os p2-tema-t1 a t7 fazem a EDA por fase baseline, stress e recovery com qualidade de dados, agregações, percentis, Pearson e MAD."
+  },
+  "exercicios": [
+    "p2-test-e2-kpm",
+    "p2-test-e2-kpm-traffic",
+    "p2-kpm-real",
+    "p2-kpm-analytics",
+    "p2-tema-t1",
+    "p2-tema-t2",
+    "p2-tema-t3",
+    "p2-tema-t4",
+    "p2-tema-t5",
+    "p2-tema-t6",
+    "p2-tema-t7"
+  ],
+  "quiz": [
+    {
+      "q": "Um KPM deixa de ser reportado exatamente nos segundos em que o jammer está ativo. Que tipo de ausência é essa e por que isso importa na EDA?",
+      "a": "MNAR (Missing Not At Random): a falta depende do próprio fenômeno. Tratar como zero ou imputar pela média esconderia o evento; o gap deve ser registrado como evidência e documentado no README."
+    },
+    {
+      "q": "No recovery o DRB.UEThpUl tem máximo perto de 1,7 x 10^5 e mediana perto de 3,7. Qual é a conduta correta com esse outlier no CP1?",
+      "a": "Não apagar sem documentar. Investigar erro de escala ou unidade, amostra residual do stress ou reinício de contador; depois sinalizar com flag, winsorizar na feature ou excluir com justificativa no README, usando mediana e MAD como medidas robustas."
+    },
+    {
+      "q": "Por que um gráfico de série KPM sem janela, agregação e unidade declaradas é reprovado como não auditável?",
+      "a": "Porque média, mediana, p95 e máximo contam histórias diferentes e granularidades distintas (O1 a 15 min, E2 a 1 s) não se misturam sem agregar. Sem título, unidades, janela, fonte e linhagem bronze, silver, plot, ninguém reproduz nem confia no resultado."
+    }
+  ],
+  "fontes": "pp. 5-13 (aula, workflow do bruto ao gráfico, ciclo e DIKW), 14-18 (Open RAN e fontes O1/E2/A1), 21-26 (medallion, ETL x ELT, artefato UE-TP, envelope JSONL, contrato de features), 28-44 (EDA, hipóteses, ausentes MCAR/MAR/MNAR, outliers, univariada, bivariada, qualidade, contraste baseline x stress, checklist), 46-52 (etapas do ETL, batch x streaming, séries temporais, formatos, governança), 54-73 (caso jammers: OFDM, SSB, espectrogramas, pipeline, ML), 75-77 (visualização, Checkpoint 1, síntese), 79-81 (preparação Aula 04 e referências)"
+}

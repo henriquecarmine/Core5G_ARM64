@@ -1,0 +1,181 @@
+{
+  "id": "e2a02",
+  "n": 2,
+  "titulo": "Artigo NGO: RIC open source validado em rede 5G real",
+  "slide": "aula02-oss_nonrt_nearrt_ric.pdf",
+  "resumo": "Esta aula usa o artigo NGO et al. (ICT Express, 2024) como fio condutor: parte da motivação do Open RAN, passa pelas plataformas open source de Non-RT RIC (ORAN-SC) e Near-RT RIC (OSC, FlexRIC, SD-RAN) e chega à validação em uma rede 5G privada comercial no campus da SUTD. Você vai ver como um proxy E2 (FlexRIC + wrapper gRPC) transforma uma BBU fechada em nó O-RAN, e como rApps de ML e xApps (KPM, Traffic Steering) fecham o laço de energy saving usando A1, E2 e O1.",
+  "objetivos": [
+    "Explicar por que a RAN tradicional limita slicing, edge e automação com IA e como o O-RAN responde a isso",
+    "Distinguir SMO, Non-RT RIC e Near-RT RIC pelas escalas de tempo e pelas interfaces A1, E2, O1 e O2",
+    "Comparar as plataformas open source ORAN-SC, FlexRIC e SD-RAN em escopo, prós e contras",
+    "Descrever o proxy E2 do artigo NGO e como ele integra um RIC open source a uma RAN comercial",
+    "Relacionar a cadeia de rApps (KPM, Localization, UE-TP, Cell-TP, ES, IM, PM) e as xApps KPM e TS com o loop fechado de energy saving"
+  ],
+  "conceitos": [
+    {
+      "t": "Limitações da RAN tradicional e motivação do Open RAN",
+      "d": "A RAN tradicional é feita de caixas fechadas com interfaces proprietárias e um único fornecedor por site. Isso trava três coisas que o 5G exige: network slicing na RAN (controle fino por slice), coordenação com o edge (interfaces abertas entre RAN, core e orquestrador) e automação com IA (RIC, rApps e xApps precisam de A1, E2 e O1 para ler métricas e aplicar políticas). O Open RAN responde com interoperabilidade multi-vendor, desagregação RU/DU/CU, fronthaul aberto (split 7.2x) e um ecossistema em que terceiros desenvolvem aplicações sem depender de um único vendor."
+    },
+    {
+      "t": "SMO, Non-RT RIC e Near-RT RIC: escalas de tempo",
+      "d": "O SMO (Service Management and Orchestration) orquestra serviços, cuida de FCAPS, ciclo de vida e automação via O1 e O2. Dentro ou ao lado dele fica o Non-RT RIC, que decide em laço maior que 1 s, hospeda rApps e envia políticas pela interface A1. O Near-RT RIC atua entre 10 ms e 1 s, fala E2 com O-DU e O-CU e hospeda xApps. O RIC é o 'cérebro' software-defined da rede; o artigo NGO valida o Non-RT da ORAN-SC e o Near-RT OSC/FlexRIC sobre uma RAN comercial QCT."
+    },
+    {
+      "t": "Interfaces A1, E2, O1 e O2",
+      "d": "E2 liga o Near-RT RIC aos nós RAN (CU/DU) para controle near-RT e telemetria, com service models como KPM e RC. O1 liga SMO e Non-RT RIC aos elementos RAN para OAM, provisionamento, PM e alarmes. A1 liga Non-RT RIC ao Near-RT RIC para políticas, intent e enrichment information. O2 liga o SMO ao O-Cloud para orquestrar a infraestrutura, por exemplo o deploy de xApps em Kubernetes. Padronizar essas quatro interfaces permite combinar fornecedores de CU, DU, RU, RIC e SMO e reproduzir o cenário em laboratório com capturas E2AP."
+    },
+    {
+      "t": "Telco cloud: de NFV ao cloud-native e o O-Cloud",
+      "d": "NFV colocou funções de rede em máquinas virtuais e desacoplou o hardware proprietário. O passo seguinte é cloud-native: microserviços em containers orquestrados por Kubernetes. No O-RAN, o O-Cloud hospeda O-CU, O-DU e o RIC, e a interface O2 conecta o SMO a essa orquestração. Por isso os RICs open source da OSC rodam em Kubernetes com Helm; o artigo discute o trade-off entre microserviços (escala, muitos componentes) e monólito (FlexRIC, zero overhead)."
+    },
+    {
+      "t": "Artigo NGO et al. (2024): contexto, lacuna e testbed SUTD",
+      "d": "Título: 'RAN Intelligent Controller (RIC): From open-source implementation to real-world validation', ICT Express 10 (2024), open access. A lacuna: a O-RAN WG1 especifica 25 use cases, mas em 2023 poucas RANs comerciais tinham O1/E2 plenos, e os trabalhos anteriores (Polese, NexRAN, Hoffmann) ficaram em simuladores. O testbed é uma rede 5G privada QCT no campus SUTD (Singapura): 2 BBUs, 2 RRUs outdoor, 5 RRUs indoor, banda n78, em operação desde o verão de 2022. Quatro desafios motivam o trabalho: energy saving (O-RUs 24/7 em potência máxima), interferência indoor x outdoor no andar L5, RRU 'malformado' (heartbeat OK mas antena falha) e integração OSS com RAN comercial sem E2 nativo."
+    },
+    {
+      "t": "Non-RT RIC da ORAN-SC (projeto NONRTRIC)",
+      "d": "É o único Non-RT RIC open source citado no artigo; pode rodar dentro do SMO ou standalone. Vive no namespace Kubernetes 'nonrtric' e é composto de microserviços: Control Panel, A1 controller, A1 simulator, rApp catalogue, ICS (Information Coordinator Service), DMaaP adapter/mediator, NonRT-RIC gateway e Helm manager. Interfaces: A1 (políticas para o Near-RT), O1 (provisionamento e PM), R1 (onboarding de rApps) e ICS/DMaaP para produtores e consumidores de dados. Prós: referência da aliança, integra analytics e policy. Contras: depende de ONAP/DMaaP, curva de aprendizado alta."
+    },
+    {
+      "t": "Near-RT RIC da ORAN-SC (OSC)",
+      "d": "Organizado em três namespaces Kubernetes: ricinfra (Helm/K8s), ricplt (plataforma) e ricxapp (xApps). No ricplt ficam E2 termination e E2 manager, subscription manager (report, insert, control, policy), routing manager com RMR, app manager, alarm manager, VESPA/Prometheus, KONG e dbaas com Redis. No testbed SUTD a KPM-xApp persiste em InfluxDB; xApps de referência incluem anomaly detection, KPM monitoring, QoE predictor e traffic steering. Prós: O-RAN compliant e escalável. Contras: consome recursos de Kubernetes e sofre mismatch de versões de E2-SM com a RAN comercial."
+    },
+    {
+      "t": "FlexRIC/OAI e SD-RAN/ONF: comparativo das plataformas",
+      "d": "FlexRIC (OAI, MOSAIC5G) é um Near-RT RIC monolítico com princípio zero-overhead: sem containers ou Kubernetes, SDK em C com SWIG para xApps em várias linguagens, protocolo E42 e iApps de baixa latência, SQLite local e um E2 agent emulável que serve de proxy para RAN comercial. Ideal para 5G privado com poucos clientes críticos, mas com escala e resiliência limitadas. SD-RAN (ONF) usa micro-ONOS com gRPC (onos-e2t, onos-e2-sm, onos-topo, onos-uenib), traz 6 xApps (PCI, KPMmon, MHO, MLB, RSM, Traffic Steering) e um RANsim com cerca de 1000 RANs e 100 mil UEs, porém sem PHY nem user plane real. Resumo: OSC é completo mas pesado; FlexRIC é enxuto; SD-RAN é bom para laboratório rápido."
+    },
+    {
+      "t": "Proxy E2 na RAN comercial",
+      "d": "Muitos vendors ainda não expõem E2 nativo. A solução do NGO: um wrapper que adapta a API proprietária da BBU QCT em rotinas E2, empacotado como dois serviços Docker rodando na própria BBU, sem alterar o ambiente do vendor. O E2-agent do FlexRIC recebe E2AP e conversa via gRPC com um servidor que chama a API da BBU. O design é modular: trocar a BBU significa reescrever apenas o serviço gRPC, o E2-agent é reutilizado. Resultado: a RAN privada vira um nó E2 O-RAN-compliant enquanto o vendor não entrega E2 nativo."
+    },
+    {
+      "t": "KPM-xApp e TS-xApp no Near-RT RIC",
+      "d": "A KPM-xApp coleta Key Performance Measurements via E2 usando o E2-SM KPM da O-RAN WG3 e persiste em InfluxDB (OSC) ou SQLite (FlexRIC). Métricas por UE com amostragem de 1 s: throughput DL/UL em MAC e RLC, PRB por segundo, MCS, CQI, RSSI e BLER. Esses dados alimentam anomaly detection, traffic prediction e steering, e são a base do dataset e das features das rApps. A TS-xApp (Traffic Steering) recebe a política A1 do Non-RT RIC e a aplica no nó E2 entre 10 ms e 1 s; no energy saving ela desvia o tráfego antes de colocar a RRU em sleep, usando os dados da KPM-xApp para evitar ruptura de sessão."
+    },
+    {
+      "t": "Cadeia de rApps e loop fechado de energy saving",
+      "d": "No Non-RT RIC da SUTD as rApps se encadeiam: KPM/VES alimentam o InfluxDB; a Localization-rApp classifica o andar do UE (L4/L5/L6) porque o GPS falha nos corredores; a UE-TP-rApp prevê o throughput DL a partir de RSSI, RSRP, SINR, PRB e MCS; a Cell-TP-rApp agrega a demanda por célula; ES-rApp, IM-rApp e PM-rApp tomam decisões via O1 e geram alertas. O loop de energy saving: Cell-TP e UE-TP preveem a carga, a ES-rApp publica política A1 com células candidatas e SLA, a TS-xApp desvia tráfego via E2, a O1 executa o sleep da RRU e a KPM-xApp monitora o impacto. A ES-rApp desliga RRUs após 15 min sem UE em horários de baixa demanda e mantém a RU de cobertura com TX reduzido; a simulação de um ano deu cerca de 65% de economia de energia de transmissão."
+    },
+    {
+      "t": "Dataset SUTD e modelos ML: instance vs sequence",
+      "d": "O dataset público (github.com/FCCLab/sutd_5g_dataset_2023) vem de walk tests nos corredores L4 a L6 com um Samsung S22 Ultra a 2 Hz, 7 KPMs (RSRP, RSRQ, SINR, PRB, MCS DL/UL, throughput) e cerca de 2000 a 2300 amostras por cenário. Pré-processamento: remover nulos, cortar features com correlação acima de 0,98, normalizar para [0,1], split 70/30 e janela sequencial de 10 amostras (5 s). Modelos testados: SVM, RF, XGBoost, DNN e LSTM. A entrada sequencial (janela temporal) sempre superou a instance-based (1 amostra). Deploy escolhido: Localization com LSTM (91,1%), UE-TP com DNN (R² = 0,90, inferência 10x mais rápida que LSTM), IM com LSTM (F1 = 0,828), PM com DNN (99,1%). Toda inferência ficou abaixo de 30 microssegundos, muito dentro do limite de 1 s do Non-RT."
+    }
+  ],
+  "formulas": [
+    {
+      "nome": "Laço Non-RT RIC",
+      "expr": "T_nonRT > 1 s",
+      "vars": "T_nonRT = período de decisão das rApps via A1/O1",
+      "unidade": "s",
+      "quando": "Políticas, treino de ML, energy saving e manutenção preditiva no Non-RT RIC"
+    },
+    {
+      "nome": "Laço Near-RT RIC",
+      "expr": "10 ms ≤ T_nearRT < 1 s",
+      "vars": "T_nearRT = tempo de reação das xApps via E2",
+      "unidade": "ms",
+      "quando": "KPM-xApp e TS-xApp aplicando política A1 no nó E2"
+    },
+    {
+      "nome": "Laço RT (dentro do gNB)",
+      "expr": "T_RT < 10 ms",
+      "vars": "T_RT = decisões de scheduler MAC e PHY",
+      "unidade": "ms",
+      "quando": "Fora do RIC; fica no O-DU (MAC/High-PHY) e O-RU"
+    },
+    {
+      "nome": "Latência de inferência das rApps",
+      "expr": "t_inf < 30 µs << 1 s",
+      "vars": "t_inf = tempo de inferência de DNN/LSTM por amostra",
+      "unidade": "µs",
+      "quando": "Mostra que o requisito Non-RT é atendido com folga"
+    },
+    {
+      "nome": "Economia de energia da ES-rApp",
+      "expr": "E_economizada ≈ 65% da energia de TX por ano",
+      "vars": "simulação de 1 ano com O-RAN WG1 + spec QCT",
+      "unidade": "%",
+      "quando": "Avaliar o ganho do energy saving indoor/outdoor (Table 5)"
+    },
+    {
+      "nome": "Redução de potência da RU de cobertura",
+      "expr": "outdoor: 37 dBm -> 14 dBm; indoor: 24 dBm -> 8 dBm",
+      "vars": "potência TX da RU mantida ligada em modo economia",
+      "unidade": "dBm",
+      "quando": "ES-rApp mantém uma RU de cobertura e desliga as demais"
+    },
+    {
+      "nome": "Gatilho de sleep da RRU",
+      "expr": "sem UE por 15 min -> desliga RRU",
+      "vars": "janelas: noite 20h às 8h, fim de semana, feriados",
+      "unidade": "min",
+      "quando": "Regra da ES-rApp enviada via O1"
+    },
+    {
+      "nome": "Amostragem da KPM-xApp",
+      "expr": "f_KPM = 1 amostra/s",
+      "vars": "métricas por UE: throughput MAC/RLC, PRB/s, MCS, CQI, RSSI, BLER",
+      "unidade": "s",
+      "quando": "Coleta via E2-SM KPM no Near-RT RIC"
+    },
+    {
+      "nome": "Janela sequencial do dataset",
+      "expr": "janela = 10 amostras a 2 Hz = 5 s",
+      "vars": "walk test a 2 Hz; 7 KPMs por amostra",
+      "unidade": "s",
+      "quando": "Modelos sequence-based (LSTM/DNN seq.)"
+    },
+    {
+      "nome": "Pré-processamento",
+      "expr": "remover nulls; descartar se corr > 0,98; normalizar [0,1]; split 70/30",
+      "vars": "corr = correlação entre features",
+      "unidade": "",
+      "quando": "Antes de treinar SVM, RF, XGBoost, DNN, LSTM"
+    },
+    {
+      "nome": "Treino de deep learning",
+      "expr": "20 epochs; lr = 0,001",
+      "vars": "lr = learning rate",
+      "unidade": "",
+      "quando": "DNN e LSTM do artigo"
+    },
+    {
+      "nome": "Métricas de validação",
+      "expr": "Localization acc = 91,1%; UE-TP R² = 0,90; IM F1 = 0,828; PM acc = 99,1%",
+      "vars": "acc = acurácia; R² = coeficiente de determinação; F1 = média harmônica de precisão e recall",
+      "unidade": "",
+      "quando": "Comparar seu modelo do lab com o baseline do artigo"
+    }
+  ],
+  "onde": {
+    "scene": "kpm",
+    "texto": "No P2 o gNB OAI (RFSIM) com agente E2 se conecta ao FlexRIC, o mesmo Near-RT RIC monolítico que o artigo usa como proxy E2, e a xApp KPM coleta as métricas; o Non-RT RIC via A1 fecha o laço como no energy saving do NGO."
+  },
+  "exercicios": [
+    "p2-test-e2-sm",
+    "p2-test-e2-kpm",
+    "p2-kpm-real",
+    "p2-kpm-analytics",
+    "p2-test-a1",
+    "p2-ml-uetp",
+    "p2-ml-localizacao",
+    "p2-ml-pm",
+    "p2-tema-t1",
+    "p2-tema-t5"
+  ],
+  "quiz": [
+    {
+      "q": "Quais são as escalas de tempo do Non-RT RIC, do Near-RT RIC e do laço RT, e qual interface cada RIC usa para atuar?",
+      "a": "O Non-RT RIC decide acima de 1 s e envia políticas pela A1 (e usa O1 para OAM). O Near-RT RIC atua entre 10 ms e 1 s pela E2 com O-DU/O-CU. Abaixo de 10 ms é o laço RT, que fica dentro do próprio gNB (scheduler MAC/PHY), fora do RIC."
+    },
+    {
+      "q": "Como o artigo NGO conectou um RIC open source a uma BBU comercial que não tinha interface E2 nativa?",
+      "a": "Com um proxy E2: o E2-agent do FlexRIC roda na BBU, recebe E2AP do Near-RT RIC e conversa por gRPC com um serviço wrapper que chama a API proprietária da BBU QCT. São dois serviços Docker na BBU, sem alterar o ambiente do vendor; trocar de BBU exige reescrever apenas o serviço gRPC."
+    },
+    {
+      "q": "Descreva o loop fechado de energy saving do artigo citando as interfaces e as aplicações envolvidas.",
+      "a": "Cell-TP e UE-TP-rApp preveem a carga no Non-RT RIC (dados de KPM/VES em InfluxDB); a ES-rApp publica uma política A1 com células candidatas e SLA; a TS-xApp no Near-RT RIC desvia o tráfego via E2 em 10 ms a 1 s; a O1 executa o sleep da RRU e a KPM-xApp monitora o impacto. A simulação de um ano indicou cerca de 65% de economia de energia de TX."
+    }
+  ],
+  "fontes": "Páginas 4, 8 a 27, 30 a 36, 39 a 57 e 60 a 61 de 62"
+}

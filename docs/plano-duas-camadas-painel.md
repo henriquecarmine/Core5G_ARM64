@@ -74,8 +74,14 @@ cada NF está dizendo**, não só se está de pé.
   espelhada ao vivo aos alunos. V2: eventos estruturados `FLOW|/STORE|/RESULT|`
   no `testlog.sh`; V3: cena por JSON ao lado da topologia.
 
-### Fase C — reorganizar a didática (futuro, não agora)
+### Fase C — reorganizar a didática
 
+- ✅ **Entregue (v0.64.0)** — ver [estudos-por-cadeira.md](estudos-por-cadeira.md):
+  rail do console com um dropdown por cadeira (Estudos 1–4), hubs
+  `/lab/estudo/{n}` e aulas `/lab/estudo/{n}/aula/{k}` renderizadas de JSON
+  plugável (`static/lab/estudos/`), os 7 temas do projeto integrador da
+  disciplina 03 como comandos (`p2-tema-*`) com fonte de dados trocável
+  (amostra do professor · arquivo · colado).
 - Hub `/lab` por **disciplina** (espelhando `pdfs/01-ric · 02-ric-ai ·
   03-dados-telecom`), aulas como conteúdo plugável (os geradores de
   `02-ric-ai/lab-didatico/` já produzem HTML — viram "pacotes" por disciplina).

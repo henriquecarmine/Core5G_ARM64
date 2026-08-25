@@ -82,6 +82,17 @@ COMMANDS: dict[str, dict] = {
     "p2-ml-uetp": {"cmd": ["./scripts/p2_ml_uetp.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-ml-localizacao": {"cmd": ["./scripts/p2_ml_localizacao.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-ml-pm": {"cmd": ["./scripts/p2_ml_pm.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    # Análise de Dados em Redes de Telecom (Kunzler) — os 7 temas do projeto
+    # integrador sobre a telemetria KPM (stdlib; amostra do professor ou dado
+    # enviado/colado no painel, ver /api/lab-data/kpm). Não precisa da RAN no ar.
+    "p2-tema-t1": {"cmd": ["./scripts/p2_temas.sh", "t1"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-tema-t2": {"cmd": ["./scripts/p2_temas.sh", "t2"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-tema-t3": {"cmd": ["./scripts/p2_temas.sh", "t3"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-tema-t4": {"cmd": ["./scripts/p2_temas.sh", "t4"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-tema-t5": {"cmd": ["./scripts/p2_temas.sh", "t5"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-tema-t6": {"cmd": ["./scripts/p2_temas.sh", "t6"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-tema-t7": {"cmd": ["./scripts/p2_temas.sh", "t7"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    "p2-tema-all": {"cmd": ["./scripts/p2_temas.sh", "all"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     # Non-RT RIC — completa a pilha O-RAN do Projeto 2 (server/nonrt-ric/,
     # imagens ARM64 locais via docker load; docs/instalacao-nonrt-arm64.md).
     # Leve (~0,5 GB): o switch p/ P2 sobe junto; toggle dá o controle manual.
@@ -908,6 +919,106 @@ async def labdata_upload(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True, "rows": len(rows) - 1, "source": "custom"})
 
 
+# ---- Fonte de dados dos 7 temas (Análise de Dados): amostra do professor × ----
+# dado enviado/colado. O upload aceita JSONL (formato do professor) ou CSV
+# (largo: thp_ul,delay_dl,prb_ul[,phase,...]; ou o longo do kpm_analytics).
+# Um arquivo só; os wrappers p2_temas.sh honram KPM_FILE.
+KPM_DIR = SERVER_DIR / "panel_uploads" / "labdata" / "kpm"
+KPM_CUSTOM = KPM_DIR / "kpm_custom.txt"
+KPM_SAMPLE = SERVER_DIR / "oai-cn-gnb-e2" / "scripts" / "temas" / "samples" / "kpm_ue_tp_sample.jsonl"
+_KPM_ALIASES = {"thp": ("thp_ul", "drb.uethpul", "throughput", "thp", "vazao"),
+                "delay": ("delay_dl", "drb.rlcsdudelaydl", "delay", "atraso", "latency"),
+                "prb": ("prb_ul", "rru.prbtotul", "prb", "prbtotul")}
+
+
+def _kpm_validate(text: str) -> int:
+    """Devolve o nº de amostras válidas ou levanta HTTPException explicando."""
+    rows = [l for l in text.splitlines() if l.strip()]
+    if len(rows) < 5:
+        raise HTTPException(400, "preciso de pelo menos 5 amostras")
+    if rows[0].lstrip().startswith("{"):
+        n = 0
+        for l in rows:
+            try:
+                o = json.loads(l)
+            except json.JSONDecodeError:
+                continue
+            m = o.get("metrics", o)
+            low = {k.lower() for k in m}
+            if all(any(a in low for a in _KPM_ALIASES[f]) for f in _KPM_ALIASES):
+                n += 1
+        if n < 5:
+            raise HTTPException(400, "JSONL sem as 3 métricas (DRB.UEThpUl, DRB.RlcSduDelayDl, RRU.PrbTotUl) em pelo menos 5 linhas")
+        return n
+    if "," not in rows[0]:
+        raise HTTPException(400, "CSV inválido: preciso de um cabeçalho com vírgulas (baixe o exemplo)")
+    hdr = [h.strip().lower() for h in rows[0].split(",")]
+    if "measname" in hdr and "value" in hdr:
+        return len(rows) - 1
+    faltam = [f for f in _KPM_ALIASES if not any(a in hdr for a in _KPM_ALIASES[f])]
+    if faltam:
+        raise HTTPException(400, f"CSV sem coluna de {', '.join(faltam)} (use thp_ul, delay_dl, prb_ul; baixe o exemplo)")
+    return len(rows) - 1
+
+
+@router.get("/api/lab-data/kpm")
+def kpmdata_status() -> JSONResponse:
+    st = _labdata_state()
+    return JSONResponse({"source": st.get("kpm", "default"), "has_custom": KPM_CUSTOM.exists(),
+                         "rows": st.get("kpm_rows")})
+
+
+@router.get("/api/lab-data/kpm/example")
+def kpmdata_example() -> PlainTextResponse:
+    """Modelo em CSV largo (as 3 métricas + fase + índice), tirado da amostra do professor."""
+    out = ["thp_ul,delay_dl,prb_ul,phase,sample_index"]
+    try:
+        for l in KPM_SAMPLE.read_text(errors="replace").splitlines():
+            if len(out) > 6:
+                break
+            try:
+                o = json.loads(l)
+            except json.JSONDecodeError:
+                continue
+            m = o.get("metrics", {})
+            out.append(f"{m.get('DRB.UEThpUl')},{m.get('DRB.RlcSduDelayDl')},{m.get('RRU.PrbTotUl')},"
+                       f"{o.get('phase', '')},{o.get('sample_index', '')}")
+    except OSError:
+        raise HTTPException(404, "amostra do professor não encontrada no servidor")
+    return PlainTextResponse("\n".join(out) + "\n", headers={
+        "Content-Disposition": "attachment; filename=exemplo_kpm.csv", "Content-Type": "text/csv"})
+
+
+@router.post("/api/lab-data/kpm/source")
+def kpmdata_source(payload: dict, request: Request) -> JSONResponse:
+    _only_professor(request)
+    source = payload.get("source")
+    if source not in ("default", "custom"):
+        raise HTTPException(400, "source deve ser default|custom")
+    if source == "custom" and not KPM_CUSTOM.exists():
+        raise HTTPException(400, "nenhum dado enviado ainda")
+    st = _labdata_state(); st["kpm"] = source; _labdata_save(st)
+    return JSONResponse({"ok": True, "source": source})
+
+
+@router.post("/api/lab-data/kpm/upload")
+async def kpmdata_upload(request: Request) -> JSONResponse:
+    """Corpo cru (text/csv ou JSONL; colado ou arquivo). Sem multipart."""
+    _only_professor(request)
+    body = await request.body()
+    if len(body) > 8_000_000:
+        raise HTTPException(413, "arquivo grande demais (limite 8 MB)")
+    try:
+        text = body.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(400, "não é texto UTF-8 — envie .csv ou .jsonl")
+    n = _kpm_validate(text)
+    KPM_DIR.mkdir(parents=True, exist_ok=True)
+    KPM_CUSTOM.write_text(text)
+    st = _labdata_state(); st["kpm"] = "custom"; st["kpm_rows"] = n; _labdata_save(st)
+    return JSONResponse({"ok": True, "rows": n, "source": "custom"})
+
+
 @router.post("/api/run/{command}")
 def run_command(command: str, request: Request) -> StreamingResponse:
     by = ensure_can_run(request)
@@ -921,6 +1032,9 @@ def run_command(command: str, request: Request) -> StreamingResponse:
     if command.startswith("p2-ml-") and _labdata_state().get("sutd") == "custom":
         env = os.environ.copy()
         env["SUTD_DIR"] = str(LABDATA_DIR)
+    if command.startswith("p2-tema-") and _labdata_state().get("kpm") == "custom" and KPM_CUSTOM.exists():
+        env = env or os.environ.copy()
+        env["KPM_FILE"] = str(KPM_CUSTOM)
     return StreamingResponse(
         tee_to_live(stream_command(spec["cmd"], spec["cwd"], env=env, lang=lang), command, by, cmd=command),
         media_type="text/plain",

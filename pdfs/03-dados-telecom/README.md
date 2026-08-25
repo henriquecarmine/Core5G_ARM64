@@ -72,15 +72,31 @@ estatística, regressão simples ou anomalia básica — sem exigir ML avançado
 
 Cada grupo desenvolve o projeto e o seminário sobre um dos 7 temas:
 
-| Grupo | Tema |
-|-------|------|
-| G1 | Vazão do usuário |
-| G2 | Anomalia de carga |
-| G3 | Latência / proxy de QoE |
-| G4 | Risco de congestionamento |
-| G5 | Visão agregada da célula |
-| G6 | Economia de energia (intenção) |
-| G7 | Política de QoS / steering |
+| Tema | Assunto | No painel |
+|------|---------|-----------|
+| T1 | Vazão do usuário (UE-TP) | `p2-tema-t1` |
+| T2 | Anomalia de carga | `p2-tema-t2` |
+| T3 | Latência / proxy de QoE | `p2-tema-t3` |
+| T4 | Risco de congestionamento | `p2-tema-t4` |
+| T5 | Visão agregada da célula | `p2-tema-t5` |
+| T6 | Economia de energia (intenção) | `p2-tema-t6` |
+| T7 | Política de QoS / steering | `p2-tema-t7` |
+
+Atenção: o número do **grupo não é** o número do tema. A distribuição está na
+planilha "Projeto Integrador: Data" do professor (ex.: **Grupo 6 = Tema 1**,
+Vazão do usuário; ver [`projeto/`](projeto/)).
+
+## No painel (Estudo 4)
+
+A disciplina vive no painel como **Estudo 4** (rail do console, dropdown
+*Análise de Dados em Redes de Telecom*): as aulas 01–03 renderizadas dos slides
+(`/lab/estudo/4/aula/{1,2,3}`: objetivos, conceitos, fórmulas, "onde roda" no
+mini-mapa, exercícios, quiz) e **os 7 temas do projeto integrador** como
+comandos (`p2-tema-t1 … p2-tema-all`): cada um imprime a pergunta do card, as
+fórmulas dos 2 indicadores, as tabelas por fase, a leitura e a recomendação como
+política A1 em dry-run, sobre os mesmos dados (`kpm-ue-tp-sample`) ou sobre um
+arquivo/colagem do professor. Motor: `server/oai-cn-gnb-e2/scripts/temas/`.
+Doc: [`docs/estudos-por-cadeira.md`](../../docs/estudos-por-cadeira.md).
 
 ## Referências
 

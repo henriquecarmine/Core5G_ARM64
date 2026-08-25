@@ -101,6 +101,15 @@
         { re: /KPI|indicador|m[ée]dia|percentil/i, to: 'kpi' },
         { re: /CSV|sparkline|s[ée]rie|decis|relat/i, to: 'viz' },
       ] },
+    { name: "tema", match: /^p2-tema-/,
+      nodes: [{ id: 'raw', txt: '💾 KPM (3 fases)' }, { id: 'etl', txt: '🧪 silver' },
+              { id: 'kpi', txt: '📐 2 indicadores' }, { id: 'dec', txt: '🧭 recomendação' }],
+      edges: ['', '', ''],
+      triggers: [
+        { re: /formato detectado|dados carregados|amostras/i, to: 'etl' },
+        { re: /F[óo]rmulas|indicador|\bI1\b|\bI2\b/i, to: 'kpi' },
+        { re: /recomend|Pol[ií]tica A1|dry-run|Veredito|regra N[ÃA]O|regra disparou|lado a lado/i, to: 'dec' },
+      ] },
     { name: "ml", match: /^p2-ml-/,
       nodes: [{ id: 'data', txt: '💾 dados SUTD' }, { id: 'train', txt: '🧮 treino' },
               { id: 'metr', txt: '📊 métricas' }],
@@ -200,6 +209,12 @@
       etl: { q: 'A faxina: Extrair, Transformar, Carregar — texto vira tabela.', o: 'script <b>kpm_analytics.sh</b> (awk/python), no host', d: 'Parse de cada linha → série temporal estruturada (time, measName, valor, UE, slice).' },
       kpi: { q: 'A agregação: milhares de amostras viram POUCOS números que informam decisão.', o: 'calculado em memória pelo script', d: 'Throughput médio/máx por UE, ocupação de PRB — os KPIs (aula 04 da disciplina!).' },
       viz: { q: 'O resultado visível: a forma do tráfego no tempo.', o: '<b>logs/kpm_timeseries.csv</b> + sparkline ASCII no console', d: 'O CSV final — o mesmo insumo que alimentaria um UE-TP-rApp de verdade.' },
+    },
+    tema: {
+      raw: { dataKey: 'kpm', q: 'A telemetria KPM do lab do professor (kpm-ue-tp-sample): 100 medições em 3 fases (baseline 20 · stress 60 · recovery 20). Os MESMOS dados para os 7 grupos — muda a pergunta.', o: 'servidor: <b>oai-cn-gnb-e2/scripts/temas/samples/</b> · original: submódulo cesar-school-repo/data/code/datasets/kpm-ue-tp-sample/', d: '1 linha = 1 medição: DRB.UEThpUl (vazão UL), DRB.RlcSduDelayDl (atraso DL), RRU.PrbTotUl (PRBs) + fase, run_id, sample_index.' },
+      etl: { q: 'A zona silver: cada linha tipada e ordenada por fase e sample_index — o mini-lake da Aula 02.', o: 'em memória, no <b>scripts/temas/temas_projeto.py</b> (só biblioteca padrão)', d: 'Contagem por fase, unidades por convenção KPM e os limiares derivados dos dados (PRB alto, vazão baixa, atraso máximo).' },
+      kpi: { q: 'Os 2 indicadores obrigatórios do card do tema — a fórmula é impressa ANTES do número.', o: 'GROUP BY fase, percentis, correlação de Pearson, MAD, médias móveis', d: 'Tabelas por fase (média, mediana, p95, %), correlação global × dentro da fase, score de anomalia (robust-baseline-mad, o mesmo do model.json).' },
+      dec: { q: 'A recomendação: uma política A1 candidata em DRY-RUN — nada é aplicado na RAN.', o: 'JSON no formato do decision.json do professor (policy_data.scope / qosObjectives)', d: 'Se a regra do tema disparou, o motivo; se não disparou, por que não (a leitura honesta) — e as limitações.' },
     },
     ml: {
       data: { dataKey: 'sutd', q: 'Medições REAIS de campo: o walk test 5G da universidade SUTD (Singapura) — material da disciplina \u201cAplicações de IA e ML em RIC\u201d do Prof. Julio C. C. Tesolin (CESAR School).', o: 'servidor: <b>oai-cn-gnb-e2/scripts/ml/</b> · cópia aberta no repo: pdfs/02-ric-ai/casos-artigo/data/sutd/', d: 'CSVs com RSRP, RSRQ, SINR, PRB e throughput medidos andando pelos andares 4/5/6 — cada linha é um instante rotulado.' },
@@ -388,15 +403,33 @@
   }
 
   // ---- Fonte dos dados (funções de ML): sugerida × CSV do professor -------
-  function srcHtml() {
+  // Por chave de dado: o texto do cartão muda, o mecanismo é o mesmo (GET
+  // /api/lab-data/{key}, POST .../source, POST .../upload com o corpo cru).
+  var SRC = {
+    sutd: { def: 'o dataset SUTD original (4 cenários do walk test) descrito no cartão acima — reproduz o artigo.',
+            cus: 'mesmas colunas do exemplo; seu CSV vira os 4 cenários.', accept: '.csv', paste: false,
+            foot: '4 cenários no servidor · disciplina do Prof. Julio C. C. Tesolin' },
+    kpm:  { def: 'a amostra oficial do professor (kpm-ue-tp-sample): 100 medições em 3 fases — a mesma dos 7 grupos.',
+            cus: 'JSONL (formato do professor) ou CSV com thp_ul, delay_dl, prb_ul e, se tiver, phase. Sem fase, as primeiras 20% viram baseline.',
+            accept: '.csv,.jsonl,.json,.txt', paste: true,
+            foot: 'amostra do professor · disciplina Análise de Dados (Prof. Jonas A. Kunzler)' },
+  };
+  function srcHtml(key) {
+    var s = SRC[key] || SRC.sutd;
     return '<div class="sec">Fonte dos dados desta função</div><div class="fs-src">'
       + '<label><input type="radio" name="fsrc" value="default"> 1. Sugerida pelo servidor · <a href="#" class="see">👁 ver amostra</a></label>'
-      + '<div class="exp">o dataset SUTD original (4 cenários do walk test) descrito no cartão acima — reproduz o artigo.</div>'
+      + '<div class="exp">' + s.def + '</div>'
       + '<div class="smp" style="display:none;margin:5px 0 4px 20px;max-width:345px;overflow-x:auto;border:1px solid #2c3038;border-radius:6px"></div>'
-      + '<label><input type="radio" name="fsrc" value="custom"> 2. Meu CSV enviado <span class="st"></span></label>'
-      + '<div class="exp">mesmas colunas do exemplo; seu CSV vira os 4 cenários. '
-      + '<a href="/api/lab-data/sutd/example" download>⬇ baixe o exemplo aqui</a></div>'
-      + '<input type="file" accept=".csv">'
+      + '<label><input type="radio" name="fsrc" value="custom"> 2. Meus dados <span class="st"></span></label>'
+      + '<div class="exp">' + s.cus + ' '
+      + '<a href="/api/lab-data/' + key + '/example" download>⬇ baixe o exemplo aqui</a></div>'
+      + '<input type="file" accept="' + s.accept + '">'
+      + (s.paste
+          ? '<div class="exp" style="margin-top:6px">…ou cole aqui (mesmas colunas do exemplo):</div>'
+            + '<textarea class="paste" rows="4" spellcheck="false" placeholder="thp_ul,delay_dl,prb_ul,phase\n3.7,0,2,baseline\n80023.7,158.9,99,stress" '
+            + 'style="margin:3px 0 0 20px;width:calc(100% - 20px);max-width:330px;font:10.5px \'SF Mono\',Menlo,monospace;background:#0d0e11;color:#c9d1d9;border:1px solid #2c3038;border-radius:6px;padding:6px 8px;resize:vertical"></textarea>'
+            + '<div style="margin:4px 0 0 20px"><button type="button" class="pastebtn" style="font:11px -apple-system,sans-serif;background:#1c2230;color:#c9d1d9;border:1px solid #2c3038;border-radius:6px;padding:4px 10px;cursor:pointer">⬆ Usar o que colei</button></div>'
+          : '')
       + '</div>';
   }
   function wireSrc(card, key) {
@@ -438,21 +471,29 @@
                   return '<td style="padding:3px 7px;color:#9aa4b2;border-bottom:1px solid #1c1f26;white-space:nowrap">' + v + '</td>';
                 }).join('') + '</tr>';
               }).join('')
-            + '</table><div style="padding:5px 9px;color:#5c6370;font-size:9.5px">⋮ primeiras linhas · passe o mouse nos cabeçalhos · 4 cenários no servidor · disciplina do Prof. Julio C. C. Tesolin</div>';
+            + '</table><div style="padding:5px 9px;color:#5c6370;font-size:9.5px">⋮ primeiras linhas · passe o mouse nos cabeçalhos · ' + ((SRC[key] || SRC.sutd).foot) + '</div>';
           smp.innerHTML = html;
         })
         .catch(function () { smp.innerHTML = '<div style="padding:6px 9px;color:#ff6b6b;font-size:10px">falhou ao carregar</div>'; });
     };
+    function upload(txt) {
+      st.textContent = 'enviando…';
+      return fetch('/api/lab-data/' + key + '/upload', { method: 'POST',
+        headers: { 'Content-Type': 'text/plain' }, body: txt })
+        .then(function (resp) {
+          if (!resp.ok) return resp.json().then(function (e) { st.textContent = ''; alert(e.detail || 'falhou'); });
+          refresh();
+        });
+    }
     file.onchange = function () {
       var fl = file.files && file.files[0]; if (!fl) return;
-      st.textContent = 'enviando…';
-      fl.text().then(function (txt) {
-        return fetch('/api/lab-data/' + key + '/upload', { method: 'POST',
-          headers: { 'Content-Type': 'text/csv' }, body: txt });
-      }).then(function (resp) {
-        if (!resp.ok) return resp.json().then(function (e) { st.textContent = ''; alert(e.detail || 'falhou'); });
-        refresh();
-      });
+      fl.text().then(upload);
+    };
+    var pb = card.querySelector('.pastebtn'), ta = card.querySelector('textarea.paste');
+    if (pb && ta) pb.onclick = function () {
+      var txt = (ta.value || '').trim();
+      if (!txt) { alert('cole os dados primeiro (cabeçalho + linhas)'); return; }
+      upload(txt + '\n');
     };
     refresh();
   }
@@ -475,7 +516,7 @@
       + '<div class="sec">O que é</div><div>' + node.info.q + '</div>'
       + '<div class="sec">Onde vive</div><div><code>' + node.info.o + '</code></div>'
       + '<div class="sec">O que tem dentro</div><div>' + node.info.d + '</div>'
-      + (node.info.dataKey ? srcHtml() : '')
+      + (node.info.dataKey ? srcHtml(node.info.dataKey) : '')
       + '<div class="hint">💡 Enquanto o teste roda, o log abaixo é esta operação acontecendo — a faixa mostra POR ONDE o dado passa; o log mostra O QUE ele diz.</div>';
     document.body.appendChild(back);
     document.body.appendChild(c);

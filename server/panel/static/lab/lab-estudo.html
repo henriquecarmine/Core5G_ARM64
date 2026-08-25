@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estudo · Core5G_ARM64</title>
+<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.64.0">
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <a href="/" class="back">← Painel</a> <span class="sep">·</span> <a href="/lab" class="back">Lab de IA</a>
+      <div class="eyebrow" id="eyebrow">Estudo</div>
+      <h1 id="h1">…</h1>
+      <p class="lead" id="lead"></p>
+    </div>
+    <div class="topright"><button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button></div>
+  </div>
+
+  <div class="meta" id="meta"></div>
+
+  <div id="dados"></div>
+  <div id="temas"></div>
+
+  <h2 class="section-h" id="aulas-h">Aulas</h2>
+  <p class="sub" id="aulas-sub"></p>
+  <div class="steps" id="aulas"></div>
+
+  <h2 class="section-h">Exercícios no console</h2>
+  <p class="sub" id="ex-sub"></p>
+  <div class="exlist" id="ex"></div>
+
+  <div id="proximas"></div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const EMBED=new URLSearchParams(location.search).has("embed");
+const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const GH="https://github.com/henriquecarmine/Core5G_ARM64/tree/main/";
+const N=parseInt((location.pathname.match(/\/lab\/estudo\/(\d)/)||[])[1]||"4",10);
+const withEmbed=u=>u+(EMBED?(u.includes("?")?"&":"?")+"embed=1":"");
+
+if(EMBED){document.documentElement.classList.add("embed");
+  try{const th=window.parent.document.documentElement.getAttribute("data-theme");if(th)document.documentElement.setAttribute("data-theme",th);}catch(e){}}
+$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('a[href^="/lab"]');
+  if(a&&EMBED){const u=a.getAttribute("href");if(u&&!u.includes("embed=1")){e.preventDefault();location.href=withEmbed(u);}}},true);
+
+function runBtn(cmd,label,any){
+  if(EMBED) return `<button class="runb" data-cmd="${esc(cmd)}" title="${esc(cmd)}">▶ ${esc(label)}</button>`;
+  return `<a class="runb ghost" href="/" title="abra o painel e rode pelo menu da esquerda">▶ ${esc(label)} <small>(no painel)</small></a>`;
+}
+function wireRun(root){
+  root.querySelectorAll("button.runb").forEach(b=>b.addEventListener("click",()=>{
+    try{window.parent.postMessage({c5gLab:{runCmd:b.dataset.cmd}},location.origin);}catch(e){}
+  }));
+}
+
+async function main(){
+  const idx=await (await fetch("/static/lab/estudos/index.json",{cache:"no-store"})).json();
+  const e=idx.estudos.find(x=>x.n===N)||idx.estudos[3];
+  document.title=`Estudo ${e.n} · ${e.titulo}`;
+  try{if(EMBED)window.parent.postMessage({c5gLab:{title:`Estudo ${e.n} · ${e.titulo}`}},location.origin);}catch(x){}
+  $("#eyebrow").textContent=`Estudo ${e.n} · ${e.prof}`;
+  $("#h1").textContent=`${e.icon} ${e.titulo}`;
+  $("#lead").textContent=e.resumo;
+  $("#meta").innerHTML=`
+    <span class="chip"><b>Bancada</b> ${esc(idx.bancadas[e.bancada]||e.bancada)}</span>
+    <span class="chip"><b>Período</b> ${esc(e.periodo||"")}</span>
+    <a class="chip" href="${GH}${esc(e.pdfs)}" target="_blank" rel="noopener"><b>Slides</b> ${esc(e.pdfs)} ↗</a>
+    ${e.lab?`<a class="chip" href="${e.lab}"><b>Lab</b> trilha completa no Lab de IA ↗</a>`:""}`;
+
+  // ---- aulas (detalhadas, extraídas dos slides) ou páginas do Lab de IA (Estudo 3)
+  if(e.externas){
+    $("#aulas-sub").textContent="As aulas desta cadeira são as páginas do Lab de IA: teoria, experimento ao vivo e relatório.";
+    $("#aulas").innerHTML=e.externas.map((a,i)=>`
+      <div class="step"><div class="stepnum">${i}</div>
+        <div class="stepbody"><h4>${a.icon} ${esc(a.titulo)}</h4><p>${esc(a.one)}</p></div>
+        <a class="stepgo" href="${a.href}">Abrir ▸</a></div>`).join("");
+  } else {
+    $("#aulas-sub").textContent=(e.nota?e.nota+" ":"")+"Cada aula traz objetivos, os conceitos dos slides, as fórmulas, onde aquilo roda no nosso lab, os exercícios e um quiz.";
+    const aulas=await Promise.all(e.aulas.map(id=>fetch(`/static/lab/estudos/${id}.json`,{cache:"no-store"}).then(r=>r.json()).catch(()=>null)));
+    $("#aulas").innerHTML=aulas.filter(Boolean).map(a=>`
+      <div class="step"><div class="stepnum">${a.n}</div>
+        <div class="stepbody"><h4>${esc(a.titulo)}</h4><p>${esc(a.resumo)}</p>
+          <div class="oran">${a.conceitos.length} conceitos · ${a.formulas.length} fórmula(s) · ${a.exercicios.length} exercício(s) · ${esc(a.slide)}</div></div>
+        <a class="stepgo" href="/lab/estudo/${e.n}/aula/${a.n}">Abrir a aula ▸</a></div>`).join("");
+  }
+
+  // ---- exercícios (comandos do console)
+  $("#ex-sub").innerHTML=e.bancada==="p2"
+    ?"Rodam na bancada do <b>Projeto 2</b> (ative no topo do painel)."+(e.temas?" Os 7 temas rodam sobre arquivo e não precisam da RAN no ar.":"")
+    :"Rodam na bancada do <b>Projeto 1</b> (ative no topo do painel).";
+  $("#ex").innerHTML=e.exercicios.map(c=>runBtn(c,idx.comandos[c]||c)).join("");
+
+  // ---- Estudo 4: dados do projeto + os 7 temas + próximas aulas
+  if(e.dados){
+    const d=e.dados;
+    $("#dados").innerHTML=`
+      <div class="card">
+        <h2>💾 Os dados do projeto integrador</h2>
+        <p>${esc(d.fonte)}</p>
+        <table class="tbl"><tr><th>coluna</th><th>nome KPM</th><th>o que é</th><th>unidade</th></tr>
+          ${d.metricas.map(m=>`<tr><td><code>${esc(m.k)}</code></td><td><code>${esc(m.kpm)}</code></td><td>${esc(m.o)}</td><td>${esc(m.u)}</td></tr>`).join("")}
+        </table>
+        <p class="note">${esc(d.troca)}</p>
+      </div>`;
+  }
+  if(e.temas){
+    $("#temas").innerHTML=`
+      <h2 class="section-h">Projeto integrador: os 7 temas</h2>
+      <p class="sub">Mesmos dados para todos os grupos. O que muda é a pergunta, os <b>2 indicadores</b> (com fórmula e unidade) e a recomendação, sempre como política A1 em <b>dry-run</b>. Cada botão imprime as fórmulas antes dos números.</p>
+      <div class="temas">
+        ${e.temas.map(t=>`
+          <div class="tema">
+            <div class="tema-h"><span class="tema-ic">${t.icon}</span><div><h3>${esc(t.titulo)}</h3>${t.grupo?`<div class="grupo">${esc(t.grupo)}</div>`:""}</div></div>
+            <p class="perg">${esc(t.pergunta)}</p>
+            <div class="inds">
+              ${t.ind.map((i,k)=>`<div class="ind"><div class="ind-n">Indicador ${k+1} · ${esc(i.nome)} <span class="u">[${esc(i.u)}]</span></div><code>${esc(i.formula)}</code></div>`).join("")}
+            </div>
+            <p class="extra">${esc(t.extra)}</p>
+            <p class="rec"><b>Recomendação:</b> ${esc(t.rec)}</p>
+            ${runBtn(t.cmd,"Rodar "+t.id.toUpperCase()+" no console")}
+          </div>`).join("")}
+      </div>
+      <div class="allrow">${runBtn("p2-tema-all","Os 7 temas lado a lado")}</div>`;
+  }
+  if(e.proximas){
+    $("#proximas").innerHTML=`<h2 class="section-h">Próximas aulas</h2>
+      <div class="steps">${e.proximas.map(p=>`<div class="step soon"><div class="stepnum">${p.n}</div><div class="stepbody"><h4>${esc(p.data)}</h4><p>${esc(p.t)}</p></div></div>`).join("")}</div>`;
+  }
+  wireRun(document);
+  $("#footer").innerHTML=`Core5G_ARM64 · CESAR School · conteúdo extraído dos slides de ${esc(e.prof)}; exercícios rodam na RAN do laboratório.`;
+}
+main().catch(err=>{$("#h1").textContent="não consegui carregar este estudo";$("#lead").textContent=String(err);});
+</script>
+</body>
+</html>

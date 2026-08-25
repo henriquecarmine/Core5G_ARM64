@@ -2,12 +2,15 @@
 """
 Checkpoint 1 (Aula 04 · 25/08) — Exploração dos dados (EDA) do Projeto Integrador.
 
+Grupo 6 · Tema 1 — **Vazão do usuário (UE-TP)**.
+Pergunta: a vazão do UE sobe/desce junto com o uso de PRB e com o atraso?
+
 Parte do mini-lake gerado por etl/build_lake.py (zona silver: data/silver/kpm.sqlite)
 e produz, conforme o briefing:
   - relatório de QUALIDADE (nulos, duplicatas, timezone, gaps, fases);
-  - 2 CONSULTAS (SQL sobre a zona silver);
+  - 2 CONSULTAS (agregados por fase; correlação vazão × PRB × atraso);
   - 2 VISUALIZAÇÕES (figures/);
-  - 2 INDICADORES PRELIMINARES (recorte do tema — provável G6: economia de energia).
+  - os 2 INDICADORES do tema (vazão UL média/p95 por fase; PRB UL médio por fase).
 
 Uso:  python3 eda_cp1.py     (rode etl/build_lake.py antes)
 Dados: telemetria KPM sintética (RFSIM) do lab oai-cn-gnb-nonrt-nearrt; sem dados
@@ -32,10 +35,9 @@ FIG = os.path.join(HERE, "figures")
 os.makedirs(FIG, exist_ok=True)
 
 PHASES = ["baseline", "stress", "recovery"]          # ordem cronológica do experimento
-METRICS = {"thp_ul": ("Vazão UL", "kbps"),           # DRB.UEThpUl
+METRICS = {"thp_ul": ("Vazão UL", "kbps"),           # DRB.UEThpUl  (alvo do tema)
            "delay_dl": ("Atraso DL (RLC)", "ms"),    # DRB.RlcSduDelayDl
            "prb_ul": ("PRB UL em uso", "PRBs")}      # RRU.PrbTotUl
-PRB_BAIXA = 10.0   # limiar de "baixa carga": baseline/recovery ~2-3 PRB, stress ~97 → 10 separa com folga
 
 
 def carregar() -> pd.DataFrame:
@@ -51,104 +53,116 @@ def qualidade(df: pd.DataFrame) -> None:
     print(f"  amostras: {len(df)}  ·  run_id(s): {df.run_id.nunique()}  "
           f"({df.run_id.iloc[0]})")
     print(f"  por fase: {dict(df.phase.value_counts().reindex(PHASES))}")
-    # nulos
     nul = df[list(METRICS)].isna().sum().to_dict()
     print(f"  nulos por métrica: {nul}  -> {'OK, sem nulos' if sum(nul.values())==0 else 'ATENÇÃO'}")
-    # duplicatas na chave
     dup = df.duplicated(["run_id", "phase", "sample_index"]).sum()
     print(f"  duplicatas na chave (run_id,phase,sample_index): {dup}  "
           f"-> {'OK' if dup==0 else 'ATENÇÃO'}")
-    # timezone
     off = df.ingested_at.str[-6:].unique()
-    print(f"  timezone (offset de ingested_at): {list(off)}  -> tudo UTC" )
-    # gaps no sample_index por fase
+    print(f"  timezone (offset de ingested_at): {list(off)}  -> tudo UTC")
+    # Nota temporal: ingested_at é carimbo de ingestão em lote, não a hora da medição
+    print(f"  ingested_at: {df.ingested_at.nunique()} valor(es) distinto(s) -> carimbo de "
+          "ingestão em lote (UTC); a hora da medição não vem por amostra (experimento de "
+          "jun/25, ver source_path). Ordem temporal = sample_index.")
+    # Nota de unidade: o artefato não declara; adotamos a convenção KPM O-RAN
+    print("  unidades (convenção KPM, não declaradas no artefato): "
+          "thp_ul=kbps · delay_dl=ms · prb_ul=contagem de PRBs.")
     print("  gaps no sample_index por fase:")
     for ph in PHASES:
         idx = df[df.phase == ph].sample_index.to_numpy()
-        esperado = np.arange(idx.min(), idx.max() + 1)
-        faltando = sorted(set(esperado) - set(idx))
+        faltando = sorted(set(np.arange(idx.min(), idx.max() + 1)) - set(idx))
         print(f"    {ph:<9} {idx.min()}..{idx.max()} (n={len(idx)})  "
               f"gaps: {faltando if faltando else 'nenhum'}")
-    # sanidade de valores (a "anomalia" do recovery: média >> p95 = distribuição torta)
-    print("  sanidade de valores (média × p95 da vazão por fase):")
+    print("  sanidade (média × p95 da vazão por fase):")
     for ph in PHASES:
         s = df.loc[df.phase == ph, "thp_ul"]
-        flag = " <-- média >> p95 (distribuição assimétrica: poucos picos altos)" \
-               if s.mean() > s.quantile(.95) * 1.5 else ""
-        print(f"    {ph:<9} média={s.mean():.1f}  p95={s.quantile(.95):.1f}{flag}")
+        flag = " <-- média puxada por pico(s) residual(is); usar mediana/p95 e recorte por fase" \
+               if s.mean() > s.median() * 3 else ""
+        print(f"    {ph:<9} média={s.mean():.1f}  mediana={s.median():.1f}  p95={s.quantile(.95):.1f}{flag}")
 
 
 def consultas(df: pd.DataFrame) -> None:
     con = sqlite3.connect(DB)
     print("\n== CONSULTA 1 — agregados por fase (SQL) ==")
     q1 = """SELECT phase, COUNT(*) n,
-                   ROUND(AVG(thp_ul),1) thp_med, ROUND(AVG(delay_dl),1) delay_med,
-                   ROUND(AVG(prb_ul),1) prb_med
+                   ROUND(AVG(thp_ul),1) thp_med,
+                   ROUND(AVG(prb_ul),1) prb_med, ROUND(AVG(delay_dl),1) delay_med
             FROM kpm GROUP BY phase"""
     print(pd.read_sql_query(q1, con).set_index("phase").reindex(PHASES).to_string())
-
-    print("\n== CONSULTA 2 — janelas de BAIXA CARGA (prb_ul <= %g) por fase (SQL) ==" % PRB_BAIXA)
-    q2 = f"""SELECT phase, COUNT(*) n,
-                    SUM(CASE WHEN prb_ul <= {PRB_BAIXA} THEN 1 ELSE 0 END) baixa_carga,
-                    ROUND(100.0*SUM(CASE WHEN prb_ul <= {PRB_BAIXA} THEN 1 ELSE 0 END)/COUNT(*),1) pct_baixa
-             FROM kpm GROUP BY phase"""
-    print(pd.read_sql_query(q2, con).set_index("phase").reindex(PHASES).to_string())
     con.close()
+
+    print("\n== CONSULTA 2 — a vazão anda junto com PRB e atraso? (correlação de Pearson) ==")
+    corr = df[["thp_ul", "prb_ul", "delay_dl"]].corr().round(3)
+    print(corr.to_string())
+    print(f"  -> vazão×PRB = {corr.loc['thp_ul','prb_ul']:.3f}  ·  "
+          f"vazão×atraso = {corr.loc['thp_ul','delay_dl']:.3f}")
+    # Nota metodológica: a correlação global mistura as fases; o correto é olhar
+    # dentro de cada fase (evita ler contraste idle × carga como se fosse dinâmica).
+    print("  correlação DENTRO de cada fase (sem misturar idle × carga):")
+    for ph in PHASES:
+        s = df[df.phase == ph]
+        cp = s.thp_ul.corr(s.prb_ul)
+        cd = s.thp_ul.corr(s.delay_dl)
+        nota = "  (PRB constante nesta fase -> correlação indefinida)" if s.prb_ul.std() == 0 else ""
+        print(f"    {ph:<9} vazão×PRB={cp:.3f}  vazão×atraso={cd:.3f}{nota}")
+    print("  Leitura: vazão×PRB se mantém dentro do stress (~0,98) = relação real;")
+    print("  vazão×atraso ~0 dentro de cada fase (o 0,48 global vem só do contraste entre fases).")
 
 
 def indicadores(df: pd.DataFrame) -> dict:
-    """2 indicadores preliminares — recorte do tema (provável G6: economia de energia)."""
-    baixa = df["prb_ul"] <= PRB_BAIXA
+    """Os 2 indicadores do Tema 1 (Vazão do usuário)."""
+    g = df.groupby("phase", observed=True)
     ind = {
-        "frac_baixa_carga_pct": round(100.0 * baixa.mean(), 1),
-        "thp_media_baixa_carga_kbps": round(df.loc[baixa, "thp_ul"].mean(), 2),
-        "delay_medio_baixa_carga_ms": round(df.loc[baixa, "delay_dl"].mean(), 1),
-        "limiar_prb": PRB_BAIXA,
+        "vazao_ul": {ph: {"media": round(g.get_group(ph).thp_ul.mean(), 2),
+                          "p95": round(g.get_group(ph).thp_ul.quantile(.95), 2)}
+                     for ph in PHASES},
+        "prb_ul_medio": {ph: round(g.get_group(ph).prb_ul.mean(), 1) for ph in PHASES},
     }
-    print("\n== INDICADORES PRELIMINARES (recorte G6 · economia de energia) ==")
-    print(f"  (1) Fração do tempo em baixa carga (prb_ul <= {PRB_BAIXA}): "
-          f"{ind['frac_baixa_carga_pct']}% das amostras")
-    print(f"  (2) Nessas janelas — vazão média: {ind['thp_media_baixa_carga_kbps']} kbps · "
-          f"atraso médio: {ind['delay_medio_baixa_carga_ms']} ms")
+    print("\n== INDICADORES DO TEMA (Grupo 6 · Vazão do usuário) ==")
+    print("  (1) Vazão UL média / p95 por fase (kbps):")
+    for ph in PHASES:
+        print(f"        {ph:<9} média={ind['vazao_ul'][ph]['media']:>10}  p95={ind['vazao_ul'][ph]['p95']:>10}")
+    print("  (2) Utilização média de PRB UL por fase (PRBs):")
+    for ph in PHASES:
+        print(f"        {ph:<9} {ind['prb_ul_medio'][ph]}")
     return ind
 
 
 def figuras(df: pd.DataFrame) -> None:
     ordem = df.reset_index(drop=True)          # já ordenado baseline→stress→recovery
-    bordas = ordem.groupby("phase", observed=True).apply(lambda g: g.index.min()).reindex(PHASES)
     cores = {"baseline": "#dfeee0", "stress": "#f6dede", "recovery": "#dfe6f2"}
 
     # FIGURA 1 — série temporal das 3 métricas com faixas de fase
     fig, axs = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
     for ax, (col, (lab, unit)) in zip(axs, METRICS.items()):
         ax.plot(ordem.index, ordem[col], lw=1.1, color="#2b4a66")
-        for ph in PHASES:                       # faixas coloridas por fase
+        for ph in PHASES:
             sub = ordem[ordem.phase == ph]
-            ax.axvspan(sub.index.min() - .5, sub.index.max() + .5,
-                       color=cores[ph], zorder=0)
+            ax.axvspan(sub.index.min() - .5, sub.index.max() + .5, color=cores[ph], zorder=0)
         ax.set_ylabel(f"{lab}\n({unit})")
         ax.grid(alpha=.25)
     for ph in PHASES:
-        axs[0].text(df.reset_index().groupby("phase", observed=True).groups[ph].to_numpy().mean() if False
-                    else bordas[ph], axs[0].get_ylim()[1], f" {ph}",
-                    va="top", ha="left", fontsize=9, color="#555")
+        i0 = ordem[ordem.phase == ph].index.min()
+        axs[0].text(i0, axs[0].get_ylim()[1], f" {ph}", va="top", ha="left",
+                    fontsize=9, color="#555")
     axs[-1].set_xlabel("amostra (ordem do experimento)")
-    fig.suptitle("Telemetria KPM ao longo do experimento — baseline → stress → recovery")
+    fig.suptitle("Vazão do usuário × PRB × atraso ao longo do experimento — baseline → stress → recovery")
     fig.tight_layout()
     fig.savefig(os.path.join(FIG, "cp1_serie_temporal.png"), dpi=150)
 
-    # FIGURA 2 — distribuição por fase (boxplot) das 3 métricas
-    fig, axs = plt.subplots(1, 3, figsize=(11, 4))
-    for ax, (col, (lab, unit)) in zip(axs, METRICS.items()):
-        ax.boxplot([df.loc[df.phase == ph, col] for ph in PHASES],
-                   tick_labels=PHASES, showfliers=True)
-        ax.set_title(lab)
-        ax.set_ylabel(unit)
-        ax.grid(alpha=.25, axis="y")
-    fig.suptitle("Distribuição das métricas por fase (o salto de carga fica evidente)")
+    # FIGURA 2 — vazão UL × PRB UL (dispersão, colorida por fase): a relação do tema
+    fig, ax = plt.subplots(figsize=(7.2, 5))
+    for ph, c in [("baseline", "#2e7d32"), ("stress", "#c62828"), ("recovery", "#1565c0")]:
+        sub = df[df.phase == ph]
+        ax.scatter(sub.prb_ul, sub.thp_ul, s=28, alpha=.7, label=ph, color=c, edgecolors="none")
+    ax.set_xlabel("PRB UL em uso (PRBs)")
+    ax.set_ylabel("Vazão UL (kbps)")
+    ax.set_title("Vazão do usuário sobe com o uso de PRB (por fase)")
+    ax.grid(alpha=.25)
+    ax.legend(title="fase")
     fig.tight_layout()
-    fig.savefig(os.path.join(FIG, "cp1_dist_por_fase.png"), dpi=150)
-    print(f"\nFiguras salvas em {FIG}/  (cp1_serie_temporal.png, cp1_dist_por_fase.png)")
+    fig.savefig(os.path.join(FIG, "cp1_vazao_x_prb.png"), dpi=150)
+    print(f"\nFiguras salvas em {FIG}/  (cp1_serie_temporal.png, cp1_vazao_x_prb.png)")
 
 
 if __name__ == "__main__":

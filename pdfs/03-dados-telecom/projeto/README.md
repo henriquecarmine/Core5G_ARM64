@@ -5,9 +5,11 @@ Pipeline analítico **reproduzível** sobre telemetria RAN do lab
 [briefing oficial](../../../external/cesar-school-repo/data/docs/briefing-projeto.md)
 e os [temas por grupo](../../../external/cesar-school-repo/data/docs/temas-grupos.md).
 
-**Tema do grupo:** **G6 — Economia de energia** (só intenção) — _provável,
-a confirmar com o grupo_. Card do tema em
-[`temas-grupos.md`](../../../external/cesar-school-repo/data/docs/temas-grupos.md).
+**Grupo 6** · **Tema 1 — Vazão do usuário (UE-TP)**.
+**Integrantes:** Henrique Carmine · Kelvin de Lima Gabriel · Klinger Carneiro Júnior.
+**Mentor:** Prof. Dr. Jonas Augusto Kunzler (`jak@cesar.school`).
+**Pergunta:** a vazão do UE sobe/desce **junto** com o uso de PRB e com o atraso?
+Card do tema em [`temas-grupos.md`](../../../external/cesar-school-repo/data/docs/temas-grupos.md).
 
 ## Fonte de dados (trilha offline — a que vale nota)
 
@@ -51,19 +53,23 @@ Reprodução: `python3 etl/build_lake.py && python3 eda_cp1.py`
   sozinha engana).
 - **Consulta 1 — agregados por fase:** baseline PRB≈2 · stress PRB≈97 ·
   recovery PRB≈3 → o salto de carga do stress é nítido nas 3 métricas.
-- **Consulta 2 — baixa carga (`prb_ul ≤ 10`):** baseline 100% · stress 1,7% ·
-  recovery 95% das amostras.
-- **Visualizações** (`figures/`): `cp1_serie_temporal.png` (as 3 métricas ao longo
-  do experimento, faixas por fase) e `cp1_dist_por_fase.png` (boxplots por fase).
-- **Indicadores preliminares** (recorte G6): **40%** do tempo em baixa carga;
-  nessas janelas, vazão ≈ 4 kbps e atraso ≈ 70 ms — fórmulas em
-  [`kpis/kpis.md`](kpis/kpis.md).
+- **Consulta 2 — a vazão anda junto com PRB e atraso? (correlação de Pearson):**
+  **vazão × PRB = 0,924** · vazão × atraso = 0,484. Olhando **dentro de cada fase**,
+  vazão × PRB se mantém (stress 0,98) e vazão × atraso ≈ 0 — o 0,48 global é só o
+  contraste idle × carga entre fases.
+- **Visualizações** (`figures/`): `cp1_serie_temporal.png` (vazão × PRB × atraso ao
+  longo do experimento, faixas por fase) e `cp1_vazao_x_prb.png` (dispersão
+  vazão × PRB por fase — a relação do tema).
+- **Indicadores do tema** (`kpis/kpis.md`): (1) **vazão UL média/p95 por fase**
+  (baseline 3,7 · stress 78 384 · recovery 8 619 — mediana **3,7**) e (2) **PRB UL
+  médio por fase** (2 · 97 · 3). Conclusão: a vazão do usuário **acompanha de perto
+  o uso de PRB** (rádio cheio → vazão alta).
 
 ## Entregáveis (briefing) — checklist
 
 - [x] README com origem dos dados, reprodução e ética/licença (este arquivo)
 - [x] Scripts de ETL e análise (`etl/build_lake.py`, `eda_cp1.py`)
-- [~] **≥ 2 KPIs/KQIs** — **preliminares** feitos (`kpis/kpis.md`); formalizar no CP2
+- [x] **2 KPIs/KQIs do tema** — fórmula, unidade, granularidade (`kpis/kpis.md`)
 - [x] Visualizações com insights acionáveis (`figures/` — 2 plots do CP1)
 - [ ] Recomendação operacional **ou** política A1 em dry-run (CP técnico final)
 - [ ] Seção de **limitações** (RFSIM × rede real, poucos UEs, viés, privacidade)

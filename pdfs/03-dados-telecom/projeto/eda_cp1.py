@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Checkpoint 1 (Aula 04 · 25/08) — Exploração dos dados (EDA) do Projeto Integrador.
+Checkpoint 1 (Aula 04, 25/08) - EDA do Projeto Integrador, Grupo 6.
 
-Grupo 6 · Tema 1 — **Vazão do usuário (UE-TP)**.
-Pergunta: a vazão do UE sobe/desce junto com o uso de PRB e com o atraso?
+Tema 1, Vazao do usuario (UE-TP). A pergunta: a vazao do UE sobe/desce junto
+com o uso de PRB e com o atraso?
 
-Parte do mini-lake gerado por etl/build_lake.py (zona silver: data/silver/kpm.sqlite)
-e produz, conforme o briefing:
-  - relatório de QUALIDADE (nulos, duplicatas, timezone, gaps, fases);
-  - 2 CONSULTAS (agregados por fase; correlação vazão × PRB × atraso);
-  - 2 VISUALIZAÇÕES (figures/);
-  - os 2 INDICADORES do tema (vazão UL média/p95 por fase; PRB UL médio por fase).
+Le a zona silver montada pelo etl/build_lake.py (data/silver/kpm.sqlite) e, como
+pede o briefing, imprime:
+  - um relatorio de qualidade (nulos, duplicatas, timezone, gaps, fases);
+  - 2 consultas (agregados por fase; correlacao vazao x PRB x atraso);
+  - 2 figuras (em figures/);
+  - os 2 indicadores do tema (vazao UL media/p95 por fase; PRB UL medio por fase).
 
-Uso:  python3 eda_cp1.py     (rode etl/build_lake.py antes)
-Dados: telemetria KPM sintética (RFSIM) do lab oai-cn-gnb-nonrt-nearrt; sem dados
-pessoais. Métricas: thp_ul (DRB.UEThpUl), delay_dl (DRB.RlcSduDelayDl),
-prb_ul (RRU.PrbTotUl). 100 amostras, fases baseline(20)/stress(60)/recovery(20).
+Uso: python3 eda_cp1.py  (rode o etl/build_lake.py antes).
+Dados: KPM sintetico (RFSIM) do lab oai-cn-gnb-nonrt-nearrt, sem dados pessoais.
+Metricas: thp_ul (DRB.UEThpUl), delay_dl (DRB.RlcSduDelayDl), prb_ul
+(RRU.PrbTotUl). 100 amostras, fases baseline(20)/stress(60)/recovery(20).
 """
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def carregar() -> pd.DataFrame:
 
 def qualidade(df: pd.DataFrame) -> None:
     print("== QUALIDADE DOS DADOS ==")
-    print(f"  amostras: {len(df)}  ·  run_id(s): {df.run_id.nunique()}  "
+    print(f"  amostras: {len(df)}  |run_id(s): {df.run_id.nunique()}  "
           f"({df.run_id.iloc[0]})")
     print(f"  por fase: {dict(df.phase.value_counts().reindex(PHASES))}")
     nul = df[list(METRICS)].isna().sum().to_dict()
@@ -66,7 +66,7 @@ def qualidade(df: pd.DataFrame) -> None:
           "jun/25, ver source_path). Ordem temporal = sample_index.")
     # Nota de unidade: o artefato não declara; adotamos a convenção KPM O-RAN
     print("  unidades (convenção KPM, não declaradas no artefato): "
-          "thp_ul=kbps · delay_dl=ms · prb_ul=contagem de PRBs.")
+          "thp_ul=kbps, delay_dl=ms, prb_ul=contagem de PRBs.")
     print("  gaps no sample_index por fase:")
     for ph in PHASES:
         idx = df[df.phase == ph].sample_index.to_numpy()
@@ -83,7 +83,7 @@ def qualidade(df: pd.DataFrame) -> None:
 
 def consultas(df: pd.DataFrame) -> None:
     con = sqlite3.connect(DB)
-    print("\n== CONSULTA 1 — agregados por fase (SQL) ==")
+    print("\n== CONSULTA 1 - agregados por fase (SQL) ==")
     q1 = """SELECT phase, COUNT(*) n,
                    ROUND(AVG(thp_ul),1) thp_med,
                    ROUND(AVG(prb_ul),1) prb_med, ROUND(AVG(delay_dl),1) delay_med
@@ -91,10 +91,10 @@ def consultas(df: pd.DataFrame) -> None:
     print(pd.read_sql_query(q1, con).set_index("phase").reindex(PHASES).to_string())
     con.close()
 
-    print("\n== CONSULTA 2 — a vazão anda junto com PRB e atraso? (correlação de Pearson) ==")
+    print("\n== CONSULTA 2 - a vazão anda junto com PRB e atraso? (correlação de Pearson) ==")
     corr = df[["thp_ul", "prb_ul", "delay_dl"]].corr().round(3)
     print(corr.to_string())
-    print(f"  -> vazão×PRB = {corr.loc['thp_ul','prb_ul']:.3f}  ·  "
+    print(f"  -> vazão×PRB = {corr.loc['thp_ul','prb_ul']:.3f}  |"
           f"vazão×atraso = {corr.loc['thp_ul','delay_dl']:.3f}")
     # Nota metodológica: a correlação global mistura as fases; o correto é olhar
     # dentro de cada fase (evita ler contraste idle × carga como se fosse dinâmica).
@@ -118,7 +118,7 @@ def indicadores(df: pd.DataFrame) -> dict:
                      for ph in PHASES},
         "prb_ul_medio": {ph: round(g.get_group(ph).prb_ul.mean(), 1) for ph in PHASES},
     }
-    print("\n== INDICADORES DO TEMA (Grupo 6 · Vazão do usuário) ==")
+    print("\n== INDICADORES DO TEMA (Grupo 6, Vazão do usuário) ==")
     print("  (1) Vazão UL média / p95 por fase (kbps):")
     for ph in PHASES:
         print(f"        {ph:<9} média={ind['vazao_ul'][ph]['media']:>10}  p95={ind['vazao_ul'][ph]['p95']:>10}")
@@ -132,7 +132,7 @@ def figuras(df: pd.DataFrame) -> None:
     ordem = df.reset_index(drop=True)          # já ordenado baseline→stress→recovery
     cores = {"baseline": "#dfeee0", "stress": "#f6dede", "recovery": "#dfe6f2"}
 
-    # FIGURA 1 — série temporal das 3 métricas com faixas de fase
+    # FIGURA 1 - série temporal das 3 métricas com faixas de fase
     fig, axs = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
     for ax, (col, (lab, unit)) in zip(axs, METRICS.items()):
         ax.plot(ordem.index, ordem[col], lw=1.1, color="#2b4a66")
@@ -146,11 +146,11 @@ def figuras(df: pd.DataFrame) -> None:
         axs[0].text(i0, axs[0].get_ylim()[1], f" {ph}", va="top", ha="left",
                     fontsize=9, color="#555")
     axs[-1].set_xlabel("amostra (ordem do experimento)")
-    fig.suptitle("Vazão do usuário × PRB × atraso ao longo do experimento — baseline → stress → recovery")
+    fig.suptitle("Vazão do usuário × PRB × atraso ao longo do experimento - baseline → stress → recovery")
     fig.tight_layout()
     fig.savefig(os.path.join(FIG, "cp1_serie_temporal.png"), dpi=150)
 
-    # FIGURA 2 — vazão UL × PRB UL (dispersão, colorida por fase): a relação do tema
+    # FIGURA 2 - vazão UL × PRB UL (dispersão, colorida por fase): a relação do tema
     fig, ax = plt.subplots(figsize=(7.2, 5))
     for ph, c in [("baseline", "#2e7d32"), ("stress", "#c62828"), ("recovery", "#1565c0")]:
         sub = df[df.phase == ph]

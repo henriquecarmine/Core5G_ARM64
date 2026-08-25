@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ETL do projeto integrador: raw (pacote KPM do docente) → bronze → silver → gold.
 
-Zonas conforme a Aula 02 (mini-lake). Stdlib apenas — reproduzível em qualquer
+Zonas conforme a Aula 02 (mini-lake). Stdlib apenas - reproduzível em qualquer
 Python 3.9+, sem dependências.
 """
 import json
@@ -29,7 +29,7 @@ def main():
             "rode: git submodule update --init external/cesar-school-repo"
         )
 
-    # bronze — 1 linha por medição, métricas achatadas
+    # bronze - 1 linha por medição, métricas achatadas
     bronze_dir = DATA / "bronze"
     bronze_dir.mkdir(parents=True, exist_ok=True)
     linhas = []
@@ -50,7 +50,7 @@ def main():
         for linha in linhas:
             f.write(json.dumps(linha) + "\n")
 
-    # silver — SQLite tipado
+    # silver - SQLite tipado
     silver_dir = DATA / "silver"
     silver_dir.mkdir(parents=True, exist_ok=True)
     db = silver_dir / "kpm.sqlite"
@@ -74,7 +74,7 @@ def main():
     )
     con.commit()
 
-    # gold — agregados por fase (base dos KPIs do grupo)
+    # gold - agregados por fase (base dos KPIs do grupo)
     gold_dir = DATA / "gold"
     gold_dir.mkdir(parents=True, exist_ok=True)
     agregados = []

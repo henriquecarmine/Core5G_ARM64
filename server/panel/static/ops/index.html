@@ -1565,6 +1565,84 @@ const TEST_EXPLAIN = {
     ],
     concl: '✓ Reproduz a Tabela 3 (Instance); o LSTM 91,1% famoso é *sequence*, fora da abordagem designada.',
   },
+  // Análise de Dados em Redes de Telecom — os 7 temas do projeto integrador
+  // (mesmos dados KPM do professor; muda a pergunta, os 2 indicadores e a recomendação).
+  'p2-tema-t1': {
+    title: 'O que acabou de acontecer — T1 Vazão do usuário (UE-TP)',
+    items: [
+      'Leu o KPM do professor (100 medições, 3 fases: baseline · stress · recovery) da zona <b>silver</b>: <code>thp_ul</code>, <code>delay_dl</code>, <code>prb_ul</code>.',
+      '<b>Indicador 1</b>: média e p95 da vazão UL por fase · <b>Indicador 2</b>: PRB UL médio por fase (<code>GROUP BY fase</code>) — a fórmula sai antes do número.',
+      '<b>Correlação de Pearson</b> global × <b>dentro de cada fase</b>: a global mistura idle com carga; só a relação que sobrevive dentro da fase vale.',
+      'Regra do card: vazão caindo com PRB alto → priorização em política <b>A1 (dry-run)</b>; se não disparou, o script diz por quê.',
+    ],
+    concl: '✓ A vazão acompanha o PRB dentro da fase (0,98 no stress); vazão × atraso ≈ 0 dentro da fase — o 0,48 global é confundimento entre fases.',
+  },
+  'p2-tema-t2': {
+    title: 'O que acabou de acontecer — T2 Detecção de anomalia de carga',
+    items: [
+      '<b>Baseline robusto</b>: mediana e MAD por métrica só na fase baseline — o mesmo <code>model.json</code> do professor (piso 1,0 · limiar 3,5 · 2 métricas · janela 5).',
+      'Score por amostra = |x − mediana| / MAD; anômala se ≥ 2 métricas passam de 3,5. <b>Indicadores</b>: % de anômalas por fase e intensidade do desvio na carga.',
+      'Decisão por <b>janela de 5</b>: só uma janela inteira anômala vira <code>apply</code> — pico isolado é falso alarme, não decisão.',
+      'Política A1 candidata em <b>dry-run</b>, no formato do <code>decision.json</code>.',
+    ],
+    concl: '✓ Anomalia sustentada no stress; os picos do baseline/recovery ficam como falsos alarmes, sem decisão.',
+  },
+  'p2-tema-t3': {
+    title: 'O que acabou de acontecer — T3 Latência e qualidade percebida (QoE)',
+    items: [
+      '<b>Indicador 1</b>: mediana e p95 do atraso RLC DL por fase · <b>Indicador 2</b>: fração do tempo acima de <b>100 ms</b> (limiar justificado e ajustável).',
+      'Cruzamento: atraso alto <b>com vazão baixa</b> reforça má experiência; atraso alto com vazão alta é fila de carga.',
+      'O atraso é <b>proxy</b> de QoE — não há nota MOS no lab; picos isolados não são experiência ruim.',
+      'Recomendação: investigar a sessão / priorizar tráfego sensível (A1 dry-run).',
+    ],
+    concl: '✓ Na carga, 100% das amostras acima do limiar → recomendação de priorização; no idle, só picos.',
+  },
+  'p2-tema-t4': {
+    title: 'O que acabou de acontecer — T4 Risco de congestionamento',
+    items: [
+      '<b>Indicador 1</b>: PRB UL médio e p95 por fase · <b>Indicador 2</b>: índice de risco = amostras com <b>MM5(PRB) alto E MM5(vazão) baixa</b>.',
+      'Média móvel de 5: olha a <b>tendência</b>, não um instante. Rádio cheio com vazão alta é capacidade <b>em uso</b>, não em risco.',
+      'Alerta de capacidade só com saturação E queda de vazão; limitação: 1 UE em RFSIM satura os PRB sozinho.',
+    ],
+    concl: '✓ Com os dados do professor: saturação sem queda de vazão → sem alerta (a leitura honesta).',
+  },
+  'p2-tema-t5': {
+    title: 'O que acabou de acontecer — T5 Visão agregada da célula',
+    items: [
+      '<code>GROUP BY run_id, fase</code> (a zona <b>gold</b> do mini-lake): PRB médio/máx, vazão média/soma/p95, atraso médio.',
+      'Conta os UEs distintos: com <b>1 UE, média = soma</b> — a agregação é didática, não estatística de campus.',
+      'Limite declarado: poucos UEs em RFSIM; a capacidade real da célula não é observável aqui.',
+    ],
+    concl: '✓ Resumo "de célula" fase a fase, com o limite do lab dito em voz alta.',
+  },
+  'p2-tema-t6': {
+    title: 'O que acabou de acontecer — T6 Economia de energia (só intenção)',
+    items: [
+      '<b>Baixa carga</b> = PRB ≤ 10% do máximo E vazão ≤ 10% do p95 · <b>Indicador 1</b>: fração do tempo nessas janelas.',
+      '<b>Indicador 2</b>: vazão e atraso dentro das janelas — a intenção só faz sentido se o atraso continua aceitável.',
+      'Intenção de economia em A1 (<b>dry-run</b>) apenas: o lab não controla potência de RU e nada é desligado.',
+    ],
+    concl: '✓ ~40% do experimento em baixa carga com atraso ok → intenção candidata, sem atuação física.',
+  },
+  'p2-tema-t7': {
+    title: 'O que acabou de acontecer — T7 Política de QoS / steering (candidata)',
+    items: [
+      '<b>Regra</b>: atraso > 100 ms OU (PRB alto E vazão baixa) · <b>Indicador 1</b>: % do tempo em degradação por fase.',
+      '<b>Indicador 2</b>: acionamentos (subidas da regra) e os <b>sustentados</b> (3 amostras seguidas) — persistência evita reagir a pico.',
+      'Linha do tempo ASCII por fase mostra onde a regra dispara (e os falsos alarmes do baseline/recovery).',
+      'Política A1 candidata (escopo UE/QoS, prioridade, steering) com <b>validação humana</b>; não afirmamos que handover/path mudaram.',
+    ],
+    concl: '✓ Regra segura = limiar + persistência; a política nasce como proposta, não como automação.',
+  },
+  'p2-tema-all': {
+    title: 'O que acabou de acontecer — os 7 temas lado a lado',
+    items: [
+      'Rodou os 7 temas em sequência sobre os <b>mesmos dados</b> e fechou com a tabela lado a lado (indicador 1 · indicador 2 · veredito).',
+      'O que muda de um grupo para o outro é a <b>pergunta</b>, os indicadores e a recomendação — não o dado.',
+      'Cada tema imprime a fórmula antes do número e a política A1 sempre em <b>dry-run</b>.',
+    ],
+    concl: '✓ Mesmos dados, 7 perguntas — a tese do projeto integrador numa tela.',
+  },
   'p2-ml-pm': {
     title: 'O que acabou de acontecer — Predictive Maintenance (RRU perdida)',
     items: [

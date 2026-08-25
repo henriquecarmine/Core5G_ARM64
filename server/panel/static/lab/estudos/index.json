@@ -83,7 +83,7 @@
       "periodo": "ago/2026 (em andamento)",
       "resumo": "De onde vêm os dados de uma rede (SMO, O1, E2, A1; PM, FM, KPM), como guardá-los (lake, warehouse, as zonas raw/bronze/silver/gold), como explorá-los (EDA, ETL, estatística, visualização) e como transformá-los em indicadores (KPIs/KQIs) e decisões. O projeto integrador (50% da nota) usa a telemetria KPM do nosso lab: todos os grupos partem dos mesmos dados e cada um responde a uma pergunta diferente.",
       "pdfs": "pdfs/03-dados-telecom",
-      "aulas": ["e4a01", "e4a02", "e4a03"],
+      "aulas": ["e4a01", "e4a02", "e4a03", "e4a04"],
       "proximas": [
         {"n": 4, "data": "25/08", "t": "KPIs/KQIs e Checkpoint 1 (2 indicadores fechados + visualizações)"},
         {"n": 5, "data": "27/08", "t": "Capacidade e otimização; checkpoint técnico final (recomendação/A1 + limitações)"},
@@ -94,8 +94,8 @@
         "fonte": "kpm-ue-tp-sample (trilha offline do professor): 100 medições KPM em 3 fases, baseline (20), stress (60) e recovery (20).",
         "metricas": [
           {"k": "thp_ul", "kpm": "DRB.UEThpUl", "o": "vazão de subida do UE", "u": "kbps"},
-          {"k": "delay_dl", "kpm": "DRB.RlcSduDelayDl", "o": "atraso RLC de descida", "u": "ms"},
-          {"k": "prb_ul", "kpm": "RRU.PrbTotUl", "o": "PRBs de subida em uso", "u": "PRBs"}
+          {"k": "delay_dl", "kpm": "DRB.RlcSduDelayDl", "o": "atraso RLC de descida", "u": "µs"},
+          {"k": "prb_ul", "kpm": "RRU.PrbTotUl", "o": "PRB de subida em uso", "u": "% dos PRB"}
         ],
         "troca": "No console, clique no nó '💾 KPM (3 fases)' da faixa de execução para trocar a fonte: amostra do professor, um arquivo (.jsonl ou .csv) ou dados colados à mão. Só o professor troca; todo mundo vê."
       },
@@ -104,7 +104,7 @@
          "pergunta": "A vazão do UE sobe e desce junto com o uso de PRB e com o atraso?",
          "ind": [
            {"nome": "Vazão UL por fase", "formula": "média(thp_ul) e p95(thp_ul), GROUP BY phase", "u": "kbps"},
-           {"nome": "Utilização de PRB UL por fase", "formula": "média(prb_ul), GROUP BY phase", "u": "PRBs"}
+           {"nome": "Utilização de PRB UL por fase", "formula": "média(prb_ul), GROUP BY phase", "u": "% dos PRB"}
          ],
          "extra": "Relação: Pearson r = cov(x, y) / (sx * sy), global e dentro de cada fase (a global mistura idle com carga).",
          "rec": "Se a vazão cair com o PRB alto (usuário mal servido), propor priorização em política A1 (dry-run)."},
@@ -119,7 +119,7 @@
         {"id": "t3", "cmd": "p2-tema-t3", "icon": "⏱️", "titulo": "Latência e qualidade percebida (QoE)",
          "pergunta": "Quando o atraso de rádio sugere que a experiência do usuário pode estar ruim?",
          "ind": [
-           {"nome": "Atraso RLC DL por fase", "formula": "mediana(delay_dl) e p95(delay_dl), GROUP BY phase", "u": "ms"},
+           {"nome": "Atraso RLC DL por fase", "formula": "mediana(delay_dl) e p95(delay_dl), GROUP BY phase", "u": "µs"},
            {"nome": "Fração do tempo em atraso alto", "formula": "n(delay_dl > 100 ms) / n, por fase", "u": "%"}
          ],
          "extra": "Cruzamento: atraso alto COM vazão baixa reforça a hipótese de má experiência; atraso alto com vazão alta é fila de carga. O limiar de 100 ms é justificado e ajustável.",
@@ -127,7 +127,7 @@
         {"id": "t4", "cmd": "p2-tema-t4", "icon": "🚧", "titulo": "Risco de congestionamento",
          "pergunta": "Os dados mostram saturação que justifique um alerta de capacidade?",
          "ind": [
-           {"nome": "Utilização de PRB UL", "formula": "média(prb_ul) e p95(prb_ul), GROUP BY phase", "u": "PRBs"},
+           {"nome": "Utilização de PRB UL", "formula": "média(prb_ul) e p95(prb_ul), GROUP BY phase", "u": "% dos PRB"},
            {"nome": "Índice de risco", "formula": "n( MM5(prb_ul) > 0,8 * PRB_max  E  MM5(thp_ul) < 0,5 * p95(thp_ul) ) / n", "u": "%"}
          ],
          "extra": "MM5 = média móvel de 5 amostras: olha a tendência, não um instante. Rádio cheio com vazão alta é capacidade em uso, não em risco.",
@@ -135,7 +135,7 @@
         {"id": "t5", "cmd": "p2-tema-t5", "icon": "🏙️", "titulo": "Visão agregada da célula",
          "pergunta": "Como resumir o experimento em indicadores de célula, e qual o limite disso no lab?",
          "ind": [
-           {"nome": "PRB médio da célula por fase", "formula": "média(prb_ul), GROUP BY run_id, phase", "u": "PRBs"},
+           {"nome": "PRB médio da célula por fase", "formula": "média(prb_ul), GROUP BY run_id, phase", "u": "% dos PRB"},
            {"nome": "Vazão representativa da célula", "formula": "média(thp_ul) por fase; soma = média * n_UE quando há vários UEs", "u": "kbps"}
          ],
          "extra": "É o GROUP BY da zona gold do mini-lake. Com 1 UE, média = soma: a agregação é didática, não estatística de campus.",
@@ -144,7 +144,7 @@
          "pergunta": "Em que trechos a carga está baixa o suficiente para pensar em economizar energia, sem desligar nada?",
          "ind": [
            {"nome": "Fração do tempo em baixa carga", "formula": "baixa carga = prb_ul <= 0,1 * PRB_max  E  thp_ul <= 0,1 * p95(thp_ul); n(baixa) / n", "u": "%"},
-           {"nome": "Vazão e atraso nessas janelas", "formula": "média(thp_ul) e mediana(delay_dl) só nas amostras de baixa carga", "u": "kbps / ms"}
+           {"nome": "Vazão e atraso nessas janelas", "formula": "média(thp_ul) e mediana(delay_dl) só nas amostras de baixa carga", "u": "kbps / µs"}
          ],
          "extra": "Antes de qualquer intenção, checar se o atraso continua aceitável (<= 100 ms) nas janelas de baixa carga.",
          "rec": "Intenção de economia em A1 (dry-run) apenas: o lab não controla potência de RU e nada é desligado."},

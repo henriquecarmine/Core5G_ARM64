@@ -1590,9 +1590,9 @@ const TEST_EXPLAIN = {
   'p2-tema-t3': {
     title: 'O que acabou de acontecer — T3 Latência e qualidade percebida (QoE)',
     items: [
-      '<b>Indicador 1</b>: mediana e p95 do atraso RLC DL por fase · <b>Indicador 2</b>: fração do tempo acima de <b>100 ms</b> (limiar justificado e ajustável).',
+      '<b>Indicador 1</b>: mediana e p95 do atraso RLC DL por fase · <b>Indicador 2</b>: fração do tempo acima de <b>100 µs</b> (≈ 3× o p95 do baseline; marca a mudança de regime, ajustável).',
       'Cruzamento: atraso alto <b>com vazão baixa</b> reforça má experiência; atraso alto com vazão alta é fila de carga.',
-      'O atraso é <b>proxy</b> de QoE — não há nota MOS no lab; picos isolados não são experiência ruim.',
+      'O atraso é <b>proxy</b> de QoE — não há nota MOS no lab; em valor absoluto, atraso RLC abaixo de 1 ms não é experiência ruim: o indicador mostra o salto em relação ao repouso.',
       'Recomendação: investigar a sessão / priorizar tráfego sensível (A1 dry-run).',
     ],
     concl: '✓ Na carga, 100% das amostras acima do limiar → recomendação de priorização; no idle, só picos.',
@@ -1627,7 +1627,7 @@ const TEST_EXPLAIN = {
   'p2-tema-t7': {
     title: 'O que acabou de acontecer — T7 Política de QoS / steering (candidata)',
     items: [
-      '<b>Regra</b>: atraso > 100 ms OU (PRB alto E vazão baixa) · <b>Indicador 1</b>: % do tempo em degradação por fase.',
+      '<b>Regra</b>: atraso > 100 µs OU (PRB alto E vazão baixa) · <b>Indicador 1</b>: % do tempo em degradação por fase.',
       '<b>Indicador 2</b>: acionamentos (subidas da regra) e os <b>sustentados</b> (3 amostras seguidas) — persistência evita reagir a pico.',
       'Linha do tempo ASCII por fase mostra onde a regra dispara (e os falsos alarmes do baseline/recovery).',
       'Política A1 candidata (escopo UE/QoS, prioridade, steering) com <b>validação humana</b>; não afirmamos que handover/path mudaram.',

@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Estudo · Core5G_ARM64</title>
-<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.64.0">
+<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.64.2">
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div>
-      <a href="/" class="back">← Painel</a> <span class="sep">·</span> <a href="/lab" class="back">Lab de IA</a>
-      <div class="eyebrow" id="eyebrow">Estudo</div>
+      <a href="/" class="back" data-i18n="nav.back">← Painel</a> <span class="sep">·</span> <a href="/lab" class="back" data-i18n="est.back_lab">Lab de IA</a>
+      <div class="eyebrow" id="eyebrow" data-i18n="est.word">Estudo</div>
       <h1 id="h1">…</h1>
       <p class="lead" id="lead"></p>
     </div>
-    <div class="topright"><button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button></div>
+    <div class="topright"><div id="langsel" class="langsel"></div><button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button></div>
   </div>
 
   <div class="meta" id="meta"></div>
@@ -23,11 +23,11 @@
   <div id="dados"></div>
   <div id="temas"></div>
 
-  <h2 class="section-h" id="aulas-h">Aulas</h2>
+  <h2 class="section-h" id="aulas-h" data-i18n="est.aulas">Aulas</h2>
   <p class="sub" id="aulas-sub"></p>
   <div class="steps" id="aulas"></div>
 
-  <h2 class="section-h">Exercícios no console</h2>
+  <h2 class="section-h" data-i18n="est.ex_console">Exercícios no console</h2>
   <p class="sub" id="ex-sub"></p>
   <div class="exlist" id="ex"></div>
 
@@ -36,8 +36,13 @@
   <footer id="footer"></footer>
 </div>
 
+<script src="/static/lab/lab-i18n.js?v=0.64.2"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s);
+const T=(k,p)=>window.LABI18N?LABI18N.t(k,p):k;
+const LANG=(window.LABI18N&&LABI18N.lang)||"pt";
+async function jl(name){if(LANG!=="pt"){try{const r=await fetch(`/static/lab/estudos/${name}.${LANG}.json`,{cache:"no-store"});if(r.ok)return r.json();}catch(x){}}return (await fetch(`/static/lab/estudos/${name}.json`,{cache:"no-store"})).json();}
+if(window.LABI18N)LABI18N.onChange(()=>location.reload());
 const EMBED=new URLSearchParams(location.search).has("embed");
 const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const GH="https://github.com/henriquecarmine/Core5G_ARM64/tree/main/";
@@ -52,7 +57,7 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 
 function runBtn(cmd,label,any){
   if(EMBED) return `<button class="runb" data-cmd="${esc(cmd)}" title="${esc(cmd)}">▶ ${esc(label)}</button>`;
-  return `<a class="runb ghost" href="/" title="abra o painel e rode pelo menu da esquerda">▶ ${esc(label)} <small>(no painel)</small></a>`;
+  return `<a class="runb ghost" href="/" title="${esc(T("est.run_hint"))}">▶ ${esc(label)} <small>${esc(T("est.in_panel"))}</small></a>`;
 }
 function wireRun(root){
   root.querySelectorAll("button.runb").forEach(b=>b.addEventListener("click",()=>{
@@ -61,40 +66,40 @@ function wireRun(root){
 }
 
 async function main(){
-  const idx=await (await fetch("/static/lab/estudos/index.json",{cache:"no-store"})).json();
+  const idx=await jl("index");
   const e=idx.estudos.find(x=>x.n===N)||idx.estudos[3];
-  document.title=`Estudo ${e.n} · ${e.titulo}`;
-  try{if(EMBED)window.parent.postMessage({c5gLab:{title:`Estudo ${e.n} · ${e.titulo}`}},location.origin);}catch(x){}
-  $("#eyebrow").textContent=`Estudo ${e.n} · ${e.prof}`;
+  document.title=`${T("est.word")} ${e.n} · ${e.titulo}`;
+  try{if(EMBED)window.parent.postMessage({c5gLab:{title:`${T("est.word")} ${e.n} · ${e.titulo}`}},location.origin);}catch(x){}
+  $("#eyebrow").textContent=`${T("est.word")} ${e.n} · ${e.prof}`;
   $("#h1").textContent=`${e.icon} ${e.titulo}`;
   $("#lead").textContent=e.resumo;
   $("#meta").innerHTML=`
-    <span class="chip"><b>Bancada</b> ${esc(idx.bancadas[e.bancada]||e.bancada)}</span>
-    <span class="chip"><b>Período</b> ${esc(e.periodo||"")}</span>
-    <a class="chip" href="${GH}${esc(e.pdfs)}" target="_blank" rel="noopener"><b>Slides</b> ${esc(e.pdfs)} ↗</a>
-    ${e.lab?`<a class="chip" href="${e.lab}"><b>Lab</b> trilha completa no Lab de IA ↗</a>`:""}`;
+    <span class="chip"><b>${T("est.bancada")}</b> ${esc(idx.bancadas[e.bancada]||e.bancada)}</span>
+    <span class="chip"><b>${T("est.periodo")}</b> ${esc(e.periodo||"")}</span>
+    <a class="chip" href="${GH}${esc(e.pdfs)}" target="_blank" rel="noopener"><b>${T("est.slides")}</b> ${esc(e.pdfs)} ↗</a>
+    ${e.lab?`<a class="chip" href="${e.lab}"><b>Lab</b> ${T("est.lab_chip")}</a>`:""}`;
 
   // ---- aulas (detalhadas, extraídas dos slides) ou páginas do Lab de IA (Estudo 3)
   if(e.externas){
-    $("#aulas-sub").textContent="As aulas desta cadeira são as páginas do Lab de IA: teoria, experimento ao vivo e relatório.";
+    $("#aulas-sub").textContent=T("est.externas_sub");
     $("#aulas").innerHTML=e.externas.map((a,i)=>`
       <div class="step"><div class="stepnum">${i}</div>
         <div class="stepbody"><h4>${a.icon} ${esc(a.titulo)}</h4><p>${esc(a.one)}</p></div>
-        <a class="stepgo" href="${a.href}">Abrir ▸</a></div>`).join("");
+        <a class="stepgo" href="${a.href}">${T("est.open")}</a></div>`).join("");
   } else {
-    $("#aulas-sub").textContent=(e.nota?e.nota+" ":"")+"Cada aula traz objetivos, os conceitos dos slides, as fórmulas, onde aquilo roda no nosso lab, os exercícios e um quiz.";
-    const aulas=await Promise.all(e.aulas.map(id=>fetch(`/static/lab/estudos/${id}.json`,{cache:"no-store"}).then(r=>r.json()).catch(()=>null)));
+    $("#aulas-sub").textContent=(e.nota?e.nota+" ":"")+T("est.aulas_sub");
+    const aulas=await Promise.all(e.aulas.map(id=>jl(id).catch(()=>null)));
     $("#aulas").innerHTML=aulas.filter(Boolean).map(a=>`
       <div class="step"><div class="stepnum">${a.n}</div>
-        <div class="stepbody"><h4>${esc(a.titulo)}</h4><p>${esc(a.resumo)}</p>
-          <div class="oran">${a.conceitos.length} conceitos · ${a.formulas.length} fórmula(s) · ${a.exercicios.length} exercício(s) · ${esc(a.slide)}</div></div>
-        <a class="stepgo" href="/lab/estudo/${e.n}/aula/${a.n}">Abrir a aula ▸</a></div>`).join("");
+        <div class="stepbody"><h4>${esc(a.titulo)}${a.previa?` <span class="previa-tag">${esc(T("est.previa"))}</span>`:""}</h4><p>${esc(a.resumo)}</p>
+          <div class="oran">${T("est.stats",{c:a.conceitos.length,f:a.formulas.length,x:a.exercicios.length})} · ${a.slide?esc(a.slide):esc(T("est.noslides"))}</div></div>
+        <a class="stepgo" href="/lab/estudo/${e.n}/aula/${a.n}">${T("est.open_aula")}</a></div>`).join("");
   }
 
   // ---- exercícios (comandos do console)
   $("#ex-sub").innerHTML=e.bancada==="p2"
-    ?"Rodam na bancada do <b>Projeto 2</b> (ative no topo do painel)."+(e.temas?" Os 7 temas rodam sobre arquivo e não precisam da RAN no ar.":"")
-    :"Rodam na bancada do <b>Projeto 1</b> (ative no topo do painel).";
+    ?T("est.ex_p2")+(e.temas?T("est.ex_p2_temas"):"")
+    :T("est.ex_p1");
   $("#ex").innerHTML=e.exercicios.map(c=>runBtn(c,idx.comandos[c]||c)).join("");
 
   // ---- Estudo 4: dados do projeto + os 7 temas + próximas aulas
@@ -102,9 +107,9 @@ async function main(){
     const d=e.dados;
     $("#dados").innerHTML=`
       <div class="card">
-        <h2>💾 Os dados do projeto integrador</h2>
+        <h2>${T("est.dados_h")}</h2>
         <p>${esc(d.fonte)}</p>
-        <table class="tbl"><tr><th>coluna</th><th>nome KPM</th><th>o que é</th><th>unidade</th></tr>
+        <table class="tbl"><tr><th>${T("est.col")}</th><th>${T("est.kpm")}</th><th>${T("est.oque")}</th><th>${T("est.unid")}</th></tr>
           ${d.metricas.map(m=>`<tr><td><code>${esc(m.k)}</code></td><td><code>${esc(m.kpm)}</code></td><td>${esc(m.o)}</td><td>${esc(m.u)}</td></tr>`).join("")}
         </table>
         <p class="note">${esc(d.troca)}</p>
@@ -112,31 +117,31 @@ async function main(){
   }
   if(e.temas){
     $("#temas").innerHTML=`
-      <h2 class="section-h">Projeto integrador: os 7 temas</h2>
-      <p class="sub">Mesmos dados para todos os grupos. O que muda é a pergunta, os <b>2 indicadores</b> (com fórmula e unidade) e a recomendação, sempre como política A1 em <b>dry-run</b>. Cada botão imprime as fórmulas antes dos números.</p>
+      <h2 class="section-h">${T("est.temas_h")}</h2>
+      <p class="sub">${T("est.temas_sub")}</p>
       <div class="temas">
         ${e.temas.map(t=>`
           <div class="tema">
             <div class="tema-h"><span class="tema-ic">${t.icon}</span><div><h3>${esc(t.titulo)}</h3>${t.grupo?`<div class="grupo">${esc(t.grupo)}</div>`:""}</div></div>
             <p class="perg">${esc(t.pergunta)}</p>
             <div class="inds">
-              ${t.ind.map((i,k)=>`<div class="ind"><div class="ind-n">Indicador ${k+1} · ${esc(i.nome)} <span class="u">[${esc(i.u)}]</span></div><code>${esc(i.formula)}</code></div>`).join("")}
+              ${t.ind.map((i,k)=>`<div class="ind"><div class="ind-n">${T("est.ind")} ${k+1} · ${esc(i.nome)} <span class="u">[${esc(i.u)}]</span></div><code>${esc(i.formula)}</code></div>`).join("")}
             </div>
             <p class="extra">${esc(t.extra)}</p>
-            <p class="rec"><b>Recomendação:</b> ${esc(t.rec)}</p>
-            ${runBtn(t.cmd,"Rodar "+t.id.toUpperCase()+" no console")}
+            <p class="rec"><b>${T("est.rec")}</b> ${esc(t.rec)}</p>
+            ${runBtn(t.cmd,T("est.run_tema",{id:t.id.toUpperCase()}))}
           </div>`).join("")}
       </div>
-      <div class="allrow">${runBtn("p2-tema-all","Os 7 temas lado a lado")}</div>`;
+      <div class="allrow">${runBtn("p2-tema-all",T("est.all"))}</div>`;
   }
   if(e.proximas){
-    $("#proximas").innerHTML=`<h2 class="section-h">Próximas aulas</h2>
+    $("#proximas").innerHTML=`<h2 class="section-h">${T("est.proximas")}</h2>
       <div class="steps">${e.proximas.map(p=>`<div class="step soon"><div class="stepnum">${p.n}</div><div class="stepbody"><h4>${esc(p.data)}</h4><p>${esc(p.t)}</p></div></div>`).join("")}</div>`;
   }
   wireRun(document);
-  $("#footer").innerHTML=`Core5G_ARM64 · CESAR School · conteúdo extraído dos slides de ${esc(e.prof)}; exercícios rodam na RAN do laboratório.`;
+  $("#footer").innerHTML=esc(T("est.footer",{prof:e.prof}));
 }
-main().catch(err=>{$("#h1").textContent="não consegui carregar este estudo";$("#lead").textContent=String(err);});
+main().catch(err=>{$("#h1").textContent=T("est.err");$("#lead").textContent=String(err);});
 </script>
 </body>
 </html>

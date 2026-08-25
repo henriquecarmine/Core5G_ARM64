@@ -67,18 +67,17 @@ case "${1:-status}" in
 esac
 
 # ---------------------------------------------------------------------------
-# Política IAM de menor privilégio (cole no console ao criar o usuário; troque
-# ACCOUNT_ID e o instance-id). Start/Stop só nesta instância; Describe é
-# read-only e a AWS exige recurso "*" para ele.
-# {
-#   "Version": "2012-10-17",
-#   "Statement": [
-#     { "Effect": "Allow",
-#       "Action": ["ec2:StartInstances", "ec2:StopInstances"],
-#       "Resource": "arn:aws:ec2:us-east-2:ACCOUNT_ID:instance/i-xxxxxxxxxxxxxxxxx" },
-#     { "Effect": "Allow",
-#       "Action": "ec2:DescribeInstances",
-#       "Resource": "*" }
-#   ]
-# }
+# Política IAM de menor privilégio para o usuário core5g-ops
+# (arquivo pronto: infra/iam-core5g-ops-policy.json — conta 263069515288,
+# instância i-0c7f76199afc9e27f em us-east-2). Start/Stop só nesta instância;
+# Describe é read-only e a AWS exige recurso "*" para ele.
+#
+# O próprio core5g-ops NÃO consegue se anexar a política (permissions boundary
+# nega iam:PutUserPolicy — testado em 25/08/2026). Anexe com um perfil admin:
+#   aws iam put-user-policy --profile admin --user-name core5g-ops \
+#       --policy-name core5g-ops-start-stop \
+#       --policy-document file://infra/iam-core5g-ops-policy.json
+# ou no console: IAM → Users → core5g-ops → Add permissions → Create inline
+# policy → JSON → colar o arquivo → nome core5g-ops-start-stop.
+# Conferir depois:  ./infra/aws-instance.sh status
 # ---------------------------------------------------------------------------

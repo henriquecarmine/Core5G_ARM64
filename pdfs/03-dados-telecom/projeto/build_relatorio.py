@@ -89,9 +89,9 @@ o que muda de um pro outro é a pergunta, os dois indicadores e a recomendação
 <p>Usamos a trilha offline do professor (o pacote <code>kpm-ue-tp-sample</code>), que tem
 100 amostras separadas em três fases: baseline (20 amostras, com a rede parada), stress
 (60, sob carga) e recovery (20, voltando ao repouso). São dados de simulação (RFSIM), sem
-nada pessoal. O artefato não informa a unidade de cada métrica, então adotamos a convenção
-do KPM do O-RAN: <code>thp_ul</code> em kbps, <code>delay_dl</code> em ms e
-<code>prb_ul</code> como quantidade de PRBs. Vale um cuidado: o campo <code>ingested_at</code>
+nada pessoal. As unidades são as do E2SM-KPM, as mesmas que o xApp do FlexRIC imprime e que aparecem no slide 66 da aula 01
+: <code>thp_ul</code> em kbps, <code>delay_dl</code> em µs e
+<code>prb_ul</code> em % dos PRB. Vale um cuidado: o campo <code>ingested_at</code>
 (04/08, em UTC) é a hora em que os dados foram carregados, não a hora da medição, que é
 anterior. Por isso usamos o <code>sample_index</code> como ordem no tempo.</p>
 
@@ -144,7 +144,7 @@ mais PRB acompanha mais vazão; nas fases paradas, os dois ficam no chão.</figc
 <h2>7. O que os indicadores não mostram</h2>
 <ul>
 <li>A vazão × atraso de 0,48 é efeito de comparar fases; dentro de cada fase não há relação.</li>
-<li>As unidades são as da convenção KPM, o dado em si não as declara.</li>
+<li>As unidades (kbps, µs, % dos PRB) são as do E2SM-KPM; o JSONL em si não as carrega, a gente as tira do log do xApp e do slide 66 da aula 01.</li>
 <li>O <code>ingested_at</code> é a hora de carregar, não de medir; a ordem no tempo é o <code>sample_index</code>.</li>
 <li>É um único run e poucos UEs (RFSIM). Serve pra aprender, não é estatística de rede real.</li>
 <li>O atraso é um proxy de qualidade, não há nota de aplicativo; e a vazão é sintética do simulador.</li>

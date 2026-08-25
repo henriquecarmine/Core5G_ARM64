@@ -48,11 +48,21 @@
     '.fs-pop code{font-family:"SF Mono",Menlo,monospace;font-size:11px;color:#74c0fc;word-break:break-all}',
     '.fs-pop .hint{margin-top:10px;padding-top:8px;border-top:1px solid #2c3038;color:#8a8f98;font-size:11px}',
     '.fs-pop .x{position:absolute;top:8px;right:11px;cursor:pointer;color:#8a8f98;font-size:14px}',
-    '.fs-src label{display:flex;gap:6px;align-items:baseline;margin:5px 0 1px;cursor:pointer;color:#c9d1d9}',
-    '.fs-src .exp{margin-left:20px;color:#8a8f98;font-size:11px}',
+    // Fonte dos dados: cada opção é UMA linha (rádio · rótulo · ação à direita);
+    // os meios de envio (arquivo / colar) ficam alinhados sob um rótulo curto.
+    '.fs-src label.opt{display:flex;align-items:center;gap:8px;margin:6px 0 1px;cursor:pointer;color:#c9d1d9;line-height:1.3}',
+    '.fs-src label.opt input{margin:0;flex:none}',
+    '.fs-src .lbl{flex:1 1 auto;min-width:0;font-weight:600}',
+    '.fs-src .act{flex:none;margin-left:auto;white-space:nowrap;font-size:11px}',
+    '.fs-src .exp{margin-left:22px;color:#8a8f98;font-size:11px}',
     '.fs-src a{color:#74c0fc}',
-    '.fs-src .st{margin-left:8px;font-size:11px;color:#69db7c}',
-    '.fs-src input[type=file]{margin:4px 0 0 20px;font-size:11px;color:#8a8f98;max-width:330px}',
+    '.fs-src .st{color:#69db7c}',
+    '.fs-src .how{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin:6px 0 0 22px}',
+    '.fs-src .hk{flex:none;width:44px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#8a8f98}',
+    '.fs-src input[type=file]{flex:1 1 180px;min-width:0;margin:0;font-size:11px;color:#8a8f98}',
+    '.fs-src .paste{flex:1 1 100%;order:2;margin-left:52px;font:10.5px "SF Mono",Menlo,monospace;background:#0d0e11;color:#c9d1d9;border:1px solid #2c3038;border-radius:6px;padding:6px 8px;resize:vertical;min-height:58px}',
+    '.fs-src .pastebtn{order:3;margin-left:52px;font:11px -apple-system,"Segoe UI",sans-serif;background:#1c2230;color:#c9d1d9;border:1px solid #2c3038;border-radius:6px;padding:4px 10px;cursor:pointer}',
+    '.fs-src .pastebtn:hover{border-color:#74c0fc;color:#fff}',
     '.fs-result.ok{visibility:visible;color:#69db7c}',
     '.fs-result.fail{visibility:visible;color:#ff6b6b}',
     '@keyframes fs-travel{from{left:0}to{left:calc(100% - 6px)}}',
@@ -211,7 +221,7 @@
       viz: { q: 'O resultado visível: a forma do tráfego no tempo.', o: '<b>logs/kpm_timeseries.csv</b> + sparkline ASCII no console', d: 'O CSV final — o mesmo insumo que alimentaria um UE-TP-rApp de verdade.' },
     },
     tema: {
-      raw: { dataKey: 'kpm', q: 'A telemetria KPM do lab do professor (kpm-ue-tp-sample): 100 medições em 3 fases (baseline 20 · stress 60 · recovery 20). Os MESMOS dados para os 7 grupos — muda a pergunta.', o: 'servidor: <b>oai-cn-gnb-e2/scripts/temas/samples/</b> · original: submódulo cesar-school-repo/data/code/datasets/kpm-ue-tp-sample/', d: '1 linha = 1 medição: DRB.UEThpUl (vazão UL), DRB.RlcSduDelayDl (atraso DL), RRU.PrbTotUl (PRBs) + fase, run_id, sample_index.' },
+      raw: { dataKey: 'kpm', q: 'A telemetria KPM do lab do professor (kpm-ue-tp-sample): 100 medições em 3 fases (baseline 20 · stress 60 · recovery 20). Os MESMOS dados para os 7 grupos — muda a pergunta.', o: 'servidor: <b>oai-cn-gnb-e2/scripts/temas/samples/</b> · original: submódulo cesar-school-repo/data/code/datasets/kpm-ue-tp-sample/', d: '1 linha = 1 medição: DRB.UEThpUl (vazão UL, kbps), DRB.RlcSduDelayDl (atraso DL, µs), RRU.PrbTotUl (% de PRB) + fase, run_id, sample_index.' },
       etl: { q: 'A zona silver: cada linha tipada e ordenada por fase e sample_index — o mini-lake da Aula 02.', o: 'em memória, no <b>scripts/temas/temas_projeto.py</b> (só biblioteca padrão)', d: 'Contagem por fase, unidades por convenção KPM e os limiares derivados dos dados (PRB alto, vazão baixa, atraso máximo).' },
       kpi: { q: 'Os 2 indicadores obrigatórios do card do tema — a fórmula é impressa ANTES do número.', o: 'GROUP BY fase, percentis, correlação de Pearson, MAD, médias móveis', d: 'Tabelas por fase (média, mediana, p95, %), correlação global × dentro da fase, score de anomalia (robust-baseline-mad, o mesmo do model.json).' },
       dec: { q: 'A recomendação: uma política A1 candidata em DRY-RUN — nada é aplicado na RAN.', o: 'JSON no formato do decision.json do professor (policy_data.scope / qosObjectives)', d: 'Se a regra do tema disparou, o motivo; se não disparou, por que não (a leitura honesta) — e as limitações.' },
@@ -417,18 +427,23 @@
   function srcHtml(key) {
     var s = SRC[key] || SRC.sutd;
     return '<div class="sec">Fonte dos dados desta função</div><div class="fs-src">'
-      + '<label><input type="radio" name="fsrc" value="default"> 1. Sugerida pelo servidor · <a href="#" class="see">👁 ver amostra</a></label>'
+      // Cada opção é uma linha só: rádio + rótulo (que pode quebrar) + ação à
+      // direita (que nunca quebra). Antes o texto solto virava item flex e
+      // quebrava palavra a palavra.
+      + '<label class="opt"><input type="radio" name="fsrc" value="default">'
+      +   '<span class="lbl">1. Sugerida pelo servidor</span>'
+      +   '<a href="#" class="see act">👁 ver amostra</a></label>'
       + '<div class="exp">' + s.def + '</div>'
       + '<div class="smp" style="display:none;margin:5px 0 4px 20px;max-width:345px;overflow-x:auto;border:1px solid #2c3038;border-radius:6px"></div>'
-      + '<label><input type="radio" name="fsrc" value="custom"> 2. Meus dados <span class="st"></span></label>'
+      + '<label class="opt"><input type="radio" name="fsrc" value="custom">'
+      +   '<span class="lbl">2. Meus dados</span><span class="st act"></span></label>'
       + '<div class="exp">' + s.cus + ' '
       + '<a href="/api/lab-data/' + key + '/example" download>⬇ baixe o exemplo aqui</a></div>'
-      + '<input type="file" accept="' + s.accept + '">'
+      + '<div class="how"><span class="hk">arquivo</span><input type="file" accept="' + s.accept + '"></div>'
       + (s.paste
-          ? '<div class="exp" style="margin-top:6px">…ou cole aqui (mesmas colunas do exemplo):</div>'
-            + '<textarea class="paste" rows="4" spellcheck="false" placeholder="thp_ul,delay_dl,prb_ul,phase\n3.7,0,2,baseline\n80023.7,158.9,99,stress" '
-            + 'style="margin:3px 0 0 20px;width:calc(100% - 20px);max-width:330px;font:10.5px \'SF Mono\',Menlo,monospace;background:#0d0e11;color:#c9d1d9;border:1px solid #2c3038;border-radius:6px;padding:6px 8px;resize:vertical"></textarea>'
-            + '<div style="margin:4px 0 0 20px"><button type="button" class="pastebtn" style="font:11px -apple-system,sans-serif;background:#1c2230;color:#c9d1d9;border:1px solid #2c3038;border-radius:6px;padding:4px 10px;cursor:pointer">⬆ Usar o que colei</button></div>'
+          ? '<div class="how"><span class="hk">colar</span>'
+            + '<textarea class="paste" rows="4" spellcheck="false" placeholder="thp_ul,delay_dl,prb_ul,phase\n3.7,0,2,baseline\n80023.7,158.9,99,stress"></textarea>'
+            + '<button type="button" class="pastebtn">⬆ Usar o que colei</button></div>'
           : '')
       + '</div>';
   }

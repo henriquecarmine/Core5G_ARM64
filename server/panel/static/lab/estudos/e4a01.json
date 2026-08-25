@@ -1,7 +1,7 @@
 {
   "id": "e4a01",
   "n": 1,
-  "titulo": "Aula 01: Introdução e fontes de dados na rede",
+  "titulo": "Introdução e fontes de dados na rede",
   "slide": "aula01-intro_fontes_dados_telecom-2.pdf",
   "resumo": "Esta aula abre a disciplina definindo o vocabulário (DIKW, PM, FM, KPM, KPI, KQI) e mapeando onde nascem os dados em uma rede 5G: no core Open5GS com CUPS e na arquitetura O-RAN com SMO, O1, E2 e A1. Você vê o lab (OAI + FlexRIC + xApp KPM) rodar um experimento UE-TP e aprende a ler uma RIC Indication. Por fim, conhece o projeto integrador: produto, trilhas offline e ao vivo, rubrica de 10 pontos e os 7 temas dos grupos.",
   "objetivos": [

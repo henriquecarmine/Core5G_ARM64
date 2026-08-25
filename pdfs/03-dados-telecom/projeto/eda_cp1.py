@@ -36,8 +36,8 @@ os.makedirs(FIG, exist_ok=True)
 
 PHASES = ["baseline", "stress", "recovery"]          # ordem cronológica do experimento
 METRICS = {"thp_ul": ("Vazão UL", "kbps"),           # DRB.UEThpUl  (alvo do tema)
-           "delay_dl": ("Atraso DL (RLC)", "ms"),    # DRB.RlcSduDelayDl
-           "prb_ul": ("PRB UL em uso", "PRBs")}      # RRU.PrbTotUl
+           "delay_dl": ("Atraso DL (RLC)", "µs"),    # DRB.RlcSduDelayDl
+           "prb_ul": ("PRB UL em uso", "%")}         # RRU.PrbTotUl
 
 
 def carregar() -> pd.DataFrame:
@@ -65,8 +65,8 @@ def qualidade(df: pd.DataFrame) -> None:
           "ingestão em lote (UTC); a hora da medição não vem por amostra (experimento de "
           "jun/25, ver source_path). Ordem temporal = sample_index.")
     # Nota de unidade: o artefato não declara; adotamos a convenção KPM O-RAN
-    print("  unidades (convenção KPM, não declaradas no artefato): "
-          "thp_ul=kbps, delay_dl=ms, prb_ul=contagem de PRBs.")
+    print("  unidades (as do E2SM-KPM, como o xApp imprime): "
+          "thp_ul=kbps, delay_dl=µs, prb_ul=% dos PRB (slide 66 da aula 01 e log do FlexRIC).")
     print("  gaps no sample_index por fase:")
     for ph in PHASES:
         idx = df[df.phase == ph].sample_index.to_numpy()
@@ -122,7 +122,7 @@ def indicadores(df: pd.DataFrame) -> dict:
     print("  (1) Vazão UL média / p95 por fase (kbps):")
     for ph in PHASES:
         print(f"        {ph:<9} média={ind['vazao_ul'][ph]['media']:>10}  p95={ind['vazao_ul'][ph]['p95']:>10}")
-    print("  (2) Utilização média de PRB UL por fase (PRBs):")
+    print("  (2) Utilização média de PRB UL por fase (% dos PRB):")
     for ph in PHASES:
         print(f"        {ph:<9} {ind['prb_ul_medio'][ph]}")
     return ind
@@ -155,7 +155,7 @@ def figuras(df: pd.DataFrame) -> None:
     for ph, c in [("baseline", "#2e7d32"), ("stress", "#c62828"), ("recovery", "#1565c0")]:
         sub = df[df.phase == ph]
         ax.scatter(sub.prb_ul, sub.thp_ul, s=28, alpha=.7, label=ph, color=c, edgecolors="none")
-    ax.set_xlabel("PRB UL em uso (PRBs)")
+    ax.set_xlabel("PRB UL em uso (%)")
     ax.set_ylabel("Vazão UL (kbps)")
     ax.set_title("Vazão do usuário sobe com o uso de PRB (por fase)")
     ax.grid(alpha=.25)

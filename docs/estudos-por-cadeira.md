@@ -96,3 +96,24 @@ professor). O arquivo fica em `panel_uploads/labdata/kpm/kpm_custom.txt` e
 - Conteúdo das aulas só em PT (a UI do console segue nos 4 idiomas).
 - Estudo 4: aulas 04–06 entram quando o professor compartilhar os slides.
 - Estudo 1: só a aula 01 existe em PDF.
+
+## Unidades das três KPMs (corrigido em 0.64.2)
+
+O JSONL do professor não carrega unidade, mas o xApp KPM do FlexRIC imprime e o
+slide 66 da aula 01 mostra: `DRB.UEThpUl` em **kbps**, `RRU.PrbTotUl` em **%**
+(fração dos PRB de subida em uso) e `DRB.RlcSduDelayDl` em **µs**. Até a 0.64.1 o
+painel e o CP1 do Grupo 6 diziam "ms" e "PRBs"; corrigido em `temas_projeto.py`,
+`TEST_EXPLAIN`, `estudos/index.json`, cartão 💾 e nos arquivos de
+`pdfs/03-dados-telecom/projeto/`. Consequência didática: 150 µs de atraso RLC não
+é experiência ruim, então o limiar do T3/T7 (`TEMA_DELAY_MAX=100` µs) marca a
+**mudança de regime** em relação ao baseline, não QoE.
+
+## Idiomas e aulas em prévia
+
+- A moldura de `/lab/estudo/N` e `/lab/estudo/N/aula/K` usa `lab-i18n.js`
+  (chaves `est.*` e `aula.*`, 4 idiomas). O conteúdo vem de
+  `estudos/<id>.<lang>.json` quando existe (en/es/fr) e cai para `<id>.json` (pt).
+  Trocar de idioma recarrega a página.
+- Aula sem slides publicados: `"slide": null, "previa": true, "nota": "..."` no
+  JSON; o renderizador mostra badge e faixa de prévia e o rodapé cita as fontes.
+  Exemplo: `e4a04.json` (KPIs, KQIs, QoS e QoE, montada do plano de ensino).

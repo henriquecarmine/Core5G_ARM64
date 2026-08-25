@@ -25,7 +25,7 @@ Sem coluna de fase, as primeiras 20% amostras viram "baseline" e o resto
 "observacao" (o script avisa).
 
 Limiares (todos ajustaveis por variavel de ambiente, impressos na saida):
-  TEMA_DELAY_MAX   atraso RLC DL acima do qual consideramos degradacao (ms)  [100]
+  TEMA_DELAY_MAX   atraso RLC DL acima do qual consideramos degradacao (us)  [100]
   TEMA_PRB_HIGH    fracao do PRB maximo observado que conta como "radio cheio" [0.8]
   TEMA_THP_LOW     fracao do p95 da vazao abaixo da qual e "vazao baixa"     [0.5]
   TEMA_LOW_LOAD    fracao (do PRB max e do p95 da vazao) que define baixa carga [0.1]
@@ -245,7 +245,7 @@ def t1(d, th):
                    "gNB (E2SM-KPM) -> xApp -> arquivo; a analise roda no painel; a politica iria pelo A1")
     step("Formulas dos 2 indicadores")
     formula("I1  Vazao UL por fase", "media(thp_ul) e p95(thp_ul), agrupando por fase", "kbps")
-    formula("I2  Utilizacao de PRB UL por fase", "media(prb_ul), agrupando por fase", "PRBs")
+    formula("I2  Utilizacao de PRB UL por fase", "media(prb_ul), agrupando por fase", "% dos PRB")
     rows = []
     for p in d.phases:
         t = d.col("thp", p); pr = d.col("prb", p)
@@ -264,7 +264,7 @@ def t1(d, th):
     mp, mt = movavg(d.col("prb"), LIM["window"]), movavg(d.col("thp"), LIM["window"])
     gatilho = [a > th["prb_high"] and b < th["thp_low"] for a, b in zip(mp, mt)]
     fr = frac(gatilho)
-    kv("regra do card", f"vazao cai (< {f1(th['thp_low'])} kbps) com PRB alto (> {f1(th['prb_high'])}) -> priorizar/aliviar carga")
+    kv("regra do card", f"vazao cai (< {f1(th['thp_low'])} kbps) com PRB alto (> {f1(th['prb_high'])}%) -> priorizar/aliviar carga")
     if fr > 0:
         warn(f"regra disparou em {pct(fr)} das amostras (media movel de {LIM['window']})")
         a1_dryrun("ue-tp-prioridade", {"ueId": "ue-any", "qosId": "qos-lab"}, {"priorityLevel": 10},
@@ -336,9 +336,10 @@ def t3(d, th):
                    "quando o atraso de radio sugere que a experiencia do usuario pode estar ruim?",
                    "DRB.RlcSduDelayDl medido no gNB (RLC) -> KPM -> analise; nao ha MOS de aplicativo no lab")
     step("Formulas dos 2 indicadores")
-    formula("I1  Atraso RLC DL por fase", "mediana(delay_dl) e p95(delay_dl), por fase", "ms")
-    formula("I2  Fracao do tempo em atraso alto", f"n(delay_dl > {th['delay_max']:g} ms) / n, por fase", "%")
-    kv("limiar justificado", f"{th['delay_max']:g} ms: acima disso apps interativos (voz/video) ja sofrem; ajustavel por TEMA_DELAY_MAX")
+    formula("I1  Atraso RLC DL por fase", "mediana(delay_dl) e p95(delay_dl), por fase", "us")
+    formula("I2  Fracao do tempo em atraso alto", f"n(delay_dl > {th['delay_max']:g} us) / n, por fase", "%")
+    kv("limiar justificado", f"{th['delay_max']:g} us: ~3x o p95 do baseline em repouso, marca a MUDANCA de regime; ajustavel por TEMA_DELAY_MAX")
+    kv("em valor absoluto", "atraso RLC abaixo de 1 ms nao e experiencia ruim: o indicador mostra o salto relativo ao repouso, nao QoE")
     rows = []
     for p in d.phases:
         dl = d.col("delay", p); t = d.col("thp", p)
@@ -370,10 +371,10 @@ def t4(d, th):
                    "RRU.PrbTotUl do gNB (E2SM-KPM) -> analise no painel -> alerta / intencao de alivio via A1")
     w = LIM["window"]
     step("Formulas dos 2 indicadores")
-    formula("I1  Utilizacao de PRB UL", "media(prb_ul) e p95(prb_ul), por fase", "PRBs")
-    formula("I2  Indice de risco", f"n(MM{w}(prb) > {f1(th['prb_high'])} E MM{w}(thp) < {f1(th['thp_low'])}) / n", "%")
+    formula("I1  Utilizacao de PRB UL", "media(prb_ul) e p95(prb_ul), por fase", "% dos PRB")
+    formula("I2  Indice de risco", f"n(MM{w}(prb) > {f1(th['prb_high'])}% E MM{w}(thp) < {f1(th['thp_low'])} kbps) / n", "%")
     kv("MMk", f"media movel de {w} amostras: olha a tendencia, nao um instante")
-    kv("limiares", f"PRB alto = {LIM['prb_high']:g} x PRB max ({f1(th['prb_max'])}); vazao baixa = {LIM['thp_low']:g} x p95 da vazao ({f1(th['thp_p95'])})")
+    kv("limiares", f"PRB alto = {LIM['prb_high']:g} x PRB max ({f1(th['prb_max'])}%); vazao baixa = {LIM['thp_low']:g} x p95 da vazao ({f1(th['thp_p95'])} kbps)")
     rows, i, risco_g = [], 0, []
     for p in d.phases:
         pr, t = d.col("prb", p), d.col("thp", p)
@@ -404,7 +405,7 @@ def t5(d, th):
                    "como resumir o experimento em indicadores de celula e qual o limite disso no lab?",
                    "agregacao por run_id e fase (o GROUP BY da zona gold do mini-lake), no painel")
     step("Formulas dos 2 indicadores")
-    formula("I1  PRB medio da celula por fase", "media(prb_ul) GROUP BY run_id, phase", "PRBs")
+    formula("I1  PRB medio da celula por fase", "media(prb_ul) GROUP BY run_id, phase", "% dos PRB")
     formula("I2  Vazao representativa da celula", "media(thp_ul) por fase (e soma = media x n_UE quando ha varios UEs)", "kbps")
     ues = sorted(set(str(r["ue"]) for r in d.rows)); n_ue = len(ues)
     runs = sorted(set(str(r["run"]) for r in d.rows))
@@ -428,9 +429,9 @@ def t6(d, th):
                    "em que trechos a carga esta baixa o suficiente para pensar em economizar energia, sem desligar nada?",
                    "janelas de PRB/vazao baixos no KPM -> intencao A1 em dry-run; o lab NAO controla potencia da RU")
     step("Formulas dos 2 indicadores")
-    formula("baixa carga", f"prb_ul <= {f1(th['prb_low'])} E thp_ul <= {f1(th['thp_lowload'])}  ({LIM['low_load']:g} x PRB max e x p95 da vazao)", "-")
+    formula("baixa carga", f"prb_ul <= {f1(th['prb_low'])}% E thp_ul <= {f1(th['thp_lowload'])} kbps  ({LIM['low_load']:g} x PRB max e x p95 da vazao)", "-")
     formula("I1  Fracao do tempo em baixa carga", "n(baixa carga) / n, por fase e no total", "%")
-    formula("I2  Vazao e atraso nessas janelas", "media(thp_ul) e media/mediana(delay_dl) so nas amostras de baixa carga", "kbps / ms")
+    formula("I2  Vazao e atraso nessas janelas", "media(thp_ul) e media/mediana(delay_dl) so nas amostras de baixa carga", "kbps / us")
     rows, low_all = [], []
     for p in d.phases:
         pr, t, dl = d.col("prb", p), d.col("thp", p), d.col("delay", p)
@@ -465,7 +466,7 @@ def t7(d, th):
                    "regra avaliada sobre o KPM no painel -> politica A1 desenhada (escopo UE/QoS, prioridade), sem afirmar handover/path")
     k = LIM["persist"]
     step("Formulas dos 2 indicadores")
-    formula("regra", f"degradacao = delay_dl > {th['delay_max']:g} ms  OU  (prb_ul > {f1(th['prb_high'])} E thp_ul < {f1(th['thp_low'])})", "-")
+    formula("regra", f"degradacao = delay_dl > {th['delay_max']:g} us  OU  (prb_ul > {f1(th['prb_high'])}% E thp_ul < {f1(th['thp_low'])} kbps)", "-")
     formula("I1  Tempo em degradacao", "n(regra verdadeira) / n, por fase", "%")
     formula("I2  Acionamentos da politica", f"subidas da regra (falso -> verdadeiro); 'sustentado' = {k} amostras seguidas", "contagem")
     deg = [r["delay"] > th["delay_max"] or (r["prb"] > th["prb_high"] and r["thp"] < th["thp_low"]) for r in d.rows]
@@ -510,13 +511,13 @@ def main():
     d = Data(rows, phases)
     kv("arquivo", a.file); kv("formato detectado", fmt)
     kv("amostras", f"{len(rows)}  ({', '.join(f'{p}: {d.n(p)}' for p in phases)})")
-    kv("metricas", "thp_ul = DRB.UEThpUl [kbps]   delay_dl = DRB.RlcSduDelayDl [ms]   prb_ul = RRU.PrbTotUl [PRBs]")
-    kv("unidades", "convencao KPM do O-RAN (o artefato nao declara)")
+    kv("metricas", "thp_ul = DRB.UEThpUl [kbps]   delay_dl = DRB.RlcSduDelayDl [us]   prb_ul = RRU.PrbTotUl [%]")
+    kv("unidades", "as do E2SM-KPM, como o xApp do FlexRIC imprime e o slide 66 da aula 01 mostra (kbps, us, %)")
     if inferred:
         warn("sem coluna de fase: as primeiras 20% amostras viraram 'baseline' e o resto 'observacao'")
     th = thresholds(d)
     kv("limiares derivados", f"PRB alto > {f1(th['prb_high'])}  vazao baixa < {f1(th['thp_low'])} kbps  "
-                             f"baixa carga: PRB <= {f1(th['prb_low'])} e vazao <= {f1(th['thp_lowload'])}  atraso > {th['delay_max']:g} ms")
+                             f"baixa carga: PRB <= {f1(th['prb_low'])}% e vazao <= {f1(th['thp_lowload'])}  atraso > {th['delay_max']:g} us")
     ok("dados carregados: 1 linha = 1 medicao KPM (zona silver)")
 
     sel = list(TEMAS) if a.tema == "all" else [a.tema]

@@ -35,7 +35,7 @@ mediana junto.
 
 ## Indicador 2 - Utilização de PRB UL por fase
 
-Fórmula: `média(prb_ul)` agrupando por `phase`. Unidade em PRBs, por fase.
+Fórmula: `média(prb_ul)` agrupando por `phase`. Unidade em % dos PRB, por fase.
 
 Valores no CP1: baseline 2,0, stress 97,3 e recovery 3,0. O recurso de rádio
 segue a mesma forma da vazão (idle, satura, volta pro idle).
@@ -68,8 +68,9 @@ atuar de fato na RAN.
 
 - A correlação de vazão × atraso (0,48) vem do contraste entre fases; dentro da
   fase é ~0. Só a de vazão × PRB se sustenta dentro da fase.
-- As unidades não vêm declaradas no artefato. kbps, ms e PRBs são a convenção do
-  KPM O-RAN que a gente assumiu.
+- As unidades são as do E2SM-KPM, como o xApp do FlexRIC imprime e o slide 66 da
+  aula 01 mostra: kbps, µs e % dos PRB (numa versão anterior deste texto a gente
+  tinha escrito ms e PRBs; corrigido).
 - O `ingested_at` não é a hora da medição, é o carimbo de ingestão em lote
   (04/08 UTC); o experimento é de jun/25 (ver `source_path`). A ordem no tempo é
   o `sample_index`, não tem relógio de medição por amostra.

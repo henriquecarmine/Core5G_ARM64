@@ -4,40 +4,45 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aula · Core5G_ARM64</title>
-<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.64.0">
+<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.64.2">
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div>
-      <a href="/" class="back">← Painel</a> <span class="sep">·</span> <a id="back-estudo" href="/lab" class="back">Estudo</a>
-      <div class="eyebrow" id="eyebrow">Aula</div>
+      <a href="/" class="back" data-i18n="nav.back">← Painel</a> <span class="sep">·</span> <a id="back-estudo" href="/lab" class="back">Estudo</a>
+      <div class="eyebrow" id="eyebrow" data-i18n="aula.word">Aula</div>
       <h1 id="h1">…</h1>
       <p class="lead" id="lead"></p>
     </div>
-    <div class="topright"><button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button></div>
+    <div class="topright"><div id="langsel" class="langsel"></div><button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button></div>
   </div>
 
-  <div class="card"><h2>🎯 O que você vai aprender</h2><ul class="obj" id="obj"></ul></div>
+  <div class="card"><h2 data-i18n="aula.obj">🎯 O que você vai aprender</h2><ul class="obj" id="obj"></ul></div>
 
-  <h2 class="section-h">Conceitos, na ordem dos slides</h2>
+  <h2 class="section-h" data-i18n="aula.conc">Conceitos, na ordem dos slides</h2>
   <div class="conceitos" id="conceitos"></div>
 
   <div id="formulas"></div>
 
-  <div class="card"><h2>🛰️ Onde isso roda no nosso lab</h2><p id="onde-txt"></p><div class="mm" id="mm"></div></div>
+  <div class="card"><h2 data-i18n="aula.onde_h">🛰️ Onde isso roda no nosso lab</h2><p id="onde-txt"></p><div class="mm" id="mm"></div></div>
 
-  <div class="card"><h2>🎛️ Exercícios</h2><p class="sub" id="ex-sub"></p><div class="exlist" id="ex"></div></div>
+  <div class="card"><h2 data-i18n="aula.ex_h">🎛️ Exercícios</h2><p class="sub" id="ex-sub"></p><div class="exlist" id="ex"></div></div>
 
-  <div class="card"><h2>❓ Quiz de fixação</h2><div class="quiz" id="quiz"></div></div>
+  <div class="card"><h2 data-i18n="aula.quiz_h">❓ Quiz de fixação</h2><div class="quiz" id="quiz"></div></div>
 
   <div class="nav" id="nav"></div>
   <footer id="footer"></footer>
 </div>
 
 <script src="/static/ops/mini-map.js?v=0.64.0"></script>
+<script src="/static/lab/lab-i18n.js?v=0.64.2"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s);
+const T=(k,p)=>window.LABI18N?LABI18N.t(k,p):k;
+const LANG=(window.LABI18N&&LABI18N.lang)||"pt";
+async function jl(name){if(LANG!=="pt"){try{const r=await fetch(`/static/lab/estudos/${name}.${LANG}.json`,{cache:"no-store"});if(r.ok)return r.json();}catch(x){}}return (await fetch(`/static/lab/estudos/${name}.json`,{cache:"no-store"})).json();}
+if(window.LABI18N)LABI18N.onChange(()=>location.reload());
 const EMBED=new URLSearchParams(location.search).has("embed");
 const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const GH="https://github.com/henriquecarmine/Core5G_ARM64/blob/main/";
@@ -53,42 +58,46 @@ document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest
 
 function runBtn(cmd,label){
   if(EMBED) return `<button class="runb" data-cmd="${esc(cmd)}" title="${esc(cmd)}">▶ ${esc(label)}</button>`;
-  return `<a class="runb ghost" href="/" title="abra o painel e rode pelo menu da esquerda">▶ ${esc(label)} <small>(no painel)</small></a>`;
+  return `<a class="runb ghost" href="/" title="${esc(T("est.run_hint"))}">▶ ${esc(label)} <small>${esc(T("est.in_panel"))}</small></a>`;
 }
 
 async function main(){
-  const idx=await (await fetch("/static/lab/estudos/index.json",{cache:"no-store"})).json();
+  const idx=await jl("index");
   const e=idx.estudos.find(x=>x.n===N);
   const id=e.aulas[K-1];
-  const a=await (await fetch(`/static/lab/estudos/${id}.json`,{cache:"no-store"})).json();
-  document.title=`Aula ${a.n} · ${a.titulo}`;
-  try{if(EMBED)window.parent.postMessage({c5gLab:{title:`Estudo ${e.n} · Aula ${a.n}`}},location.origin);}catch(x){}
-  $("#back-estudo").textContent=`Estudo ${e.n}: ${e.titulo}`; $("#back-estudo").href=`/lab/estudo/${e.n}`;
-  $("#eyebrow").textContent=`Estudo ${e.n} · ${e.titulo} · Aula ${a.n} · ${e.prof}`;
+  const a=await jl(id);
+  const W=T("est.word"), A=T("aula.word");
+  document.title=`${A} ${a.n} · ${a.titulo}`;
+  try{if(EMBED)window.parent.postMessage({c5gLab:{title:`${W} ${e.n} · ${A} ${a.n}`}},location.origin);}catch(x){}
+  $("#back-estudo").textContent=`${W} ${e.n}: ${e.titulo}`; $("#back-estudo").href=`/lab/estudo/${e.n}`;
+  $("#eyebrow").textContent=`${W} ${e.n} · ${e.titulo} · ${A} ${a.n} · ${e.prof}${a.previa?T("aula.previa_tag"):""}`;
   $("#h1").textContent=a.titulo; $("#lead").textContent=a.resumo;
+  if(a.previa){const b=document.createElement("div");b.className="previa";b.innerHTML=`<b>${esc(T("aula.previa_b"))}</b> ${esc(a.nota||T("aula.previa_default"))}`;$("#lead").after(b);}
   $("#obj").innerHTML=a.objetivos.map(o=>`<li>${esc(o)}</li>`).join("");
   $("#conceitos").innerHTML=a.conceitos.map((c,i)=>`<div class="conc"><div class="cn">${i+1}</div><div><h3>${esc(c.t)}</h3><p>${esc(c.d)}</p></div></div>`).join("");
   if(a.formulas&&a.formulas.length){
-    $("#formulas").innerHTML=`<h2 class="section-h">Fórmulas e métricas desta aula</h2><div class="forms">${a.formulas.map(f=>`
+    $("#formulas").innerHTML=`<h2 class="section-h">${T("aula.formulas")}</h2><div class="forms">${a.formulas.map(f=>`
       <div class="form"><div class="fn">${esc(f.nome)} ${f.unidade?`<span class="u">[${esc(f.unidade)}]</span>`:""}</div>
         <code>${esc(f.expr)}</code>
-        ${f.vars?`<p><b>onde</b> ${esc(f.vars)}</p>`:""}
-        ${f.quando?`<p><b>para quê</b> ${esc(f.quando)}</p>`:""}</div>`).join("")}</div>`;
+        ${f.vars?`<p><b>${T("aula.where")}</b> ${esc(f.vars)}</p>`:""}
+        ${f.quando?`<p><b>${T("aula.why")}</b> ${esc(f.quando)}</p>`:""}</div>`).join("")}</div>`;
   }
   $("#onde-txt").textContent=a.onde.texto;
   try{ if(window.MiniMap) MiniMap.preview(a.onde.scene,$("#mm")); }catch(x){}
   $("#ex-sub").innerHTML=a.exercicios.length
-    ?`Os comandos abaixo exercitam esta aula na RAN de verdade (bancada ${esc(idx.bancadas[e.bancada]||e.bancada)}).`
-    :"Esta aula é conceitual: não tem exercício no console.";
+    ?esc(T("aula.ex_sub",{b:idx.bancadas[e.bancada]||e.bancada}))
+    :esc(T("aula.ex_none"));
   $("#ex").innerHTML=a.exercicios.map(c=>runBtn(c,idx.comandos[c]||c)).join("");
   document.querySelectorAll("button.runb").forEach(b=>b.addEventListener("click",()=>{
     try{window.parent.postMessage({c5gLab:{runCmd:b.dataset.cmd}},location.origin);}catch(x){}}));
   $("#quiz").innerHTML=a.quiz.map((q,i)=>`<details class="q"><summary>${i+1}. ${esc(q.q)}</summary><p>${esc(q.a)}</p></details>`).join("");
   const prev=K>1?`/lab/estudo/${e.n}/aula/${K-1}`:null, next=K<e.aulas.length?`/lab/estudo/${e.n}/aula/${K+1}`:null;
-  $("#nav").innerHTML=`${prev?`<a class="navb" href="${prev}">◂ Aula ${K-1}</a>`:"<span></span>"}<a class="navb" href="/lab/estudo/${e.n}">Voltar ao Estudo ${e.n}</a>${next?`<a class="navb primary" href="${next}">Aula ${K+1} ▸</a>`:"<span></span>"}`;
-  $("#footer").innerHTML=`Fonte: <a href="${GH}${esc(e.pdfs)}/${esc(a.slide)}" target="_blank" rel="noopener">${esc(a.slide)}</a> (${esc(a.fontes)}) · ${esc(e.prof)} · CESAR School. O conteúdo foi extraído dos slides e adaptado ao laboratório; os exercícios rodam na RAN do painel.`;
+  $("#nav").innerHTML=`${prev?`<a class="navb" href="${prev}">${T("aula.prev",{n:K-1})}</a>`:"<span></span>"}<a class="navb" href="/lab/estudo/${e.n}">${T("aula.back",{n:e.n})}</a>${next?`<a class="navb primary" href="${next}">${T("aula.next",{n:K+1})}</a>`:"<span></span>"}`;
+  $("#footer").innerHTML=a.slide
+    ?`${esc(T("aula.src"))} <a href="${GH}${esc(e.pdfs)}/${esc(a.slide)}" target="_blank" rel="noopener">${esc(a.slide)}</a> (${esc(a.fontes)})${esc(T("aula.src_tail",{prof:e.prof}))}`
+    :esc(T("aula.src_previa",{f:a.fontes,prof:e.prof}));
 }
-main().catch(err=>{$("#h1").textContent="não consegui carregar esta aula";$("#lead").textContent=String(err);});
+main().catch(err=>{$("#h1").textContent=T("aula.err");$("#lead").textContent=String(err);});
 </script>
 </body>
 </html>

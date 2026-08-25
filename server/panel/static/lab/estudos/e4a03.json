@@ -116,7 +116,7 @@
       "expr": "MAD = mediana(|x - mediana(x)|); z_robusto = 0,6745 * (x - mediana) / MAD",
       "vars": "x amostras da fase; mediana da fase",
       "unidade": "a da métrica; z_robusto adimensional",
-      "quando": "Modelo simples de anomalia com limiar (DIKW, conhecimento); robusto ao Thp extremo do recovery"
+      "quando": "Modelo simples de anomalia com limiar (DIKW, conhecimento); robusto ao Thp extremo do recovery. O model.json do lab usa a variante sem o fator 0,6745: score = |x - mediana| / max(MAD, 1), anômalo se score > 3,5 em 2 das 3 métricas (é o que o p2-tema-t2 reproduz)"
     },
     {
       "nome": "Correlação de Pearson",

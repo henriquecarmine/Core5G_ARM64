@@ -51,7 +51,7 @@
     // Fonte dos dados: cada opção é UMA linha (rádio · rótulo · ação à direita);
     // os meios de envio (arquivo / colar) ficam alinhados sob um rótulo curto.
     '.fs-src label.opt{display:flex;align-items:center;gap:8px;margin:6px 0 1px;cursor:pointer;color:#c9d1d9;line-height:1.3}',
-    '.fs-src label.opt input{margin:0;flex:none}',
+    '.fs-src label.opt input{margin:0;flex:none;width:auto;height:auto;min-width:0}',   // o painel dá width:100% a todo input: o rádio engolia a linha
     '.fs-src .lbl{flex:1 1 auto;min-width:0;font-weight:600}',
     '.fs-src .act{flex:none;margin-left:auto;white-space:nowrap;font-size:11px}',
     '.fs-src .exp{margin-left:22px;color:#8a8f98;font-size:11px}',

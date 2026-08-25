@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""Gera o RELATÓRIO do Checkpoint 1 (Projeto Integrador · Grupo 6) e monta o ZIP
-de entrega. Self-contained: logo da CESAR inline (SVG) e figuras embutidas (base64)
--> RELATORIO.html -> RELATORIO.pdf (Chrome headless).
-
+"""Gera o relatorio do Checkpoint 1 e monta o zip de entrega do grupo.
+RELATORIO.html (logo da CESAR + figuras embutidas) -> RELATORIO.pdf via Chrome.
 Uso: python3 build_relatorio.py
 """
 import base64
@@ -34,138 +32,138 @@ def b64img(path):
 
 def logo_svg():
     with open(LOGO, encoding="utf-8") as f:
-        svg = f.read()
-    # normaliza tamanho no cabeçalho
-    return svg.replace('width="561" height="500"', 'width="54" height="48"', 1)
+        return f.read().replace('width="561" height="500"', 'width="54" height="48"', 1)
 
 
 CSS = """
-@page { size: A4; margin: 18mm 18mm 16mm; }
+@page { size: A4; margin: 20mm 18mm 16mm; }
 *{box-sizing:border-box}
-body{font:11pt/1.5 Georgia,'Times New Roman',serif;color:#1a2430;max-width:174mm;margin:0 auto}
-.hd{display:flex;align-items:center;gap:14px;border-bottom:2.5px solid #f04e23;padding-bottom:12px;margin-bottom:6px}
-.hd .logo{flex:none}
+body{font:11.5pt/1.55 Georgia,'Times New Roman',serif;color:#20272e;max-width:174mm;margin:0 auto}
+.hd{display:flex;align-items:center;gap:14px;border-bottom:2px solid #f04e23;padding-bottom:11px;margin-bottom:4px}
 .hd .t{flex:1}
-.hd .disc{font:700 10pt/1.2 Helvetica,Arial,sans-serif;letter-spacing:.02em;color:#f04e23;text-transform:uppercase}
-.hd h1{font:800 17pt/1.15 Helvetica,Arial,sans-serif;margin:2px 0 0;color:#12202e;letter-spacing:-.01em}
-.hd .sub{font:400 10.5pt/1.3 Helvetica,Arial,sans-serif;color:#5a6b7c;margin-top:2px}
-.meta{display:flex;flex-wrap:wrap;gap:4px 22px;font:10pt/1.5 Helvetica,Arial,sans-serif;color:#33465a;margin:10px 0 4px}
-.meta b{color:#12202e}
-h2{font:700 12.5pt/1.25 Helvetica,Arial,sans-serif;color:#12202e;margin:18pt 0 6pt;padding-top:8pt;border-top:1px solid #dfe5ec;page-break-after:avoid}
-p{margin:0 0 8pt;text-align:justify;hyphens:auto}
-b,strong{color:#12202e}
-table{border-collapse:collapse;width:100%;margin:8pt 0 12pt;font:9.5pt/1.4 Helvetica,Arial,sans-serif;font-variant-numeric:tabular-nums;page-break-inside:avoid}
-th{border-top:1.2pt solid #12202e;border-bottom:.7pt solid #12202e;padding:4pt 8pt;text-align:left;background:#f7f9fb}
+.hd .disc{font:600 10pt/1.2 Helvetica,Arial,sans-serif;color:#f04e23}
+.hd h1{font:700 17pt/1.15 Helvetica,Arial,sans-serif;margin:2px 0 0;color:#1a2733}
+.hd .sub{font:400 11pt/1.3 Helvetica,Arial,sans-serif;color:#5a6b7c;margin-top:2px}
+.meta{font:10.5pt/1.55 Helvetica,Arial,sans-serif;color:#33465a;margin:10px 0 2px}
+.meta div b{color:#1a2733}
+h2{font:700 13pt/1.25 Helvetica,Arial,sans-serif;color:#1a2733;margin:17pt 0 5pt;page-break-after:avoid}
+p{margin:0 0 8pt;text-align:justify}
+table{border-collapse:collapse;width:100%;margin:8pt 0 12pt;font:10pt/1.4 Helvetica,Arial,sans-serif;font-variant-numeric:tabular-nums;page-break-inside:avoid}
+th{border-bottom:1.5pt solid #33465a;padding:4pt 8pt;text-align:left}
 td{border-bottom:.5pt solid #d3dbe4;padding:3.5pt 8pt}
-tr:last-child td{border-bottom:1.2pt solid #12202e}
 .num{text-align:right}
 figure{margin:10pt 0 6pt;page-break-inside:avoid}
-figure img{width:100%;border:1px solid #dfe5ec;border-radius:4px}
-figcaption{font:9pt/1.35 Helvetica,Arial,sans-serif;color:#5a6b7c;margin-top:5px;text-align:center}
-.callout{border:1px solid #dfe5ec;border-left:4px solid #f04e23;background:#fbfbf7;padding:9pt 13pt;font-size:10.5pt;margin:8pt 0}
-code{font:9.5pt 'DejaVu Sans Mono',Consolas,monospace;background:#f2f4f7;padding:0 3pt;border-radius:2px}
-ul{margin:0 0 8pt;padding-left:18pt} li{margin-bottom:3pt;text-align:justify}
-footer{margin-top:16pt;padding-top:8pt;border-top:.7pt solid #b9c4cf;font:8.5pt/1.4 Helvetica,Arial,sans-serif;color:#7c8da0;text-align:center}
+figure img{width:100%;border:1px solid #e2e7ee}
+figcaption{font:9.5pt/1.35 Helvetica,Arial,sans-serif;color:#5a6b7c;margin-top:5px}
+.box{background:#f6f8f5;border-left:3px solid #4a7a3a;padding:8pt 12pt;font-size:11pt;margin:8pt 0}
+code{font:10pt 'DejaVu Sans Mono',Consolas,monospace;color:#324}
+ul{margin:0 0 8pt;padding-left:20pt} li{margin-bottom:4pt}
+footer{margin-top:16pt;padding-top:8pt;border-top:.5pt solid #c3ccd5;font:9pt/1.4 Helvetica,Arial,sans-serif;color:#8593a1}
 """
 
 
 def html():
-    integrantes = " · ".join(INTEGRANTES)
-    fig1, fig2 = b64img(os.path.join(FIG, "cp1_serie_temporal.png")), b64img(os.path.join(FIG, "cp1_vazao_x_prb.png"))
+    nomes = ", ".join(INTEGRANTES)
+    fig1 = b64img(os.path.join(FIG, "cp1_serie_temporal.png"))
+    fig2 = b64img(os.path.join(FIG, "cp1_vazao_x_prb.png"))
     return f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
-<title>Projeto Integrador — {GRUPO} — Checkpoint 1</title><style>{CSS}</style></head><body>
-<div class="hd"><div class="logo">{logo_svg()}</div><div class="t">
-  <div class="disc">CESAR School · {DISCIPLINA}</div>
+<title>Projeto Integrador - Grupo 6 - Checkpoint 1</title><style>{CSS}</style></head><body>
+<div class="hd">{logo_svg()}<div class="t">
+  <div class="disc">CESAR School &nbsp;|&nbsp; {DISCIPLINA}</div>
   <h1>Projeto Integrador — Checkpoint 1</h1>
   <div class="sub">{TEMA}</div></div></div>
 <div class="meta">
-  <span><b>{GRUPO}:</b> {integrantes}</span>
-  <span><b>Mentor:</b> {MENTOR}</span>
-  <span><b>Entrega:</b> Aula 04 · 25/08/2026 (Checkpoint 1 — EDA)</span>
+  <div><b>{GRUPO}:</b> {nomes}</div>
+  <div><b>Professor:</b> {MENTOR}</div>
+  <div><b>Entrega:</b> Aula 04, 25/08/2026 (Checkpoint 1)</div>
 </div>
 
 <h2>1. Tema e pergunta</h2>
-<p>O {GRUPO} investiga a <b>vazão do usuário (UE-TP)</b> sobre a telemetria KPM do lab
-<code>oai-cn-gnb-nonrt-nearrt</code>. <b>Pergunta:</b> a vazão do UE (<code>DRB.UEThpUl</code>)
-sobe e desce <b>junto</b> com o uso de PRB (<code>RRU.PrbTotUl</code>) e com o atraso
-(<code>DRB.RlcSduDelayDl</code>)? Todos os grupos usam os mesmos dados; muda a pergunta,
-os dois indicadores e a recomendação.</p>
+<p>O nosso grupo ficou com o tema da <b>vazão do usuário (UE-TP)</b>. A pergunta que
+queremos responder é direta: a vazão de subida do UE (<code>DRB.UEThpUl</code>) sobe e
+desce junto com o uso de PRB (<code>RRU.PrbTotUl</code>) e com o atraso
+(<code>DRB.RlcSduDelayDl</code>)? Todos os grupos partem dos mesmos dados do laboratório;
+o que muda de um pro outro é a pergunta, os dois indicadores e a recomendação no fim.</p>
 
-<h2>2. Fonte dos dados e ética</h2>
-<p>Trilha offline oficial do docente (pacote <code>kpm-ue-tp-sample</code>): <b>100 amostras</b>
-em três fases — <b>baseline</b> (20, ocioso), <b>stress</b> (60, sob carga) e <b>recovery</b>
-(20, retorno ao ocioso). Telemetria <b>sintética (RFSIM)</b>, sem dados pessoais.
-As unidades não são declaradas no artefato; adotamos a <b>convenção KPM O-RAN</b>
-(<code>thp_ul</code> em kbps, <code>delay_dl</code> em ms, <code>prb_ul</code> em contagem de PRBs).
-O carimbo <code>ingested_at</code> (04/08, UTC) é da <b>ingestão em lote</b>, não da medição
-(o experimento é anterior); a ordem temporal usada é o <code>sample_index</code>.</p>
+<h2>2. De onde vêm os dados</h2>
+<p>Usamos a trilha offline do professor (o pacote <code>kpm-ue-tp-sample</code>), que tem
+100 amostras separadas em três fases: baseline (20 amostras, com a rede parada), stress
+(60, sob carga) e recovery (20, voltando ao repouso). São dados de simulação (RFSIM), sem
+nada pessoal. O artefato não informa a unidade de cada métrica, então adotamos a convenção
+do KPM do O-RAN: <code>thp_ul</code> em kbps, <code>delay_dl</code> em ms e
+<code>prb_ul</code> como quantidade de PRBs. Vale um cuidado: o campo <code>ingested_at</code>
+(04/08, em UTC) é a hora em que os dados foram carregados, não a hora da medição, que é
+anterior. Por isso usamos o <code>sample_index</code> como ordem no tempo.</p>
 
-<h2>3. Pipeline (mini-lake, zonas da Aula 02)</h2>
-<p>ETL reprodutível em <code>etl/build_lake.py</code> (stdlib): <b>raw</b> (JSONL do pacote) →
-<b>bronze</b> (achatado) → <b>silver</b> (SQLite tipado, chave <code>run_id·phase·sample_index</code>)
-→ <b>gold</b> (agregados por fase). A análise (<code>eda_cp1.py</code>) parte da zona silver.</p>
+<h2>3. Como organizamos os dados</h2>
+<p>O ETL está no <code>etl/build_lake.py</code>, escrito só com a biblioteca padrão do
+Python. Ele monta um mini-lake em três zonas, como vimos na Aula 02: bronze (uma linha por
+medição), silver (um SQLite com tipos e chave run_id/phase/sample_index) e gold (os
+agregados por fase). A análise em <code>eda_cp1.py</code> parte da zona silver.</p>
 
 <h2>4. Qualidade dos dados</h2>
-<p>Sobre as 100 amostras: <b>sem nulos</b> nas três métricas, <b>sem duplicatas</b> na chave,
-<b>sem gaps</b> no <code>sample_index</code> (0–19 / 0–59 / 0–19) e <code>ingested_at</code>
-todo em <b>UTC</b>. Ressalva: no <b>recovery</b>, a <b>média</b> de vazão (8.619) é puxada por
-um <b>pico residual</b> — a <b>mediana (3,7)</b> mostra que o usuário já voltou ao ocioso;
-por isso reportamos mediana e p95 além da média.</p>
+<p>Nas 100 amostras não encontramos nulos nas três métricas, nem linhas repetidas na chave,
+nem buracos no <code>sample_index</code> (vai de 0 a 19, 0 a 59 e 0 a 19). O
+<code>ingested_at</code> está todo em UTC. O único ponto de atenção é o recovery: a média de
+vazão (8.619) fica alta por causa de um pico isolado, mas a mediana (3,7) mostra que o
+usuário já tinha voltado ao repouso. Por isso reportamos a mediana e o p95 junto com a média.</p>
 
-<h2>5. Indicadores do tema</h2>
-<p><b>Indicador 1 — Vazão UL por fase</b> (kbps): <code>média(thp_ul)</code> e <code>p95(thp_ul)</code>
-agrupando por fase. <b>Indicador 2 — Utilização de PRB UL por fase</b> (PRBs): <code>média(prb_ul)</code>.</p>
+<h2>5. Os dois indicadores</h2>
+<p>O primeiro indicador é a vazão de subida por fase (média e p95 de <code>thp_ul</code>). O
+segundo é a utilização média de PRB por fase (média de <code>prb_ul</code>). Os dois saem de
+um <code>GROUP BY phase</code> na zona silver.</p>
 <table><tr><th>Fase</th><th class="num">Vazão média</th><th class="num">Vazão p95</th>
-  <th class="num">Vazão mediana</th><th class="num">PRB UL médio</th></tr>
+  <th class="num">Vazão mediana</th><th class="num">PRB médio</th></tr>
 <tr><td>baseline</td><td class="num">3,7</td><td class="num">3,8</td><td class="num">3,7</td><td class="num">2,0</td></tr>
 <tr><td>stress</td><td class="num">78.383,8</td><td class="num">82.189,5</td><td class="num">80.023,7</td><td class="num">97,3</td></tr>
 <tr><td>recovery</td><td class="num">8.619,3</td><td class="num">8.619,4</td><td class="num">3,7</td><td class="num">3,0</td></tr></table>
-<p>A vazão e o PRB seguem a mesma forma: pequenos no ocioso (baseline/recovery) e altos sob carga
-(stress). Uma eventual recomendação (a fechar no checkpoint final) seria: se a vazão <b>cair</b>
-com o <b>PRB alto</b>, propor priorização/alívio de carga em <b>política A1 simulada</b> (dry-run,
-sem atuação física na RAN).</p>
+<p>Vazão e PRB seguem o mesmo desenho: baixos quando a rede está parada (baseline e recovery)
+e altos sob carga (stress). A recomendação, que fechamos no checkpoint final, vai na linha de:
+se a vazão cair com o PRB alto (rádio cheio mas usuário mal atendido), propor uma política A1
+de alívio de carga, só em simulação, sem mexer de verdade na rede.</p>
 
-<h2>6. A vazão anda junto com PRB e atraso?</h2>
-<p>Correlação de Pearson <b>global</b> (100 amostras): <b>vazão × PRB = 0,924</b> ·
-vazão × atraso = 0,484. A correlação global, porém, <b>mistura as fases</b> (ocioso × carga).
-Olhando <b>dentro</b> de cada fase:</p>
+<h2>6. A vazão anda junto com o PRB e o atraso?</h2>
+<p>Na correlação de Pearson com as 100 amostras juntas deu vazão × PRB = 0,924 e vazão ×
+atraso = 0,484. Só que essa conta global mistura as fases (repouso e carga). Quando olhamos
+dentro de cada fase separada, o quadro muda:</p>
 <table><tr><th>Fase</th><th class="num">vazão × PRB</th><th class="num">vazão × atraso</th></tr>
-<tr><td>baseline</td><td class="num">— (PRB constante = 2)</td><td class="num">0,11</td></tr>
+<tr><td>baseline</td><td class="num">PRB constante (=2)</td><td class="num">0,11</td></tr>
 <tr><td>stress</td><td class="num">0,979</td><td class="num">0,16</td></tr>
 <tr><td>recovery</td><td class="num">1,00</td><td class="num">−0,08</td></tr></table>
-<div class="callout"><b>Resposta:</b> a vazão <b>acompanha o PRB de verdade</b> — a relação se
-mantém mesmo dentro do stress (0,98). Já a vazão × atraso é <b>≈ 0 dentro de cada fase</b>: o
-0,48 global vem apenas do <b>contraste entre fases</b>, não de uma dinâmica entre as duas.</div>
+<div class="box"><b>Resposta:</b> a vazão acompanha o PRB de verdade, já que a relação
+continua forte mesmo dentro do stress (0,98). Com o atraso é diferente: dentro de cada fase
+a correlação fica perto de zero, então aquele 0,48 global vem só do contraste entre repouso e
+carga, não de uma ligação real entre as duas.</div>
 
-<figure><img src="{fig1}"><figcaption>Figura 1 — Vazão UL, PRB UL e atraso DL ao longo do experimento
-(faixas por fase). O PRB e a vazão sobem juntos no stress; o pico isolado no início do recovery
-é o que puxa a média.</figcaption></figure>
-<figure><img src="{fig2}"><figcaption>Figura 2 — Vazão UL × PRB UL por fase: sob carga (stress),
-mais PRB acompanha mais vazão; nas fases ociosas, ambos ficam no piso.</figcaption></figure>
+<figure><img src="{fig1}"><figcaption>Figura 1. Vazão, PRB e atraso ao longo do experimento,
+com as fases marcadas. O PRB e a vazão sobem juntos no stress; o pico isolado no começo do
+recovery é o que puxa a média.</figcaption></figure>
+<figure><img src="{fig2}"><figcaption>Figura 2. Vazão contra PRB, por fase. Sob carga (stress),
+mais PRB acompanha mais vazão; nas fases paradas, os dois ficam no chão.</figcaption></figure>
 
-<h2>7. Limitações — o que os indicadores NÃO provam</h2>
+<h2>7. O que os indicadores não mostram</h2>
 <ul>
-<li><b>Correlação por fase:</b> a vazão × atraso "0,48" é contraste entre fases (≈0 dentro da fase).</li>
-<li><b>Unidades por convenção</b> KPM (não declaradas no artefato).</li>
-<li><b><code>ingested_at</code></b> é carimbo de ingestão, não a hora da medição; ordem = <code>sample_index</code>.</li>
-<li><b>1 <code>run_id</code>, poucos UEs</b> (RFSIM): estatística didática, não de campus real.</li>
-<li><code>delay_dl</code> é <b>proxy</b> de qualidade — não há MOS de aplicativo; vazão sintética do RFSIM.</li>
+<li>A vazão × atraso de 0,48 é efeito de comparar fases; dentro de cada fase não há relação.</li>
+<li>As unidades são as da convenção KPM, o dado em si não as declara.</li>
+<li>O <code>ingested_at</code> é a hora de carregar, não de medir; a ordem no tempo é o <code>sample_index</code>.</li>
+<li>É um único run e poucos UEs (RFSIM). Serve pra aprender, não é estatística de rede real.</li>
+<li>O atraso é um proxy de qualidade, não há nota de aplicativo; e a vazão é sintética do simulador.</li>
 </ul>
 
-<h2>8. Reprodução</h2>
-<p>Com o pacote de dados ao lado (<code>data-raw/</code>):</p>
+<h2>8. Como reproduzir</h2>
+<p>Com a pasta <code>data-raw/</code> do lado:</p>
 <p><code>python3 etl/build_lake.py &amp;&amp; python3 eda_cp1.py</code></p>
-<p>Gera o mini-lake em <code>data/</code> e as figuras em <code>figures/</code>. Detalhe dos
-indicadores em <code>kpis/kpis.md</code>.</p>
+<p>Isso gera o lake em <code>data/</code> e os gráficos em <code>figures/</code>. As contas dos
+indicadores estão em <code>kpis/kpis.md</code>.</p>
 
-<footer>CESAR School · {DISCIPLINA} · {MENTOR} · {GRUPO}: {integrantes} · Checkpoint 1 (25/08/2026)</footer>
+<footer>{DISCIPLINA} · {MENTOR} · {GRUPO}: {nomes} · Checkpoint 1, 25/08/2026</footer>
 </body></html>"""
 
 
 def build_pdf(html_path, pdf_path):
     chrome = shutil.which("google-chrome") or shutil.which("chromium")
     if not chrome:
-        print("aviso: chrome não encontrado — PDF pulado", file=sys.stderr)
+        print("aviso: chrome não encontrado, PDF pulado", file=sys.stderr)
         return False
     subprocess.run([chrome, "--headless", "--disable-gpu", "--no-sandbox",
                     "--no-pdf-header-footer", "--print-to-pdf=" + pdf_path,
@@ -174,36 +172,30 @@ def build_pdf(html_path, pdf_path):
 
 
 def montar_zip():
-    """Pasta self-contained grupo-6-projeto-integrador/ -> zip em ~/Downloads."""
     stage = os.path.join(OUT, "grupo-6-projeto-integrador")
     shutil.rmtree(stage, ignore_errors=True)
     os.makedirs(stage)
-    # relatório
     shutil.copy(os.path.join(OUT, "RELATORIO.html"), stage)
     if os.path.exists(os.path.join(OUT, "RELATORIO.pdf")):
         shutil.copy(os.path.join(OUT, "RELATORIO.pdf"), stage)
-    # código + docs + figuras
     for item in ["README.md", "eda_cp1.py", "kpis"]:
         src = os.path.join(HERE, item)
-        dst = os.path.join(stage, item)
-        (shutil.copytree if os.path.isdir(src) else shutil.copy)(src, dst)
+        (shutil.copytree if os.path.isdir(src) else shutil.copy)(src, os.path.join(stage, item))
     shutil.copytree(FIG, os.path.join(stage, "figures"))
-    # ETL — variante standalone que lê de data-raw/
     os.makedirs(os.path.join(stage, "etl"))
     etl = open(os.path.join(HERE, "etl", "build_lake.py"), encoding="utf-8").read()
     etl = etl.replace(
         'REPO = PROJETO.parents[2]\nRAW = REPO / "external/cesar-school-repo/data/code/datasets/kpm-ue-tp-sample/kpm.jsonl"',
         'RAW = PROJETO / "data-raw/kpm.jsonl"')
-    etl = etl.replace('.relative_to(REPO)', '.relative_to(PROJETO)')   # todos os prints
+    etl = etl.replace('.relative_to(REPO)', '.relative_to(PROJETO)')
     open(os.path.join(stage, "etl", "build_lake.py"), "w", encoding="utf-8").write(etl)
-    # dados brutos (pra rodar sem o submódulo)
     shutil.copytree(RAW_DIR, os.path.join(stage, "data-raw"))
-    # deps: build_lake.py é stdlib; eda_cp1.py usa pandas + matplotlib
     with open(os.path.join(stage, "requirements.txt"), "w") as f:
-        f.write("# só para eda_cp1.py (build_lake.py é stdlib puro)\npandas\nmatplotlib\n")
-    # zip -> Downloads
-    dl = os.path.join(os.path.expanduser("~"), "Downloads")
-    zip_path = os.path.join(dl if os.path.isdir(dl) else OUT, "grupo-6-projeto-integrador.zip")
+        f.write("# so para eda_cp1.py (build_lake.py e stdlib)\npandas\nmatplotlib\n")
+    # zip na Area de trabalho
+    desk = os.path.join(os.path.expanduser("~"), "Área de trabalho")
+    dest = desk if os.path.isdir(desk) else OUT
+    zip_path = os.path.join(dest, "grupo-6-projeto-integrador.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
         for root, _, files in os.walk(stage):
             for fn in files:
@@ -214,9 +206,8 @@ def montar_zip():
 
 if __name__ == "__main__":
     html_path = os.path.join(OUT, "RELATORIO.html")
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(html())
+    open(html_path, "w", encoding="utf-8").write(html())
     ok = build_pdf(html_path, os.path.join(OUT, "RELATORIO.pdf"))
     zip_path = montar_zip()
-    print(f"RELATORIO.html + {'RELATORIO.pdf' if ok else '(sem PDF)'} em {OUT}")
-    print(f"ZIP de entrega: {zip_path}  ({os.path.getsize(zip_path)/1024:.0f} KB)")
+    print(f"relatorio: {'PDF ok' if ok else 'sem PDF'}")
+    print(f"zip: {zip_path}  ({os.path.getsize(zip_path)/1024:.0f} KB)")

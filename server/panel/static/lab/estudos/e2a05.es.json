@@ -1,0 +1,100 @@
+{
+ "id": "e2a05",
+ "n": 5,
+ "titulo": "Diseño integrado, SMO y validación de la pila OAI+OSC",
+ "slide": "aula05-design_smo.pdf",
+ "resumo": "En esta clase ampliamos el lab de la Clase 04 (solo FlexRIC) hacia una pila integrada: Core OAI + gNB OAI RFSIM + Non-RT RIC de la OSC + Near-RT RIC (FlexRIC u O-RAN SC) + SMO. El hilo conductor es el diseño de punta a punta del artículo NGO (Fig. 6, rApps y xApps) y el papel del SMO según Polese (O1, O2, R1, assurance). El principio práctico es simple: antes de levantar cualquier RIC, probar que el plano de datos 5G está sano, con evidencias (NRF, N4, ping del UE) que van al plan de pruebas del Proyecto 2.",
+ "objetivos": [
+  "Validar la pila OAI integrada a la OSC (Non-RT + Near-RT) y mapear cada pieza al diseño NGO + SMO.",
+  "Documentar la salud de Core y RAN en capas (NRF, N4, forwarding, PDU session, ping) antes de encender el RIC.",
+  "Distinguir las tres fases del lab (FlexRIC :36421, O-RAN SC :36422, SMO/OAM con O1 simulado) y cuándo usar cada una.",
+  "Explicar el flujo integrado intent → rApp → A1 → xApp → E2 → RAN y la vuelta de la telemetría para assurance.",
+  "Bosquejar el plan de pruebas del Proyecto 2 con casos CT-01 a CT-03 y evidencias reales del lab."
+ ],
+ "conceitos": [
+  {
+   "t": "Pila integrada y las tres fases del lab",
+   "d": "Pila integrada es el conjunto Core OAI (5GC en Docker con UPF-VPP) + RAN (gNB OAI RFSIM o UERANSIM) + Non-RT RIC + Near-RT RIC + SMO, todo en el proyecto oai-cn-gnb-nonrt-nearrt. El lab está dividido en tres fases: la Fase 1 usa FlexRIC como Near-RT (E2 en el puerto 36421) y el Non-RT de la OSC con PMS y simuladores A1; la Fase 2 cambia el Near-RT por el O-RAN SC (E2 en el puerto 36422) y conecta el PMS al A1 Mediator real; la Fase 3 es el scaffold de SMO/OAM con O1 simulado y topología. Regla de oro: la Fase 1 y la Fase 2 nunca corren Near-RT al mismo tiempo, porque los puertos entran en conflicto."
+  },
+  {
+   "t": "SMO (Service Management and Orchestration)",
+   "d": "SMO es la capa de gestión y orquestación que queda por encima del Non-RT RIC en la Fig. 6 del artículo NGO: aloja el framework Non-RT, las rApps, el colector VES y el InfluxDB, y conversa con la RAN por O1 y con el Near-RT por A1. En el lab aparece solo en la Fase 3, como scaffold de la O-RAN SC OAM con Keycloak (identidad), VES (eventos), SDNC (control) y TEIV (topología e inventario), con O1 simulado por el ntsim-ng, ya que el gNB OAI no tiene O1 real. En producción, quien manda es el operador humano: define la intención (intent) en el SMO y las capas de abajo traducen eso en políticas y acciones."
+  },
+  {
+   "t": "Interfaces del SMO: O1, O2 y R1",
+   "d": "O1 es la interfaz de gestión de la RAN, por donde pasan las funciones clásicas FCAPS (Fault, Configuration, Accounting, Performance, Security): en el caso SUTD, el ES-rApp pone RRUs a dormir y el PM-rApp lee alarmas y desempeño por O1. O2 es la interfaz del SMO con la nube (O-Cloud) para deploy y ciclo de vida de VNFs y CNFs del core y de la RAN. R1 une el SMO a las rApps, llevando intent y alimentando los dashboards del operador. Assurance cierra el lazo: compara el SLA observado con las políticas A1 vigentes y realimenta el Non-RT. En el lab, el Core sube con up_core.sh, que llama a core-network.py y al Docker Compose y valida readiness (contenedores healthy, NRF, N4): parece un O2 simplificado (instantiate + health-check), pero no es O2 real, porque no hay SMO, catálogo ni lifecycle de scale, heal y upgrade."
+  },
+  {
+   "t": "Principio de la clase: salud antes del RIC",
+   "d": "Antes de levantar Near-RT, Non-RT o xApps, validamos el plano de datos 5G en capas: (1) Core, con AMF, SMF y UPF registrados en el NRF y N4 SMF-UPF activo; (2) red, con IP forwarding en el host y la IP .129 en la interfaz demo-oai; (3) RAN, con attach del UE, PDU session y ping externo a 8.8.8.8 (N6); (4) solo entonces el RIC, con contenedores nearRT/nonRT, E2 SETUP y el nodo en el RNIB. Sin eso, una falla en E2 o A1 puede ser síntoma de un problema en el 5GC, y vas a depurar en el lugar equivocado."
+  },
+  {
+   "t": "Healthy del contenedor versus NRF y N4",
+   "d": "El estado healthy de Docker solo dice que el proceso del contenedor respondió al healthcheck; no garantiza que el 5GC funcione de punta a punta. Por eso el script también consulta el NRF (Network Repository Function, en 192.168.70.130, vía nnrf-nfm/v1/nf-instances) para ver AMF, SMF, UPF, AUSF, UDM y UDR aceptados, y confirma la N4 Association con heartbeats entre SMF y UPF-VPP. Cada NF que falla tiene su propio síntoma: sin AMF el UE no se registra; sin SMF no hay PDU session; sin UPF el UE hace attach pero no navega. Y sin IP forwarding en el host, el ping del UE falla aunque el Core entero esté healthy."
+  },
+  {
+   "t": "UERANSIM versus gNB OAI (RFSIM)",
+   "d": "UERANSIM corre gNB + UE en un contenedor Docker, sube en ~10 s y es la forma rápida de validar N2, N3 y N6 sin compilar OAI (UE en 12.1.1.2, ping a 8.8.8.8 con 0% de pérdida y RTT ~26,5 ms). Pero no expone agente E2, así que sirve solo como smoke test del Core. El gNB OAI en RFSIM (binarios nr-softmodem y nr-uesoftmodem, IP 192.168.70.129 en demo-oai, túnel oaitun_ue1 en 12.1.1.3) tiene el agente E2 integrado y es el que usamos en el lab de RIC y en el Proyecto 2. Si falta la IP .129, el gNB no habla NGAP con la AMF; si está duplicada, hay conflicto de registro."
+  },
+  {
+   "t": "Fase 1: Non-RT OSC + FlexRIC con A1 simulado",
+   "d": "En la Fase 1 el up_e2_lab.sh levanta el Non-RT de la OSC (nonrt-policy-agent, el PMS en el puerto 8081; nonrt-control-panel en el 8181; simuladores a1-sim OSC/STD en los puertos 30001 a 30005; nonrtric-gateway en el 9090) y el FlexRIC con xApps en C, como el xapp_kpm_moni. El punto de atención: cuando una rApp crea una política en el PMS, va al simulador A1, no al gNB, porque el FlexRIC no integra A1. Aun así la fase enseña el ciclo de vida completo de una política A1 (tipo, instancia, estado). Las rApps que solo tendrían sentido con A1 real son las de decisión y control, ES-rApp (ahorro de energía) e IM-rApp (mitigación de interferencia)."
+  },
+  {
+   "t": "Fase 2: Near-RT O-RAN SC con A1 Mediator y RNIB",
+   "d": "En la Fase 2 corremos down_e2_lab.sh (apaga el FlexRIC) y up_oai_oran_lab.sh, que en cuatro etapas reutiliza el Core healthy, levanta el Near-RT O-RAN SC (ric_e2term en 36422, ric_e2mgr, ric_submgr, ric_a1mediator en el puerto 10000, ric_dbaas con Redis RNIB, python_xapp_runner), cambia el PMS al perfil oran apuntando al A1 Mediator y levanta el gNB nr-softmodem-oran-sc con E2 hacia 10.0.2.10:36422. La evidencia del E2 SETUP es el nodo en el RNIB (Radio Network Information Base), por ejemplo gnb_208_095_00000e00, listado por e2mgr y verificado por el test_oran_ric.sh. Comparando: FlexRIC es un binario en el host, xApps en C y didáctica de E2SM directo; O-RAN SC es multi-contenedor, xApps en Python y stack de producción de la OSC."
+  },
+  {
+   "t": "KPM bajo carga: baseline versus iperf3",
+   "d": "La xApp simple_xapp_oai.py (KPM Style 4, filtro de slice S-NSSAI SST 222 / SD 123) recibe INDICATIONs a cerca de 1 por segundo con DRB.UEThpDl/Ul, DRB.PdcpSduVolume, DRB.RlcSduDelayDl y RRU.PrbTot. En reposo, el throughput queda en ~2 kbps y el PRB uplink en ~4%. Con iperf3 del nrUE (12.1.1.5) hacia el servidor en la DN (192.168.73.135) vía UPF-VPP, el UEThpUl sube a ~50 000 kbps, el volumen PDCP UL a 70 a 99 Mb por intervalo y el PrbTotUl llega al 99%. Trampa: test_oran_ric.sh --run-xapp tiene un timeout de 25 s y puede terminar sin INDICATION visible si el UE todavía está haciendo attach o no hay tráfico; usa run_xapp_oai_kpm_extended.sh o KPM_TRAFFIC=1 con mayor duración."
+  },
+  {
+   "t": "Flujo integrado: SMO → rApp → xApp → RAN",
+   "d": "El diseño de punta a punta tiene cinco pasos: (1) el operador define el intent en el SMO o en el Control Panel del Non-RT; (2) la rApp deriva una política A1 (en la Fase 2, vía A1 Mediator); (3) la xApp en el Near-RT hace subscribe y control vía E2; (4) la telemetría de O1 y de E2/KPM sube para assurance; (5) el lazo se cierra comparando el SLA con la política. En el lab de la Fase 1 los pasos 3 y 4 ocurren sin SMO real, y la Fase 3 agrega el O1 simulado. Es la misma arquitectura del campus SUTD del artículo NGO, con la diferencia de que allá la RAN es comercial con proxy E2 y aquí es OAI con RFSIM."
+  },
+  {
+   "t": "Diseño de xApp, de rApp y Native AI",
+   "d": "Checklist de xApp (Near-RT): qué E2SM y report/control styles (KPM v2.03, RC); filtro de slice alineado al lab (SST 222, SD 123); periodicidad compatible con la carga del nodo RFSIM; tratamiento de fallas (timeout E2, puerto equivocado, E2SM no soportado); en el FlexRIC usar -p flexric-lib/, en el O-RAN SC el xApp runner + RNIB. Diseño de rApp según NGO §4: Localization-rApp con LSTM y UE-TP-rApp con regresión, entrenamiento offline en el Non-RT e inferencia convirtiéndose en política A1, con metas de exactitud por encima del 90% y R² por encima de 0,85. Native AI (Sun et al.) resume eso: IA distribuida con entrenamiento en el Non-RT e inferencia en el Near-RT, gobernanza de modelos y datos en el SMO, y rApps como contenedores de lógica de IA sobre A1. En cualquier stack, separa la lógica de negocio del codec ASN.1."
+  },
+  {
+   "t": "Seguridad y observabilidad de la pila",
+   "d": "Superficies de ataque: E2 y A1 necesitan autenticación, TLS (Transport Layer Security) y RBAC (Role-Based Access Control); una xApp maliciosa pide sandbox y whitelisting de E2SM; el Control Panel en el puerto 8181 nunca debe quedar expuesto en una red pública; y la cadena de suministro exige imágenes OAI/OSC versionadas (v1.5.1). Para observar: en el Core, docker ps, NRF y logs de AMF/SMF; en la RAN, attach del UE, oaitun_ue1 y ping N6; en el Near-RT, logs/nearRT-RIC.log o docker logs ric_e2term; en el Non-RT, el /status del PMS y las políticas en el Control Panel; en el E2, el subscription ID y la latencia entre indication y control. Si el healthcheck A1 devuelve 404, el path de la API cambió: usa PMS + E2 como evidencia principal."
+  }
+ ],
+ "formulas": [
+  {
+   "nome": "Metas de ML de las rApps (NGO §6)",
+   "expr": "exactitud > 90 %  y  R² > 0,85",
+   "vars": "exactitud = fracción de aciertos del clasificador (Localization-rApp); R² = coeficiente de determinación de la regresión (UE-TP-rApp)",
+   "unidade": "adimensional (porcentaje y razón)",
+   "quando": "Al evaluar una rApp de ML antes de transformar la inferencia en política A1; son las metas de validación del artículo NGO."
+  }
+ ],
+ "onde": {
+  "scene": "a1",
+  "texto": "En nuestro P2, el papel de SMO/Non-RT queda en el Non-RT RIC (A1 PMS y simuladores A1), el Near-RT es el FlexRIC con xApps leyendo KPM del gNB OAI RFSIM, y la salud del core se verifica en el panel antes de cualquier prueba de RIC."
+ },
+ "exercicios": [
+  "status",
+  "test-system-status",
+  "test-ue-connection",
+  "p2-test-e2-sm",
+  "p2-test-e2-kpm-traffic",
+  "p2-test-a1"
+ ],
+ "quiz": [
+  {
+   "q": "¿Por qué validar el plano de datos 5G antes de levantar Near-RT, Non-RT o xApps?",
+   "a": "Porque una falla en E2 o A1 puede ser síntoma de un problema en el 5GC, no en el RIC. El orden es en capas: Core (NFs en el NRF, N4 SMF-UPF), red (forwarding y demo-oai con la IP .129), RAN (PDU session y ping a 8.8.8.8 desde el UE) y solo entonces el RIC (contenedores nearRT/nonRT, E2 SETUP y nodo en el RNIB)."
+  },
+  {
+   "q": "¿El up_core.sh es un O2 de verdad?",
+   "a": "No. Es un script de deploy que llama a core-network.py, instancia el 5GC y valida readiness (contenedores healthy, NRF, N4). Didácticamente recuerda a un O2 simplificado (instantiate + health-check), pero no tiene SMO, catálogo ni lifecycle de scale, heal y upgrade."
+  },
+  {
+   "q": "¿Qué cambia de la Fase 1 a la Fase 2 en el puerto E2 y en el destino de la política A1?",
+   "a": "En la Fase 1 el FlexRIC escucha E2 en 36421 y la política creada en el PMS va a un simulador A1, sin llegar al gNB. En la Fase 2 el FlexRIC se apaga, el E2 apunta al ric_e2term del O-RAN SC en 36422 y la política del PMS llega al ric_a1mediator (A1 real). Las dos fases nunca corren Near-RT al mismo tiempo."
+  }
+ ],
+ "fontes": "Diapositivas 4 a 41 (bloque 1: pila integrada, tres fases, O2 vs Polese, salud Core/RAN, UERANSIM vs gNB OAI), 44 a 70 (bloque 2: Fase 1 FlexRIC, Fase 2 O-RAN SC, KPM bajo carga, Fase 3 SMO/OAM, O1/O2/R1, flujo integrado, diseño de xApp/rApp), 73 a 80 (bloque 3: Native AI, seguridad, observabilidad, plan de pruebas) y 81 a 82 (referencias NGO, Polese, Sun)."
+}

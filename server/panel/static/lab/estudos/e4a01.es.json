@@ -1,0 +1,144 @@
+{
+  "id": "e4a01",
+  "n": 1,
+  "titulo": "Introducción y fuentes de datos en la red",
+  "slide": "aula01-intro_fontes_dados_telecom-2.pdf",
+  "resumo": "Esta clase abre la asignatura definiendo el vocabulario (DIKW, PM, FM, KPM, KPI, KQI) y mapeando dónde nacen los datos en una red 5G: en el core Open5GS con CUPS y en la arquitectura O-RAN con SMO, O1, E2 y A1. Ves el lab (OAI + FlexRIC + xApp KPM) correr un experimento UE-TP y aprendes a leer una RIC Indication. Por último, conoces el proyecto integrador: producto, pistas offline y en vivo, rúbrica de 10 puntos y los 7 temas de los grupos.",
+  "objetivos": [
+    "Distinguir dato, información, conocimiento y sabiduría usando ejemplos de telemetría RAN.",
+    "Diferenciar PM, FM y KPM por la naturaleza del dato, por la escala temporal y por la pregunta que cada uno responde.",
+    "Ubicar SMO, O1, O2, E2 y A1 en el mapa O-RAN y conectar NG-c/NG-u con el core Open5GS.",
+    "Elegir la fuente de datos por la decisión que apoya y por la escala de tiempo del lazo de control.",
+    "Reconocer los entregables, las pistas y la rúbrica del proyecto integrador y lo que el lab prueba o no afirma."
+  ],
+  "conceitos": [
+    {
+      "t": "Pipeline de la asignatura y ciclo mínimo de análisis",
+      "d": "Análisis de datos aquí no es solo hacer gráficos: es transformar telemetría operativa en evidencia para una decisión de red. El hilo conductor de todas las clases es fuente, ingesta, almacenamiento, calidad, transformación, indicador, análisis, visualización y decisión. El ciclo mínimo que vas a repetir en el proyecto es observar, limpiar y agregar, indicar (KPI/KQI), interpretar y recomendar declarando límites. La pregunta guía es siempre: ¿qué componente produce el dato, en qué escala temporal y qué decisión apoya?"
+    },
+    {
+      "t": "Jerarquía DIKW: dato, información, conocimiento y sabiduría",
+      "d": "DIKW (Data, Information, Knowledge, Wisdom) es la pirámide de la Ciencia de la Información que usamos como vocabulario común. Dato es el registro crudo de un evento, como el valor DRB.UEThpUl: 55969.8 dentro de una RIC Indication. Información es dato en contexto, por ejemplo 'el UEThpUl medio cayó 90% después del rate-limit'. Conocimiento es información interrelacionada que dice cómo usarla: 'caída de UEThp con PRB alto bajo stress indica saturación de uplink tratable por política'. Sabiduría es conocimiento con juicio de uso: actuar vía política A1 sabiendo lo que el lab no prueba, como O1 real o cuota de PRB en el softmodem OAI."
+    },
+    {
+      "t": "Por qué Open RAN amplía el volumen de datos",
+      "d": "En la evolución de 2G a 4G el eNB era monolítico; en 5G el split CU, DU y RU reparte la telemetría por varias capas y sitios. Open RAN agrega interfaces abiertas (O1, O2, A1, E2, Open Fronthaul) e inteligencia programable en el RIC (RAN Intelligent Controller). Cada split y cada interfaz es una fuente potencial de PM, FM, trace o KPM. Los lazos near-RT y non-RT exigen telemetría continua con ingesta reproducible, y el escenario multi-vendor obliga a correlacionar PM y FM de proveedores distintos. Los use cases de QoE, capacidad, energy saving y congestion están todos orientados a datos."
+    },
+    {
+      "t": "PM, FM y KPM no son lo mismo (KPI y KQI quedan por encima)",
+      "d": "PM (Performance Management) son contadores y series vía O1, en una escala de segundos a minutos, respondiendo '¿cómo se desempeñó la celda?'. FM (Fault Management) son alarmas y eventos, respondiendo '¿qué se rompió?'. KPM (Key Performance Measurements, del E2SM) son medidas periódicas near-RT de 100 ms a 1 s, respondiendo '¿qué está midiendo el RRM ahora?'. KPI (Key Performance Indicator) y KQI (Key Quality Indicator) son la capa de información construida sobre esos datos; en el proyecto entregas al menos 2 y usas KQI como proxy de QoE con cuidado. Correlacionar las tres fuentes exige alinear timestamps, granularidad y zona horaria; sin eso la correlación miente."
+    },
+    {
+      "t": "Taxonomía del dato operativo: granularidad y riesgo",
+      "d": "Cada tipo de dato tiene una granularidad típica y un riesgo de privacidad. El contador PM (PRB, volumen PDCP) viene en minutos a segundos y es de bajo riesgo si está agregado. La alarma FM (link down, cell outage) es por evento y tiene riesgo medio porque revela contexto del sitio. El KPM E2 (DRB.UEThpUl) viene cada 100 ms a 1 s y es de alto riesgo cuando identifica al UE. Trace y MDT (Minimization of Drive Tests, con RLF y RSRP por UE) son por procedimiento y de alto riesgo por contener PII y localización. El diagnóstico de lab (iperf, ping, logs) es bajo demanda y de bajo riesgo en RFSIM."
+    },
+    {
+      "t": "Planos de la red, dominios y dónde nace cada decisión",
+      "d": "El plano de usuario produce throughput, latencia y pérdida y apoya decisiones de capacidad, QoE y steering. El plano de control produce señalización, handover y sesión y apoya decisiones de movilidad y falla de procedimiento. El plano de gestión produce PM/FM vía O1, inventario y configuración y apoya FCAPS, alarmística y retención. Por dominio: RAN (O1 PM, E2 KPM, trace) decide load balance y tilt; core (N2/N3, NWDAF) decide política de QoS y capacidad; transporte (CTI y telemetría x-haul con latencia, pérdida y utilización de fronthaul, midhaul y backhaul) decide re-enrutamiento y upgrade; terminal (MDT, QoE de app) decide priorización y cobertura. CTI (Cooperative Transport Interface) es la O-DU avisando a la red de transporte sobre la demanda futura de ancho de banda uplink. Correlacionar la degradación de un KPI de radio con métricas de transporte evita culpar a la celda por un problema de fronthaul."
+    },
+    {
+      "t": "Mapa 1: Open5GS y la separación CUPS",
+      "d": "CUPS (Control and User Plane Separation) es el principio clave del 5G: AMF y SMF quedan en el plano de control y el UPF en el plano de usuario, pudiendo ir al edge; CP y UP escalan de forma independiente. La gNB habla con el AMF por N2 y con el UPF por N3; el SMF instruye al UPF por N4 y el N6 va hacia internet. Fuentes en el control: AMF (registro, movilidad, contexto del UE), SMF (sesión PDU, reglas de flujo, IP), UDM/UDR en MongoDB (perfil y suscripción, sensibles, minimización obligatoria), PCF (políticas de QoS y charging), NRF/NSSF (descubrimiento de NFs y slicing) y SBI en HTTP/2 (logs y traces entre NFs). Fuentes en el usuario y en la RAN: UPF en N3/N6 (volumen, throughput, pérdida, latencia), N4 (instrucciones CP hacia UP y stats de sesión), CU+DU (contadores RRC a PHY), RRU y fronthaul (sincronismo, carga) y air interface (RSRP, RSRQ, interferencia, PRB). Lectura analítica: control es 'lo que la red decidió', usuario es 'lo que el abonado experimentó' y RAN es 'cómo se comportó la radio'. Una degradación de throughput puede ser radio, N3/N6 o política de SMF/PCF; una sola fuente induce a error."
+    },
+    {
+      "t": "Mapa 2: O-RAN, SMO como hub y las interfaces O1, O2, E2 y A1",
+      "d": "SMO (Service Management and Orchestration) es el hub de datos de gestión: recibe FCAPS vía O1 de las funciones O-RAN y vía M-Plane de la O-RU, y orquesta la O-Cloud por O2; el Non-RT RIC vive dentro de él, consume datos agregados y genera políticas A1. O1 une SMO y NFs con PM, FM, configuración y trace; sus Management Services (MnS) son Provisioning (NETCONF/YANG), Fault Supervision, Performance Assurance en bulk (archivo) o streaming, Trace (call trace, MDT, fallas RRC/RLF) y Heartbeat, File y Software. O2 une SMO y O-Cloud con CPU, memoria y eventos, permitiendo cruzar KPI de radio con falla de infraestructura. E2 une el Near-RT RIC a los nodos E2 (O-CU, O-DU) con KPM y estado del RRM, y es el eje de nuestro lab. A1 lleva políticas y enrichment del Non-RT al Near-RT y cierra el lazo. Y1 expone información de la RAN a consumidores externos sin E2 crudo, y NG-c/NG-u son el puente hacia el AMF/UPF del Mapa 1; O-CU-CP y O-CU-UP (unidos por E1) reflejan el CUPS dentro de la RAN."
+    },
+    {
+      "t": "Lazos de tiempo y la regla de elección de la fuente",
+      "d": "O-RAN define tres lazos de control. Non-RT (1 s o más) corre en el SMO/Non-RT RIC y sirve para tendencia, entrenamiento offline, políticas A1 y retención larga. Near-RT (10 ms a menos de 1 s) corre en el Near-RT RIC vía E2 con KPM por UE o celda y optimización asistida. Real-Time (menos de 10 ms) queda en el scheduler de la O-DU/O-RU, con un volumen extremo que rara vez entra en el lake analítico. La regla práctica: elige la fuente por la decisión y por la escala temporal. PM O1 da la visión agregada e histórica, E2 KPM da alta resolución para diagnóstico y automatización, y uno no sustituye al otro. Del mismo modo, iperf y ping validan el camino del plano de usuario, pero no sustituyen al KPM; correlaciona, no sustituyas."
+    },
+    {
+      "t": "E2SM-KPM en el lab y cómo leer una RIC Indication",
+      "d": "E2SM-KPM (E2 Service Model for Key Performance Measurements) es el servicio que hace que el nodo E2 envíe medidas periódicas o por evento al Near-RT RIC. En el lab la xApp se suscribe a KPM Report Style 4 y graba las Indications de las features del caso UE-TP: RRU.PrbTotUl (uso de PRB en el uplink en %), DRB.RlcSduDelayDl (retardo de SDU RLC en el downlink en microsegundos) y DRB.UEThpUl (throughput del UE en el uplink en kbps). Una Indication típica trae el id del gNB (gnb_208_095_00000e00), la subscription, el UE_id y los tres valores. Lección importante: subscribe OK no es dato OK; sin la línea RIC Indication en el log, el parser no tiene muestra. Después el pipeline sigue de JSONL/SQLite al entrenamiento del baseline (MAD), evaluación, política A1 en dry-run y effect_report."
+    },
+    {
+      "t": "Privacidad y gobernanza de los datos",
+      "d": "Minimización y anonimización de identificadores de abonado y UE son regla, no opción. La gobernanza incluye retención, acceso y procedencia: quién produjo el dato, cuándo y con qué script. Declara siempre si el dato es operativo, sintético o simulado (RFSIM) y qué limitaciones trae eso para las conclusiones. La agregación reduce el riesgo, pero puede esconder anomalías locales. En el lab, el KPM por UE es didáctico; en una red real, cruzar UDR/MongoDB con PM de celda o KPM por UE identifica comportamiento, localización y rutina de los abonados, así que agregación y seudonimización serían obligatorias."
+    },
+    {
+      "t": "Proyecto integrador: producto, pistas, rúbrica y límites del lab",
+      "d": "El producto es un pipeline reproducible sobre telemetría RAN del lab oai-cn-gnb-nonrt-nearrt, con el caso UE-TP / load-anomaly: capturar KPM, almacenar en JSONL/SQLite, entrenar un baseline (MAD), evaluar, generar una política A1 en dry-run y opcionalmente actuar (closed-loop emulado con tc tbf en la oaitun). Entregables: ETL y análisis, al menos 2 KPIs/KQIs, visualizaciones, recomendación o política A1, limitaciones y presentación con defensa en la Clase 06; la progresión es caso (A02), Checkpoint 1 EDA (A03), Checkpoint 2 indicadores (A04), checkpoint técnico (A05) y defensa (A06). La pista offline (artefactos KPM del docente, regenerables con run_ue_tp_experiment.sh) es obligatoria para la evaluación; la pista en vivo (--live) es complementaria. Rúbrica de 10 puntos: datos, ETL/reproducibilidad, KPIs/KQIs, análisis/recomendación y gobernanza/defensa, 2 puntos cada uno, con análisis proporcional (umbrales, estadística, regresión simple o anomalía básica, sin exigir ML avanzado). Siete grupos usan los mismos datos con preguntas diferentes: G1 throughput del usuario, G2 anomalía de carga, G3 latencia/proxy de QoE, G4 riesgo de congestión, G5 visión agregada de la celda, G6 ahorro de energía y G7 política de QoS/steering. El lab prueba E2 SETUP e Indications KPM en el gNB OAI, pipeline offline reproducible, closed-loop emulado con evidencia KPM y RC action 2 como PoC; no afirma O1/NETCONF completo en el softmodem, generalización a red comercial, que un A1 commit por sí solo mueva la radio ni cuota de PRB vía action 6."
+    }
+  ],
+  "formulas": [
+    {
+      "nome": "DRB.UEThpUl (throughput del UE en el uplink)",
+      "expr": "UEThpUl = bits entregados en el uplink por el DRB / intervalo de reporte",
+      "vars": "DRB = Data Radio Bearer; un valor por UE en cada RIC Indication (ej.: 55969.8)",
+      "unidade": "kbps",
+      "quando": "Feature principal del caso UE-TP; compara el baseline calmo con el stress y el before/after de una actuación."
+    },
+    {
+      "nome": "RRU.PrbTotUl (uso de PRB en el uplink)",
+      "expr": "PrbTotUl = 100 * PRBs usados en el UL / PRBs disponibles en el UL",
+      "vars": "PRB = Physical Resource Block; RRU = Radio Resource Utilization (ej.: 58.0)",
+      "unidade": "%",
+      "quando": "Indicador de carga y de riesgo de congestión; caída de UEThp con PRB alto sugiere saturación de uplink."
+    },
+    {
+      "nome": "DRB.RlcSduDelayDl (retardo RLC en el downlink)",
+      "expr": "RlcSduDelayDl = media del tiempo entre llegada y entrega de las SDUs RLC en el DL",
+      "vars": "SDU = Service Data Unit; RLC = Radio Link Control (ej.: 120.0)",
+      "unidade": "us (microsegundos)",
+      "quando": "Proxy de latencia y de QoE (tema G3); cuidado al leerlo como experiencia real del usuario."
+    },
+    {
+      "nome": "Delta medio before/after (effect_report)",
+      "expr": "Δ% = 100 * (media_after - media_before) / media_before",
+      "vars": "media_before y media_after = medias de la feature antes y después de la actuación (rate-limit, tc tbf)",
+      "unidade": "% (o la unidad de la feature)",
+      "quando": "Transforma dato en información ('UEThpUl medio cayó 90% después del rate-limit') y responde si el after muestra efecto."
+    },
+    {
+      "nome": "MAD (baseline de anomalía simple)",
+      "expr": "MAD = mediana(|x_i - mediana(x)|); score = |x - mediana(x)| / MAD",
+      "vars": "x = serie de la feature en el baseline calmo; x_i = cada muestra; score alto = anomalía",
+      "unidade": "adimensional (score)",
+      "quando": "El deck cita MAD como modelo simple del pipeline (entrenar baseline, evaluar); la expresión es la definición usual, la diapositiva solo lo nombra."
+    },
+    {
+      "nome": "Nota de la asignatura",
+      "expr": "Nota = 0,5 * proyecto + 0,3 * ejercicios en la plataforma + 0,2 * participación y checkpoints",
+      "vars": "proyecto = pipeline + KPIs + defensa en la Clase 06; ejercicios = #data/aula01 a #data/aula06",
+      "unidade": "puntos",
+      "quando": "Acuerdo didáctico presentado en la apertura."
+    },
+    {
+      "nome": "Rúbrica del proyecto (10 pts)",
+      "expr": "Nota_proyecto = datos(2) + ETL/reproducibilidad(2) + KPIs/KQIs(2) + análisis/recomendación(2) + gobernanza/defensa(2)",
+      "vars": "cinco criterios de 0 a 2 puntos cada uno",
+      "unidade": "puntos (máx. 10)",
+      "quando": "Úsala como checklist en cada checkpoint (A03, A04, A05) y en la defensa (A06)."
+    }
+  ],
+  "onde": {
+    "scene": "kpm",
+    "texto": "En el P2, el gNB OAI (RFSIM) con agente E2 manda RIC Indications de E2SM-KPM al FlexRIC, y la xApp KPM graba DRB.UEThpUl, RRU.PrbTotUl y DRB.RlcSduDelayDl en el log que se convierte en la serie temporal del proyecto."
+  },
+  "exercicios": [
+    "status",
+    "test-throughput",
+    "p2-test-e2-kpm",
+    "p2-kpm-real",
+    "p2-kpm-analytics",
+    "p2-test-a1",
+    "p2-tema-t1",
+    "p2-tema-t2"
+  ],
+  "quiz": [
+    {
+      "q": "Una línea de log muestra DRB.UEThpUl: 55969.8 kbps. ¿Eso es dato, información, conocimiento o sabiduría? ¿Y cuándo se convierte en información?",
+      "a": "Es dato: registro crudo de un evento en una RIC Indication. Se convierte en información cuando gana contexto, por ejemplo 'el UEThpUl medio cayó 90% después del rate-limit', comparando before y after."
+    },
+    {
+      "q": "PM vía O1 y KPM vía E2 miden la misma red. ¿Por qué uno no sustituye al otro?",
+      "a": "Porque responden preguntas en escalas diferentes. PM O1 son contadores de segundos a minutos que dicen cómo se desempeñó la celda (visión agregada e histórica). KPM E2 son medidas near-RT de 100 ms a 1 s que dicen qué está midiendo el RRM ahora (alta resolución para diagnóstico y automatización). Elige la fuente por la decisión y por la escala temporal."
+    },
+    {
+      "q": "El throughput de un UE cayó. Cita tres lugares diferentes donde puede estar la causa y qué fuente de datos mirarías en cada uno.",
+      "a": "Radio (RAN): PRB, BLER, SINR, retransmisiones y KPM E2 como RRU.PrbTotUl. Plano de usuario en el core: métricas del UPF en N3/N6 (drops, colas, CPU, throughput). Plano de control: política de sesión en SMF/PCF (reglas de QoS, límites de tasa). Una sola fuente induce a error; cruza CP, UP y RAN."
+    }
+  ],
+  "fontes": "p. 5-12 (asignatura, proyecto, rúbrica, temas), 16-35 (objetivos, pipeline, DIKW, Open RAN, glosario, taxonomía, planos), 38-58 (mapas Open5GS y O-RAN, O1 MnS, E2/KPM, transporte/CTI, dominios, PM x FM x KPM, telemetría, privacidad), 61-76 (lab, fases, caso UE-TP, log KPM, mini-pipeline, lo que prueba, discusión guiada, síntesis, preparación A02)"
+}

@@ -1,0 +1,90 @@
+{
+  "id": "e2a04",
+  "n": 4,
+  "titulo": "The OAI stack + the E2 interface via FlexRIC",
+  "slide": "aula04-xapps_opensource.pdf",
+  "resumo": "In this lecture we leave the simulation without E2 (Open5GS, srsRAN ZMQ) and bring up the complete OpenAirInterface stack: OAI core in Docker, gNB and nrUE with RFSIM and an E2 agent inside the gNB talking to FlexRIC, which plays the Near-RT RIC role. We watch the E2 SETUP, SUBSCRIPTION and INDICATION flow actually happening with the KPM and RC service models, and tie that to the life cycle of an xApp (Design, Develop, Onboard, Deploy, Monitor). We close with the overview of open-source RIC platforms from the NGO paper (OSC, FlexRIC, SD-RAN) and the start of Project 2.",
+  "objetivos": [
+    "Describe the lab's OAI stack (5GC, nr-softmodem, RFSIM, E2 agent) and why it serves as the academic reference for E2.",
+    "Bring up Core, FlexRIC, gNB and xApps in the right order and recognize in the log the E2 SETUP with the registered RAN functions.",
+    "Differentiate E2AP (transport) from E2SM (semantics) and choose between KPM, RC or a custom service model according to the xApp's goal.",
+    "Run KPM subscription tests (slice 222/123) and RC tests (RRCSetupComplete event) and interpret the INDICATIONs received.",
+    "Map the five phases of an xApp's life cycle to what we do in the lab and to the OSC, FlexRIC and SD-RAN platforms."
+  ],
+  "conceitos": [
+    {
+      "t": "OpenAirInterface (OAI)",
+      "d": "OAI is an open-source implementation of 4G and 5G maintained by Eurecom and the OAI Software Alliance, under the OAI Public License v1.1, which allows academic and industrial use with attribution. The community gathers operators, vendors and universities, and the project integrates with the O-RAN Software Community (OSC) and the Telecom Infra Project (TIP). In this course it is the main stack because it brings a mature E2 agent inside the gNB and the RFSIM, something few commercial RANs offer."
+    },
+    {
+      "t": "The lab stack and RFSIM",
+      "d": "The lab has four layers: the OAI 5G Core (AMF, SMF, NRF, UPF-VPP, UDM, UDR, AUSF) in Docker via oai-cn5g-fed; the RAN with nr-softmodem (gNB) and nr-uesoftmodem (UE) running natively on the host; the RFSIM, a software radio simulator that replaces an SDR or USRP; and the E2 layer with the agent in the gNB plus FlexRIC as the Near-RT RIC. With RFSIM you get attach, PDU session and metrics without hardware, which is ideal for developing xApps. The lab slice is SST 222 and SD 123, aligned in the core, in the UE and in the KPM filter."
+    },
+    {
+      "t": "E2AP and E2SM version alignment",
+      "d": "The build happens once: OAI dependencies with build_oai --ninja -I, then build_e2.sh compiles gNB and nrUE with --build-e2 (E2AP_V2 and KPM_V2_03) and build_flexric_tools.sh generates the nearRT-RIC, the xApps and the service models' .so libraries in flexric-lib/. The golden rule is that gNB, RIC and xApps must share exactly the same E2AP stack and the same E2SM versions (E2AP v2, E2SM-KPM v2.03, E2SM-RC v1.03), otherwise the E2 SETUP fails or the INDICATIONs do not decode."
+    },
+    {
+      "t": "Start-up order: Core, RIC, gNB, xApp",
+      "d": "The sequence matters because each component needs the previous one up: first up_core.sh brings up the OAI core on the demo-oai interface; then up_flexric.sh brings up the nearRT-RIC at 127.0.0.1:36421; then up_gnb_oai.sh brings up gNB and nrUE, and at that moment the gNB's E2 agent connects to the RIC; last come the xApps, via test_e2_sm.sh, test_e2_kpm.sh and test_e2_rc_attach.sh. The shortcut up_e2_lab.sh does all of that and down_e2_lab.sh tears it down. If the gNB comes up before the RIC, the E2 SETUP does not happen."
+    },
+    {
+      "t": "The E2 interface in the O-RAN architecture",
+      "d": "The E2 node is the OAI gNB, which exposes RAN Functions such as KPM, RC, MAC and RLC. The Near-RT RIC (FlexRIC) routes subscriptions and INDICATIONs between gNB and xApps. The xApp consumes metrics and events and can send CONTROL, as in the RC PoC. The basic flow is SETUP (the gNB announces its RAN functions to the RIC), SUBSCRIPTION (the xApp requests data from a RAN function) and INDICATION (the gNB sends periodic or event-triggered reports). In the gNB log you see this as E2 SETUP-REQUEST tx followed by E2 SETUP RESPONSE rx."
+    },
+    {
+      "t": "xApp and rApp",
+      "d": "The xApp runs in the Near-RT RIC, on a time scale below 1 second, and speaks E2 (E2AP plus E2SM) with the gNB to monitor or control the RAN in near real time; the course example is FlexRIC's xapp_kpm_moni. The rApp runs in the Non-RT RIC, above 1 second, uses A1 for policies and consumes SMO data via O1 and R1, focused on analytics, ML and long-term policies. In this lecture the lab is about xApps; rApps remain as context for Lecture 05."
+    },
+    {
+      "t": "The xApp life cycle in five phases",
+      "d": "Design defines what the app does: which E2SM (KPM, RC), which KPIs, what latency is acceptable, and produces a requirements document. Develop implements it with the RIC SDK, answers how to subscribe and how to handle INDICATION, and produces code, tests and a README. Onboard registers it on the platform with metadata, permissions and E2SM dependencies (descriptor or manifest in OSC, versioned binary in FlexRIC). Deploy instantiates it and connects it to the RIC, checking whether the RIC is up, whether the gNB has E2 and whether the E2AP versions are aligned. Monitor, Upgrade and Retire take care of observing metrics, handling drift, versioning and shutting down safely."
+    },
+    {
+      "t": "E2AP versus E2SM: the xApp's contract with the gNB",
+      "d": "E2AP (E2 Application Protocol) is the transport: it defines the SETUP, SUBSCRIPTION, INDICATION and CONTROL messages. E2SM (E2 Service Model) is the semantics: it says what each message means for a specific RAN function. In Design you choose the E2SM, in Develop you implement the subscription and in Deploy you validate the INDICATIONs. In the lab we have E2SM-KPM (3GPP measurements), E2SM-RC (RRC events and control) and custom SMs for MAC, RLC, PDCP and GTP."
+    },
+    {
+      "t": "E2SM-KPM (Key Performance Measurement)",
+      "d": "It is the service model for standardized 3GPP measurements, such as per-UE throughput, PRB usage and RLC delay. In the lab, test_e2_kpm.sh subscribes with the filter KPM_SST=222 and KPM_SD=123 using Report Style 4 (per S-NSSAI) and receives periodic INDICATIONs about every 1 second. Observed metrics: DRB.UEThpDl and DRB.UEThpUl between 3.72 and 19 kbps, RRU.PrbTotUl at 2 percent, DRB.RlcSduDelayDl between 9 and 141 microseconds and DRB.PdcpSduVolume at zero. A zero PDCP volume is expected in a light RFSIM; KPM_TRAFFIC=1 generates pings to the data network and makes the throughput go up."
+    },
+    {
+      "t": "E2SM-RC (RAN Control) and RRC events",
+      "d": "E2SM-RC delivers radio control (RRC) events and allows CONTROL from the RIC to the gNB. The test_e2_rc_attach.sh follows the order RIC, RC xApp, gNB and only then UE, because the subscription must exist before the attach in order to capture the event. The xApp subscribes to RAN_FUNC_ID 3 and receives an RC Indication with the RRC message decoded in ASN.1, for example rrcSetupComplete with rrc-TransactionIdentifier 1. Operational note: xapp_rc_moni may end with a timeout in sync_ui.c after the first INDICATION; the data has already been captured, so just inspect logs/xapp_rc_attach.log."
+    },
+    {
+      "t": "Custom Service Models (MAC, RLC, PDCP, GTP)",
+      "d": "Besides the O-RAN SMs, FlexRIC brings its own service models for the L2 and L3 layers, with plain encoding and independent of the slice. In the E2 SETUP the gNB registers the RAN functions with id 2 (KPM), 3 (RC), 142 (MAC), 143 (RLC), 144 (PDCP) and 148 (GTP). The test_e2_sm.sh cust runs xapp_cust_moni and serves to confirm that the E2 stack works end to end before the O-RAN KPM and RC tests."
+    },
+    {
+      "t": "Open-source RIC platforms: OSC, FlexRIC and SD-RAN",
+      "d": "The NGO paper compares three platforms. O-RAN SC (OSC) covers Non-RT and Near-RT, is O-RAN compliant and scales on Kubernetes, but is complex and has many pods; onboarding goes through a K8s catalogue with a Helm chart and a YAML descriptor. FlexRIC is Near-RT only, lean, with an E2 proxy and low latency, but monolithic and of limited scale; deployment is direct via binary plus .so in flexric-lib/. SD-RAN has a Near-RT with RANsim and SDKs in Go and Python, good for a quick lab, but without a real PHY or user plane. On the commercial side (Juniper, VMware, Capgemini, Mavenir) few RANs expose O-RAN-compliant E2, which is why the academic lab uses OAI plus FlexRIC."
+    }
+  ],
+  "formulas": [],
+  "onde": {
+    "scene": "kpm",
+    "texto": "In P2, the E2 agent embedded in the OAI gNB (RFSIM) does the E2 SETUP with FlexRIC at 127.0.0.1:36421 and xapp_kpm_moni subscribes to KPM for slice 222/123, receiving periodic INDICATIONs."
+  },
+  "exercicios": [
+    "p2-test-e2-sm",
+    "p2-test-e2-kpm",
+    "p2-test-e2-kpm-traffic",
+    "p2-test-e2-rc"
+  ],
+  "quiz": [
+    {
+      "q": "What is the correct start-up order of the OAI + FlexRIC lab and why does it matter?",
+      "a": "Core, RIC, gNB and lastly the xApp. The gNB's E2 agent connects to FlexRIC the moment it comes up, so the RIC must already be listening at 127.0.0.1:36421; the xApp can only subscribe after the E2 SETUP has registered the RAN functions."
+    },
+    {
+      "q": "What is the difference between E2AP and E2SM?",
+      "a": "E2AP is the transport protocol with the SETUP, SUBSCRIPTION, INDICATION and CONTROL messages. E2SM is the service model that gives those messages semantics for a RAN function, such as KPM (3GPP measurements) or RC (RRC events and control)."
+    },
+    {
+      "q": "Why, in test_e2_rc_attach.sh, is the RC subscription made before the UE is switched on?",
+      "a": "Because E2SM-RC delivers RRC events, such as RRCSetupComplete, which happen at attach. If the xApp subscribes afterwards, the event has already gone by and no INDICATION arrives."
+    }
+  ],
+  "fontes": "p. 4, 8-16, 18-29, 32-44, 47-50"
+}

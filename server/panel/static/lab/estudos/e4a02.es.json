@@ -1,0 +1,91 @@
+{
+  "id": "e4a02",
+  "n": 2,
+  "titulo": "Arquitecturas de datos: lake, warehouse y bases de datos en telecom",
+  "slide": "aula02-data_lakes_big_data.pdf",
+  "resumo": "En la clase 1 mapeamos las fuentes (RAN, core, transporte, terminal); ahora la pregunta es dónde persistir PM, FM y KPM. La clase compara data warehouse (curado, schema-on-write, OLAP) con data lake (crudo, schema-on-read) y la convergencia lakehouse, organiza la calidad en capas bronze, silver y gold, y posiciona bases de datos concretas: SQLite en el proyecto, MySQL en el core, InfluxDB en el camino Non-RT del O-RAN SC, Redis como RNIB del near-RT, MongoDB y Firebase en otros papeles. Cierra con consultas en la terminal y el checkpoint de arquitectura de los grupos G1 a G7.",
+  "objetivos": [
+    "Diferenciar data warehouse, data lake y lakehouse por el momento en que se impone el schema y por quién consume el dato",
+    "Organizar un pipeline de KPM en capas bronze, silver y gold, mapeando cada una a JSONL, SQLite y KPIs del lab",
+    "Distinguir OLTP, TSDB y OLAP y explicar por qué no se consulta la función de red directamente para análisis",
+    "Elegir la base de datos adecuada (SQLite, MySQL, InfluxDB, Redis, MongoDB, Firebase) para cada caso telco y justificarlo",
+    "Consultar SQLite, MySQL y Redis desde la terminal y proponer la arquitectura DW/Lake del proyecto integrador"
+  ],
+  "conceitos": [
+    {
+      "t": "Schema-on-write versus schema-on-read",
+      "d": "Schema-on-write valida y tipa el dato en el momento de la carga, con DDL (Data Definition Language) y ETL; es la forma del warehouse. Schema-on-read guarda el dato tal como llegó e interpreta el schema solo en la consulta; es la forma del lake. Fíjate en que schema-on-read no es ausencia de esquema: sigue exigiendo contrato, metadatos y linaje. En el lab, la tabla Thp por celda cada 15 min es schema-on-write; el envelope E2 o el log original de Indication es schema-on-read."
+    },
+    {
+      "t": "Tipos básicos y formatos de almacenamiento",
+      "d": "El mismo concepto, por ejemplo throughput, aparece como float en Python, columna REAL en SQLite y campo JSON en el bronze. El dato estructurado (KPI agregado, inventario) vive en CSV, Parquet o SQL; el semiestructurado (alarma FM, muestra KPM) en JSON, JSONL o Avro; el no estructurado (log textual, captura PCAP) en texto o binario. En el modelado ER, un atributo atómico se vuelve columna tipada, uno compuesto se vuelve varias columnas y uno multivaluado se vuelve tabla auxiliar o JSON. El código tipa y transforma; el depósito define cuándo se impone el schema y para quién sirve el dato."
+    },
+    {
+      "t": "Data warehouse y los cuatro rasgos de Inmon",
+      "d": "Data warehouse (DW) es el repositorio orientado a análisis y decisión, con datos integrados y schema-on-write, optimizado para OLAP (Online Analytical Processing: agregaciones, histórico, drill-down) y no para miles de transacciones cortas (OLTP). Bill Inmon define el Enterprise Data Warehouse (EDW) por cuatro rasgos: temático (dominio capacidad RAN, no dump crudo de E2), integrado (PRB y Thp con nombres y unidades coherentes entre proveedores), variable en el tiempo (KPI por celda cada 15 min a lo largo de meses) y no volátil (append y corrección por nueva carga versionada, nunca editar el pasado). En telecom sostiene KPIs oficiales, SLA, capacidad e informes regulatorios del NOC; en el lab es el SQLite tipado con agregaciones por fase baseline y stress."
+    },
+    {
+      "t": "Modelado dimensional de Kimball: hecho, dimensiones, estrella y copo de nieve",
+      "d": "Ralph Kimball diseña el DW a partir de cómo pregunta el negocio. La tabla de hechos guarda medidas numéricas (throughput UL/DL, PRB, RLC delay, UEs conectados, BLER) en una granularidad declarada, por ejemplo 1 fila = celda x 15 min x slice. Las tablas de dimensión dan el contexto: tiempo, celda, sitio, región, slice, proveedor, software. En el esquema estrella cada dimensión es una tabla desnormalizada unida directamente al hecho, con pocos joins, ideal para BI; en el copo de nieve las dimensiones se normalizan en subniveles (dim_celula se une a dim_site que se une a dim_regiao), con menos redundancia y más joins. Inmon y Kimball son estrategias de construcción (top-down con EDW en 3NF versus bottom-up con marts y dimensiones conformadas); estrella y copo de nieve son la forma del modelo que el analista consulta."
+    },
+    {
+      "t": "Data lake y el riesgo del data swamp",
+      "d": "Data lake es el repositorio de datos crudos o poco transformados a escala: archivos, objetos, logs, telemetría, típicamente schema-on-read. Es fuerte para exploración, reprocesamiento y entrenamiento de ML, y en telecom recibe histórico PM en bulk, traces y configs. Sin catálogo, linaje y retención definida se convierte en data swamp: unidades inconsistentes (bps contra Mbps), timestamps sin sincronismo, IDs de celda incompatibles, UE sin seudonimización. Volumen no es observabilidad; el lago gobernado tiene catálogo integrado, linaje y SLA de datos. En el lab el lake es el kpm.jsonl y los logs de Indication."
+    },
+    {
+      "t": "Lakehouse: la convergencia",
+      "d": "El lakehouse mantiene lo crudo al estilo lake y expone tablas confiables al estilo warehouse en el mismo ecosistema, poniendo SQL, versionamiento, calidad y transacciones ACID sobre almacenamiento de objetos (Parquet más una capa de tabla). Sirve cuando se quiere reprocesar fórmulas de KPI y al mismo tiempo servir BI y ML sin dos silos. En el tríptico comparativo, el lake atiende investigación de fallas y logs complejos, el warehouse atiende BI histórico y paneles de SLA, el lakehouse atiende BI de KPI y entrenamiento de ML para rApps. En el curso el mini-lakehouse offline es JSONL más SQLite más notebook."
+    },
+    {
+      "t": "Lote versus streaming",
+      "d": "Lote (batch) es cuando el dato llega en bloques: agregaciones diarias u horarias de PM, backfill y reprocesamiento, archivos PM O1 bulk; bueno para entrenamiento offline. Streaming es el flujo continuo: alarmas y anomalías en tiempo casi real, ventanas tumbling o sliding, O1 streaming y E2 KPM near-RT; bueno para NOC y closed-loop. Recuerda que no toda medición genera una acción inmediata y no toda acción depende del histórico."
+    },
+    {
+      "t": "Capas bronze, silver y gold (medallion)",
+      "d": "Medallion es una convención de organización de calidad, no una norma O-RAN. Bronze es lo crudo tal como llegó: JSONL de KPM, dumps PM, alarmas, con timestamp de ingesta. Silver es el dato limpio y tipado: UTC, unidades, IDs de celda y UE armonizados, deduplicación y seudonimización. Gold son los indicadores curados: KPIs, KQIs, SLA, scores y datasets para rApps y paneles. Mapeo en el lab: kpm.jsonl (bronze), kpm.sqlite (silver) y agregaciones o decision.json (gold)."
+    },
+    {
+      "t": "Escalas de decisión y ciclo de datos en Open RAN",
+      "d": "Cada escala tiene un papel para el dato: tiempo real (PHY/MAC, control interno de la RAN), near-RT (near-RT RIC y xApps vía E2, observación y control en segundos o menos), non-RT (non-RT RIC, rApps y SMO: histórico, políticas A1, entrenamiento) y offline (lab, auditoría, reproducibilidad). El ciclo es red, recolección (O1, E2, A1, O2, APIs del core), ingesta (brokers, colectores, batch o stream), almacenamiento (TSDB, lake, warehouse, catálogo), procesamiento, análisis, decisión y política o acción, que vuelve a la red por A1 (rApp), E2 (xApp) u O1 (config). DW y lake encajan en los planos analítico y non-RT sin sustituir a E2 y A1."
+    },
+    {
+      "t": "OLTP, TSDB y OLAP: el plano operativo no es el plano analítico",
+      "d": "OLTP (Online Transaction Processing) sirve a la función de red: muchas escrituras pequeñas, retención corta, consulta puntual; ejemplos son el MySQL del 5G Core (abonados) y el Redis RNIB (Radio Network Information Base) del near-RT, ambos en el camino crítico de la RAN. TSDB (Time-Series Database) como InfluxDB y Prometheus guarda métricas recientes indexadas en el tiempo, retención de días a semanas, punto intermedio entre operativo y analítico. OLAP o warehouse guarda KPIs históricos por meses o años, con carga en batch por ETL o ELT. No se consulta la NF directamente para análisis porque eso pone carga en una función crítica, el esquema está orientado a la operación, el histórico es incompleto, los timestamps son inconsistentes y hay riesgo de exponer abonados."
+    },
+    {
+      "t": "ETL versus ELT",
+      "d": "ETL (Extract, Transform, Load) transforma antes de cargar: recolectar O1, validar UTC, normalizar IDs, calcular KPI, cargar en el DW; alta gobernanza en la entrada, dato listo en el warehouse. ELT (Extract, Load, Transform) carga primero lo crudo en el lake, preserva el origen y transforma después generando las tablas gold del medallion; máxima flexibilidad y dato reprocesable. El pipeline del lab es ELT: el log crudo entra entero y el CSV y los KPIs se derivan después."
+    },
+    {
+      "t": "Familias de bases de datos y dónde vive cada una en el lab",
+      "d": "SQLite es SQL embebido en un archivo, cero servidor, ACID en un proceso, ideal para EDA offline y artefacto docente (kpm.sqlite con tablas runs y kpm_samples); evítalo con muchos escritores simultáneos. MySQL es SQL cliente/servidor fuerte en OLTP: en el core OAI el contenedor mysql guarda las suscripciones 5G en oai_db, plano de control y no KPI histórico. InfluxDB es la TSDB del O-RAN SC: en el camino VES, Data File Collector, PM Producer vía Kafka e Influx Logger, las rApps de UE-TP y Cell-TP leen series de ella; el modelo es measurement, fields, tags y tiempo. Redis ric_dbaas es clave-valor en memoria con el RNIB/SDL del near-RT (qué gNBs están registrados, suscripciones), no histórico PM. MongoDB guarda documentos BSON/JSON con schema flexible (alarmas FM, envelopes KPM; el Open5GS usa MongoDB para abonados y sesiones). Firebase es BaaS (Backend-as-a-Service) para apps colaborativas y dashboards livianos, no sustituye al lake ni al BI. Recuerda los subconjuntos de SQL: DDL (CREATE, ALTER, DROP), DML (INSERT, UPDATE, DELETE), DQL (SELECT), DTL (BEGIN, COMMIT, ROLLBACK) y DCL (GRANT, REVOKE, DENY)."
+    }
+  ],
+  "formulas": [],
+  "onde": {
+    "scene": "analytics",
+    "texto": "En el P2 el p2-kpm-analytics es el mini-lakehouse de la clase: el log crudo del p2-kpm-real es el bronze (schema-on-read), el CSV de serie temporal con UTC y unidades es el silver y los KPIs agregados son el gold; al lado, el MySQL del OAI 5GC es el OLTP del core y el Redis del FlexRIC hace el papel de RNIB del near-RT, que no guarda histórico."
+  },
+  "exercicios": [
+    "p2-kpm-real",
+    "p2-kpm-analytics",
+    "p2-test-e2-kpm",
+    "p2-tema-t1",
+    "p2-test-a1"
+  ],
+  "quiz": [
+    {
+      "q": "¿Por qué el Redis ric_dbaas del near-RT RIC no sirve para entrenar un modelo de UE-TP con 2 horas de KPM?",
+      "a": "Porque es el RNIB/SDL: un inventario en memoria del near-RT (qué E2 nodes están registrados, suscripciones activas), con retención corta y consulta puntual, en el camino crítico de la RAN. El histórico de series PM/KPM para entrenamiento queda en una TSDB como el InfluxDB (camino Non-RT del O-RAN SC) o en el lake/warehouse; en el lab, en el kpm.jsonl y en el kpm.sqlite."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre schema-on-write y schema-on-read y dónde aparece cada uno en el lab?",
+      "a": "Schema-on-write valida y tipa en la carga (DDL más ETL), típico del warehouse: en el lab es el SQLite tipado con agregaciones por fase. Schema-on-read guarda el dato tal como llegó e interpreta el schema en la consulta, típico del lake: en el lab es el kpm.jsonl y el log de Indication del E2. Schema-on-read no es falta de esquema; exige contrato, metadatos y linaje para no convertirse en data swamp."
+    },
+    {
+      "q": "¿Qué guardan las capas bronze, silver y gold y cómo se mapean en el pipeline del lab?",
+      "a": "Bronze es lo crudo tal como llegó (JSONL de KPM, dumps PM, alarmas, con timestamp de ingesta). Silver es el dato limpio y tipado (UTC, unidades, IDs de celda y UE armonizados, deduplicación, seudonimización). Gold son los indicadores curados (KPIs, KQIs, SLA, datasets para rApps). En el lab: kpm.jsonl, después kpm.sqlite, después agregaciones y decision.json; en el P2, el log del p2-kpm-real, el CSV de serie temporal y los KPIs del p2-kpm-analytics. Medallion es una convención de organización, no una norma O-RAN."
+    }
+  ],
+  "fontes": "pp. 4-11 (plan de la clase, objetivos, referencias, glosario), 12-20 (paradigmas, tipos básicos, formatos, por qué el script no basta), 21-28 (data warehouse, Inmon, Kimball, estrella x copo de nieve), 29-34 (data lake, comparación, lakehouse, tríptico, data swamp), 35-38 (lote x streaming, bronze/silver/gold), 40-55 (arquitectura O-RAN, escalas, ciclo de datos, OLTP x TSDB x OLAP, esquema estrella de KPIs, ETL x ELT, arquitectura analítica integrada), 57-68 (familias de bases de datos, subconjuntos SQL, SQLite, MySQL, MongoDB, Firebase, InfluxDB, VES hacia Influx, Redis x Influx, ejercicio guiado), 70-82 (demos en la terminal, mapa comando/objetivo, discusión, checkpoint, síntesis), 84-86 (preparación de la clase 3 y referencias)"
+}

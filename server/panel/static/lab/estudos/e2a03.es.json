@@ -1,0 +1,92 @@
+{
+  "id": "e2a03",
+  "n": 3,
+  "titulo": "Interfaz A1, políticas y seminarios del Proyecto 1",
+  "slide": "aula03-interface_a1_seminarios.pdf",
+  "resumo": "Clase de 5 horas en dos bloques: primero los siete grupos presentan el Proyecto 1 (Polese + NGO párrafo 6.1) diciendo qué interfaz O-RAN sostiene cada etapa de su caso; después retomamos el Módulo 5 con la interfaz A1 (políticas, Enrichment Information y gestión de modelos ML) y el papel del Non-RT RIC dentro del SMO. Cerramos con la discusión de los tres proyectos Open5GS del lab, la escalera de desagregación de la RAN y lo que el ZMQ del srsRAN hace de verdad, preparando el salto hacia OAI + FlexRIC y E2.",
+  "objetivos": [
+    "Correlacionar cada caso de uso del NGO párrafo 6.1 con las interfaces A1, O1, E2 y O2 del Módulo 5.",
+    "Explicar qué viaja por la interfaz A1: policy type, policy instance, EI y modelos ML, todo en JSON sobre REST.",
+    "Distinguir A1 (política, ciclo mayor que 1 s) de O1 (aprovisionamiento FCAPS) y de E2 (control near-RT), sin tratarlas como sustitutas.",
+    "Describir el ciclo de vida de una política A1 (create, update, delete, query) y cómo el Near-RT RIC trata políticas concurrentes.",
+    "Comparar los tres proyectos Open5GS del lab (monolito, split ZMQ, CU/DU estricto) y ubicar dónde todavía falta el E2."
+  ],
+  "conceitos": [
+    {
+      "t": "Seminarios del Proyecto 1: NGO párrafo 6.1 cruzado con el Módulo 5",
+      "d": "Cada grupo sorteó uno de los siete casos del artículo NGO (recolección de KPM, Localization-rApp, UE-TP-rApp, Cell-TP-rApp, ES-rApp, IM-rApp, PM-rApp) y presenta en 20 minutos citando a Polese y a NGO. El criterio central es decir qué interfaz sostiene cada etapa: KPM entra por O1/VES en el InfluxDB, Localization y UE-TP alimentan el Cell-TP, el ES-rApp sale por A1 (política para el TS-xApp) más O1 (sleep de la RRU), el IM-rApp ajusta la potencia de la O-RU por O1 y el PM-rApp genera alarma y mantenimiento predictivo. No basta con resumir las diapositivas: el jurado exige métricas, arquitectura y limitaciones."
+    },
+    {
+      "t": "Non-RT RIC: papel en el SMO",
+      "d": "El Non-RT RIC (RAN Intelligent Controller no tiempo real) vive dentro del SMO (Service Management and Orchestration) y aloja rApps con visión de red y de servicios: políticas, predicción y planificación. Trabaja con ciclos de minutos a horas, lo que combina con ML de largo plazo (Localization, UE-TP y PM-rApp de la SUTD), puede operar por intent-based management y publica orientaciones hacia el Near-RT RIC por la interfaz A1. En el ORAN-SC la implementación se llama NONRTRIC y trae A1, O1, ICS/DMaaP y rApp catalogue."
+    },
+    {
+      "t": "Interfaz A1: visión general (A1-P, A1-EI, A1-ML)",
+      "d": "A1 une el Non-RT RIC al Near-RT RIC y ofrece tres servicios: A1 Policy Management (A1-P, guidance basada en política), A1 Enrichment Information (A1-EI) y A1 ML Model Management (A1-ML). No es tiempo real: el ciclo es mayor que 1 segundo, la sintaxis es JSON schema y el protocolo A1AP corre sobre REST/HTTP con pares cliente/servidor por servicio. El alcance de una política, de un modelo o de una EI puede ser un grupo de UEs o un UE específico."
+    },
+    {
+      "t": "Policy type y policy instance: la estructura JSON de la política",
+      "d": "Un policy type es el contrato: el JSON schema que define qué campos puede tener una política. Una policy instance es el documento JSON concreto que obedece a ese schema, identificado por un policy identifier. Dentro de ella está el scope identifier (UE, grupo de UEs, slice, celda, bearer o clase de aplicación) y los policy statements, divididos en policy resources (condiciones) y policy objectives (metas de QoS y KPI). Ejemplo del NGO: el ES-rApp publica umbrales de SLA y celdas candidatas como una policy instance para el TS-xApp."
+    },
+    {
+      "t": "Tipos de política A1: del intent al comportamiento deseado",
+      "d": "Los tipos clásicos son throughput maximization, traffic steering (preferencias de celda o RAT, consumidas por el TS-xApp), QoS targets o slice (asignación y priorización por SLA) y energy saving (ventanas y umbrales para sleep modes, publicados por el ES-rApp). La política parte de un intent de alto nivel y se refina en un lazo: el Near-RT RIC aplica, el reporting O1 devuelve el resultado y la rApp ajusta o revoca la política."
+    },
+    {
+      "t": "A1 Enrichment Information (A1-EI)",
+      "d": "EI es información que mejora la decisión de la RAN pero no está disponible localmente en el nodo: predicción de carga, analytics agregados, mapas de contexto externo. El Non-RT RIC o el SMO pueden hacer relay de la EI vía A1 hacia las xApps, o solo instruir a la xApp para que acceda a la fuente de EI directamente. En el NGO, las salidas de la Localization-rApp y de la Cell-TP-rApp funcionan como EI interna para las rApps de ES e IM."
+    },
+    {
+      "t": "A1AP sobre HTTP/REST",
+      "d": "Cada servicio A1 expone APIs HTTP y los roles de cliente y servidor cambian por función (en A1-P el Non-RT RIC es cliente y el Near-RT RIC es servidor). Ese estilo REST facilita integrar catálogos de políticas y portales de orquestación en el SMO y mantiene el Non-RT RIC desacoplado de la implementación interna del Near-RT RIC, sea OSC, FlexRIC u otro."
+    },
+    {
+      "t": "Ciclo de vida de una policy A1",
+      "d": "Las operaciones típicas son create, update y delete de políticas en un Near-RT RIC objetivo, y query del conjunto de políticas activas y sus versiones. La coherencia entre políticas concurrentes se trata dentro del RIC, que mitiga el conflicto entre xApps. En el NGO párrafo 4.4 el ES-rApp actualiza o revoca la política A1 si el SLA se degrada después de poner una O-RU en sleep."
+    },
+    {
+      "t": "A1 versus O1: política versus aprovisionamiento",
+      "d": "A1 lleva contratos de comportamiento e intent hacia el Near-RT RIC y sus xApps. O1 es FCAPS (Fault, Configuration, Accounting, Performance, Security) sobre los Network Elements: configuración, falla, desempeño y el comando de sleep o wake de una RRU. Un único objetivo de red puede exigir los dos: en el NGO el ES-rApp manda A1 al TS-xApp para desviar el tráfico y O1 para dormir la RRU."
+    },
+    {
+      "t": "A1 versus E2: latencias diferentes, capas complementarias",
+      "d": "E2 hace suscripciones, reports, insert y control con un vínculo cercano al ciclo de RRM, en milisegundos. A1 ajusta reglas y modelos que las xApps aplicarán a lo largo del tiempo. Una falla común es tratar E2 como sustituto de la política A1: son complementarias. En el NGO la KPM-xApp mide por el E2 y el ES-rApp orienta a la TS-xApp por el A1 antes de la acción O1."
+    },
+    {
+      "t": "Gestión de modelos ML vía A1 y workflow IA/ML",
+      "d": "Las políticas pueden referenciar modelos y artefactos ML; el model management es un área en evolución y las implementaciones varían (ORAN-SC, ONAP), y el deploy de imágenes también puede pasar por O1 file management. El workflow tiene seis fases: recolección de KPM vía VES/O1 en el InfluxDB, entrenamiento offline (DNN/LSTM con el dataset FCCLab de la SUTD, ventana de 10 muestras, split 70/30, normalización en [0,1]), publicación en el rApp catalogue, deploy de rApps en el Non-RT y xApps en el Near-RT en Kubernetes, inferencia por debajo de 30 microsegundos con exactitud por encima del 90 por ciento, y operación continua con políticas A1, feedback O1 y monitoreo de drift."
+    },
+    {
+      "t": "Escalera de desagregación en el lab y el ZMQ del srsRAN",
+      "d": "Los proyectos Open5GS suben por escalones: monolito UERANSIM (gNB y UE en el mismo contenedor), gNB y UE en contenedores separados (net-air o net-zmq), PHY real con srsRAN vía ZMQ, y CU y DU separadas con F1-C y F1-U. ZMQ (ZeroMQ) aquí es un driver de radio que intercambia muestras IQ entre gNB y UE como un cable de RF virtual (base_srate 23,04 MHz para 20 MHz NR), puertos TX y RX cruzados 2000/2001; no es la mensajería de A1, E2 u O1. Reiniciar solo un lado del par ZMQ tumba el enlace, y el E2 todavía falta: viene con OAI + FlexRIC."
+    }
+  ],
+  "formulas": [],
+  "onde": {
+    "scene": "a1",
+    "texto": "En el P2 el panel hace el papel de Non-RT RIC: el A1 PMS publica la policy instance en JSON y los simuladores A1 la entregan al near-RT (FlexRIC y xApps), cerrando el ciclo que recorre el p2-test-a1."
+  },
+  "exercicios": [
+    "p2-test-a1",
+    "p2-test-e2-kpm",
+    "p2-test-e2-rc",
+    "p2-tema-t3",
+    "p2-tema-t5",
+    "test-ue-connection"
+  ],
+  "quiz": [
+    {
+      "q": "¿Cuál es la diferencia entre policy type y policy instance en la interfaz A1?",
+      "a": "El policy type es el JSON schema que define los campos permitidos; la policy instance es el JSON concreto que obedece a ese schema, con policy identifier, scope y statements (resources y objectives)."
+    },
+    {
+      "q": "En el caso del ES-rApp del NGO, ¿por qué un único objetivo de ahorro de energía necesita A1 y O1 al mismo tiempo?",
+      "a": "El A1 lleva la política al TS-xApp para desviar el tráfico de las celdas candidatas (comportamiento), y el O1 envía el comando de sleep a la RRU (aprovisionamiento FCAPS). Política y configuración son cosas diferentes."
+    },
+    {
+      "q": "¿El ZMQ usado en el lab srsRAN es una implementación de la mensajería A1 o E2?",
+      "a": "No. En el lab el ZMQ es un driver de radio que transporta muestras IQ entre gNB (o DU) y UE, como un cable de RF virtual. A1 usa REST/HTTP y E2 usa SCTP con E2AP; ninguna pasa por el ZMQ."
+    }
+  ],
+  "fontes": "pp. 4-13 (enunciado, temas y tabla 6.1 x interfaces), 25-40 (Non-RT RIC, A1 policy/EI/ML, A1 vs O1/E2, workflow IA/ML), 45-63 (tres proyectos Open5GS, ZMQ, desagregación), 65 (material de apoyo)"
+}

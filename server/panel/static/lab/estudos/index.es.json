@@ -1,0 +1,162 @@
+{
+  "_comment": "Catálogo de los Estudios (asignaturas) del panel: cada clase detallada vive en <id>.json (extraída de las diapositivas). Los ejercicios son comandos de la consola (/api/run). El Estudio 3 apunta a las páginas del Lab de IA ya existentes.",
+  "comandos": {
+    "status": "Estado / Healthcheck",
+    "test-system-status": "Estado detallado de todos los NFs",
+    "test-ng-setup": "NG Setup (N2, gNB y AMF)",
+    "test-registration": "Registro del UE (N1/NAS)",
+    "test-config-coherence": "Coherencia de configuración (gNB y UE)",
+    "test-ue-connection": "Conectividad del UE (E2E)",
+    "test-throughput": "Throughput del UE (iperf3)",
+    "test-upf-failover": "Failover UPF-A / UPF-B",
+    "p2-test-e2-sm": "Probar E2 Service Models",
+    "p2-test-e2-kpm": "Probar E2SM-KPM (indications)",
+    "p2-test-e2-kpm-traffic": "Probar E2SM-KPM con tráfico",
+    "p2-test-e2-rc": "Probar E2SM-RC (attach)",
+    "p2-kpm-real": "Recolectar KPM real con tráfico",
+    "p2-kpm-analytics": "Analizar datos KPM (ETL, CSV, KPI)",
+    "p2-test-a1": "Ciclo A1 (non-RT hacia near-RT)",
+    "p2-ml-uetp": "IA: predecir throughput (UE-TP)",
+    "p2-ml-localizacao": "IA: localizar el piso (Localization)",
+    "p2-ml-pm": "IA: detectar RRU perdida (PM)",
+    "p2-tema-t1": "T1 Throughput del usuario",
+    "p2-tema-t2": "T2 Anomalía de carga",
+    "p2-tema-t3": "T3 Latencia y QoE",
+    "p2-tema-t4": "T4 Riesgo de congestión",
+    "p2-tema-t5": "T5 Visión agregada de la celda",
+    "p2-tema-t6": "T6 Ahorro de energía",
+    "p2-tema-t7": "T7 Política de QoS / steering",
+    "p2-tema-all": "Los 7 temas lado a lado"
+  },
+  "bancadas": {
+    "p1": "Proyecto 1: Open5GS + UERANSIM",
+    "p2": "Proyecto 2: OAI + FlexRIC + Non-RT RIC",
+    "any": "corre sobre archivo, sin necesidad de la RAN"
+  },
+  "estudos": [
+    {
+      "id": "e1", "n": 1, "icon": "🛰️", "bancada": "p1",
+      "titulo": "Interfaces y Protocolos O-RAN",
+      "prof": "Prof. Dr. Jonas Augusto Kunzler",
+      "periodo": "mar a abr/2026",
+      "resumo": "La primera asignatura de Open RAN de la especialización: el 5G que ya existe (core, RAN, interfaces N1..N11), la nube telco y la motivación para abrir la RAN. En nuestro lab eso es el Proyecto 1: un core Open5GS completo con gNB y UE simulados, donde cada interfaz se puede ver funcionando.",
+      "pdfs": "pdfs/00-interfaces-oran",
+      "nota": "Solo la clase 01 fue compartida en PDF; las demás se presentaron en el aula.",
+      "aulas": ["e1a01"],
+      "exercicios": ["status", "test-system-status", "test-ng-setup", "test-registration", "test-config-coherence", "test-ue-connection", "test-throughput", "test-upf-failover"]
+    },
+    {
+      "id": "e2", "n": 2, "icon": "🧠", "bancada": "p2",
+      "titulo": "RAN Intelligent Controller (RIC)",
+      "prof": "Prof. Dr. Jonas Augusto Kunzler",
+      "periodo": "6 clases",
+      "resumo": "El controlador inteligente de la RAN: near-RT y non-RT RIC, las interfaces E2 y A1, xApps y rApps, el SMO y cómo se prueba todo eso. En el lab es el Proyecto 2: gNB OAI con agente E2 hablando con el FlexRIC, xApps de KPM y control, y un Non-RT RIC que baja políticas por el A1.",
+      "pdfs": "pdfs/01-ric",
+      "aulas": ["e2a01", "e2a02", "e2a03", "e2a04", "e2a05", "e2a06"],
+      "exercicios": ["p2-test-e2-sm", "p2-test-e2-kpm", "p2-test-e2-kpm-traffic", "p2-test-e2-rc", "p2-kpm-real", "p2-test-a1"]
+    },
+    {
+      "id": "e3", "n": 3, "icon": "🎓", "bancada": "p2",
+      "titulo": "Aplicaciones de IA y ML en RIC",
+      "prof": "Prof. Julio C. C. Tesolin",
+      "periodo": "6 clases",
+      "resumo": "Técnicas de aprendizaje automático aplicadas al RIC: regresión, clasificación, clustering, anomalía, PCA, y los tres casos del artículo de referencia (UE-TP, Localización, Mantenimiento predictivo) con datos reales del walk test SUTD. El Lab de IA del panel es el material de esta asignatura: cada clase tiene teoría, el experimento corriendo en vivo y un informe.",
+      "pdfs": "pdfs/02-ric-ai",
+      "lab": "/lab",
+      "externas": [
+        {"icon": "🧭", "titulo": "Fundamentos", "one": "Qué es IA/ML, supervisado y no supervisado, y el lazo del O-RAN.", "href": "/lab/fundamentos"},
+        {"icon": "📶", "titulo": "Regresión", "one": "Predecir un número: el throughput de cada UE (UE-TP).", "href": "/lab/regressao"},
+        {"icon": "🚦", "titulo": "Clasificación", "one": "Predecir una categoría: el estado de la celda.", "href": "/lab/classificacao"},
+        {"icon": "📍", "titulo": "Localización", "one": "Predecir el piso del UE solo con KPMs de radio.", "href": "/lab/localizacao"},
+        {"icon": "🛠️", "titulo": "Mantenimiento predictivo", "one": "Detectar la RRU perdida desde el lado del UE.", "href": "/lab/manutencao"},
+        {"icon": "🎨", "titulo": "Clustering", "one": "Agrupar celdas parecidas, sin etiqueta.", "href": "/lab/clustering"},
+        {"icon": "🚨", "titulo": "Anomalía", "one": "Encontrar la celda fuera del patrón.", "href": "/lab/anomalia"},
+        {"icon": "🧭", "titulo": "PCA", "one": "Resumir muchos KPIs en pocos.", "href": "/lab/pca"},
+        {"icon": "📄", "titulo": "Proyecto final", "one": "Aplicar una técnica a un caso de uso y entregar el informe.", "href": "/lab/projeto"}
+      ],
+      "exercicios": ["p2-ml-uetp", "p2-ml-localizacao", "p2-ml-pm"]
+    },
+    {
+      "id": "e4", "n": 4, "icon": "📊", "bancada": "p2",
+      "titulo": "Análisis de Datos en Redes de Telecomunicaciones",
+      "prof": "Prof. Dr. Jonas Augusto Kunzler",
+      "periodo": "ago/2026 (en curso)",
+      "resumo": "De dónde vienen los datos de una red (SMO, O1, E2, A1; PM, FM, KPM), cómo guardarlos (lake, warehouse, las zonas raw/bronze/silver/gold), cómo explorarlos (EDA, ETL, estadística, visualización) y cómo transformarlos en indicadores (KPIs/KQIs) y decisiones. El proyecto integrador (50% de la nota) usa la telemetría KPM de nuestro lab: todos los grupos parten de los mismos datos y cada uno responde a una pregunta diferente.",
+      "pdfs": "pdfs/03-dados-telecom",
+      "aulas": ["e4a01", "e4a02", "e4a03", "e4a04"],
+      "proximas": [
+        {"n": 4, "data": "25/08", "t": "KPIs/KQIs y Checkpoint 1 (2 indicadores cerrados + visualizaciones)"},
+        {"n": 5, "data": "27/08", "t": "Capacidad y optimización; checkpoint técnico final (recomendación/A1 + limitaciones)"},
+        {"n": 6, "data": "29/08", "t": "Presentaciones y defensa"}
+      ],
+      "exercicios": ["p2-kpm-real", "p2-kpm-analytics"],
+      "dados": {
+        "fonte": "kpm-ue-tp-sample (pista offline del profesor): 100 mediciones KPM en 3 fases, baseline (20), stress (60) y recovery (20).",
+        "metricas": [
+          {"k": "thp_ul", "kpm": "DRB.UEThpUl", "o": "throughput de subida del UE", "u": "kbps"},
+          {"k": "delay_dl", "kpm": "DRB.RlcSduDelayDl", "o": "retardo RLC de bajada", "u": "µs"},
+          {"k": "prb_ul", "kpm": "RRU.PrbTotUl", "o": "PRB de subida en uso", "u": "% de los PRB"}
+        ],
+        "troca": "En la consola, haz clic en el nodo '💾 KPM (3 fases)' de la franja de ejecución para cambiar la fuente: muestra del profesor, un archivo (.jsonl o .csv) o datos pegados a mano. Solo el profesor cambia; todos lo ven."
+      },
+      "temas": [
+        {"id": "t1", "cmd": "p2-tema-t1", "icon": "📶", "titulo": "Throughput del usuario (UE-TP)", "grupo": "Grupo 6 (Henrique, Kelvin, Klinger)",
+         "pergunta": "¿El throughput del UE sube y baja junto con el uso de PRB y con el retardo?",
+         "ind": [
+           {"nome": "Throughput UL por fase", "formula": "media(thp_ul) y p95(thp_ul), GROUP BY phase", "u": "kbps"},
+           {"nome": "Utilización de PRB UL por fase", "formula": "media(prb_ul), GROUP BY phase", "u": "% de los PRB"}
+         ],
+         "extra": "Relación: Pearson r = cov(x, y) / (sx * sy), global y dentro de cada fase (la global mezcla idle con carga).",
+         "rec": "Si el throughput cae con el PRB alto (usuario mal atendido), proponer priorización en una política A1 (dry-run)."},
+        {"id": "t2", "cmd": "p2-tema-t2", "icon": "🚨", "titulo": "Detección de anomalía de carga",
+         "pergunta": "¿En qué momentos la red sale de lo normal de forma sostenida, y no en un pico aislado?",
+         "ind": [
+           {"nome": "% de muestras anómalas por fase", "formula": "score = |x - mediana_baseline| / max(MAD, 1); anómala si score > 3,5 en al menos 2 de las 3 métricas", "u": "%"},
+           {"nome": "Intensidad de la desviación en la carga", "formula": "media y máximo del mayor score de la muestra, en la fase de stress", "u": "adimensional"}
+         ],
+         "extra": "MAD = mediana(|x - mediana(x)|) calculado solo en el baseline. Es el mismo algoritmo del model.json del profesor (robust-baseline-mad); la decisión 'apply' sale cuando la ventana entera (5 muestras) es anómala.",
+         "rec": "Con la mayoría de la ventana anómala, decisión de reducir la congestión UL en A1 (dry-run). Los picos aislados se vuelven falsa alarma, no decisión."},
+        {"id": "t3", "cmd": "p2-tema-t3", "icon": "⏱️", "titulo": "Latencia y calidad percibida (QoE)",
+         "pergunta": "¿Cuándo el retardo de radio sugiere que la experiencia del usuario puede estar mal?",
+         "ind": [
+           {"nome": "Retardo RLC DL por fase", "formula": "mediana(delay_dl) y p95(delay_dl), GROUP BY phase", "u": "µs"},
+           {"nome": "Fracción del tiempo en retardo alto", "formula": "n(delay_dl > 100 ms) / n, por fase", "u": "%"}
+         ],
+         "extra": "Cruce: retardo alto CON throughput bajo refuerza la hipótesis de mala experiencia; retardo alto con throughput alto es cola de carga. El umbral de 100 ms está justificado y es ajustable.",
+         "rec": "Retardo sostenido por encima del umbral en la carga: investigar la sesión y priorizar el tráfico sensible (A1 dry-run). El retardo es un proxy: no hay nota MOS."},
+        {"id": "t4", "cmd": "p2-tema-t4", "icon": "🚧", "titulo": "Riesgo de congestión",
+         "pergunta": "¿Los datos muestran una saturación que justifique una alerta de capacidad?",
+         "ind": [
+           {"nome": "Utilización de PRB UL", "formula": "media(prb_ul) y p95(prb_ul), GROUP BY phase", "u": "% de los PRB"},
+           {"nome": "Índice de riesgo", "formula": "n( MM5(prb_ul) > 0,8 * PRB_max  Y  MM5(thp_ul) < 0,5 * p95(thp_ul) ) / n", "u": "%"}
+         ],
+         "extra": "MM5 = media móvil de 5 muestras: mira la tendencia, no un instante. Radio lleno con throughput alto es capacidad en uso, no en riesgo.",
+         "rec": "Solo con PRB saturado Y throughput cayendo: alerta de capacidad e intención de alivio de carga en A1 (dry-run)."},
+        {"id": "t5", "cmd": "p2-tema-t5", "icon": "🏙️", "titulo": "Visión agregada de la celda",
+         "pergunta": "¿Cómo resumir el experimento en indicadores de celda, y cuál es el límite de eso en el lab?",
+         "ind": [
+           {"nome": "PRB medio de la celda por fase", "formula": "media(prb_ul), GROUP BY run_id, phase", "u": "% de los PRB"},
+           {"nome": "Throughput representativo de la celda", "formula": "media(thp_ul) por fase; suma = media * n_UE cuando hay varios UEs", "u": "kbps"}
+         ],
+         "extra": "Es el GROUP BY de la zona gold del mini-lake. Con 1 UE, media = suma: la agregación es didáctica, no estadística de campus.",
+         "rec": "Comparar la fase normal con la fase de carga y declarar el límite: pocos UEs en RFSIM."},
+        {"id": "t6", "cmd": "p2-tema-t6", "icon": "🔋", "titulo": "Ahorro de energía (solo intención)",
+         "pergunta": "¿En qué tramos la carga está lo bastante baja como para pensar en ahorrar energía, sin apagar nada?",
+         "ind": [
+           {"nome": "Fracción del tiempo en baja carga", "formula": "baja carga = prb_ul <= 0,1 * PRB_max  Y  thp_ul <= 0,1 * p95(thp_ul); n(baja) / n", "u": "%"},
+           {"nome": "Throughput y retardo en esas ventanas", "formula": "media(thp_ul) y mediana(delay_dl) solo en las muestras de baja carga", "u": "kbps / µs"}
+         ],
+         "extra": "Antes de cualquier intención, verificar si el retardo sigue aceptable (<= 100 ms) en las ventanas de baja carga.",
+         "rec": "Intención de ahorro en A1 (dry-run) solamente: el lab no controla la potencia de la RU y nada se apaga."},
+        {"id": "t7", "cmd": "p2-tema-t7", "icon": "🎛️", "titulo": "Política de QoS / steering (candidata)",
+         "pergunta": "Ante una degradación, ¿qué regla de decisión sería segura para proponer una política de QoS?",
+         "ind": [
+           {"nome": "Tiempo en degradación", "formula": "degradación = delay_dl > 100 ms  O  (prb_ul > 0,8 * PRB_max  Y  thp_ul < 0,5 * p95); n(regla) / n", "u": "%"},
+           {"nome": "Activaciones de la política", "formula": "subidas de la regla (de falso a verdadero); 'sostenido' = 3 muestras seguidas", "u": "conteo"}
+         ],
+         "extra": "El filtro de persistencia evita reaccionar a un pico aislado (falsas alarmas en el baseline y en el recovery). La línea de tiempo ASCII muestra dónde se dispara la regla.",
+         "rec": "Política A1 candidata (alcance UE/QoS, prioridad, steering) con validación humana antes de automatizar. No afirmamos que el handover o el path hayan cambiado."}
+      ]
+    }
+  ]
+}

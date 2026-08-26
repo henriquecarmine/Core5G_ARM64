@@ -1,0 +1,129 @@
+{
+  "id": "e2a01",
+  "n": 1,
+  "titulo": "O-RAN interfaces revisited and the Open5GS/UERANSIM lab",
+  "slide": "aula01-retomada_interfaces_oran-2.pdf",
+  "resumo": "This lecture opens the RIC course by revisiting what you saw in Course 5: the 5G System architecture (SBA, NFs, interfaces N1 to N11), the NG-RAN with its CU/DU split and the O-RAN proposal with SMO, Non-RT RIC, Near-RT RIC and the A1, E2, O1 and O2 interfaces. We then close with the Open5GS + UERANSIM lab, reading gnb.yaml and ue.yaml line by line and mapping what the lab covers (N2, N3, registration, PDU Session) and what is still missing (E2, RIC, xApps).",
+  "objetivos": [
+    "Review the service-based 5GC architecture and the role of each NF (AMF, SMF, UPF, AUSF, UDM, UDR, NRF)",
+    "Distinguish the 3GPP interfaces N1, N2, N3, N4, N6 and N11 by protocol and by the pair of entities they connect",
+    "Place SMO, Non-RT RIC and Near-RT RIC in the O-RAN architecture and associate each one with the A1, E2, O1 and O2 interfaces",
+    "Explain the observe, decide and act closed loop with its time horizons (near-RT from 10 ms to 1 s; non-RT above 1 s)",
+    "Validate N1, N2 and N3 in the Open5GS/UERANSIM lab, checking the coherence between gnb.yaml, ue.yaml and the subscriber in the core"
+  ],
+  "conceitos": [
+    {
+      "t": "Service-based 5GC architecture (SBA) and CUPS",
+      "d": "The 5G core (5GC, 5G Core) is a Service-Based Architecture: the components are Network Functions (NFs) that expose services to one another through a common HTTP/2 + JSON framework, with three interaction patterns: Query (GET on a resource), Subscription (POST creating a subscription) and Notification (POST to a callback). The CUPS principle (Control and User Plane Separation) separates the control plane from the user plane, which lets the operator scale each plane independently. In TS 23.501 the drawing is always the same: user plane at the bottom (UE, RAN, UPF, DN) and control plane on top."
+    },
+    {
+      "t": "Network functions (NFs) of the 5GC",
+      "d": "In the control plane: the AMF (Access and Mobility Management Function) manages UE registration and connection; the AUSF (Authentication Server Function) authenticates the subscriber; the UDM (Unified Data Management) is the equivalent of the 4G HSS and the 2G HLR; the UDR (Unified Data Repository) stores subscriber data; the NRF (Network Repository Function) registers and discovers NFs; the SMF (Session Management Function) creates sessions and commands the UPF; the PCF (Policy Control Function) applies policies; the NSSF selects the slice; the NEF exposes capabilities; the CHF does charging. In the user plane: the UPF (User Plane Function) is the gateway between the RAN and the Data Network; N3IWF and TNGF do interworking with non-3GPP access. In our P1, Open5GS brings up precisely AMF, SMF, UPF, AUSF, UDM, UDR and NRF."
+    },
+    {
+      "t": "Reference interfaces N1, N2, N3, N4, N6, N9 and N11",
+      "d": "N1 links UE and AMF and carries NAS (Non-Access Stratum: registration and session), transported inside the RAN without an IP interface of its own. N2 links NG-RAN and AMF with NGAP (NG Application Protocol) over SCTP and concentrates the control signaling. N3 links NG-RAN and UPF with GTP-U, the user-plane tunnel. N4 links SMF and UPF with PFCP (Packet Forwarding Control Protocol), which programs the forwarding rules in the UPF. N6 is the UPF's exit toward the Data Network (internet, IMS), N9 is GTP-U between UPFs and N11 is the SBI (Service Based Interface) between AMF and SMF. Keep the rule: N2 is control, N3 is data, N4 configures the N3 tunnel."
+    },
+    {
+      "t": "NG-RAN, gNB and the CU/DU split (TS 38.401)",
+      "d": "NG-RAN is the set of radio nodes that connect the UE to the 5GC; the main node is the gNB (5G Node B), which speaks NR-Uu with the UE and NG (N2 and N3) with the core. The gNB can be monolithic or disaggregated into a gNB-CU (Central Unit, with RRC and PDCP, resource control, mobility and session, can live in the cloud) and a gNB-DU (Distributed Unit, with RLC, MAC and PHY, real-time processing close to the antenna). CU and DU connect through the F1 interface (F1-C and F1-U, TS 38.473); the CU can further split into CU-CP and CU-UP over E1, and neighboring gNBs use Xn for handover and dual connectivity."
+    },
+    {
+      "t": "Motivation for Open RAN and the role of the O-RAN Alliance",
+      "d": "The traditional RAN comes closed and coupled to the vendor (hardware, software and integration in a single package). Open RAN proposes to disaggregate and virtualize (vRAN) and to open interfaces so that vendors interoperate, which brings competition, operational flexibility and AI-driven automation in the control, which is where the RIC comes in. The O-RAN Alliance, founded in 2018 by operators and vendors, complements 3GPP rather than replacing it: 3GPP defines NG-RAN, 5GC, E1, F1, Xn, N2 and N3; O-RAN specifies Open Fronthaul, E2, A1, O1 and O2 through Working Groups (WG2/WG3 take care of the RICs, A1 and E2). The four principles are disaggregation (CU/DU/RU, split 7.2x), RICs with closed-loop control, virtualization (O-Cloud) and open interfaces."
+    },
+    {
+      "t": "SMO, Non-RT RIC and Near-RT RIC",
+      "d": "The SMO (Service Management and Orchestration) orchestrates services, manages O1 and O2 and takes care of FCAPS (fault, configuration, accounting, performance and security) and of the life cycle. Inside the SMO lives the Non-RT RIC, which hosts rApps, works in loops above 1 s and publishes policies and intents to the Near-RT RIC over A1. The Near-RT RIC runs outside the SMO, hosts xApps as microservices, speaks E2 with O-CU and O-DU in loops between 10 ms and 1 s and needs conflict mitigation when several xApps touch the same RAN object. In our P2, FlexRIC plays the Near-RT RIC role and the A1 service simulates the Non-RT RIC."
+    },
+    {
+      "t": "O-RAN interfaces: E2, A1, O1 and O2",
+      "d": "E2 connects the Near-RT RIC to the RAN nodes (O-CU, O-DU, O-eNB) for near-RT telemetry and control: the E2AP protocol does setup, subscription, indication and control, and the E2SM service models define the content, such as KPM (measurements) and RC (RAN Control); the transport is SCTP, the same as NGAP on N2. A1 connects Non-RT RIC and Near-RT RIC for JSON policies, enrichment information and long-term guidance, via A1AP over REST/HTTP. O1 connects the SMO to the RAN elements for OAM and FCAPS with NETCONF/YANG (in the O-RAN SC figure you see O1 Adapter, SDNC/SDNR, VES Collector and Kafka). O2 connects the SMO to the O-Cloud to provision the virtualized infrastructure with Kubernetes or OpenStack."
+    },
+    {
+      "t": "Closed-loop control and time horizons",
+      "d": "The O-RAN closed loop is: observe over E2 or O1, decide in an xApp or rApp and act over E2 or A1. In one sentence: the RAN generates data, the RIC decides, the RAN receives the decision. The time horizon separates the controllers: the Near-RT RIC acts between 10 ms and 1 s (session management, load balancing, scheduling policy, slicing with CU and MAC KPMs) and the Non-RT RIC above 1 s up to hours (policies, models, planning with infrastructure KPMs). Real-time loops below 10 ms (beamforming, per-TTI scheduling) and below 1 ms (modulation, I/Q samples) stay inside the gNB and are not covered by O-RAN. Remember: A1 defines what to pursue, E2 executes how to react."
+    },
+    {
+      "t": "AI/ML workflow in O-RAN",
+      "d": "O-RAN describes six phases: data collection and processing, offline training, validation and publication, deployment (xApp/rApp image or artifact via O1), execution/inference and continuous operations (monitor drift, retrain, roll back). The data comes from KPM KPIs over E2, alarms and PM over O1 and policy context over A1, aggregated in the operator's data lakes. Training is almost always offline for cost and stability, validation includes regression against key KPIs and the versioned catalogue prevents ghost models in the field. Online inference has to respect the latency of the loop it runs in. The choice of algorithm follows data, latency, risk and governance, not the model of the moment."
+    },
+    {
+      "t": "Open5GS + UERANSIM lab: Docker topology and N1/N2/N3",
+      "d": "The professor's lab brings up the core (SBI on 10.10.0.0/16) and UERANSIM on separate Docker networks: N2 on 10.20.0.0/16 (AMF and gNB, NGAP over SCTP port 38412), N3 on 10.30.0.0/16 (gNB and UPF, GTP-U UDP 2152), N4 on 10.40.0.0/16 (PFCP), N6 on 10.50.0.0/16 and the UE subnet 10.60.0.0/16 on the uesimtun0 interface. The core always comes up before UERANSIM because the networks are shared. On N2 the gNB opens the SCTP association and sends an NGSetupRequest with PLMN, TAC and slices; the AMF replies with NGSetupResponse and the log shows NG Setup procedure is successful. Then come Initial UE Message, Registration and PDU Session, always NGAP carrying NAS. The ping -I uesimtun0 8.8.8.8 proves the UE, UPF and N6 path."
+    },
+    {
+      "t": "gnb.yaml and ue.yaml: fields and coherence checklist",
+      "d": "In gnb.yaml, mcc and mnc form the cell's PLMN, tac is the Tracking Area Code, nci and idLength identify the cell in the NG Setup, linkIp and ngapIp are the SCTP bind for N2, gtpIp is the GTP-U bind for N3, amfConfigs points to the AMF (10.20.0.11:38412) and slices defines the SST. In ue.yaml, supi is the IMSI, key and op are the 5G-AKA credentials that must match the UDM, gnbSearchList must equal the gNB's ngapIp, sessions defines the DNN (internet) and slice of the PDU Session, and ciphering EA0 turns off NAS encryption (fine for a demo, never for production). The checklist before up_ran.sh: core Up with core_net-n2 and core_net-n3, PLMN 001/01 identical in gNB, UE and subscriber, gnbSearchList equal to ngapIp, DNN internet in the UE and in the Open5GS profile, SST 1 in gNB and UE; in the logs, NG Setup OK, UE REGISTERED and an IP on uesimtun0."
+    },
+    {
+      "t": "Troubleshooting and lab limitations",
+      "d": "Symptom and probable cause: network core_net-n2 not found means the core was not started; NG Setup failing or slice-not-supported points to PLMN, TAC or SST diverging between gnb.yaml and the AMF; a UE without an IP is a subscriber missing in MongoDB/WebUI; registered but ping fails tells you to look at the UPF, PFCP and the N6 route. The limitations are clear: simulated Uu with gNB and UE in the same container, no O-RU or O-DU; no E2, Near-RT RIC or xApps (only 3GPP N2/N3); no Open Fronthaul; few UEs; relaxed security; and a fragile dependence on start-up order and fixed IPs in Docker. It is exactly this E2 and RIC gap that the OAI + FlexRIC stack of Project 2 comes to fill."
+    }
+  ],
+  "formulas": [
+    {
+      "nome": "Near-RT RIC loop",
+      "expr": "10 ms < T_loop < 1 s",
+      "vars": "T_loop: period of the control loop between observing via E2 and acting via E2",
+      "unidade": "ms to s",
+      "quando": "Sizing xApps (KPM, RC, load balancing, scheduling policy, slicing); in P2 it is the FlexRIC and xApp cycle"
+    },
+    {
+      "nome": "Non-RT RIC loop",
+      "expr": "T_loop > 1 s (up to hours)",
+      "vars": "T_loop: period of the loop of policies and models published via A1 by rApps",
+      "unidade": "s to h",
+      "quando": "Policies, planning and ML training in the SMO; in P2 it is the A1 service"
+    },
+    {
+      "nome": "Real-time loops (outside the O-RAN scope)",
+      "expr": "T_loop < 10 ms (MAC/PHY) and T_loop < 1 ms (I/Q samples)",
+      "vars": "T_loop: period of the scheduling, beamforming and modulation decisions inside the gNB",
+      "unidade": "ms",
+      "quando": "Remember that the RIC does not control per-TTI decisions; those stay in the DU/RU"
+    },
+    {
+      "nome": "The O-RAN closed loop in one sentence",
+      "expr": "RAN → (data via E2/O1) → RIC → (decision via E2/A1) → RAN",
+      "vars": "Observability, intelligence (xApp or rApp) and action",
+      "unidade": "",
+      "quando": "Whenever you need to explain what an xApp does end to end"
+    },
+    {
+      "nome": "P1 lab ports",
+      "expr": "N2: SCTP 38412 (NGAP); N3: UDP 2152 (GTP-U, one TEID per PDU Session)",
+      "vars": "TEID: Tunnel Endpoint Identifier of the GTP-U tunnel",
+      "unidade": "port",
+      "quando": "Filtering captures: tcpdump -i any 'sctp and port 38412' and udp.port == 2152 in Wireshark"
+    }
+  ],
+  "onde": {
+    "scene": "reg",
+    "texto": "In P1, the UERANSIM gNB completes the NG Setup on N2 with the Open5GS AMF, the UE registers via NAS (N1) with AUSF and UDM, and the SMF programs the N3 GTP-U tunnel in the UPF via PFCP (N4)."
+  },
+  "exercicios": [
+    "status",
+    "test-system-status",
+    "test-ng-setup",
+    "test-registration",
+    "test-config-coherence",
+    "test-ue-connection",
+    "test-throughput"
+  ],
+  "quiz": [
+    {
+      "q": "Which interface and which protocol carry the NGSetupRequest from the gNB to the AMF, and on which port does it show up in the lab?",
+      "a": "Interface N2, protocol NGAP over SCTP, port 38412 of the AMF (10.20.0.11 in the lab). The success log line is NG Setup procedure is successful."
+    },
+    {
+      "q": "Who programs the N3 GTP-U tunnel in the UPF, over which interface and with which protocol? Why does that explain the case where N2 is OK but the ping fails?",
+      "a": "The SMF, over N4, using PFCP, after being triggered by the AMF via N11. If registration passed but the ping fails, the N2 signaling is fine and the problem is in the user plane: PFCP rules in the UPF, the session's DNN/APN or the exit route on N6."
+    },
+    {
+      "q": "Differentiate Near-RT RIC and Non-RT RIC by time horizon, by the interface each one uses and by the type of application it hosts.",
+      "a": "The Near-RT RIC acts between 10 ms and 1 s, speaks E2 (E2AP + E2SM such as KPM and RC) with O-CU/O-DU and hosts xApps. The Non-RT RIC acts above 1 s, lives in the SMO, speaks A1 with the Near-RT RIC and hosts rApps for policies, intent and long-term ML. A1 defines what to pursue; E2 executes how to react."
+    }
+  ],
+  "fontes": "Pages 1-95 read; teaching content extracted mainly from 15-53 (mobile networks, 5GC, NG-RAN, O-RAN, RIC), 55-70 (A1, E2, O1, O2, closed loop, AI/ML) and 73-91 (Open5GS/UERANSIM lab, gnb.yaml, ue.yaml, troubleshooting, limitations, assessment)."
+}

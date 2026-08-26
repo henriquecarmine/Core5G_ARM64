@@ -8,13 +8,35 @@
 (function () {
   'use strict';
   var CSS = [
-    '.mm-box{margin:6px 0;border:1px solid #2c3038;border-radius:8px;background:#0d0e11;overflow:hidden}',
-    '.mm-head{display:flex;align-items:center;gap:6px;padding:3px 10px;font:10px -apple-system,sans-serif;color:#8a8f98;cursor:pointer}',
+    '.mm-box{margin:6px 0;border:1px solid #2c3038;border-radius:8px;background:#0d0e11;overflow:hidden;flex:0 0 auto}',
+    '.mm-head{display:flex;align-items:center;gap:6px;padding:3px 10px;font:10px -apple-system,sans-serif;color:#8a8f98;cursor:pointer;user-select:none}',
     '.mm-head b{color:#f59f00}',
+    '.mm-head .mm-ct{flex:1 1 auto;min-width:0}',
+    '.mm-head .mm-btn{flex:none;border:1px solid #2c3038;border-radius:5px;padding:0 6px;line-height:16px;font-size:11px;color:#8a8f98}',
+    '.mm-head .mm-btn:hover{color:#ffb84d;border-color:#8a5a1a}',
+    /* O mapa não pode engolir o console: o que se lê durante o teste é o log.
+       Por padrão ele entra como JANELA do mapa (escala cheia, legível) já
+       rolada até os nós acesos; ⤢ abre o mapa inteiro (aí a coluna do console
+       é que rola) e ▾ esconde, deixando só o cabeçalho. */
+    '.mm-box .mm-vp{overflow:auto;max-height:min(30vh,260px);overscroll-behavior:contain}',
+    '.mm-box.full .mm-vp{max-height:none;overflow:visible}',
     '.mm-box svg{display:block;width:100%;height:auto}',
-    '.mm-box.closed svg{display:none}',
+    '.mm-box.closed .mm-vp{display:none}',
   ].join('\n');
   var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
+
+  // tamanho do mapa: janela (padrão) | real | só o cabeçalho. A escolha do
+  // professor fica no navegador — não volta ao padrão a cada teste.
+  var VIEW_KEY = 'c5g-minimap-view', view = 'mini';
+  try { var _v = localStorage.getItem(VIEW_KEY); if (_v === 'mini' || _v === 'full' || _v === 'closed') view = _v; } catch (e) {}
+  function applyView(host) {
+    host.classList.toggle('closed', view === 'closed');
+    host.classList.toggle('full', view === 'full');
+    var z = host.querySelector('.mm-zoom'), c = host.querySelector('.mm-caret');
+    if (z) { z.textContent = view === 'full' ? '\u2921' : '\u2922'; z.title = view === 'full' ? 'ver em miniatura' : 'ver o mapa em tamanho real'; }
+    if (c) { c.textContent = view === 'closed' ? '\u25b8' : '\u25be'; }
+  }
+  function setView(host, v) { view = v; try { localStorage.setItem(VIEW_KEY, v); } catch (e) {} applyView(host); }
 
   // cena → projeto + nós acesos + fluxos (sentido do dado) no mapa real.
   // Fluxo = [origem, destino, rótulo?]; sem rótulo, usa o iface do link do mapa.
@@ -140,12 +162,31 @@
       s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" ' + FONT + ' font-size="' + (on ? 18 : 15) + '" font-weight="' + (on ? 700 : 500) + '" fill="' + (on ? '#ffb84d' : g ? '#d0a75c' : '#9aa1ab') + '">' + esc(n.label || n.id) + '</text>';
     });
     s += lbl + '</svg>';
-    host.innerHTML = '<div class="mm-head"><b>◉</b> onde está rodando — mapa do projeto (' + mm.proj.toUpperCase() + ') · setas = sentido dos dados'
+    host.classList.add('mm-box');
+    host.innerHTML = '<div class="mm-head"><b>◉</b><span class="mm-ct">onde está rodando — mapa do projeto (' + mm.proj.toUpperCase() + ') · setas = sentido dos dados'
       + (mm.ghost ? ' · <span style="color:#8a6d1f">⇢ tracejado = de onde o dado veio</span>' : '')
       + (mm.note ? ' · <span style="color:#c9974d">' + mm.note + '</span>' : '')
-      + ' <span style="margin-left:auto">▾</span></div>' + s;
-    host.querySelector('.mm-head').onclick = function () { host.classList.toggle('closed'); };
+      + '</span><span class="mm-btn mm-zoom"></span><span class="mm-btn mm-caret"></span></div>'
+      + '<div class="mm-vp">' + s + '</div>';
+    host.querySelector('.mm-head').onclick = function () { setView(host, view === 'closed' ? 'mini' : 'closed'); };
+    host.querySelector('.mm-zoom').onclick = function (ev) {
+      ev.stopPropagation();
+      setView(host, view === 'full' ? 'mini' : 'full');
+    };
+    applyView(host);
     host.style.display = 'block';
+    centerOnLit(host, mm, byId, H);
+  }
+
+  // Na janela o mapa fica em escala cheia e só uma faixa dele aparece: rolamos
+  // até a faixa dos componentes acesos — os que o teste usa de verdade.
+  function centerOnLit(host, mm, byId, H) {
+    var vp = host.querySelector('.mm-vp'); if (!vp) return;
+    var ys = mm.nodes.map(function (id) { return byId[id]; }).filter(Boolean).map(function (n) { return n.y + 33; });
+    if (!ys.length) return;
+    var cy = (Math.min.apply(0, ys) + Math.max.apply(0, ys)) / 2;
+    var full = vp.scrollHeight; if (!full) return;
+    vp.scrollTop = Math.max(0, cy / H * full - vp.clientHeight / 2);
   }
 
   function show(name, host, live) {

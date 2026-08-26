@@ -288,7 +288,9 @@
   .ll-btn:hover { background:rgba(77,171,247,.26); }
 
   /* Console */
-  #console-wrap { display:flex; flex-direction:column; min-height:0; }
+  /* a COLUNA rola quando o mapa é aberto em tamanho real; o log (#output) tem
+     piso próprio para nunca virar uma linha ilegível no rodapé. */
+  #console-wrap { display:flex; flex-direction:column; min-height:0; overflow-y:auto; }
   #console-toolbar { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
   #status-pill { font-size:12px; padding:3px 10px; border-radius:12px; background:var(--btn-bg2); color:var(--muted); }
   #status-pill.running { background:var(--warn-bg); color:var(--warn-fg); }
@@ -306,7 +308,7 @@
   #clear-btn { color:var(--ok-fg); background:rgba(105,219,124,.12); border-color:rgba(105,219,124,.42); }
   #clear-btn:hover { background:rgba(105,219,124,.24); border-color:rgba(105,219,124,.64); }
   /* consoles/terminais ficam escuros nos dois temas (identidade + colorização JS dos logs) */
-  #output { flex:1; background:var(--term-bg); border:1px solid var(--border); border-radius:6px; padding:12px; overflow-y:auto; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px; white-space:pre-wrap; line-height:1.5; color:#e6e6e6; }
+  #output { flex:1; min-height:200px; background:var(--term-bg); border:1px solid var(--border); border-radius:6px; padding:12px; overflow-y:auto; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px; white-space:pre-wrap; line-height:1.5; color:#e6e6e6; }
   /* .run-header vive dentro de consoles escuros (dois temas): cores fixas */
   .run-header { display:flex; align-items:center; gap:8px; margin:14px 0 6px; padding-top:10px; border-top:1px dashed #2c3038; color:#8a8f98; font-size:11px; }
   .run-header:first-child { margin-top:0; padding-top:0; border-top:none; }
@@ -1013,7 +1015,7 @@
 <script src="../i18n.js"></script>
 <script src="/static/ops/flow-strip.js?v=0.64.0"></script>
 <script src="/static/ops/energy.js?v=0.61.3"></script>
-<script src="/static/ops/mini-map.js?v=0.64.0"></script>
+<script src="/static/ops/mini-map.js?v=0.64.3"></script>
 <script>
 // Robustez file:// (smoke do CI): sem os módulos /static/, viram no-ops —
 // a página (i18n, topbar, console) segue funcional.

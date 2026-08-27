@@ -27,18 +27,14 @@
     '.mm-box.closed .mm-vp{display:none}',
 
     /* ---- janela do console ---- */
-    '.mm-float{display:none;position:fixed;z-index:150;right:18px;bottom:46px;width:min(460px,44vw);',
-    '  background:#0d0e11;border:1px solid #3a3f48;border-radius:10px;overflow:hidden;',
-    '  box-shadow:0 12px 34px rgba(0,0,0,.55)}',
+    /* A janela abre À PARTE, sobre a tela, e some ao fechar: nao rouba faixa do
+       console nem divide atencao com o resultado do teste. */
+    '.mm-float{display:none;position:fixed;z-index:150;left:50%;transform:translateX(-50%);top:8vh;',
+    '  width:min(1180px,92vw);background:#0d0e11;border:1px solid #3a3f48;border-radius:10px;overflow:hidden;',
+    '  box-shadow:0 18px 50px rgba(0,0,0,.6)}',
     '.mm-float.open{display:block}',
-    '.mm-float .mm-head{cursor:default;padding:6px 10px;border-bottom:1px solid #2c3038;background:#12141a}',
-    '.mm-float .mm-vp{overflow:auto;max-height:min(62vh,560px);overscroll-behavior:contain}',
-    /* Reduzida, a janela NAO tapa o texto: o console reserva a faixa da direita
-       (padding), entao o log reflui e continua inteiro. Em tela estreita nao ha
-       faixa para reservar — ai ela sobrepoe mesmo, e o botao fecha. */
-    '@media (min-width:1120px){ body.mm-docked #console-wrap{padding-right:calc(min(460px,44vw) + 30px)} }',
-    '.mm-float.big{right:50%;transform:translateX(50%);bottom:6vh;width:min(1180px,92vw)}',
-    '.mm-float.big .mm-vp{max-height:76vh}',
+    '.mm-float .mm-head{cursor:default;padding:7px 12px;border-bottom:1px solid #2c3038;background:#12141a}',
+    '.mm-float .mm-vp{overflow:auto;max-height:76vh;overscroll-behavior:contain}',
     '.mm-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:149}',
     '.mm-backdrop.on{display:block}',
     /* aviso no botao do console enquanto um teste corre */
@@ -62,34 +58,29 @@
 
   // A JANELA do console: aberta/fechada e reduzida/expandida, lembradas no
   // navegador. Fechada por padrao — quem manda na tela e o resultado do teste.
-  var WIN_KEY = 'c5g-minimap-win', win = { open: false, big: false };
+  var WIN_KEY = 'c5g-minimap-win', win = { open: false };
   try { var _w = JSON.parse(localStorage.getItem(WIN_KEY) || 'null'); if (_w) win = _w; } catch (e) {}
   var backdrop = null, floatHost = null;
   function winSave() { try { localStorage.setItem(WIN_KEY, JSON.stringify(win)); } catch (e) {} }
   function winApply() {
     if (!floatHost) return;
     floatHost.classList.toggle('open', !!win.open);
-    floatHost.classList.toggle('big', !!(win.open && win.big));
     if (!backdrop) {
       backdrop = document.createElement('div'); backdrop.className = 'mm-backdrop';
-      backdrop.onclick = function () { win.big = false; winSave(); winApply(); };
+      backdrop.onclick = function () { winSet(false); };   // clicar fora fecha
       document.body.appendChild(backdrop);
     }
-    backdrop.classList.toggle('on', !!(win.open && win.big));
-    document.body.classList.toggle('mm-docked', !!(win.open && !win.big));
+    backdrop.classList.toggle('on', !!win.open);
     var b = document.getElementById('map-btn');
     if (b) b.classList.toggle('on', !!win.open);
-    var z = floatHost.querySelector('.mm-zoom');
-    if (z) { z.textContent = win.big ? '\u2921' : '\u2922'; z.title = win.big ? 'reduzir a janela' : 'expandir a janela'; }
   }
-  function winSet(open, big) {
-    win.open = open; if (big !== undefined) win.big = big;
+  function winSet(open) {
+    win.open = open;
     winSave(); winApply();
     if (open && floatHost && !floatHost.innerHTML) {
       floatHost.innerHTML = '<div class="mm-head"><b>\u25c9</b><span class="mm-ct">nenhum teste rodou ainda — o mapa acende quando um teste comeca</span>'
-        + '<span class="mm-btn mm-zoom"></span><span class="mm-btn mm-x" title="fechar">\u2715</span></div>';
+        + '<span class="mm-btn mm-x" title="fechar">\u2715</span></div>';
       floatHost.querySelector('.mm-x').onclick = function () { winSet(false); };
-      floatHost.querySelector('.mm-zoom').onclick = function () { winSet(true, !win.big); };
       winApply();
     }
   }
@@ -227,11 +218,10 @@
       + (mm.ghost ? ' · <span style="color:#8a6d1f">⇢ tracejado = de onde o dado veio</span>' : '')
       + (mm.note ? ' · <span style="color:#c9974d">' + mm.note + '</span>' : '');
     host.innerHTML = '<div class="mm-head"><b>◉</b><span class="mm-ct">' + titulo + '</span>'
-      + '<span class="mm-btn mm-zoom"></span>'
-      + (flutua ? '<span class="mm-btn mm-x" title="fechar">\u2715</span>' : '<span class="mm-btn mm-caret"></span>')
+      + (flutua ? '<span class="mm-btn mm-x" title="fechar">\u2715</span>'
+                : '<span class="mm-btn mm-zoom"></span><span class="mm-btn mm-caret"></span>')
       + '</div><div class="mm-vp">' + s + '</div>';
     if (flutua) {
-      host.querySelector('.mm-zoom').onclick = function () { winSet(true, !win.big); };
       host.querySelector('.mm-x').onclick = function () { winSet(false); };
       winApply();
     } else {

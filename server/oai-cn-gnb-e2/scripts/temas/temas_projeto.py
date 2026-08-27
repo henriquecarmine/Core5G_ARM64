@@ -270,12 +270,70 @@ def t1(d, th):
         a1_dryrun("ue-tp-prioridade", {"ueId": "ue-any", "qosId": "qos-lab"}, {"priorityLevel": 10},
                   "vazao baixa com radio cheio: usuario mal servido")
         ver = "vazao caiu com PRB alto: proposta de priorizacao em A1 (dry-run)"
+        ver_ui = ("A vaz\u00e3o CAIU com o r\u00e1dio cheio: h\u00e1 usu\u00e1rio mal servido. "
+                  "\u00c9 o caso que justifica propor prioriza\u00e7\u00e3o.")
     else:
         ok("regra NAO disparou: a vazao acompanha o PRB (radio cheio, vazao alta). Nada a priorizar.")
         ver = "a vazao acompanha o PRB dentro da fase; vazao x atraso ~0 dentro da fase"
+        ver_ui = ("A vaz\u00e3o acompanha o r\u00e1dio: quando o PRB sobe, a vaz\u00e3o sobe junto. "
+                  "R\u00e1dio cheio entregando \u00e9 capacidade em uso, n\u00e3o usu\u00e1rio mal servido.")
     kv("limitacoes", "1 run, poucos UEs (RFSIM); unidades por convencao KPM; media do recovery e puxada por picos (use mediana/p95)")
+
+    # ---- painel do UE: os mesmos numeros, prontos para desenhar na tela ----
+    # O professor pede "headline + 2 cartoes + 1 serie temporal". O calculo ja
+    # esta feito aqui; o navegador so desenha. Nada e recalculado do outro lado,
+    # entao a figura NAO pode divergir da tabela impressa acima.
+    base, carga = d.phases[0], (d.phases[1] if len(d.phases) > 1 else d.phases[0])
+    thp_carga, thp_base = median(d.col("thp", carga)), median(d.col("thp", base))
+    prb_carga, prb_base = mean(d.col("prb", carga)), mean(d.col("prb", base))
+    saturado = prb_carga >= 100 * th["prb_high"] / max(th["prb_max"], 1e-9)
+    # O texto do PAINEL vai ACENTUADO: ele e lido na tela, nao no terminal.
+    # (O resto do script segue sem acento, convencao do console; json.dumps com
+    # ensure_ascii mantem a linha transmitida em ASCII puro.)
+    painel = {
+        "tema": "t1", "grupo": "Grupo 6",
+        "titulo": "Painel do UE \u2014 vaz\u00e3o do usu\u00e1rio (UE-TP)",
+        "pergunta": "a vaz\u00e3o do UE sobe ou desce junto com o uso de PRB e com o atraso?",
+        "headline": ver_ui,
+        "coletado": {
+            "amostras": len(d.rows),
+            "fases": [{"nome": p, "n": d.n(p)} for p in d.phases],
+            "metricas": ["DRB.UEThpUl (kbps)", "RRU.PrbTotUl (%)", "DRB.RlcSduDelayDl (\u00b5s)"],
+            "origem": "gNB \u2192 E2SM-KPM \u2192 xApp \u2192 arquivo",
+        },
+        "cartoes": [
+            {"id": "Indicador 1", "titulo": "Vaz\u00e3o UL do usu\u00e1rio", "valor": round(thp_carga, 1), "unidade": "kbps",
+             "nota": f"mediana na fase \u2018{carga}\u2019", "ref": round(thp_base, 1), "ref_nota": f"mediana no {base}",
+             "estado": "ok" if thp_carga >= thp_base else "atencao",
+             "leitura": "a vaz\u00e3o SUBIU com a carga" if thp_carga >= thp_base else "a vaz\u00e3o CAIU com a carga",
+             "formula": "mediana(DRB.UEThpUl) por fase"},
+            {"id": "Indicador 2", "titulo": "Ocupa\u00e7\u00e3o do r\u00e1dio (PRB UL)", "valor": round(prb_carga, 1), "unidade": "%",
+             "nota": f"m\u00e9dia na fase \u2018{carga}\u2019", "ref": round(prb_base, 1), "ref_nota": f"m\u00e9dia no {base}",
+             "estado": "atencao" if saturado else "ok",
+             "leitura": "r\u00e1dio praticamente cheio" if saturado else "r\u00e1dio com folga",
+             "formula": "m\u00e9dia(RRU.PrbTotUl) por fase"},
+        ],
+        "serie": {
+            "titulo": "Vaz\u00e3o UL do usu\u00e1rio ao longo do experimento",
+            "unidade": "kbps",
+            "valores": [round(r["thp"], 2) for r in d.rows],
+            "fases": [r["phase"] for r in d.rows],
+        },
+        "decisao": {
+            "regra": f"vaz\u00e3o abaixo de {f1(th['thp_low'])} kbps E PRB acima de {f1(th['prb_high'])}%",
+            "disparou": fr > 0,
+            "acao": "propor prioriza\u00e7\u00e3o em pol\u00edtica A1 (dry-run)" if fr > 0 else "n\u00e3o aplicar pol\u00edtica",
+            "porque": (f"a regra disparou em {pct(fr)} das amostras: h\u00e1 usu\u00e1rio mal servido"
+                       if fr > 0 else
+                       "a vaz\u00e3o acompanha o PRB \u2014 o r\u00e1dio encheu porque o usu\u00e1rio estava usando, e a rede entregou"),
+            "confianca": f"1 execu\u00e7\u00e3o, {len(d.rows)} amostras, 1 UE em simula\u00e7\u00e3o (RFSIM)",
+        },
+        "limites": ["sem RSRP/SINR/CQI no artefato: nada sobre cobertura",
+                    "sem MOS: nada sobre a experi\u00eancia real do usu\u00e1rio",
+                    "1 UE e 1 execu\u00e7\u00e3o: n\u00e3o h\u00e1 estat\u00edstica de c\u00e9lula"],
+    }
     return {"I1": f"media/p95 por fase (stress: {f1(mean(d.col('thp', d.phases[min(1, len(d.phases)-1)])))} kbps)",
-            "I2": f"PRB medio por fase", "veredito": ver}
+            "I2": f"PRB medio por fase", "veredito": ver, "painel": painel}
 
 
 # =============================================================================
@@ -529,6 +587,12 @@ def main():
         section("Os 7 temas lado a lado (mesmos dados, perguntas diferentes)")
         table(["tema", "indicador 1", "indicador 2", "veredito"],
               [[f"T{t[1]} {TITULOS[t]}", r["I1"], r["I2"], r["veredito"]] for t, r in res.items()], right=False)
+    # Linha lida pelo painel (o console esconde): o desenho sai DESTES numeros,
+    # os mesmos que acabaram de ser impressos.
+    for t in sel:
+        pn = res[t].get("painel")
+        if pn:
+            print("#PAINEL " + json.dumps(pn, ensure_ascii=True))
     ult = res[sel[-1]]["veredito"] if len(sel) == 1 else f"{len(sel)} temas calculados sobre {len(rows)} amostras"
     print(f"\n{DIM}Veredito:{RST} {ult}")
     return 0

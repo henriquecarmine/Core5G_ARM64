@@ -316,6 +316,59 @@
   .explain li { font-size:12.5px; line-height:1.55; color:#e6e6e6; margin-bottom:4px; }
   .explain li b { color:#74c0fc; }
   .explain .ex-concl { font-size:12.5px; line-height:1.5; color:#69db7c; margin-top:8px; padding-top:8px; border-top:1px solid rgba(77,171,247,.25); }
+  /* ===== Painel do UE: a resposta em forma de tela =====
+     "headline + 2 cartoes + 1 serie temporal" (material do professor), mais o
+     caminho do dado: coletado -> tratado -> resultado -> acao. Vive dentro do
+     console escuro, entao usa paleta FIXA. A cor da serie (#3987e5) foi
+     validada contra este fundo (#0d0e11): banda de luminancia, croma e contraste.
+     Uma serie so: sem legenda (o titulo nomeia) e sem eixo duplo — o PRB e
+     cartao, nao um segundo eixo. */
+  /* O console e pre-wrap (log e texto formatado por espaco). O painel e HTML:
+     sem isto, cada quebra de linha do template viraria espaco em branco na tela. */
+  .uep, .uep * { white-space:normal; }
+  .uep { --uep-serie:#3987e5; --uep-ink:#e6e6e6; --uep-ink2:#9aa4b2; --uep-line:#2c3038;
+         border:1px solid #2f3540; border-radius:10px; background:#12141a; padding:13px 15px; margin:12px 0 6px;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  .uep-tag { display:inline-block; font-size:9px; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+             color:#ffb84d; border:1px solid #8a5a1a; border-radius:20px; padding:2px 9px; }
+  .uep h3 { margin:8px 0 2px; font-size:15px; color:var(--uep-ink); font-weight:600; }
+  .uep .uep-q { margin:0 0 10px; font-size:11.5px; color:var(--uep-ink2); }
+  .uep-headline { font-size:14px; line-height:1.5; color:var(--uep-ink); background:rgba(57,135,229,.10);
+                  border-left:3px solid var(--uep-serie); border-radius:8px; padding:10px 13px; margin-bottom:12px; }
+  .uep-grid { display:grid; grid-template-columns:minmax(150px,1fr) minmax(150px,1fr) minmax(280px,2.4fr); gap:11px; align-items:start; }
+  @media (max-width:900px) { .uep-grid { grid-template-columns:1fr; } }
+  .uep-card { border:1px solid var(--uep-line); border-radius:9px; background:#0d0e11; padding:10px 12px; min-width:0; }
+  .uep-card .c-id { font-size:9px; font-weight:700; letter-spacing:.12em; color:var(--uep-ink2); text-transform:uppercase; }
+  .uep-card .c-t { font-size:11.5px; color:var(--uep-ink2); margin-top:2px; }
+  .uep-card .c-v { font-size:24px; font-weight:700; color:var(--uep-ink); font-family:var(--mono); line-height:1.2; margin-top:6px; }
+  .uep-card .c-v i { font-size:12px; font-weight:400; color:var(--uep-ink2); font-style:normal; margin-left:3px; }
+  .uep-card .c-n { font-size:11px; color:var(--uep-ink2); margin-top:2px; }
+  .uep-card .c-ref { font-size:11px; color:var(--uep-ink2); margin-top:7px; padding-top:7px; border-top:1px solid var(--uep-line); }
+  .uep-card .c-ref b { color:var(--uep-ink); font-family:var(--mono); }
+  /* estado NUNCA por cor sozinha: vem sempre com a palavra ao lado */
+  .uep-card .c-st { display:inline-flex; align-items:center; gap:5px; font-size:11px; margin-top:7px; }
+  .uep-card .c-st .dot { width:7px; height:7px; border-radius:50%; flex:none; }
+  .uep-card .c-st.ok .dot { background:#69db7c; } .uep-card .c-st.ok { color:#69db7c; }
+  .uep-card .c-st.atencao .dot { background:#ffb84d; } .uep-card .c-st.atencao { color:#ffb84d; }
+  .uep-card .c-f { font-size:10.5px; color:#6a7180; margin-top:7px; font-family:var(--mono); word-break:break-word; }
+  .uep-chart { border:1px solid var(--uep-line); border-radius:9px; background:#0d0e11; padding:9px 11px 4px; min-width:0; position:relative; }
+  .uep-chart .ch-t { font-size:11.5px; color:var(--uep-ink); }
+  .uep-chart .ch-u { font-size:10.5px; color:var(--uep-ink2); }
+  .uep-chart svg { display:block; width:100%; height:auto; margin-top:4px; }
+  .uep-tip { position:absolute; z-index:5; pointer-events:none; display:none; background:#1c2028; border:1px solid #3a3f48;
+             border-radius:7px; padding:6px 9px; font-size:11px; color:var(--uep-ink); white-space:nowrap;
+             box-shadow:0 6px 18px rgba(0,0,0,.5); }
+  .uep-tip b { font-family:var(--mono); }
+  .uep-flow { display:grid; grid-template-columns:repeat(4,1fr); gap:11px; margin-top:12px; align-items:start; }
+  @media (max-width:900px) { .uep-flow { grid-template-columns:1fr 1fr; } }
+  .uep-step { border-top:2px solid var(--uep-line); padding-top:7px; min-width:0; }
+  .uep-step.acao { border-top-color:#ffb84d; }
+  .uep-step .s-k { font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--uep-ink2); }
+  .uep-step .s-v { font-size:12px; line-height:1.5; color:var(--uep-ink); margin-top:4px; }
+  .uep-step .s-s { font-size:11px; line-height:1.45; color:var(--uep-ink2); margin-top:4px; }
+  .uep-lim { font-size:11px; color:var(--uep-ink2); margin-top:11px; padding-top:9px; border-top:1px solid var(--uep-line); line-height:1.5; }
+  .uep-lim b { color:#ffb84d; font-weight:600; }
+
   /* Atalhos "ver logs" no fim de testes que produzem logs (também dentro do console) */
   .log-links { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin:8px 0 4px; padding:8px 11px;
                background:rgba(77,171,247,.06); border:1px dashed rgba(77,171,247,.38); border-radius:8px; }
@@ -1527,7 +1580,151 @@ async function loadVersion() {
 }
 
 // ===== Console principal =====
+
+// ===== Painel do UE: desenha a resposta =====
+// Os numeros vem PRONTOS do script (linha "#PAINEL {json}"): o navegador nao
+// recalcula nada, entao a figura nunca diverge da tabela impressa no console.
+function uepFmt(v) {
+  if (v == null || isNaN(v)) return '—';
+  return Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+}
+
+// Uma serie, eixo unico, marcas finas, rotulo so no ponto que conta.
+function uepChart(serie) {
+  const v = serie.valores, n = v.length;
+  const W = 900, H = 210, ML = 62, MR = 14, MT = 12, MB = 26;   // area util
+  const x = i => ML + (n < 2 ? 0 : i * (W - ML - MR) / (n - 1));
+  const max = Math.max(...v, 1), y = val => MT + (1 - val / max) * (H - MT - MB);
+
+  // bandas das fases: contexto, em cinza — cor fica reservada para o dado
+  let bandas = '', rotulos = '', ini = 0;
+  for (let i = 1; i <= n; i++) {
+    if (i === n || serie.fases[i] !== serie.fases[ini]) {
+      const x0 = x(ini), x1 = x(i - 1), meio = (x0 + x1) / 2;
+      const alt = (ini / Math.max(1, n)) * 0;   // sem alternancia: so a divisa
+      bandas += `<rect x="${x0.toFixed(1)}" y="${MT}" width="${(x1 - x0).toFixed(1)}" height="${H - MT - MB}" `
+             + `fill="#ffffff" opacity="${ini === 0 ? 0.012 : 0.028}"/>`;
+      if (ini > 0) bandas += `<line x1="${x0.toFixed(1)}" y1="${MT}" x2="${x0.toFixed(1)}" y2="${H - MB}" stroke="#3a4048" stroke-width="1" stroke-dasharray="3 3"/>`;
+      rotulos += `<text x="${meio.toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#9aa4b2">${escHtml(serie.fases[ini])}</text>`;
+      ini = i;
+    }
+  }
+  // grade discreta + eixo Y com 3 marcas
+  let grade = '';
+  for (let k = 0; k <= 2; k++) {
+    const val = max * k / 2, yy = y(val);
+    grade += `<line x1="${ML}" y1="${yy.toFixed(1)}" x2="${W - MR}" y2="${yy.toFixed(1)}" stroke="#2c3038" stroke-width="1"/>`
+          +  `<text x="${ML - 8}" y="${(yy + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#9aa4b2">${uepFmt(val)}</text>`;
+  }
+  const d = v.map((val, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(val).toFixed(1)}`).join(' ');
+  // rotulo direto SO no pico: e ele que explica media x mediana
+  const iMax = v.indexOf(Math.max(...v));
+  const alvo = { x: x(iMax), y: y(v[iMax]) };
+  const anc = alvo.x > W * 0.75 ? 'end' : 'start';
+  const pico = `<circle cx="${alvo.x.toFixed(1)}" cy="${alvo.y.toFixed(1)}" r="4" fill="#3987e5" stroke="#0d0e11" stroke-width="2"/>`
+    + `<text x="${(alvo.x + (anc === 'end' ? -8 : 8)).toFixed(1)}" y="${(alvo.y + 4).toFixed(1)}" text-anchor="${anc}" font-size="11" fill="#e6e6e6">pico ${uepFmt(v[iMax])}</text>`;
+  return { W, H, ML, MR, MT, MB, n, max,
+    svg: `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escHtml(serie.titulo)}">`
+       + bandas + grade
+       + `<path d="${d}" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`
+       + pico + rotulos
+       + `<line class="uep-cross" x1="0" y1="${MT}" x2="0" y2="${H - MB}" stroke="#9aa4b2" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>`
+       + `<circle class="uep-dot" r="4.5" fill="#3987e5" stroke="#0d0e11" stroke-width="2" opacity="0"/>`
+       + `</svg>` };
+}
+
+function renderPainelUE(p) {
+  const div = document.createElement('div');
+  div.className = 'uep';
+  const ch = uepChart(p.serie);
+  const cards = p.cartoes.map(c => `
+    <div class="uep-card">
+      <div class="c-id">${escHtml(c.id)}</div>
+      <div class="c-t">${escHtml(c.titulo)}</div>
+      <div class="c-v">${uepFmt(c.valor)}<i>${escHtml(c.unidade)}</i></div>
+      <div class="c-n">${escHtml(c.nota)}</div>
+      <div class="c-st ${c.estado === 'ok' ? 'ok' : 'atencao'}"><span class="dot"></span>${escHtml(c.leitura)}</div>
+      <div class="c-ref">no repouso: <b>${uepFmt(c.ref)}</b> ${escHtml(c.unidade)}<br><span style="opacity:.75">${escHtml(c.ref_nota)}</span></div>
+      <div class="c-f">${escHtml(c.formula)}</div>
+    </div>`).join('');
+  const fases = p.coletado.fases.map(f => `${escHtml(f.nome)} (${f.n})`).join(' · ');
+  div.innerHTML = `
+    <span class="uep-tag">${escHtml(p.grupo)} · painel do UE</span>
+    <h3>${escHtml(p.titulo)}</h3>
+    <p class="uep-q">pergunta do card: ${escHtml(p.pergunta)}</p>
+    <div class="uep-headline">${escHtml(p.headline)}</div>
+    <div class="uep-grid">
+      ${cards}
+      <div class="uep-chart">
+        <div class="ch-t">${escHtml(p.serie.titulo)} <span class="ch-u">— ${escHtml(p.serie.unidade)}, uma linha por medição</span></div>
+        ${ch.svg}
+        <div class="uep-tip"></div>
+      </div>
+    </div>
+    <div class="uep-flow">
+      <div class="uep-step">
+        <div class="s-k">1 · coletado</div>
+        <div class="s-v">${p.coletado.amostras} medições · ${escHtml(fases)}</div>
+        <div class="s-s">${escHtml(p.coletado.origem)}</div>
+      </div>
+      <div class="uep-step">
+        <div class="s-k">2 · tratado</div>
+        <div class="s-v">${p.cartoes.length} indicadores por fase</div>
+        <div class="s-s">${p.cartoes.map(c => escHtml(c.formula)).join('<br>')}</div>
+      </div>
+      <div class="uep-step">
+        <div class="s-k">3 · resultado</div>
+        <div class="s-v">${escHtml(p.decisao.porque)}</div>
+        <div class="s-s">regra avaliada: ${escHtml(p.decisao.regra)}</div>
+      </div>
+      <div class="uep-step acao">
+        <div class="s-k">4 · ação</div>
+        <div class="s-v">${escHtml(p.decisao.acao)}</div>
+        <div class="s-s">confiança: ${escHtml(p.decisao.confianca)}</div>
+      </div>
+    </div>
+    <div class="uep-lim"><b>o que estes dados não permitem dizer:</b> ${p.limites.map(escHtml).join(' · ')}</div>`;
+  output.appendChild(div);
+  uepHover(div, p.serie, ch);
+  output.scrollTop = output.scrollHeight;
+}
+
+// Camada de hover: a linha do tempo responde ao mouse (o professor pediu
+// explicação no mouse; num gráfico é o que transforma a curva em número).
+function uepHover(root, serie, ch) {
+  const svg = root.querySelector('svg'), tip = root.querySelector('.uep-tip');
+  const cross = svg.querySelector('.uep-cross'), dot = svg.querySelector('.uep-dot');
+  const box = root.querySelector('.uep-chart');
+  const mostra = (ev) => {
+    const r = svg.getBoundingClientRect();
+    const px = (ev.clientX - r.left) / r.width * ch.W;               // px -> viewBox
+    const util = ch.W - ch.ML - ch.MR;
+    let i = Math.round((px - ch.ML) / (util || 1) * (ch.n - 1));
+    i = Math.max(0, Math.min(ch.n - 1, i));
+    const vx = ch.ML + (ch.n < 2 ? 0 : i * util / (ch.n - 1));
+    const vy = ch.MT + (1 - serie.valores[i] / ch.max) * (ch.H - ch.MT - ch.MB);
+    cross.setAttribute('x1', vx); cross.setAttribute('x2', vx); cross.setAttribute('opacity', '.5');
+    dot.setAttribute('cx', vx); dot.setAttribute('cy', vy); dot.setAttribute('opacity', '1');
+    tip.innerHTML = `medição <b>${i + 1}</b> de ${ch.n} · fase <b>${escHtml(serie.fases[i])}</b><br>`
+                  + `${escHtml(serie.titulo.toLowerCase())}: <b>${uepFmt(serie.valores[i])}</b> ${escHtml(serie.unidade)}`;
+    tip.style.display = 'block';
+    const bx = box.getBoundingClientRect();
+    const left = Math.min(Math.max(ev.clientX - bx.left + 12, 6), bx.width - tip.offsetWidth - 6);
+    tip.style.left = left + 'px';
+    tip.style.top = (ev.clientY - bx.top + 14) + 'px';
+  };
+  svg.addEventListener('mousemove', mostra);
+  svg.addEventListener('mouseleave', () => {
+    tip.style.display = 'none'; cross.setAttribute('opacity', '0'); dot.setAttribute('opacity', '0');
+  });
+}
+
 function appendLine(line) {
+  // "#PAINEL {json}" nao e log: e a resposta em forma de tela.
+  if (line.startsWith('#PAINEL ')) {
+    try { renderPainelUE(JSON.parse(line.slice(8))); return; }
+    catch (e) { /* JSON quebrado: cai no fluxo normal e a linha aparece crua */ }
+  }
   FlowStrip.feed(line);
   const { html, color } = renderLogLine(line);
   const div = document.createElement('div');

@@ -169,6 +169,9 @@
   .quad > .q-lb { border-right:var(--frame-bd); padding-right:11px; align-self:stretch; display:flex; align-items:center; }
   #quad-ran { display:none; }
   #quad-ran.on { display:flex; }
+  /* amostra velha: sem pulso e esmaecido — o número é passado, não presente */
+  #quad-ran.stale { opacity:.55; }
+  #quad-ran.stale .rl-dot { animation:none; background:var(--muted); box-shadow:none; }
   /* ===== Instrumentos do servidor: rótulo · barra · valor · média ===== */
   #telemetry { display:flex; gap:16px; flex-wrap:wrap; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11.5px; }
   .tm-gauge { display:inline-flex; align-items:center; gap:6px; cursor:help; }
@@ -2269,6 +2272,20 @@ function levelColor(pct) {
   return 'var(--red)';
 }
 
+// O que cada instrumento do servidor significa — aparece no mouse, junto do
+// valor real. A barra fica âmbar acima de 50% e vermelha acima de 80%
+// (levelColor); a marca clara sobre ela é a média das últimas leituras.
+const TM_INFO = {
+  cpu: 'CPU — quanto do processador está em uso. O laboratório inteiro (core, rádio, RIC) divide estes '
+     + 'núcleos: passar de 80% sustentado é o que faz o teste com tráfego atrasar ou travar.',
+  ram: 'RAM — memória em uso. Quando ela acaba, o sistema começa a usar o disco como memória (swap) e '
+     + 'tudo fica lento de uma vez.',
+  swap: 'SWAP — memória emprestada do disco. Qualquer valor acima de zero significa que a RAM acabou: é o '
+      + 'sinal mais confiável de que o servidor está sofrendo, e costuma vir antes do travamento.',
+  disk: 'DISK — ocupação do volume. Logs de teste e imagens de container crescem aqui; sem espaço, o lab '
+      + 'não sobe e a coleta falha na hora de gravar.',
+};
+
 // Média móvel de cada instrumento: o valor instantâneo sozinho engana (um pico
 // de 1 s parece crise). A média das últimas amostras diz se é pico ou regime.
 const TM_HIST = {}, TM_MAX = 60;   // 60 amostras ≈ 2 min na cadência de 2 s
@@ -2312,18 +2329,18 @@ function renderTelemetry(data) {
   const h = data.host;
   const cpuEl = document.getElementById('tm-cpu');
   renderBar(cpuEl, 'CPU', h.cpu_pct, 'cpu');
-  cpuEl.title = h.cpu_count + 'x ' + h.cpu_model + ' · load ' + h.load1;
+  cpuEl.title = h.cpu_count + 'x ' + h.cpu_model + ' · load ' + h.load1 + '\n\n' + TM_INFO.cpu;
   const ramEl = document.getElementById('tm-ram');
   renderBar(ramEl, 'RAM', h.mem_pct, 'ram');
-  ramEl.title = (h.mem_used_mb/1024).toFixed(1)+'G / '+Math.round(h.mem_total_mb/1024)+'G';
+  ramEl.title = (h.mem_used_mb/1024).toFixed(1)+'G / '+Math.round(h.mem_total_mb/1024)+'G' + '\n\n' + TM_INFO.ram;
   const swapPct = h.swap_total_mb ? 100*h.swap_used_mb/h.swap_total_mb : 0;
   const swapEl = document.getElementById('tm-swap');
   renderBar(swapEl, 'SWAP', swapPct, 'swap');
-  swapEl.title = (h.swap_used_mb/1024).toFixed(1)+'G / '+Math.round(h.swap_total_mb/1024)+'G';
+  swapEl.title = (h.swap_used_mb/1024).toFixed(1)+'G / '+Math.round(h.swap_total_mb/1024)+'G' + '\n\n' + TM_INFO.swap;
   const diskEl = document.getElementById('tm-disk');
   // Volume EBS provisionado é 30G (utilizável ~28G); rótulo mostra o tamanho do volume.
   renderBar(diskEl, 'DISK', h.disk_pct, 'disk');
-  diskEl.title = h.disk_used_gb+'/'+h.disk_total_gb+' GB (volume EBS 30G)';
+  diskEl.title = h.disk_used_gb+'/'+h.disk_total_gb+' GB (volume EBS 30G)' + '\n\n' + TM_INFO.disk;
   renderContainerRows(data.containers || []);
   if (data.groups) {
     toggleButtons.forEach(b => {
@@ -3096,6 +3113,21 @@ resStopBtn.addEventListener('click', stopReplay);
 resOverlay.addEventListener('click', e => { if (e.target === resOverlay) closeResults(); });
 
 // ===== RAN ao vivo (P2): sparklines de SNR/MCS/PRB/BLER do gNB =====
+// O que cada instrumento de rádio significa — aparece no mouse. Os limiares
+// são os do deck da aula 04 (slides 31, 33 e 35); o RFSIM é dito em voz alta
+// porque um canal ideal explica por que esses números quase não se mexem.
+const RAN_STALE_S = 10;   // sem linha nova no log por mais que isto = amostra velha
+const RAN_INFO = {
+  snr: 'SNR — o sinal frente ao ruído e à interferência. Referência do slide 31: bom acima de 20 dB, '
+     + 'aceitável entre 13 e 20, ruim abaixo de 13. Aqui o rádio é simulado (RFSIM): o canal é ideal, '
+     + 'então ele fica preso perto de 50 dB e não varia como variaria no ar.',
+  mcs: 'MCS — quantos bits cabem em cada símbolo (modulação + taxa de código). Sobe com canal bom e cai '
+     + 'para proteger contra erro. 28 é o topo da tabela; no RFSIM fica sempre no teto (slide 33).',
+  prb: 'PRB — blocos de recurso do rádio em uso, sobre o total da célula (o total vem do próprio gNB). '
+     + 'É a ocupação do rádio: acima de 80% é pressão de capacidade (referência do slide 35).',
+  bler: 'BLER — fração de blocos que chegaram com erro. Sobe quando o canal piora ou quando o MCS foi '
+      + 'agressivo demais para o canal. No RFSIM fica em 0: não há erro num canal ideal.',
+};
 const RAN = { snr: [], mcs: [], prb: [], bler: [], max: 40, timer: null,
   color: { snr: '#4dabf7', mcs: '#e8590c', prb: '#2f9e44', bler: '#e03131' } };
 function ranSparkPath(vals, w = 160, h = 36, pad = 4) {
@@ -3140,6 +3172,13 @@ async function pollRan() {
     // total de PRBs: o que o gNB reportou no boot (N_RB_DL), não um número fixo
     const tot = document.getElementById('rl-prb-tot');
     if (tot) tot.textContent = d.nrb != null ? d.nrb : '—';
+    // Amostra velha: o gNB pode estar vivo e ter parado de reportar. Nesse caso
+    // o número na tela é passado, e a faixa diz isso em vez de fingir ao vivo.
+    const velho = d.age != null && d.age > RAN_STALE_S;
+    quad.classList.toggle('stale', velho);
+    quad.title = velho
+      ? 'sem amostra nova há ' + Math.round(d.age) + ' s — o gNB está no ar mas parou de reportar; os números abaixo são a última leitura'
+      : (I18N.t('ran.sub') || '');
     pushRan(RAN.snr, d.snr); pushRan(RAN.mcs, d.mcs); pushRan(RAN.prb, d.prb); pushRan(RAN.bler, d.bler);
     renderSpark('spark-snr', RAN.snr, RAN.color.snr);
     renderSpark('spark-mcs', RAN.mcs, RAN.color.mcs);
@@ -3147,6 +3186,12 @@ async function pollRan() {
     renderSpark('spark-bler', RAN.bler, RAN.color.bler);
   } catch {}
 }
+// pendura as explicações nos instrumentos (uma vez, na carga da página)
+Object.entries(RAN_INFO).forEach(([k, txt]) => {
+  const el = document.querySelector('.rl-metric[data-k="' + k + '"]');
+  if (el) { el.title = txt; el.style.cursor = 'help'; }
+});
+
 function startRanLive() { if (RAN.timer) clearInterval(RAN.timer); pollRan(); RAN.timer = setInterval(pollRan, 1500); }
 
 // ===== Alunos: conectados agora + presença (só Professor) =====

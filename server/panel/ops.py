@@ -565,6 +565,13 @@ def _compute_gnb_stats() -> dict:
     except OSError:
         return {"up": False}
     stats: dict = {"up": True}
+    # Idade da última escrita no log: o gNB pode estar VIVO e ter parado de
+    # reportar (UE caiu, RAN travada). Sem isto o painel mostraria o último
+    # número com a bolinha pulsando, fingindo que é ao vivo.
+    try:
+        stats["age"] = round(time.time() - log.stat().st_mtime, 1)
+    except OSError:
+        pass
     # Total de PRBs da célula: vem do próprio gNB ("Init: N_RB_DL 51"), não de
     # um número escrito na tela. Se a banda mudar no config, o painel acompanha.
     for line in lines[:400]:

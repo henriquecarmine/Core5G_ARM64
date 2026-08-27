@@ -333,6 +333,13 @@
     stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
   #copy-btn { color:var(--info); background:rgba(77,171,247,.12); border-color:rgba(77,171,247,.40); }
   #copy-btn:hover { background:rgba(77,171,247,.22); border-color:rgba(77,171,247,.62); }
+  #map-btn { display:inline-flex; align-items:center; gap:5px; width:auto; margin:0; padding:3px 9px;
+    border-radius:7px; font-family:inherit; font-size:11.5px; line-height:1; cursor:pointer;
+    color:var(--warn-fg); background:rgba(245,159,0,.12); border:1px solid rgba(245,159,0,.42);
+    transition:background .15s, border-color .15s; }
+  #map-btn:hover { background:rgba(245,159,0,.24); border-color:rgba(245,159,0,.66); }
+  #map-btn.on { background:rgba(245,159,0,.28); border-color:rgba(245,159,0,.8); color:var(--text); }
+  #map-btn .tb-ic { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
   #clear-btn { color:var(--ok-fg); background:rgba(105,219,124,.12); border-color:rgba(105,219,124,.42); }
   #clear-btn:hover { background:rgba(105,219,124,.24); border-color:rgba(105,219,124,.64); }
   /* consoles/terminais ficam escuros nos dois temas (identidade + colorização JS dos logs) */
@@ -875,6 +882,10 @@
         <svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
         <span data-i18n="btn.copy">copiar</span>
       </button>
+      <button id="map-btn" data-i18n-title="btn.map_title" title="Mapa da rede — janela própria: mostra por onde os dados correm durante o teste">
+        <svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>
+        <span data-i18n="btn.map">mapa</span><span class="mm-live"></span>
+      </button>
       <button id="energy-btn" class="en-btn" title="Eficiência ARM × x86 — acende após um teste">⚡</button>
       <button id="clear-btn" data-i18n-title="btn.clear" title="limpar">
         <svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
@@ -1047,13 +1058,13 @@
 <script src="../i18n.js"></script>
 <script src="/static/ops/flow-strip.js?v=0.65.0"></script>
 <script src="/static/ops/energy.js?v=0.61.3"></script>
-<script src="/static/ops/mini-map.js?v=0.65.0"></script>
+<script src="/static/ops/mini-map.js?v=0.65.2"></script>
 <script>
 // Robustez file:// (smoke do CI): sem os módulos /static/, viram no-ops —
 // a página (i18n, topbar, console) segue funcional.
 window.FlowStrip = window.FlowStrip || { attach(){}, begin(){}, feed(){}, end(){}, preview(){ return null; }, sceneInfo(){ return []; } };
 window.Energy = window.Energy || { attach(){}, begin(){}, end(){}, _open(){} };
-window.MiniMap = window.MiniMap || { attach(){}, preview(){}, begin(){}, end(){} };
+window.MiniMap = window.MiniMap || { attach(){}, preview(){}, begin(){}, end(){}, toggle(){}, isOpen(){ return false; } };
 // FlowStrip (percurso dos dados): faixa minimalista sobre o console e sobre o
 // log do modal de operação — os hooks vivem em pushRunHeader/appendLine/
 // setRunBadge (professor e aluno) e no loop do runOperation (modal).
@@ -1061,6 +1072,10 @@ FlowStrip.attach('console', document.getElementById('flow-strip-console'));
 FlowStrip.attach('modal', document.getElementById('flow-strip-modal'));
 FlowStrip.attach('lab', document.getElementById('flow-strip-lab'));
 MiniMap.attach('console', document.getElementById('mini-map-console'));
+// O mapa vive numa JANELA propria (fora da coluna do console): o botao abre e
+// fecha, e ele pisca enquanto um teste corre. A tela do console fica inteira
+// para o resultado do teste, que e o que se le.
+document.getElementById('map-btn').addEventListener('click', () => MiniMap.toggle());
 Energy.attach(document.getElementById('energy-btn'), false, document.getElementById('output'));
 // ---- Modal de créditos (rodapé) ----
 document.getElementById('credits-link').onclick = (e) => {

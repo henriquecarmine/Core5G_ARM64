@@ -8,25 +8,47 @@
 (function () {
   'use strict';
   var CSS = [
+    /* Duas encarnações do mesmo mapa:
+       .mm-box   — caixa embutida, usada no modal de pré-voo;
+       .mm-float — JANELA propria do console. O mapa saiu da coluna do console
+                   porque comia a altura do log: o resultado do teste e o que
+                   se le, o mapa e para OLHAR quando se quer. A janela abre em
+                   'reduzida' (canto, nao tapa o texto) e vai a 'expandida'
+                   (modal com fundo escurecido) num clique. */
     '.mm-box{margin:6px 0;border:1px solid #2c3038;border-radius:8px;background:#0d0e11;overflow:hidden;flex:0 0 auto}',
-    '.mm-head{display:flex;align-items:center;gap:6px;padding:3px 10px;font:10px -apple-system,sans-serif;color:#8a8f98;cursor:pointer;user-select:none}',
+    '.mm-head{display:flex;align-items:center;gap:6px;padding:4px 10px;font:10px -apple-system,sans-serif;color:#8a8f98;user-select:none}',
     '.mm-head b{color:#f59f00}',
     '.mm-head .mm-ct{flex:1 1 auto;min-width:0}',
-    '.mm-head .mm-btn{flex:none;border:1px solid #2c3038;border-radius:5px;padding:0 6px;line-height:16px;font-size:11px;color:#8a8f98}',
+    '.mm-head .mm-btn{flex:none;border:1px solid #2c3038;border-radius:5px;padding:0 6px;line-height:16px;font-size:11px;color:#8a8f98;cursor:pointer}',
     '.mm-head .mm-btn:hover{color:#ffb84d;border-color:#8a5a1a}',
-    /* O mapa não pode engolir o console: o que se lê durante o teste é o log.
-       Por padrão ele entra como JANELA do mapa (escala cheia, legível) já
-       rolada até os nós acesos; ⤢ abre o mapa inteiro (aí a coluna do console
-       é que rola) e ▾ esconde, deixando só o cabeçalho. */
     '.mm-box .mm-vp{overflow:auto;max-height:min(30vh,260px);overscroll-behavior:contain}',
     '.mm-box.full .mm-vp{max-height:none;overflow:visible}',
-    '.mm-box svg{display:block;width:100%;height:auto}',
+    '.mm-box svg,.mm-float svg{display:block;width:100%;height:auto}',
     '.mm-box.closed .mm-vp{display:none}',
+
+    /* ---- janela do console ---- */
+    '.mm-float{display:none;position:fixed;z-index:150;right:18px;bottom:46px;width:min(460px,44vw);',
+    '  background:#0d0e11;border:1px solid #3a3f48;border-radius:10px;overflow:hidden;',
+    '  box-shadow:0 12px 34px rgba(0,0,0,.55)}',
+    '.mm-float.open{display:block}',
+    '.mm-float .mm-head{cursor:default;padding:6px 10px;border-bottom:1px solid #2c3038;background:#12141a}',
+    '.mm-float .mm-vp{overflow:auto;max-height:min(62vh,560px);overscroll-behavior:contain}',
+    /* Reduzida, a janela NAO tapa o texto: o console reserva a faixa da direita
+       (padding), entao o log reflui e continua inteiro. Em tela estreita nao ha
+       faixa para reservar — ai ela sobrepoe mesmo, e o botao fecha. */
+    '@media (min-width:1120px){ body.mm-docked #console-wrap{padding-right:calc(min(460px,44vw) + 30px)} }',
+    '.mm-float.big{right:50%;transform:translateX(50%);bottom:6vh;width:min(1180px,92vw)}',
+    '.mm-float.big .mm-vp{max-height:76vh}',
+    '.mm-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:149}',
+    '.mm-backdrop.on{display:block}',
+    /* aviso no botao do console enquanto um teste corre */
+    '@keyframes mm-pulse{0%,100%{opacity:1}50%{opacity:.35}}',
+    '#map-btn .mm-live{display:none;width:7px;height:7px;border-radius:50%;background:#ffb84d;box-shadow:0 0 5px #ffb84d}',
+    '#map-btn.live .mm-live{display:inline-block;animation:mm-pulse 1.1s ease-in-out infinite}',
   ].join('\n');
   var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
 
-  // tamanho do mapa: janela (padrão) | real | só o cabeçalho. A escolha do
-  // professor fica no navegador — não volta ao padrão a cada teste.
+  // A caixa EMBUTIDA (pré-voo) continua com mini/real/escondido.
   var VIEW_KEY = 'c5g-minimap-view', view = 'mini';
   try { var _v = localStorage.getItem(VIEW_KEY); if (_v === 'mini' || _v === 'full' || _v === 'closed') view = _v; } catch (e) {}
   function applyView(host) {
@@ -37,6 +59,40 @@
     if (c) { c.textContent = view === 'closed' ? '\u25b8' : '\u25be'; }
   }
   function setView(host, v) { view = v; try { localStorage.setItem(VIEW_KEY, v); } catch (e) {} applyView(host); }
+
+  // A JANELA do console: aberta/fechada e reduzida/expandida, lembradas no
+  // navegador. Fechada por padrao — quem manda na tela e o resultado do teste.
+  var WIN_KEY = 'c5g-minimap-win', win = { open: false, big: false };
+  try { var _w = JSON.parse(localStorage.getItem(WIN_KEY) || 'null'); if (_w) win = _w; } catch (e) {}
+  var backdrop = null, floatHost = null;
+  function winSave() { try { localStorage.setItem(WIN_KEY, JSON.stringify(win)); } catch (e) {} }
+  function winApply() {
+    if (!floatHost) return;
+    floatHost.classList.toggle('open', !!win.open);
+    floatHost.classList.toggle('big', !!(win.open && win.big));
+    if (!backdrop) {
+      backdrop = document.createElement('div'); backdrop.className = 'mm-backdrop';
+      backdrop.onclick = function () { win.big = false; winSave(); winApply(); };
+      document.body.appendChild(backdrop);
+    }
+    backdrop.classList.toggle('on', !!(win.open && win.big));
+    document.body.classList.toggle('mm-docked', !!(win.open && !win.big));
+    var b = document.getElementById('map-btn');
+    if (b) b.classList.toggle('on', !!win.open);
+    var z = floatHost.querySelector('.mm-zoom');
+    if (z) { z.textContent = win.big ? '\u2921' : '\u2922'; z.title = win.big ? 'reduzir a janela' : 'expandir a janela'; }
+  }
+  function winSet(open, big) {
+    win.open = open; if (big !== undefined) win.big = big;
+    winSave(); winApply();
+    if (open && floatHost && !floatHost.innerHTML) {
+      floatHost.innerHTML = '<div class="mm-head"><b>\u25c9</b><span class="mm-ct">nenhum teste rodou ainda — o mapa acende quando um teste comeca</span>'
+        + '<span class="mm-btn mm-zoom"></span><span class="mm-btn mm-x" title="fechar">\u2715</span></div>';
+      floatHost.querySelector('.mm-x').onclick = function () { winSet(false); };
+      floatHost.querySelector('.mm-zoom').onclick = function () { winSet(true, !win.big); };
+      winApply();
+    }
+  }
 
   // cena → projeto + nós acesos + fluxos (sentido do dado) no mapa real.
   // Fluxo = [origem, destino, rótulo?]; sem rótulo, usa o iface do link do mapa.
@@ -165,19 +221,28 @@
       s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" ' + FONT + ' font-size="' + (on ? 18 : 15) + '" font-weight="' + (on ? 700 : 500) + '" fill="' + (on ? '#ffb84d' : g ? '#d0a75c' : '#9aa1ab') + '">' + esc(n.label || n.id) + '</text>';
     });
     s += lbl + '</svg>';
-    host.classList.add('mm-box');
-    host.innerHTML = '<div class="mm-head"><b>◉</b><span class="mm-ct">onde está rodando — mapa do projeto (' + mm.proj.toUpperCase() + ') · setas = sentido dos dados'
+    var flutua = host === floatHost;
+    if (!flutua) host.classList.add('mm-box');
+    var titulo = 'onde está rodando — mapa do projeto (' + mm.proj.toUpperCase() + ') · setas = sentido dos dados'
       + (mm.ghost ? ' · <span style="color:#8a6d1f">⇢ tracejado = de onde o dado veio</span>' : '')
-      + (mm.note ? ' · <span style="color:#c9974d">' + mm.note + '</span>' : '')
-      + '</span><span class="mm-btn mm-zoom"></span><span class="mm-btn mm-caret"></span></div>'
-      + '<div class="mm-vp">' + s + '</div>';
-    host.querySelector('.mm-head').onclick = function () { setView(host, view === 'closed' ? 'mini' : 'closed'); };
-    host.querySelector('.mm-zoom').onclick = function (ev) {
-      ev.stopPropagation();
-      setView(host, view === 'full' ? 'mini' : 'full');
-    };
-    applyView(host);
-    host.style.display = 'block';
+      + (mm.note ? ' · <span style="color:#c9974d">' + mm.note + '</span>' : '');
+    host.innerHTML = '<div class="mm-head"><b>◉</b><span class="mm-ct">' + titulo + '</span>'
+      + '<span class="mm-btn mm-zoom"></span>'
+      + (flutua ? '<span class="mm-btn mm-x" title="fechar">\u2715</span>' : '<span class="mm-btn mm-caret"></span>')
+      + '</div><div class="mm-vp">' + s + '</div>';
+    if (flutua) {
+      host.querySelector('.mm-zoom').onclick = function () { winSet(true, !win.big); };
+      host.querySelector('.mm-x').onclick = function () { winSet(false); };
+      winApply();
+    } else {
+      host.querySelector('.mm-head').onclick = function () { setView(host, view === 'closed' ? 'mini' : 'closed'); };
+      host.querySelector('.mm-zoom').onclick = function (ev) {
+        ev.stopPropagation();
+        setView(host, view === 'full' ? 'mini' : 'full');
+      };
+      applyView(host);
+      host.style.display = 'block';
+    }
     centerOnLit(host, mm, byId, H);
   }
 
@@ -194,20 +259,46 @@
 
   function show(name, host, live) {
     var mm = MMAP[name];
-    if (!mm || !host) { if (host) { host.style.display = 'none'; host.innerHTML = ''; } return; }
+    if (!mm || !host) {
+      if (host && host !== floatHost) { host.style.display = 'none'; host.innerHTML = ''; }
+      return;
+    }
     load(mm.proj).then(function (topo) { draw(host, mm, topo, live); }).catch(function () {});
   }
 
+  function liveBtn(on) {
+    var b = document.getElementById('map-btn');
+    if (b) b.classList.toggle('live', !!on);
+  }
+
   window.MiniMap = {
-    attach: function (name, el) { hosts[name] = el; },
+    attach: function (name, el) {
+      hosts[name] = el;
+      if (name === 'console' && el) {          // o do console e a JANELA
+        floatHost = el;
+        el.classList.add('mm-float');
+        el.style.display = '';                 // quem manda e a classe .open
+        document.body.appendChild(el);         // sai da coluna do console
+        winApply();
+      }
+    },
     preview: function (sceneName, el) { show(sceneName, el, true); },
-    begin: function (sceneName) { show(sceneName, hosts.console, true); },
+    // O teste comecou: desenha o mapa e ACENDE o botao do console. Nao abre a
+    // janela sozinha — abrir por cima do log e justamente o que atrapalhava.
+    begin: function (sceneName) {
+      liveBtn(true);
+      show(sceneName, floatHost, true);
+    },
     end: function (ok) {
-      var h = hosts.console; if (!h || !h.innerHTML) return;
+      liveBtn(false);
+      var h = floatHost; if (!h || !h.innerHTML) return;
       var c = ok ? '#2f9e44' : '#e03131';
       h.querySelectorAll('circle').forEach(function (x) { x.remove(); });   // congela: fim do fluxo
       h.querySelectorAll('line.mm-flow').forEach(function (l) { l.setAttribute('stroke', c); });
       h.querySelectorAll('polygon.mm-flow').forEach(function (p) { p.setAttribute('fill', c); });
     },
+    // botao do console
+    toggle: function () { winSet(!win.open); },
+    isOpen: function () { return !!win.open; },
   };
 })();

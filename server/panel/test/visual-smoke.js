@@ -107,11 +107,11 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   await page.evaluate(() => {
     document.querySelectorAll('.tools-set').forEach(s => s.classList.toggle('active', s.dataset.tools === 'p1'));
     document.getElementById('tools-empty').classList.remove('show');
-    // Barra de estado (v0.67): o projeto no ar aparece inteiro, o outro encolhe.
-    document.querySelector('.proj-card[data-proj-card="p1"]').classList.add('active');
-    document.querySelector('.proj-card[data-proj-card="p2"]').classList.add('idle');
-    const st = document.querySelector('[data-proj-state="p1"]');
-    st.className = 'pc-state on'; st.textContent = 'ligado';
+    // Cabeçalho v0.68: seletor de projeto + botão de energia + quadrantes.
+    document.getElementById('proj-select').value = 'p1';
+    document.querySelectorAll('.svc-set').forEach(g => g.classList.toggle('on', g.dataset.svc === 'p1'));
+    const pw = document.getElementById('power-btn');
+    pw.className = 'on'; document.getElementById('power-label').textContent = 'ligado';
     loaderInc();
     btnLoading(document.querySelector('.test-p1[data-cmd]'), true);
     btnLoading(document.getElementById('logs-btn'), true);

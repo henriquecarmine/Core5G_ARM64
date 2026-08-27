@@ -565,6 +565,13 @@ def _compute_gnb_stats() -> dict:
     except OSError:
         return {"up": False}
     stats: dict = {"up": True}
+    # Total de PRBs da célula: vem do próprio gNB ("Init: N_RB_DL 51"), não de
+    # um número escrito na tela. Se a banda mudar no config, o painel acompanha.
+    for line in lines[:400]:
+        m_nrb = _re.search(r"N_RB_DL[ =]+(\d+)", line)
+        if m_nrb:
+            stats["nrb"] = int(m_nrb.group(1))
+            break
     for line in reversed(lines[-400:]):
         if "SNR" not in line:
             continue

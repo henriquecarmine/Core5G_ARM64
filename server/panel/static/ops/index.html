@@ -59,6 +59,20 @@
     --live-bg: #fce1ea; --live-fg: #c2255c;
     --info-bg: #dcecfb; --info-fg: #1971c2; --info-strong: #14538c;
   }
+  /* Gramática visual única do painel: toda superfície (quadrante do topo, rail
+     de aulas, console de logs) usa a MESMA moldura e a MESMA legenda. Mudar o
+     desenho é mudar aqui, não em dez lugares. */
+  :root {
+    --frame-r: 8px;                       /* raio das superfícies */
+    --frame-bd: 1px solid var(--border);  /* moldura */
+    --lb-size: 8.5px;                     /* legenda: tamanho */
+    --lb-track: .13em;                    /* legenda: entreletras */
+    /* Monoespaçada de sistema: ui-monospace pega a melhor da máquina (SF Mono
+       no Mac, Cascadia no Windows, a do desktop no Linux) e cai para as
+       clássicas. Monoespaçada é requisito, não gosto: os testes imprimem
+       tabelas alinhadas por coluna. */
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", "Segoe UI Mono", Menlo, Consolas, monospace;
+  }
   * { box-sizing: border-box; }
   body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; }
   /* qualidade base: foco visível no teclado + respeito a reduced-motion */
@@ -113,7 +127,7 @@
   /* ===== Modo projeção (kiosk) — tela limpa e grande pro datashow ===== */
   /* A régua lateral de ações (#sidebar) permanece para o professor operar
      durante a projeção; só escondemos o que polui o datashow. */
-  body.kiosk .proj-card.idle, body.kiosk #kiosk-btn, body.kiosk #theme-btn,
+  body.kiosk #kiosk-btn, body.kiosk #theme-btn,
   body.kiosk #tm-containers-wrap, body.kiosk #copy-btn, body.kiosk #clear-btn { display:none !important; }
   body.kiosk #kiosk-exit { display:block; }
   body.kiosk main { grid-template-columns:230px 1fr; padding:14px 28px 22px; }
@@ -126,7 +140,6 @@
   body.kiosk #ran-live .rl-spark { width:56px; height:16px; }
   body.kiosk #guest-banner { font-size:16px; padding:11px 28px; }
   body.kiosk #output { font-size:17px; line-height:1.6; padding:18px 22px; }
-  body.kiosk #console-actions { font-size:14px; }
   body.kiosk #status-pill { font-size:14px; }
   #viewer-badge .vb-dot { width:7px; height:7px; border-radius:50%; background:#4dabf7; box-shadow:0 0 6px #4dabf7; }
   /* Banner do topo — modo aluno (ao vivo) e aviso de professor */
@@ -140,10 +153,34 @@
 
   /* Telemetria — 2ª faixa do top bar */
   /* Containers vira um toggle inline ANTES dos monitores; a tabela abre em dropdown. */
-  #topbar-telemetry { display:flex; align-items:center; gap:22px; flex-wrap:wrap; padding:5px 24px; border-top:1px solid var(--border); background:var(--surface2); }
-  #telemetry { display:flex; gap:20px; flex-wrap:wrap; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px; color:var(--muted); white-space:pre; }
-  #telemetry span { color:var(--text); }
-  #tm-containers-wrap { order:-1; position:relative; }
+  /* ===== Régua de instrumentos em quadrantes =====
+     Cada grupo tem moldura e legenda: o olho vai direto ao servidor, aos
+     serviços ou ao rádio, sem varrer a linha inteira procurando. O quadrante do
+     rádio some quando não há rádio no ar — moldura vazia é ruído. */
+  #topbar-telemetry { display:flex; align-items:stretch; gap:9px; flex-wrap:wrap; padding:4px 24px;
+                      border-top:1px solid var(--border); background:var(--surface2); }
+  .quad { display:flex; align-items:center; gap:11px; min-width:0; padding:3px 11px;
+          background:var(--input-bg); border:var(--frame-bd); border-radius:var(--frame-r);
+          box-shadow:inset 0 1px 0 rgba(255,255,255,.03); }
+  /* Legenda: a mesma em toda superfície (quadrante, rail, console) */
+  .q-lb { font-size:var(--lb-size); font-weight:700; letter-spacing:var(--lb-track); text-transform:uppercase;
+          color:var(--accent); opacity:.85; white-space:nowrap; flex:none;
+          font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  .quad > .q-lb { border-right:var(--frame-bd); padding-right:11px; align-self:stretch; display:flex; align-items:center; }
+  #quad-ran { display:none; }
+  #quad-ran.on { display:flex; }
+  /* ===== Instrumentos do servidor: rótulo · barra · valor · média ===== */
+  #telemetry { display:flex; gap:16px; flex-wrap:wrap; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11.5px; }
+  .tm-gauge { display:inline-flex; align-items:center; gap:6px; cursor:help; }
+  .tm-gauge .tm-lb { font-size:9px; letter-spacing:.08em; color:var(--muted); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  .tm-gauge .tm-track { position:relative; width:54px; height:6px; border-radius:3px; background:var(--input-bg);
+                        border:1px solid var(--border); overflow:hidden; flex:none; }
+  .tm-gauge .tm-track > i { position:absolute; inset:0 auto 0 0; border-radius:3px 0 0 3px; transition:width .35s ease, background .35s; }
+  /* marca da média: a régua do regime, para o pico não passar por crise */
+  .tm-gauge .tm-track > b { position:absolute; top:-1px; bottom:-1px; width:2px; background:var(--text); opacity:.55; transform:translateX(-1px); }
+  .tm-gauge .tm-val { font-weight:600; min-width:30px; text-align:right; }
+  .tm-gauge .tm-avg { font-size:9.5px; color:var(--muted); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  #tm-containers-wrap { position:relative; margin-left:2px; }
   #tm-containers-wrap summary { cursor:pointer; color:var(--muted); font-size:12px; padding:2px 0; white-space:nowrap; }
   #tm-containers-wrap[open] > summary { color:var(--accent); }
   #tm-table { position:absolute; top:100%; left:0; margin-top:5px; z-index:60; min-width:540px;
@@ -154,69 +191,59 @@
   #tm-table td { padding:4px 8px; border-bottom:1px solid var(--border); }
 
   /* ===== Faixa de projetos + servidores (topo) ===== */
-  /* ===== Barra de estado: UMA LINHA, e só o que está no ar =====
-     O painel é exclusivo — um projeto por vez. Mostrar os dois lado a lado,
-     cada um ocupando meia tela, gastava largura com o projeto DESLIGADO e
-     deixava um vazio no meio. Agora: o projeto no ar aparece inteiro (estado +
-     servidores), as métricas de rádio ocupam a sobra da MESMA linha, e o outro
-     projeto encolhe para um botão de trocar, no canto. Sem nada no ar, os dois
-     aparecem iguais — é o único momento em que a escolha importa. */
-  #projects-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-                  padding:5px 24px; background:var(--surface2); border-bottom:1px solid var(--border); }
-  .proj-card { display:flex; align-items:center; gap:8px; flex:0 0 auto; min-width:0;
-               background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--pc-color,var(--border));
-               border-radius:8px; padding:3px 9px; transition:opacity .18s, box-shadow .18s; }
-  .proj-card[data-proj-card="p1"] { --pc-color:var(--info); }
-  .proj-card[data-proj-card="p2"] { --pc-color:var(--accent); }
-  .proj-card.active { order:1; box-shadow:0 0 0 1px var(--green); }
-  /* o projeto que não está no ar vira só "trocar para": nome + botão */
-  .proj-card.idle { order:3; opacity:.6; }
-  .proj-card.idle .pc-dot, .proj-card.idle .pc-state, .proj-card.idle .pc-servers { display:none; }
-  .proj-card.idle:hover { opacity:1; }
-  .proj-card .pc-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:.2s; }
-  .proj-card.active .pc-dot { background:var(--green); box-shadow:0 0 6px var(--green); }
-  .pc-name { font-size:12.5px; font-weight:600; white-space:nowrap; flex-shrink:0; cursor:help; }
-  /* o estado em UMA palavra, verde ou vermelha — é o que se lê de longe */
-  .pc-state { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
-              padding:2px 9px; border-radius:20px; white-space:nowrap; flex-shrink:0; }
-  .pc-state.on { color:var(--ok-fg); background:var(--ok-bg); }
-  .pc-state.off { color:var(--err-fg); background:var(--err-bg); }
-  .pc-state.partial { color:var(--warn-fg); background:var(--warn-bg); }
-  .pc-state.loading { color:var(--warn-fg); background:var(--warn-bg); animation:tm-pulse 1.1s ease-in-out infinite; }
-  .pc-activate { width:auto; margin:0; padding:2px 12px; font-size:11.5px; border-radius:20px; background:var(--btn-bg2); color:var(--muted); border:1px solid var(--border); flex-shrink:0; }
-  .pc-activate:hover:not(:disabled) { border-color:var(--green); color:var(--text); }
-  .proj-card.active .pc-activate { background:transparent; border-color:var(--red); color:var(--err-fg); }
-  .proj-card.active .pc-activate:hover:not(:disabled) { background:var(--red); color:#fff; }
-  .pc-servers { display:flex; gap:6px; min-width:0; }
-  .pc-servers .toggle-btn { width:auto; margin:0; padding:2px 8px; font-size:11px; border-width:1.5px; gap:0; }
-  .pc-servers .toggle-main { gap:6px; }
-  .pc-servers .toggle-sub { display:none; }
-  .pc-servers .toggle-dot { width:7px; height:7px; margin-left:0; }
+  /* ===== Controle do laboratório: seletor + botão de energia =====
+     Duas linhas de cabeçalho viraram uma: QUAL projeto (dropdown) e LIGA/DESLIGA
+     (botão), do lado do título. O estado mora no próprio botão — verde ligado,
+     vermelho desligado, âmbar mudando ou parcial —, então nenhuma outra parte da
+     tela precisa repetir isso. */
+  #proj-select { width:auto; margin:0; padding:3px 26px 3px 10px; font-size:12px; font-weight:600;
+                 border-radius:20px; background:var(--btn-bg2); border:1px solid var(--border); color:var(--text);
+                 cursor:pointer; appearance:none;
+                 background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+                 background-position:calc(100% - 14px) 52%, calc(100% - 9px) 52%; background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
+  #proj-select:hover { border-color:var(--accent); }
+  #power-btn { display:inline-flex; align-items:center; gap:7px; width:auto; margin:0; padding:3px 13px 3px 10px;
+               font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; border-radius:20px;
+               cursor:pointer; background:var(--err-bg); color:var(--err-fg); border:1px solid transparent; transition:.2s; }
+  #power-btn .pw-ic { font-size:13px; line-height:1; }
+  #power-btn:hover:not(:disabled) { filter:brightness(1.25); }
+  #power-btn.on { background:var(--ok-bg); color:var(--ok-fg); box-shadow:0 0 0 1px rgba(105,219,124,.35); }
+  #power-btn.partial { background:var(--warn-bg); color:var(--warn-fg); }
+  #power-btn.loading { background:var(--warn-bg); color:var(--warn-fg); animation:tm-pulse 1.1s ease-in-out infinite; }
 
-  /* ===== RAN ao vivo: na sobra da mesma linha =====
-     Existe só quando o Projeto 2 está no ar (é o gNB OAI que reporta). A
-     sparkline só é desenhada quando o valor MUDA — com o rádio simulado esses
-     números ficam parados, e uma linha reta atravessando a tela é ruído. */
-  #ran-live { display:none; order:2; flex:1 1 300px; min-width:0; align-items:center; gap:7px;
-              padding:2px 10px; background:var(--input-bg); border:1px solid var(--border);
-              border-left:3px solid var(--green); border-radius:8px; }
+  /* ===== Régua de instrumentos: host · serviços · rádio =====
+     Uma linha só, em grupos separados por divisória — o dado bruto de cada
+     instrumento com rótulo pequeno e valor em monoespaçada, para ler de relance
+     sem procurar. */
+  #svc-strip { display:flex; gap:6px; }
+  .svc-set { display:none; gap:6px; }
+  .svc-set.on { display:flex; }
+  .svc-set .toggle-btn { width:auto; margin:0; padding:2px 9px; font-size:11px; border-width:1.5px; gap:0; }
+  .svc-set .toggle-main { gap:6px; }
+  .svc-set .toggle-dot { width:7px; height:7px; margin-left:0; }
+
+  /* Rádio ao vivo: só com o Projeto 2 no ar. A sparkline só é desenhada quando
+     o valor MUDA — com rádio simulado, linha reta é ruído fingindo informação. */
+  #ran-live { display:none; align-items:center; gap:14px; min-width:0; }
   #ran-live.on { display:flex; }
   #ran-live .rl-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:lvpulse 1.3s ease-in-out infinite; flex:none; }
-  #ran-live .rl-metrics { display:flex; gap:14px; flex:1 1 auto; min-width:0; flex-wrap:wrap; }
+  #ran-live .rl-metrics { display:flex; gap:14px; min-width:0; flex-wrap:wrap; }
   #ran-live .rl-metric { display:inline-flex; align-items:baseline; gap:5px; min-width:0; }
   #ran-live .rl-k { font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); flex:none; }
   #ran-live .rl-v { font-size:12px; font-weight:600; color:var(--text); font-family:"SF Mono",Menlo,Consolas,monospace; white-space:nowrap; flex:none; }
   #ran-live .rl-v i { font-size:10px; font-weight:400; color:var(--muted); font-style:normal; }
   #ran-live .rl-spark { width:38px; height:11px; flex:none; align-self:center; display:none; }
-  #ran-live .rl-spark.varia { display:block; }   /* só quando o valor se mexe */
+  #ran-live .rl-spark.varia { display:block; }
 
   /* Layout — rail de ferramentas (do projeto ativo) + console */
   main { display:grid; grid-template-columns:230px 1fr; gap:16px; padding:16px 24px; flex:1; min-height:0; }
 
   /* ===== Rail de ferramentas: ícone + rótulo sempre, do projeto ativo ===== */
   #sidebar { overflow-y:auto; }
-  #sidebar-inner { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px 10px; display:flex; flex-direction:column; gap:6px; min-height:100%; }
-  .rail-title { display:flex; align-items:center; gap:8px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:0 4px 4px; }
+  #sidebar-inner { background:var(--panel); border:var(--frame-bd); border-radius:var(--frame-r); padding:10px 10px 12px; display:flex; flex-direction:column; gap:6px; min-height:100%; }
+  .rail-title { display:flex; align-items:center; gap:8px; font-size:var(--lb-size); font-weight:700;
+                text-transform:uppercase; letter-spacing:var(--lb-track); color:var(--accent); opacity:.85;
+                padding:0 3px 7px; margin-bottom:2px; border-bottom:var(--frame-bd); }
   .rail-title .rt-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); transition:.2s; }
   .rail-title.on .rt-dot { background:var(--green); box-shadow:0 0 5px var(--green); }
   .tools-set { display:none; flex-direction:column; gap:5px; }
@@ -238,7 +265,6 @@
   button.primary { border-color:var(--accent); }
   button.toggle-btn { display:flex; flex-direction:column; align-items:stretch; border-width:2px; gap:3px; }
   button.toggle-btn .toggle-main { display:flex; align-items:center; justify-content:space-between; }
-  button.toggle-btn .toggle-sub { font-size:10.5px; color:var(--muted); font-weight:normal; line-height:1.3; }
   button.toggle-btn .toggle-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; margin-left:8px; transition:background .2s; }
   button.toggle-btn[data-state="on"] { border-color:var(--green); }
   button.toggle-btn[data-state="on"] .toggle-dot { background:var(--green); box-shadow:0 0 4px var(--green); }
@@ -276,8 +302,6 @@
   #tm-table tr[data-status="down"] { opacity:.55; }
   select, input { display:block; width:100%; padding:7px 9px; margin-bottom:4px; background:var(--field-bg); color:var(--text); border:1px solid var(--border); border-radius:6px; font-size:13px; }
   .field-help { font-size:11px; color:var(--muted); margin:0 0 7px 0; line-height:1.3; }
-  .help-intro { font-size:11.5px; color:var(--muted); margin:0 0 9px 0; line-height:1.4; }
-  .help-intro code { color:var(--text); }
 
   /* Bloco de explicação (o que acabou de acontecer no teste).
      Vive DENTRO do console escuro (#output/#results-console, escuros nos 2
@@ -354,7 +378,9 @@
   #clear-btn { color:var(--ok-fg); background:rgba(105,219,124,.12); border-color:rgba(105,219,124,.42); }
   #clear-btn:hover { background:rgba(105,219,124,.24); border-color:rgba(105,219,124,.64); }
   /* consoles/terminais ficam escuros nos dois temas (identidade + colorização JS dos logs) */
-  #output { flex:1; min-height:200px; background:var(--term-bg); border:1px solid var(--border); border-radius:6px; padding:12px; overflow-y:auto; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px; white-space:pre-wrap; line-height:1.5; color:#e6e6e6; }
+  #output { flex:1; min-height:200px; background:var(--term-bg); border:var(--frame-bd); border-radius:var(--frame-r);
+            padding:12px 14px; overflow-y:auto; font-family:var(--mono); font-size:12px; line-height:1.65;
+            white-space:pre-wrap; color:#e6e6e6; font-variant-ligatures:none; tab-size:2; }
   /* .run-header vive dentro de consoles escuros (dois temas): cores fixas */
   .run-header { display:flex; align-items:center; gap:8px; margin:14px 0 6px; padding-top:10px; border-top:1px dashed #2c3038; color:#8a8f98; font-size:11px; }
   .run-header:first-child { margin-top:0; padding-top:0; border-top:none; }
@@ -462,7 +488,7 @@
     #kiosk-btn { display:none; }                 /* projeção é coisa de operador, não de celular */
     #topbar-telemetry { padding:5px 14px; gap:10px; }
     #telemetry { font-size:10.5px; gap:9px; }
-    #projects-bar { flex-direction:column; gap:9px; padding:10px 14px; }
+    .quad { padding:3px 8px; gap:8px; }
     #ran-live { margin:0 14px; }
     #ran-live .rl-metrics { grid-template-columns:repeat(2,1fr); }
     #guest-banner { flex-wrap:wrap; padding:8px 14px; font-size:12.5px; }
@@ -586,6 +612,14 @@
   <div id="topbar-main">
     <div class="tb-left">
       <h1>Core5G<span>_ARM64</span> <span data-i18n="topbar.panel">— Painel</span></h1>
+      <!-- Controle do laboratório em 2 elementos: QUAL projeto e LIGA/DESLIGA.
+           O painel é exclusivo (um por vez), então um seletor diz tudo o que
+           dois cartões diziam — e devolve a linha inteira que eles ocupavam. -->
+      <select id="proj-select" data-i18n-title="pc.select_title" title="Escolha o laboratório; o botão ao lado liga ou desliga (só um roda por vez)">
+        <option value="p1">P1 · Open5GS</option>
+        <option value="p2">P2 · OAI/RIC</option>
+      </select>
+      <button id="power-btn" data-proj="p1"><span class="pw-ic">⏻</span><span id="power-label" data-i18n="pc.state_off">desligado</span></button>
     </div>
     <div class="tb-right">
       <span id="viewer-badge"><span class="vb-dot"></span><span id="viewer-count">0 alunos</span></span>
@@ -596,70 +630,66 @@
       <button id="logout-btn" data-i18n="topbar.logout" title="Sair (logout) — libera a vaga de professor para outro entrar">⎋ Sair</button>
     </div>
   </div>
+  <!-- Régua de instrumentos em QUADRANTES: cada grupo com moldura e legenda,
+       para o olho ir direto ao que quer (servidor · serviços · rádio). -->
   <div id="topbar-telemetry">
-    <div id="telemetry">
-      <span id="tm-cpu">CPU —</span>
-      <span id="tm-ram">RAM 4G [===========]</span>
-      <span id="tm-swap">Swap 8G [===========]</span>
-      <span id="tm-disk">Disk —</span>
+    <div class="quad" id="quad-host">
+      <span class="q-lb" data-i18n="q.host">servidor</span>
+      <div id="telemetry">
+        <span id="tm-cpu">CPU —</span>
+        <span id="tm-ram">RAM —</span>
+        <span id="tm-swap">SWAP —</span>
+        <span id="tm-disk">DISK —</span>
+      </div>
+      <details id="tm-containers-wrap">
+        <summary data-i18n="tm.containers" data-i18n-title="tm.containers_title" title="Containers do laboratório: CPU e RAM de cada um">containers ▾</summary>
+        <table id="tm-table">
+          <thead><tr><th data-i18n="tm.name">Nome</th><th data-i18n="tm.role">Função</th><th>CPU</th><th>RAM</th></tr></thead>
+          <tbody id="tm-containers"></tbody>
+        </table>
+      </details>
     </div>
-    <details id="tm-containers-wrap">
-      <summary data-i18n="tm.containers">Containers (CPU / RAM)</summary>
-      <table id="tm-table">
-        <thead><tr><th data-i18n="tm.name">Nome</th><th data-i18n="tm.role">Função</th><th>CPU</th><th>RAM</th></tr></thead>
-        <tbody id="tm-containers"></tbody>
-      </table>
-    </details>
+
+    <div class="quad" id="quad-svc">
+      <span class="q-lb" data-i18n="q.svc">serviços</span>
+      <div id="svc-strip">
+        <div class="svc-set" data-svc="p1">
+          <button class="toggle-btn" data-toggle="p1-core" data-up="up-core" data-down="down-core" data-label="Core" title="Core Open5GS — AMF · SMF · UPF · AUSF · UDM/UDR · NRF">
+            <div class="toggle-main"><span>Core</span><span class="toggle-dot"></span></div>
+          </button>
+          <button class="toggle-btn" data-toggle="p1-ran" data-up="up-ran" data-down="down-ran" data-label="RAN" data-i18n-title="pc.p1_ran_title" title="RAN — UERANSIM gNB + UE simulados (N2/N3)">
+            <div class="toggle-main"><span>RAN</span><span class="toggle-dot"></span></div>
+          </button>
+        </div>
+        <div class="svc-set" data-svc="p2">
+          <button class="toggle-btn" data-toggle="p2-core" data-up="p2-up-core" data-down="p2-down-core" data-label="Core (OAI)" title="Core OAI 5GC v2 — AMF/SMF/UPF (oai-cn5g-v2)">
+            <div class="toggle-main"><span>Core</span><span class="toggle-dot"></span></div>
+          </button>
+          <button class="toggle-btn" data-toggle="p2-e2lab" data-up="p2-up-e2-lab" data-down="p2-down-e2-lab" data-label="E2 lab" title="E2 lab — gNB RFSIM + E2 agent + FlexRIC near-RT RIC + xApps">
+            <div class="toggle-main"><span>E2 lab</span><span class="toggle-dot"></span></div>
+          </button>
+          <button class="toggle-btn" data-toggle="p2-nonrt" data-up="p2-up-nonrt" data-down="p2-down-nonrt" data-label="Non-RT RIC" title="Non-RT RIC (SMO) — A1 Policy Management Service + 3 A1 Simulators, imagens ARM64 nativas. Leve (cerca de 0,5 GB); sobe junto no 'ativar' do P2">
+            <div class="toggle-main"><span>Non-RT</span><span class="toggle-dot"></span></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="quad" id="quad-ran">
+      <span class="q-lb" data-i18n="q.radio">rádio · E2</span>
+      <section id="ran-live" data-i18n-title="ran.sub" title="métricas PHY/MAC reais do UE simulado · atualiza a cada 1,5s">
+        <span class="rl-dot"></span>
+        <div class="rl-metrics">
+          <div class="rl-metric" data-k="snr"><span class="rl-k">SNR</span><span class="rl-v"><span id="rl-snr">—</span> <i>dB</i></span><svg class="rl-spark" id="spark-snr" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
+          <div class="rl-metric" data-k="mcs"><span class="rl-k">MCS</span><span class="rl-v"><span id="rl-mcs">—</span></span><svg class="rl-spark" id="spark-mcs" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
+          <div class="rl-metric" data-k="prb"><span class="rl-k">PRB</span><span class="rl-v"><span id="rl-prb">—</span> <i>/ <span id="rl-prb-tot">—</span></i></span><svg class="rl-spark" id="spark-prb" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
+          <div class="rl-metric" data-k="bler"><span class="rl-k">BLER</span><span class="rl-v"><span id="rl-bler">—</span> <i>%</i></span><svg class="rl-spark" id="spark-bler" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
+        </div>
+      </section>
+    </div>
   </div>
 </header>
 <div id="guest-banner" data-i18n="banner.readonly">Modo somente leitura — guest pode visualizar, mas não executar comandos.</div>
-
-<div id="projects-bar">
-  <div class="proj-card" data-proj-card="p1">
-    <span class="pc-dot"></span>
-    <span class="pc-name" data-i18n="pc.p1_title" data-i18n-title="pc.p1_desc" title="rede 5G fim-a-fim (Core + RAN)">Projeto 1 · Open5GS</span>
-    <span class="pc-state off" data-proj-state="p1" data-i18n="pc.state_off">desligado</span>
-    <div class="pc-servers">
-      <button class="toggle-btn" data-toggle="p1-core" data-up="up-core" data-down="down-core" data-label="Core" title="Core Open5GS — AMF · SMF · UPF · AUSF · UDM/UDR · NRF">
-        <div class="toggle-main"><span>Core</span><span class="toggle-dot"></span></div>
-      </button>
-      <button class="toggle-btn" data-toggle="p1-ran" data-up="up-ran" data-down="down-ran" data-label="RAN" data-i18n-title="pc.p1_ran_title" title="RAN — UERANSIM gNB + UE simulados (N2/N3)">
-        <div class="toggle-main"><span>RAN</span><span class="toggle-dot"></span></div>
-      </button>
-    </div>
-    <button class="pc-activate" data-proj="p1" data-i18n-title="pc.p1_activate_title" title="Sobe Open5GS + UERANSIM (desliga o Projeto 2)" data-i18n="pc.activate">ativar</button>
-  </div>
-
-  <!-- RAN ao vivo: só existe quando o Projeto 2 está no ar, então mora na MESMA
-       linha, no espaço que sobra — não numa faixa própria embaixo. -->
-  <section id="ran-live" data-i18n-title="ran.sub" title="métricas PHY/MAC reais do UE simulado · atualiza a cada 1,5s">
-    <span class="rl-dot"></span>
-    <div class="rl-metrics">
-      <div class="rl-metric" data-k="snr"><span class="rl-k">SNR</span><span class="rl-v"><span id="rl-snr">—</span> <i>dB</i></span><svg class="rl-spark" id="spark-snr" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
-      <div class="rl-metric" data-k="mcs"><span class="rl-k">MCS</span><span class="rl-v"><span id="rl-mcs">—</span></span><svg class="rl-spark" id="spark-mcs" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
-      <div class="rl-metric" data-k="prb"><span class="rl-k">PRB</span><span class="rl-v"><span id="rl-prb">—</span> <i>/ 51</i></span><svg class="rl-spark" id="spark-prb" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
-      <div class="rl-metric" data-k="bler"><span class="rl-k">BLER</span><span class="rl-v"><span id="rl-bler">—</span> <i>%</i></span><svg class="rl-spark" id="spark-bler" viewBox="0 0 160 36" preserveAspectRatio="none"></svg></div>
-    </div>
-  </section>
-
-  <div class="proj-card" data-proj-card="p2">
-    <span class="pc-dot"></span>
-    <span class="pc-name" data-i18n="pc.p2_title" data-i18n-title="pc.p2_desc" title="O-RAN · near-RT + non-RT RIC (E2/A1)">Projeto 2 · OAI/RIC</span>
-    <span class="pc-state off" data-proj-state="p2" data-i18n="pc.state_off">desligado</span>
-    <div class="pc-servers">
-      <button class="toggle-btn" data-toggle="p2-core" data-up="p2-up-core" data-down="p2-down-core" data-label="Core (OAI)" title="Core OAI 5GC v2 — AMF/SMF/UPF (oai-cn5g-v2)">
-        <div class="toggle-main"><span>Core</span><span class="toggle-dot"></span></div>
-      </button>
-      <button class="toggle-btn" data-toggle="p2-e2lab" data-up="p2-up-e2-lab" data-down="p2-down-e2-lab" data-label="E2 lab" title="E2 lab — gNB RFSIM + E2 agent + FlexRIC near-RT RIC + xApps">
-        <div class="toggle-main"><span>E2 lab</span><span class="toggle-dot"></span></div>
-      </button>
-      <button class="toggle-btn" data-toggle="p2-nonrt" data-up="p2-up-nonrt" data-down="p2-down-nonrt" data-label="Non-RT RIC" title="Non-RT RIC (SMO) — A1 Policy Management Service + 3 A1 Simulators, imagens ARM64 nativas. Leve (cerca de 0,5 GB); sobe junto no 'ativar' do P2">
-        <div class="toggle-main"><span>Non-RT</span><span class="toggle-dot"></span></div>
-      </button>
-    </div>
-    <button class="pc-activate" data-proj="p2" data-i18n-title="pc.p2_activate_title" title="Sobe OAI 5GC + gNB + FlexRIC (desliga o Projeto 1)" data-i18n="pc.activate">ativar</button>
-  </div>
-</div>
 
 <div id="info-modal-overlay">
   <div id="info-modal">
@@ -880,6 +910,7 @@
 
   <div id="console-wrap">
     <div id="console-toolbar">
+      <span class="q-lb" data-i18n="q.console">console · resultado</span>
       <span id="status-pill" data-i18n="st.idle">ocioso</span>
       <button id="copy-btn" data-i18n-title="btn.copy" title="copiar">
         <svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>
@@ -1276,10 +1307,6 @@ function lineColor(line) {
   return TERM.text;
 }
 
-function randomDigits(n) {
-  return Array.from(crypto.getRandomValues(new Uint8Array(n))).map(b => b % 10).join('');
-}
-
 function randomHex32() {
   return Array.from(crypto.getRandomValues(new Uint8Array(16)))
     .map(b => b.toString(16).padStart(2, '0').toUpperCase()).join('');
@@ -1400,8 +1427,6 @@ document.querySelectorAll('#diag-test-select option').forEach(o => { if (o.value
 function prettyCmd(label) { return CMD_LABEL[label] || label || 'operação'; }
 
 let _seatLost = false;
-function plural(n, s) { return n + ' ' + s + (n === 1 ? '' : 's'); }
-
 // ---- Professor: mantém a vaga viva + mostra quantos alunos assistem ----
 let _hbTimer = null;
 async function professorBeat() {
@@ -2244,33 +2269,60 @@ function levelColor(pct) {
   return 'var(--red)';
 }
 
-function renderBar(el, prefix, pct, width = 11) {
-  const filled = Math.max(0, Math.min(width, Math.round(width * pct / 100)));
-  let fillStr = '='.repeat(filled) + Math.round(pct) + '%';
-  if (fillStr.length > width) fillStr = fillStr.slice(0, width);
-  const trackStr = '·'.repeat(Math.max(0, width - fillStr.length));
+// Média móvel de cada instrumento: o valor instantâneo sozinho engana (um pico
+// de 1 s parece crise). A média das últimas amostras diz se é pico ou regime.
+const TM_HIST = {}, TM_MAX = 60;   // 60 amostras ≈ 2 min na cadência de 2 s
+function tmAvg(k, v) {
+  const h = TM_HIST[k] || (TM_HIST[k] = []);
+  if (v != null && !isNaN(v)) { h.push(v); if (h.length > TM_MAX) h.shift(); }
+  return h.length ? h.reduce((a, b) => a + b, 0) / h.length : null;
+}
+
+// Instrumento: rótulo · barra · valor · média. A barra é um elemento de
+// verdade (não '=' e '·'), então a cor do nível e a largura são exatas:
+// verde até 50%, âmbar até 80%, vermelho acima — convenção de painel.
+function renderBar(el, prefix, pct, key) {
+  const media = tmAvg(key || prefix, pct);
+  const cor = levelColor(pct);
   el.textContent = '';
-  el.append(document.createTextNode(prefix + ' ['));
-  const fs = document.createElement('span'); fs.style.color = levelColor(pct); fs.textContent = fillStr; el.appendChild(fs);
-  const ts = document.createElement('span'); ts.style.color = 'var(--text)'; ts.textContent = trackStr; el.appendChild(ts);
-  el.append(document.createTextNode(']'));
+  el.className = 'tm-gauge';
+  const lb = document.createElement('span'); lb.className = 'tm-lb'; lb.textContent = prefix;
+  const track = document.createElement('span'); track.className = 'tm-track';
+  const fill = document.createElement('i');
+  fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  fill.style.background = cor;
+  track.appendChild(fill);
+  if (media != null) {   // marca da média sobre a barra
+    const m = document.createElement('b');
+    m.style.left = Math.max(0, Math.min(100, media)) + '%';
+    track.appendChild(m);
+  }
+  const val = document.createElement('span'); val.className = 'tm-val';
+  val.style.color = cor; val.textContent = Math.round(pct) + '%';
+  el.append(lb, track, val);
+  if (media != null) {
+    const av = document.createElement('span'); av.className = 'tm-avg';
+    av.textContent = 'méd ' + Math.round(media) + '%';
+    av.title = 'média das últimas ' + (TM_HIST[key || prefix] || []).length + ' leituras (cerca de 2 minutos)';
+    el.appendChild(av);
+  }
 }
 
 function renderTelemetry(data) {
   const h = data.host;
   const cpuEl = document.getElementById('tm-cpu');
-  renderBar(cpuEl, 'CPU ' + h.cpu_count + 'x ' + h.cpu_model.replace('Neoverse-','Neo-'), h.cpu_pct);
-  cpuEl.title = 'load ' + h.load1;
+  renderBar(cpuEl, 'CPU', h.cpu_pct, 'cpu');
+  cpuEl.title = h.cpu_count + 'x ' + h.cpu_model + ' · load ' + h.load1;
   const ramEl = document.getElementById('tm-ram');
-  renderBar(ramEl, 'RAM ' + Math.round(h.mem_total_mb/1024) + 'G', h.mem_pct);
+  renderBar(ramEl, 'RAM', h.mem_pct, 'ram');
   ramEl.title = (h.mem_used_mb/1024).toFixed(1)+'G / '+Math.round(h.mem_total_mb/1024)+'G';
   const swapPct = h.swap_total_mb ? 100*h.swap_used_mb/h.swap_total_mb : 0;
   const swapEl = document.getElementById('tm-swap');
-  renderBar(swapEl, 'Swap ' + Math.round(h.swap_total_mb/1024) + 'G', swapPct);
+  renderBar(swapEl, 'SWAP', swapPct, 'swap');
   swapEl.title = (h.swap_used_mb/1024).toFixed(1)+'G / '+Math.round(h.swap_total_mb/1024)+'G';
   const diskEl = document.getElementById('tm-disk');
   // Volume EBS provisionado é 30G (utilizável ~28G); rótulo mostra o tamanho do volume.
-  renderBar(diskEl, 'Disk 30G', h.disk_pct);
+  renderBar(diskEl, 'DISK', h.disk_pct, 'disk');
   diskEl.title = h.disk_used_gb+'/'+h.disk_total_gb+' GB (volume EBS 30G)';
   renderContainerRows(data.containers || []);
   if (data.groups) {
@@ -2763,6 +2815,15 @@ document.getElementById('demo-e2e-btn').addEventListener('click', () => openOper
 }));
 
 // --- Ativação de projeto (exclusivo): cards "ativar" + "desligar tudo" ([data-proj]) ---
+const projSelect = document.getElementById('proj-select');
+const powerBtn = document.getElementById('power-btn');
+const powerLabel = document.getElementById('power-label');
+const PROJ_GRUPOS = { p1: ['p1-core', 'p1-ran'], p2: ['p2-core', 'p2-e2lab', 'p2-nonrt'] };
+// trocar o projeto no seletor repinta a régua na hora (sem esperar a telemetria)
+projSelect.addEventListener('change', () => {
+  document.querySelectorAll('.svc-set').forEach(g => g.classList.toggle('on', g.dataset.svc === projSelect.value));
+  powerBtn.dataset.proj = projSelect.value;
+});
 const projButtons = document.querySelectorAll('[data-proj]');
 // Chaves i18n + fallback pt, resolvidas NO CLIQUE (respeitam troca de idioma).
 const PROJ_INFO = {
@@ -2782,7 +2843,7 @@ const PROJ_INFO = {
 projButtons.forEach(b => b.addEventListener('click', () => {
   if (isGuest || _opBusy) return;
   // Card ATIVO → desliga; card inativo → ativa aquele projeto (exclusivo).
-  const proj = b.classList.contains('active') ? 'off' : b.dataset.proj;
+  const proj = b.classList.contains('on') ? 'off' : b.dataset.proj;
   const info = PROJ_INFO[proj];
   openOperation({
     endpoint: '/api/switch/' + proj,
@@ -2797,6 +2858,7 @@ projButtons.forEach(b => b.addEventListener('click', () => {
 }));
 function setSelectorEnabled(on) {
   projButtons.forEach(b => b.disabled = !on || isGuest);
+  projSelect.disabled = !on || isGuest;
 }
 // Reflete o projeto ativo (cards do topo + ferramentas da lateral) a partir do
 // estado dos grupos (telemetria).
@@ -2806,33 +2868,24 @@ function updateProjSelector(groups) {
   const p1 = groups['p1-core'] !== 'off' || groups['p1-ran'] !== 'off';
   const p2 = groups['p2-core'] !== 'off' || groups['p2-e2lab'] !== 'off';
   const active = p2 ? 'p2' : p1 ? 'p1' : 'off';
-  projButtons.forEach(b => {
-    const on = b.dataset.proj === active && !_opBusy;
-    b.classList.toggle('active', on);
-    b.textContent = I18N.t(on ? 'pc.deactivate' : 'pc.activate'); b.removeAttribute('data-i18n');   // card ativo: botão vira "desligar"
-  });
-  // Topo: realça o card do projeto ativo.
-  document.querySelectorAll('.proj-card[data-proj-card]').forEach(c => {
-    const eu = c.dataset.projCard === active;
-    c.classList.toggle('active', eu);
-    // Sem nada no ar, os dois aparecem iguais (a escolha importa). Com um no
-    // ar, o outro encolhe para "trocar para" — largura é tela, e o projeto
-    // desligado não tem o que dizer.
-    c.classList.toggle('idle', active !== 'off' && !eu);
-  });
-  // ...e escreve o estado de cada projeto em UMA palavra, verde ou vermelha.
-  // 'parcial' existe porque um projeto pode estar meio no ar (ex.: Core sim,
-  // E2 lab não) — dizer LIGADO nesse caso seria mentir com cor bonita.
-  const PROJ_GRUPOS = { p1: ['p1-core', 'p1-ran'], p2: ['p2-core', 'p2-e2lab', 'p2-nonrt'] };
-  document.querySelectorAll('[data-proj-state]').forEach(el => {
-    const st = PROJ_GRUPOS[el.dataset.projState].map(g => groups[g]).filter(v => v !== undefined);
-    const cls = st.some(v => v === 'loading') ? 'loading'
-      : st.length && st.every(v => v === 'on') ? 'on'
-      : st.some(v => v === 'on') ? 'partial' : 'off';
-    el.className = 'pc-state ' + cls;
-    el.textContent = I18N.t('pc.state_' + cls);
-    el.removeAttribute('data-i18n');   // dinâmico assumiu
-  });
+  // O projeto NO AR manda no seletor: a tela nunca mostra um foco que não é o
+  // que está rodando. Enquanto nada roda, respeita a escolha do professor.
+  if (active !== 'off' && projSelect.value !== active) projSelect.value = active;
+  const foco = projSelect.value;
+  // Estado do projeto EM FOCO, em uma palavra e uma cor, dentro do próprio
+  // botão de energia. 'parcial' existe porque um projeto pode estar meio no ar
+  // (Core sim, E2 lab não) — dizer LIGADO aí seria mentir com cor bonita.
+  const st = PROJ_GRUPOS[foco].map(g => groups[g]).filter(v => v !== undefined);
+  const cls = _opBusy || st.some(v => v === 'loading') ? 'loading'
+    : st.length && st.every(v => v === 'on') ? 'on'
+    : st.some(v => v === 'on') ? 'partial' : 'off';
+  powerBtn.className = cls;
+  powerBtn.dataset.proj = foco;
+  powerLabel.textContent = I18N.t('pc.state_' + cls);
+  powerLabel.removeAttribute('data-i18n');   // dinâmico assumiu
+  powerBtn.title = I18N.t(cls === 'off' ? 'pc.power_on_title' : 'pc.power_off_title');
+  // Régua: só os serviços do projeto em foco.
+  document.querySelectorAll('.svc-set').forEach(g => g.classList.toggle('on', g.dataset.svc === foco));
   _activeProj = active;
   // Lateral: mostra as ferramentas do projeto ativo (troca conforme o projeto).
   document.querySelectorAll('.tools-set').forEach(s => s.classList.toggle('active', s.dataset.tools === active));
@@ -3072,16 +3125,21 @@ function pushRan(arr, v) { if (v == null || isNaN(v)) return; arr.push(v); if (a
 function ranReset() { RAN.snr = []; RAN.mcs = []; RAN.prb = []; RAN.bler = []; }
 async function pollRan() {
   const el = document.getElementById('ran-live');
-  if (_activeProj !== 'p2') { el.classList.remove('on'); ranReset(); return; }
+  const quad = document.getElementById('quad-ran');
+  const acende = (on) => { el.classList.toggle('on', on); if (quad) quad.classList.toggle('on', on); };
+  if (_activeProj !== 'p2') { acende(false); ranReset(); return; }
   try {
     const d = await (await fetch('/api/topology/gnb-stats', { cache: 'no-store' })).json();
     // Só mostra a faixa quando há medição PHY real (SNR) — evita um card vazio "—"
     // enquanto o UE não anexa (no P2, o anexo NAS depende do UE conectado).
-    if (!d.up || d.snr == null) { el.classList.remove('on'); ranReset(); return; }
-    el.classList.add('on');
+    if (!d.up || d.snr == null) { acende(false); ranReset(); return; }
+    acende(true);
     document.getElementById('rl-sub').textContent = 'métricas PHY/MAC reais do UE simulado · atualiza a cada 1,5s';
     const set = (id, v, fix) => { const e = document.getElementById(id); if (e) e.textContent = (v == null ? '—' : (fix != null ? Number(v).toFixed(fix) : v)); };
     set('rl-snr', d.snr, 1); set('rl-mcs', d.mcs, 0); set('rl-prb', d.prb, 0); set('rl-bler', d.bler, 1);
+    // total de PRBs: o que o gNB reportou no boot (N_RB_DL), não um número fixo
+    const tot = document.getElementById('rl-prb-tot');
+    if (tot) tot.textContent = d.nrb != null ? d.nrb : '—';
     pushRan(RAN.snr, d.snr); pushRan(RAN.mcs, d.mcs); pushRan(RAN.prb, d.prb); pushRan(RAN.bler, d.bler);
     renderSpark('spark-snr', RAN.snr, RAN.color.snr);
     renderSpark('spark-mcs', RAN.mcs, RAN.color.mcs);

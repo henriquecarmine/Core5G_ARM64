@@ -70,7 +70,7 @@ const EXPECT = {
   const tb = await page.evaluate(() => ({
     panel: document.querySelector('h1 [data-i18n="topbar.panel"]').textContent,
     kiosk: document.getElementById('kiosk-btn').textContent.trim(),
-    proj: document.querySelector('[data-proj-state="p2"]').textContent,
+    proj: document.getElementById('power-label').textContent,
   }));
   assert(tb.panel === '— Panel', `index/es: h1 = "${tb.panel}"`);
   assert(tb.kiosk.includes('Proyección'), `index/es: kiosk = "${tb.kiosk}"`);

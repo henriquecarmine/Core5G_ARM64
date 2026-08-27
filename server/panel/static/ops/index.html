@@ -128,10 +128,10 @@
   body.kiosk #active-proj { font-size:14px; padding:5px 12px; }
   body.kiosk #viewer-badge { font-size:15px; padding:5px 14px; }
   body.kiosk #telemetry { font-size:14px; }
-  body.kiosk #ran-live { margin:0 28px; padding:13px 20px; }
+  body.kiosk #ran-live { margin:0 28px; padding:5px 16px; }
   body.kiosk #ran-live .rl-title { font-size:15px; }
-  body.kiosk #ran-live .rl-v { font-size:26px; }
-  body.kiosk #ran-live .rl-spark { height:42px; }
+  body.kiosk #ran-live .rl-v { font-size:18px; }
+  body.kiosk #ran-live .rl-spark { height:20px; }
   body.kiosk #guest-banner { font-size:16px; padding:11px 28px; }
   body.kiosk #output { font-size:17px; line-height:1.6; padding:18px 22px; }
   body.kiosk #console-actions { font-size:14px; }
@@ -148,20 +148,26 @@
 
   /* ===== RAN ao vivo (sparklines do gNB) ===== */
   /* margin 24px = mesmo inset dos frames de cima (#projects-bar / main, padding 24px) */
-  #ran-live { display:none; margin:0 24px 0; padding:5px 12px; background:var(--surface2);
-              border:1px solid var(--border); border-left:3px solid var(--green); border-radius:10px; }
-  #ran-live.on { display:block; }
-  #ran-live .rl-head { display:flex; align-items:center; gap:9px; margin-bottom:4px; }
-  #ran-live .rl-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 7px var(--green); animation:lvpulse 1.3s ease-in-out infinite; }
-  #ran-live .rl-title { font-size:12.5px; font-weight:600; color:var(--text); }
-  #ran-live .rl-sub { font-size:11px; color:var(--muted); margin-left:auto; }
-  #ran-live .rl-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; align-items:center; }
-  #ran-live .rl-metric { display:flex; align-items:center; gap:7px; background:var(--input-bg); border:1px solid var(--border); border-radius:8px; padding:3px 10px; min-width:0; }
-  #ran-live .rl-k { font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); flex-shrink:0; }
-  #ran-live .rl-v { font-size:14px; font-weight:600; color:var(--text); font-family:"SF Mono",Menlo,Consolas,monospace; line-height:1.15; white-space:nowrap; flex-shrink:0; }
-  #ran-live .rl-v i { font-size:11px; font-weight:400; color:var(--muted); font-style:normal; }
-  #ran-live .rl-spark { flex:1; min-width:0; height:16px; display:block; margin-left:auto; }
-  @media (max-width:760px) { #ran-live .rl-metrics { grid-template-columns:repeat(2,1fr); } }
+  /* ===== RAN ao vivo: UMA linha =====
+     Eram 4 caixas altas com sparkline grande. Como o rádio é simulado (RFSIM),
+     esses números ficam praticamente parados — SNR ~50 dB, MCS 28, BLER 0 — e
+     só se mexem quando um teste gera tráfego de verdade. Não merecem 1/8 da
+     tela: viram uma régua fina, com o mesmo dado e a mesma sparkline. */
+  #ran-live { display:none; margin:0 24px 0; padding:3px 12px; background:var(--surface2);
+              border:1px solid var(--border); border-left:3px solid var(--green); border-radius:8px; }
+  #ran-live.on { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  #ran-live .rl-head { display:flex; align-items:center; gap:6px; flex:none; }
+  #ran-live .rl-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:lvpulse 1.3s ease-in-out infinite; }
+  #ran-live .rl-title { font-size:11px; font-weight:600; color:var(--text); white-space:nowrap; cursor:help; }
+  #ran-live .rl-sub { display:none; }   /* explicação vira title da faixa */
+  #ran-live .rl-metrics { display:flex; gap:8px; flex:1 1 auto; min-width:0; }
+  #ran-live .rl-metric { display:flex; align-items:center; gap:6px; flex:1; background:var(--input-bg);
+                         border:1px solid var(--border); border-radius:6px; padding:1px 8px; min-width:0; }
+  #ran-live .rl-k { font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); flex-shrink:0; }
+  #ran-live .rl-v { font-size:12px; font-weight:600; color:var(--text); font-family:"SF Mono",Menlo,Consolas,monospace; line-height:1.15; white-space:nowrap; flex-shrink:0; }
+  #ran-live .rl-v i { font-size:10px; font-weight:400; color:var(--muted); font-style:normal; }
+  #ran-live .rl-spark { flex:1; min-width:24px; height:13px; display:block; margin-left:auto; }
+  @media (max-width:900px) { #ran-live .rl-metrics { flex-wrap:wrap; } #ran-live .rl-metric { flex:1 1 45%; } }
 
   /* Telemetria — 2ª faixa do top bar */
   /* Containers vira um toggle inline ANTES dos monitores; a tabela abre em dropdown. */
@@ -179,25 +185,38 @@
   #tm-table td { padding:4px 8px; border-bottom:1px solid var(--border); }
 
   /* ===== Faixa de projetos + servidores (topo) ===== */
-  #projects-bar { display:flex; gap:14px; align-items:stretch; padding:12px 24px; background:var(--surface2); border-bottom:1px solid var(--border); }
-  .proj-card { flex:1; min-width:0; background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--pc-color,var(--border)); border-radius:10px; padding:7px 12px; transition:box-shadow .18s; }
+  /* ===== Barra dos projetos: UMA LINHA por projeto =====
+     Antes eram dois cartões de ~90px com título, descrição e os servidores em
+     baixo. O que se precisa saber de relance é: qual projeto é e se está
+     LIGADO ou DESLIGADO. O resto (o que cada servidor é) vive no title. */
+  #projects-bar { display:flex; gap:12px; align-items:stretch; padding:7px 24px; background:var(--surface2); border-bottom:1px solid var(--border); }
+  .proj-card { flex:1; min-width:0; display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+               background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--pc-color,var(--border));
+               border-radius:8px; padding:4px 10px; transition:box-shadow .18s; }
   .proj-card[data-proj-card="p1"] { --pc-color:var(--info); }
   .proj-card[data-proj-card="p2"] { --pc-color:var(--accent); }
-  .proj-card.active { box-shadow:0 0 0 1px var(--green), 0 6px 18px rgba(0,0,0,.35); }
-  .pc-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
-  .pc-title { display:flex; align-items:baseline; gap:8px; font-size:12.5px; font-weight:600; white-space:nowrap; min-width:0; }
-  .pc-title .pc-dot { width:9px; height:9px; border-radius:50%; background:var(--muted); flex-shrink:0; align-self:center; transition:.2s; }
-  .pc-title .pc-desc { font-weight:normal; font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; }
+  .proj-card.active { box-shadow:0 0 0 1px var(--green), 0 4px 14px rgba(0,0,0,.3); }
+  .proj-card .pc-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:.2s; }
   .proj-card.active .pc-dot { background:var(--green); box-shadow:0 0 6px var(--green); }
-  .pc-activate { width:auto; margin:0; padding:3px 13px; font-size:11.5px; border-radius:20px; background:var(--btn-bg2); color:var(--muted); border:1px solid var(--border); }
+  .pc-name { font-size:12.5px; font-weight:600; white-space:nowrap; flex-shrink:0; cursor:help; }
+  /* o estado em UMA palavra, verde ou vermelho — é o que se lê de longe */
+  .pc-state { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+              padding:2px 9px; border-radius:20px; white-space:nowrap; flex-shrink:0; }
+  .pc-state.on { color:var(--ok-fg); background:var(--ok-bg); }
+  .pc-state.off { color:var(--err-fg); background:var(--err-bg); }
+  .pc-state.partial { color:var(--warn-fg); background:var(--warn-bg); }
+  .pc-state.loading { color:var(--warn-fg); background:var(--warn-bg); animation:tm-pulse 1.1s ease-in-out infinite; }
+  .pc-activate { width:auto; margin:0; padding:3px 13px; font-size:11.5px; border-radius:20px; background:var(--btn-bg2); color:var(--muted); border:1px solid var(--border); flex-shrink:0; }
   .pc-activate:hover:not(:disabled) { border-color:var(--green); color:var(--text); }
   /* No card ATIVO o botão vira "desligar" (some o "Desligar tudo" separado). */
   .proj-card.active .pc-activate { background:transparent; border-color:var(--red); color:var(--err-fg); }
   .proj-card.active .pc-activate:hover:not(:disabled) { background:var(--red); color:#fff; }
-  .pc-servers { display:flex; gap:8px; }
-  /* Servidor = chip de comando (reaproveita .toggle-btn), 1 linha (descrição vai no title) */
-  .pc-servers .toggle-btn { flex:1; width:auto; margin:0; padding:6px 11px; border-width:1.5px; }
+  .pc-servers { display:flex; gap:6px; margin-left:auto; min-width:0; }
+  /* Servidor = chip pequeno: nome + bolinha de estado (o que ele é vai no title) */
+  .pc-servers .toggle-btn { width:auto; margin:0; padding:3px 9px; font-size:11px; border-width:1.5px; gap:0; }
+  .pc-servers .toggle-main { gap:6px; }
   .pc-servers .toggle-sub { display:none; }
+  .pc-servers .toggle-dot { width:7px; height:7px; margin-left:0; }
 
   /* Layout — rail de ferramentas (do projeto ativo) + console */
   main { display:grid; grid-template-columns:230px 1fr; gap:16px; padding:16px 24px; flex:1; min-height:0; }
@@ -606,45 +625,40 @@
 
 <div id="projects-bar">
   <div class="proj-card" data-proj-card="p1">
-    <div class="pc-head">
-      <div class="pc-title"><span class="pc-dot"></span><span data-i18n="pc.p1_title">Projeto 1 · Open5GS</span><span class="pc-desc" data-i18n="pc.p1_desc">rede 5G fim-a-fim (Core + RAN)</span></div>
-      <button class="pc-activate" data-proj="p1" data-i18n-title="pc.p1_activate_title" title="Sobe Open5GS + UERANSIM (desliga o Projeto 2)" data-i18n="pc.activate">ativar</button>
-    </div>
+    <span class="pc-dot"></span>
+    <span class="pc-name" data-i18n="pc.p1_title" data-i18n-title="pc.p1_desc" title="rede 5G fim-a-fim (Core + RAN)">Projeto 1 · Open5GS</span>
+    <span class="pc-state off" data-proj-state="p1" data-i18n="pc.state_off">desligado</span>
     <div class="pc-servers">
       <button class="toggle-btn" data-toggle="p1-core" data-up="up-core" data-down="down-core" data-label="Core" title="Core Open5GS — AMF · SMF · UPF · AUSF · UDM/UDR · NRF">
         <div class="toggle-main"><span>Core</span><span class="toggle-dot"></span></div>
-        <div class="toggle-sub">AMF·SMF·UPF·AUSF·UDM·NRF</div>
       </button>
       <button class="toggle-btn" data-toggle="p1-ran" data-up="up-ran" data-down="down-ran" data-label="RAN" data-i18n-title="pc.p1_ran_title" title="RAN — UERANSIM gNB + UE simulados (N2/N3)">
         <div class="toggle-main"><span>RAN</span><span class="toggle-dot"></span></div>
-        <div class="toggle-sub">UERANSIM gNB+UE (N2/N3)</div>
       </button>
     </div>
+    <button class="pc-activate" data-proj="p1" data-i18n-title="pc.p1_activate_title" title="Sobe Open5GS + UERANSIM (desliga o Projeto 2)" data-i18n="pc.activate">ativar</button>
   </div>
   <div class="proj-card" data-proj-card="p2">
-    <div class="pc-head">
-      <div class="pc-title"><span class="pc-dot"></span><span data-i18n="pc.p2_title">Projeto 2 · OAI/RIC</span><span class="pc-desc">O-RAN · near-RT + non-RT RIC (E2/A1)</span></div>
-      <button class="pc-activate" data-proj="p2" data-i18n-title="pc.p2_activate_title" title="Sobe OAI 5GC + gNB + FlexRIC (desliga o Projeto 1)" data-i18n="pc.activate">ativar</button>
-    </div>
+    <span class="pc-dot"></span>
+    <span class="pc-name" data-i18n="pc.p2_title" data-i18n-title="pc.p2_desc" title="O-RAN · near-RT + non-RT RIC (E2/A1)">Projeto 2 · OAI/RIC</span>
+    <span class="pc-state off" data-proj-state="p2" data-i18n="pc.state_off">desligado</span>
     <div class="pc-servers">
       <button class="toggle-btn" data-toggle="p2-core" data-up="p2-up-core" data-down="p2-down-core" data-label="Core (OAI)" title="Core OAI 5GC v2 — AMF/SMF/UPF (oai-cn5g-v2)">
-        <div class="toggle-main"><span>Core (OAI)</span><span class="toggle-dot"></span></div>
-        <div class="toggle-sub">OAI 5GC v2 (AMF/SMF/UPF)</div>
+        <div class="toggle-main"><span>Core</span><span class="toggle-dot"></span></div>
       </button>
       <button class="toggle-btn" data-toggle="p2-e2lab" data-up="p2-up-e2-lab" data-down="p2-down-e2-lab" data-label="E2 lab" title="E2 lab — gNB RFSIM + E2 agent + FlexRIC near-RT RIC + xApps">
         <div class="toggle-main"><span>E2 lab</span><span class="toggle-dot"></span></div>
-        <div class="toggle-sub">gNB RFSIM + FlexRIC + xApps</div>
       </button>
-      <button class="toggle-btn" data-toggle="p2-nonrt" data-up="p2-up-nonrt" data-down="p2-down-nonrt" data-label="Non-RT RIC" title="Non-RT RIC (SMO) — A1 Policy Management Service + 3 A1 Simulators, imagens ARM64 nativas. Leve (~0,5 GB); sobe junto no 'ativar' do P2">
-        <div class="toggle-main"><span>Non-RT RIC</span><span class="toggle-dot"></span></div>
-        <div class="toggle-sub">PMS + A1 sims (políticas A1)</div>
+      <button class="toggle-btn" data-toggle="p2-nonrt" data-up="p2-up-nonrt" data-down="p2-down-nonrt" data-label="Non-RT RIC" title="Non-RT RIC (SMO) — A1 Policy Management Service + 3 A1 Simulators, imagens ARM64 nativas. Leve (cerca de 0,5 GB); sobe junto no 'ativar' do P2">
+        <div class="toggle-main"><span>Non-RT</span><span class="toggle-dot"></span></div>
       </button>
     </div>
+    <button class="pc-activate" data-proj="p2" data-i18n-title="pc.p2_activate_title" title="Sobe OAI 5GC + gNB + FlexRIC (desliga o Projeto 1)" data-i18n="pc.activate">ativar</button>
   </div>
 </div>
 
 <!-- ===== RAN ao vivo (P2): PHY/MAC reais do gNB em sparklines ===== -->
-<section id="ran-live">
+<section id="ran-live" data-i18n-title="ran.sub" title="métricas PHY/MAC reais do UE simulado · atualiza a cada 1,5s">
   <div class="rl-head">
     <span class="rl-dot"></span>
     <span class="rl-title" data-i18n="ran.title">RAN ao vivo · gNB OAI (E2)</span>
@@ -997,7 +1011,7 @@
           <div class="lab-section-title" data-i18n="uelab.conditions">Condições do Canal</div>
           <div class="channel-info-bar">
             5G NR <span class="band-dl">n78</span> · TDD · 3.3–3.8 GHz · BW 100 MHz · SCS 30 kHz · 66 PRBs
-            &nbsp;·&nbsp; <span class="band-dl">↓ DL ~665 Mbps</span> &nbsp;·&nbsp; <span class="band-ul">↑ UL ~250 Mbps</span>
+            &nbsp;·&nbsp; <span class="band-dl">↓ DL cerca de 665 Mbps</span> &nbsp;·&nbsp; <span class="band-ul">↑ UL cerca de 250 Mbps</span>
           </div>
 
           <div class="condition-grid">
@@ -1255,6 +1269,12 @@ function lineColor(line) {
   if (/FATAL|CRITICAL|EMERG|ALERT/i.test(line))         return TERM.red;
   if (/\bERROR\b|REJECT|FAIL(ED)?|EXCEPTION|\bErro\b|não detectado|não está rodando/i.test(line)) return TERM.red;
   if (/WARN(ING)?|AVISO/i.test(line))                    return TERM.yellow;
+  // ----- Ciclo de vida do docker compose (é o que passa ao ATIVAR um projeto) -----
+  // Verde = está no ar; amarelo = ainda subindo; cinza = saindo. Antes tudo isso
+  // vinha no mesmo branco e não dava para ver o que já subiu de verdade.
+  if (/\b(Started|Healthy|Running)\b/.test(line))         return TERM.green;
+  if (/\b(Creating|Created|Starting|Waiting|Pulling|Recreate\w*)\b/.test(line)) return TERM.yellow;
+  if (/\b(Stopping|Stopped|Removing|Removed|Killed|Exited)\b/.test(line)) return TERM.dim;
   // ----- Medições de canal / throughput (Projeto 1) -----
   if (/\b0(\.0+)?%\s*packet loss\b/i.test(line))         return TERM.green;          // perda zero = ótimo
   if (/packet loss|perda de pacotes/i.test(line))        return TERM.yellow;         // qualquer perda
@@ -1537,10 +1557,16 @@ function setRunBadge(badge, state, label) {
 const TEST_EXPLAIN = {
   'p2-test-e2-sm': {
     title: 'O que acabou de acontecer — interface E2 do O-RAN',
+    antes: [
+      'Vai perguntar ao near-RT RIC <b>quantos rádios estão conectados</b> nele pela interface E2, e quais serviços cada um oferece.',
+      'Depois sobe três xApps de teste, um de cada vez. Cada um <b>assina</b> um serviço (métricas, controle, camadas MAC/RLC/PDCP/GTP), <b>recebe</b> as informações que o gNB manda e <b>cancela</b> a assinatura.',
+      'Na tela vão aparecer: o número de nós E2 conectados, a lista de serviços com os códigos (2 = métricas, 3 = controle, 142 a 148 = camadas) e um "SUCCESSFULLY" para cada xApp.',
+      'Precisa do <b>E2 lab no ar</b>. Não muda nada na rede: só assina, escuta e cancela.',
+    ],
     items: [
       '<b>Connected E2 nodes = 1</b>: o near-RT RIC encontrou 1 nó E2 — o seu gNB. A interface E2 (gNB↔RIC) está ativa.',
       '<b>Registered ran func id = 2,3,142…148</b>: o gNB anunciou 8 Service Models (capacidades): KPM(2), RC(3), MAC(142), RLC(143), PDCP(144), SLICE(145), TC(146), GTP(148).',
-      '<b>xapp_gtp_mac_rlc_pdcp</b>: assinou MAC/RLC/PDCP/GTP e recebeu indicações ao vivo (latência MAC ~5,5 ms, GTP ~0,5 ms) — o RIC está lendo métricas reais das camadas do RAN.',
+      '<b>xapp_gtp_mac_rlc_pdcp</b>: assinou MAC/RLC/PDCP/GTP e recebeu indicações ao vivo (latência MAC de cerca de 5,5 ms e GTP de cerca de 0,5 ms) — o RIC está lendo métricas reais das camadas do RAN.',
       '<b>xapp_rc</b> (RAN Control, func 3): assinou o serviço de controle — o RIC pode enviar comandos ao gNB (ex.: handover, mudança de slice).',
       '<b>xapp_kpm</b> (func 2): assinou KPM (Key Performance Metrics) — indicadores de desempenho por UE/célula (base do UE-TP-rApp).',
       '<b>Test xApp run SUCCESSFULLY</b>: cada xApp completou o ciclo assinar → receber indicação → cancelar sem erro.',
@@ -1549,6 +1575,12 @@ const TEST_EXPLAIN = {
   },
   'p2-test-e2-kpm': {
     title: 'O que acabou de acontecer — E2SM-KPM (métricas)',
+    antes: [
+      'Vai assinar o serviço de <b>métricas</b> (KPM) no rádio e ficar escutando o que ele reporta.',
+      'De onde vem o dado: o celular simulado usa a rede, o gNB mede, empacota no formato padrão do O-RAN e manda pela interface E2 até o RIC.',
+      'Na tela: a confirmação da conexão E2, o serviço assinado (RAN_FUNC_ID 2) e as indicações chegando periodicamente.',
+      'Sem ninguém gerando tráfego, os números de vazão vêm baixos — isso é o <b>esperado</b>, não é falha do teste.',
+    ],
     items: [
       '<b>Connected E2 nodes = 1</b>: o RIC está conectado ao gNB via E2.',
       '<b>Subscribed to RAN_FUNC_ID 2</b>: o xApp assinou o Service Model KPM (Key Performance Metrics).',
@@ -1558,6 +1590,11 @@ const TEST_EXPLAIN = {
   },
   'p2-test-e2-rc': {
     title: 'O que acabou de acontecer — E2SM-RC (controle)',
+    antes: [
+      'Vai assinar o serviço de <b>controle</b> (RC) — o canal pelo qual o RIC pode mandar o rádio fazer alguma coisa, e não só observar.',
+      'Este teste apenas <b>abre e confirma o canal</b>. Ele não força handover, não muda slice, não altera a rede.',
+      'Na tela: o serviço 3 assinado e o ciclo assinar → confirmar → cancelar concluído.',
+    ],
     items: [
       '<b>Subscribed to RAN_FUNC_ID 3</b>: o xApp assinou o Service Model RC (RAN Control).',
       'É o canal pelo qual o RIC pode <b>agir</b> sobre o RAN (não só observar): forçar handover, ajustar slice, etc.',
@@ -1566,6 +1603,12 @@ const TEST_EXPLAIN = {
   },
   'p2-kpm-real': {
     title: 'O que acabou de acontecer — coleta KPM com tráfego real',
+    antes: [
+      'Vai subir o celular simulado, <b>esperar ele pegar IP</b> (esperando o evento acontecer, não um relógio) e então coletar métricas com <b>tráfego de verdade</b> passando.',
+      '<b>É o teste mais pesado do painel.</b> Com 2 vCPU o celular não sustenta o tempo real e o script conclui honestamente "sem dados — use 4 vCPU"; com 4 vCPU ele coleta de verdade.',
+      'Na tela: um sinal de vida ("não travou") enquanto sincroniza e, no fim, o CSV, os indicadores e o gráfico de linha em texto.',
+      'Não mexe na trava de CPU que protege o servidor, e foi feito para <b>terminar sempre</b> — nunca congelar a máquina.',
+    ],
     items: [
       'Subiu o UE e <b>esperou por evento</b> (não por relógio) ele pegar IP — o heartbeat "⏳ … NÃO travou" mostra que está sincronizando.',
       'Por <b>segurança não mexe no cpuset</b> (o guardrail anti-freeze fica intacto): em <b>2 vCPU</b> o UE não sustenta o tempo real, então ele <b>para o UE e conclui honesto</b> "sem dados — use 4 vCPU"; em <b>4 vCPU</b> o UE attacha e coleta dados reais de throughput/PRB.',
@@ -1576,6 +1619,12 @@ const TEST_EXPLAIN = {
   },
   'p2-kpi-qoe': {
     title: 'O que acabou de acontecer — Aula 04: da medida à experiência percebida',
+    antes: [
+      'Vai percorrer, com os dados de verdade, a cadeia da <b>aula 04</b>: medida → KPI → KQI → QoS → QoE → decisão.',
+      'De onde vem o dado: o mesmo arquivo de medições dos 7 temas (ou o que você enviou no cartão 💾). Nada é coletado agora; é leitura de arquivo.',
+      'Na tela, nesta ordem: o que o arquivo tem e o que <b>não</b> tem · os indicadores da rede por fase · a fração do tempo acima do limiar · as 4 cláusulas de contrato · por que aqui só dá para falar em <b>proxy</b> de experiência · e a ficha de cada indicador para o Checkpoint 2.',
+      'Não toca na rede e leva uns 2 segundos.',
+    ],
     items: [
       '<b>Medida → métrica</b>: leu o KPM (PRB %, vazão kbps, atraso µs) e mostrou o que o artefato <b>não</b> tem — RSRP, SINR, CQI e contadores de setup/drop/handover.',
       '<b>KPI</b> (rede): utilização média e p95 de PRB, mediana e p95 da vazão e do atraso, por fase — com a agregação justificada (mediana resiste ao pico do RFSIM; p95 é a cauda).',
@@ -1588,17 +1637,29 @@ const TEST_EXPLAIN = {
   },
   'p2-kpm-analytics': {
     title: 'O que acabou de acontecer — Dados na RAN (do KPM ao KPI)',
+    antes: [
+      'Vai pegar o <b>log de texto</b> que o xApp de métricas gravou na última coleta e transformá-lo em tabela, indicador e gráfico.',
+      'De onde vem: o gNB reporta as métricas pela interface E2 e o xApp escreve <b>cerca de uma linha por segundo</b> num arquivo de texto. É esse arquivo que será lido.',
+      'O que vai acontecer com ele: cada linha <code>nome = valor unidade</code> vira uma coluna de uma tabela CSV (tempo, métrica, valor, UE, slice); depois as amostras são agrupadas por UE em indicadores (vazão média e máxima, ocupação do rádio); no fim sai um gráfico de linha desenhado com caracteres.',
+      'Se ninguém estava gerando tráfego na hora da coleta, a vazão vai aparecer <b>perto de zero</b> — o script explica isso em vez de falhar.',
+    ],
     items: [
-      '<b>Coleta</b>: leu o log bruto do xApp KPM (texto, ~1 indicação/s) — a rede vista pela lente de <b>dados</b>, não de controle.',
+      '<b>Coleta</b>: leu o log bruto do xApp KPM (texto puro, cerca de uma linha por segundo) — a rede vista pela lente de <b>dados</b>, não de controle.',
       '<b>ETL</b>: transformou cada linha <code>measName = valor unidade</code> numa série temporal estruturada (CSV: time, measName, valor, UE, slice).',
       '<b>KPI</b>: agregou as amostras em indicadores por UE (throughput médio/máx, ocupação de PRB) — o número que se leva à decisão.',
       '<b>Visualização</b>: sparkline ASCII mostra a forma do throughput no tempo (bursts de tráfego).',
-      'Sem UE gerando tráfego, o throughput vem ~0 — o script explica isso em vez de falhar.',
+      'Sem UE gerando tráfego, a vazão fica perto de zero — o script explica isso em vez de falhar.',
     ],
     concl: '✓ Fecha a cadeia Coleta→ETL→KPI→Decisão (aula06): o CSV é o insumo do UE-TP-rApp e do Módulo de Análise de Dados.',
   },
   'p2-test-a1': {
     title: 'O que acabou de acontecer — ciclo A1 (non-RT → near-RT)',
+    antes: [
+      'Vai mandar uma <b>política</b> descer pelo caminho lento do O-RAN: do SMO (camada Non-RT) até o near-RT, pela interface A1.',
+      'Três passos: confirma que o serviço de políticas está vivo, carrega o <b>tipo</b> de política (o formulário em JSON) e então <b>cria</b> a política, conferindo se ela chegou do outro lado.',
+      'Na tela: a resposta do serviço, o tipo sincronizado e a política confirmada dentro do simulador — o caminho A1 real, não um faz-de-conta.',
+      'É o laço <b>lento</b> (mais de 1 segundo). O laço rápido, de 10 milissegundos a 1 segundo, é o E2 que roda ao lado.',
+    ],
     items: [
       '<b>PMS vivo</b>: o A1 Policy Management Service (camada <b>Non-RT/SMO</b>, imagem ARM64 própria) respondeu e listou os 3 near-RT configurados.',
       '<b>Policy type</b>: o tipo de política (schema JSON) foi carregado no simulador e o PMS o <b>sincronizou</b> — supervisão periódica nonRT ← nearRT.',
@@ -1610,18 +1671,30 @@ const TEST_EXPLAIN = {
   },
   'p2-ml-uetp': {
     title: 'O que acabou de acontecer — UE-TP (previsão de throughput)',
+    antes: [
+      'Vai <b>treinar 8 modelos</b> de aprendizado de máquina para prever a vazão que o celular vai conseguir, a partir das medidas de rádio daquele instante.',
+      'De onde vem o dado: um <b>walk test real</b> (pessoas andando com o celular medindo a rede, dataset SUTD, 4 cenários) — não é simulação.',
+      'Como se avalia: separa o tempo em duas partes, treina nos primeiros 80% e testa nos últimos 20% (nunca testa no que já viu). Na tela sai a tabela com RMSE, MAE e R² de cada modelo.',
+      'Leva alguns segundos e roda no painel; não toca na rede.',
+    ],
     items: [
       'Treinou 8 regressores sobre os dados reais do walk test SUTD (4 cenários) para prever o throughput DL do UE a partir dos KPIs de rádio do instante — recorte <b>Instance</b>.',
-      'Mediu <b>RMSE, MAE e R²</b> num split temporal 80:20: o Gradient Boosting lidera (R² ~0,84) e o <b>MLP de 10 neurônios reproduz a DNN do artigo</b>.',
+      'Mediu <b>RMSE, MAE e R²</b> treinando nos primeiros 80% do tempo e testando nos últimos 20%: o Gradient Boosting lidera (R² de cerca de 0,84) e o <b>MLP de 10 neurônios reproduz a DNN do artigo</b>.',
       'É o caso do <b>UE-TP-rApp</b>: o modelo que um xApp near-RT consultaria para antecipar a taxa de cada UE.',
     ],
     concl: '✓ Reproduz a Tabela 4 de Ngo et al. 2024 (Instance) sobre dados reais — o R² 0,90 famoso é da variante *sequence*.',
   },
   'p2-ml-localizacao': {
     title: 'O que acabou de acontecer — Localization (andar do UE)',
+    antes: [
+      'Vai treinar 5 modelos para adivinhar <b>em que andar</b> (4, 5 ou 6) o celular está, usando só as 7 medidas de rádio que o RIC coleta — sem GPS.',
+      'De onde vem o dado: o mesmo walk test real do dataset SUTD.',
+      'Como se avalia: treina nos primeiros 70% do tempo e testa nos últimos 30%. Na tela sai a acurácia de cada modelo.',
+      'Serve para mostrar que dá para localizar sem sensor dedicado — a saída alimentaria o controle de interferência.',
+    ],
     items: [
       'Treinou 5 classificadores para dizer em qual <b>andar (4/5/6)</b> o UE está usando só as 7 KPMs de rádio que o RIC coleta — sem GPS.',
-      'Split temporal 70:30: o <b>Gradient Boosting (~XGBoost) acerta ~84%</b>, reproduzindo a Tabela 3 do artigo.',
+      'Treinando nos primeiros 70% do tempo e testando nos últimos 30%: o <b>Gradient Boosting (equivalente ao XGBoost) acerta cerca de 84%</b>, reproduzindo a Tabela 3 do artigo.',
       'A saída alimentaria o gerenciamento de interferência e o Cell-TP-rApp.',
     ],
     concl: '✓ Reproduz a Tabela 3 (Instance); o LSTM 91,1% famoso é *sequence*, fora da abordagem designada.',
@@ -1630,6 +1703,12 @@ const TEST_EXPLAIN = {
   // (mesmos dados KPM do professor; muda a pergunta, os 2 indicadores e a recomendação).
   'p2-tema-t1': {
     title: 'O que acabou de acontecer — T1 Vazão do usuário (Grupo 6)',
+    antes: [
+      'Vai responder a pergunta do <b>Grupo 6</b>: a vazão do usuário sobe ou desce junto com a ocupação do rádio e com o atraso?',
+      'De onde vem o dado: 100 medições que o rádio gravou, separadas em 3 momentos (repouso, carga, recuperação). O mesmo arquivo para os 7 grupos.',
+      'Na tela: as fórmulas dos 2 indicadores, a tabela por fase, as correlações e a leitura final.',
+      'Não toca na rede: é leitura de arquivo, uns 2 segundos.',
+    ],
     items: [
       '<b>O que ele fez</b>: leu o arquivo de medições do rádio (zona <b>bronze</b>), transformou cada linha em número e carimbou a fase (<b>silver</b>), e resumiu tudo numa tabela de 3 linhas — uma por fase (<b>gold</b>). Isso é o ETL da aula 03, do começo ao fim, em 2 segundos.',
       '<b>Como ler a tabela</b>: cada linha é uma <b>fase</b> (repouso · carga · recuperação). <code>n</code> = quantas medições. <b>média</b> = o valor típico. <b>mediana</b> = o valor do meio, que ignora os picos. <b>p95</b> = o quase-pior caso. <b>PRB médio</b> = quanto do rádio estava ocupado. Compare as linhas de cima para baixo: é o contraste entre as fases que conta a história, nunca um número sozinho.',
@@ -1638,10 +1717,16 @@ const TEST_EXPLAIN = {
       '<b>Para o checkpoint</b>, cada indicador precisa de: nome · fórmula · unidade · granularidade (aqui: amostra KPM agregada por fase) · fonte (a coluna do arquivo) · interpretação · limite de validade. Os dois indicadores do Grupo 6 são a <b>vazão UL por fase</b> (kbps) e a <b>ocupação de PRB por fase</b> (%) — as fórmulas saíram impressas acima dos números, é só copiar.',
       '<b>O que estes dados NÃO permitem dizer</b>: nada sobre a experiência do usuário (não há nota de vídeo nem MOS no arquivo), nada sobre cobertura ou qualidade de sinal (não há RSRP, SINR nem CQI) e nada sobre outros usuários — é <b>1 UE em simulação (RFSIM), 1 execução</b>. Dizer menos do que os dados sustentam também é resultado.',
     ],
-    concl: '✓ Na amostra do professor: a vazão acompanha o PRB dentro da fase de carga (r ≈ 0,98) e vazão × atraso fica perto de zero dentro da fase — o r global de 0,48 é a mistura das fases, não uma relação real. Leitura: capacidade sendo usada, não usuário mal servido.',
+    concl: '✓ Na amostra do professor: a vazão acompanha o PRB dentro da fase de carga (r de cerca de 0,98) e vazão × atraso fica perto de zero dentro da fase — o r global de 0,48 é a mistura das fases, não uma relação real. Leitura: capacidade sendo usada, não usuário mal servido.',
   },
   'p2-tema-t2': {
     title: 'O que acabou de acontecer — T2 Detecção de anomalia de carga',
+    antes: [
+      'Vai procurar <b>anomalia de carga</b>: momentos em que as medidas fogem do comportamento normal.',
+      'Como: aprende o que é "normal" só na fase de repouso (usando mediana e uma medida de espalhamento robusta a picos, a MAD) e depois mede o quanto cada amostra se afasta disso.',
+      'Uma amostra só vira anomalia se <b>pelo menos 2 das 3 métricas</b> se afastarem muito. E só uma janela inteira de 5 amostras seguidas vira decisão — pico isolado é falso alarme.',
+      'Na tela: a porcentagem de amostras anômalas por fase e uma política sugerida, sempre em <b>dry-run</b> (só impressa, nada aplicado).',
+    ],
     items: [
       '<b>Baseline robusto</b>: mediana e MAD por métrica só na fase baseline — o mesmo <code>model.json</code> do professor (piso 1,0 · limiar 3,5 · 2 métricas · janela 5).',
       'Score por amostra = |x − mediana| / MAD; anômala se ≥ 2 métricas passam de 3,5. <b>Indicadores</b>: % de anômalas por fase e intensidade do desvio na carga.',
@@ -1652,8 +1737,14 @@ const TEST_EXPLAIN = {
   },
   'p2-tema-t3': {
     title: 'O que acabou de acontecer — T3 Latência e qualidade percebida (QoE)',
+    antes: [
+      'Vai olhar o <b>atraso</b> e perguntar quando ele sugere que a experiência do usuário pode estar ruim.',
+      'Dois indicadores: o atraso típico e o quase-pior caso por fase; e a fração do tempo acima de um limiar.',
+      'O limiar de 100 microssegundos não é "experiência ruim": ele marca a <b>mudança de regime</b> em relação ao repouso, e é ajustável.',
+      'Importante: no laboratório não existe nota de vídeo nem MOS. O atraso é <b>proxy</b> de experiência, e o script diz isso na cara.',
+    ],
     items: [
-      '<b>Indicador 1</b>: mediana e p95 do atraso RLC DL por fase · <b>Indicador 2</b>: fração do tempo acima de <b>100 µs</b> (≈ 3× o p95 do baseline; marca a mudança de regime, ajustável).',
+      '<b>Indicador 1</b>: mediana e p95 do atraso RLC DL por fase · <b>Indicador 2</b>: fração do tempo acima de <b>100 µs</b> (cerca de 3 vezes o quase-pior caso do repouso; marca a mudança de regime, ajustável).',
       'Cruzamento: atraso alto <b>com vazão baixa</b> reforça má experiência; atraso alto com vazão alta é fila de carga.',
       'O atraso é <b>proxy</b> de QoE — não há nota MOS no lab; em valor absoluto, atraso RLC abaixo de 1 ms não é experiência ruim: o indicador mostra o salto em relação ao repouso.',
       'Recomendação: investigar a sessão / priorizar tráfego sensível (A1 dry-run).',
@@ -1662,6 +1753,12 @@ const TEST_EXPLAIN = {
   },
   'p2-tema-t4': {
     title: 'O que acabou de acontecer — T4 Risco de congestionamento',
+    antes: [
+      'Vai perguntar se os dados mostram <b>saturação suficiente para justificar um alerta</b> de capacidade.',
+      'Como: olha a tendência (média dos últimos 5 pontos), não o instante, e só acende o alerta quando o rádio está cheio <b>e</b> a vazão caiu.',
+      'Rádio cheio com vazão alta é capacidade <b>em uso</b> — e o script diz isso em vez de gritar alarme.',
+      'Limite declarado: com 1 celular em simulação, ele satura o rádio sozinho.',
+    ],
     items: [
       '<b>Indicador 1</b>: PRB UL médio e p95 por fase · <b>Indicador 2</b>: índice de risco = amostras com <b>MM5(PRB) alto E MM5(vazão) baixa</b>.',
       'Média móvel de 5: olha a <b>tendência</b>, não um instante. Rádio cheio com vazão alta é capacidade <b>em uso</b>, não em risco.',
@@ -1671,6 +1768,11 @@ const TEST_EXPLAIN = {
   },
   'p2-tema-t5': {
     title: 'O que acabou de acontecer — T5 Visão agregada da célula',
+    antes: [
+      'Vai fazer a <b>visão agregada</b>: em vez de olhar amostra por amostra, resume a célula inteira por fase.',
+      'Na tela: ocupação média e máxima do rádio, vazão média, somada e quase-pior caso, atraso médio, e quantos usuários distintos aparecem.',
+      'Aviso honesto que vai sair junto: com <b>1 usuário só</b>, a média é igual à soma — a agregação é didática, não estatística de campus.',
+    ],
     items: [
       '<code>GROUP BY run_id, fase</code> (a zona <b>gold</b> do mini-lake): PRB médio/máx, vazão média/soma/p95, atraso médio.',
       'Conta os UEs distintos: com <b>1 UE, média = soma</b> — a agregação é didática, não estatística de campus.',
@@ -1680,15 +1782,27 @@ const TEST_EXPLAIN = {
   },
   'p2-tema-t6': {
     title: 'O que acabou de acontecer — T6 Economia de energia (só intenção)',
+    antes: [
+      'Vai procurar as janelas de <b>baixa carga</b> — os momentos em que a rede está quase parada e, em tese, daria para economizar energia.',
+      'Baixa carga aqui é: rádio abaixo de 10% do máximo <b>e</b> vazão abaixo de 10% do quase-pior caso.',
+      'O segundo indicador confere se o <b>atraso continua aceitável</b> nessas janelas: economizar piorando o serviço não é economia.',
+      'Termina numa <b>intenção</b> de economia em dry-run. O laboratório não controla potência de antena: nada é desligado de verdade.',
+    ],
     items: [
       '<b>Baixa carga</b> = PRB ≤ 10% do máximo E vazão ≤ 10% do p95 · <b>Indicador 1</b>: fração do tempo nessas janelas.',
       '<b>Indicador 2</b>: vazão e atraso dentro das janelas — a intenção só faz sentido se o atraso continua aceitável.',
       'Intenção de economia em A1 (<b>dry-run</b>) apenas: o lab não controla potência de RU e nada é desligado.',
     ],
-    concl: '✓ ~40% do experimento em baixa carga com atraso ok → intenção candidata, sem atuação física.',
+    concl: '✓ Cerca de 40% do experimento em baixa carga com atraso ok → intenção candidata, sem atuação física.',
   },
   'p2-tema-t7': {
     title: 'O que acabou de acontecer — T7 Política de QoS / steering (candidata)',
+    antes: [
+      'Vai montar uma <b>regra de política</b> e testá-la sobre os dados: atraso alto <b>ou</b> (rádio cheio com vazão baixa).',
+      'Dois indicadores: quanto do tempo a rede passou em degradação, e quantas vezes a regra disparou — separando os disparos <b>sustentados</b> (3 amostras seguidas) dos picos isolados.',
+      'Na tela sai também uma linha do tempo em texto, mostrando onde a regra acendeu em cada fase.',
+      'A política nasce como <b>proposta com validação humana</b>, em dry-run. Não afirmamos que algum handover aconteceu.',
+    ],
     items: [
       '<b>Regra</b>: atraso > 100 µs OU (PRB alto E vazão baixa) · <b>Indicador 1</b>: % do tempo em degradação por fase.',
       '<b>Indicador 2</b>: acionamentos (subidas da regra) e os <b>sustentados</b> (3 amostras seguidas) — persistência evita reagir a pico.',
@@ -1699,6 +1813,11 @@ const TEST_EXPLAIN = {
   },
   'p2-tema-all': {
     title: 'O que acabou de acontecer — os 7 temas lado a lado',
+    antes: [
+      'Vai rodar os <b>7 temas em sequência</b> sobre exatamente os mesmos dados e fechar com uma tabela comparando os vereditos.',
+      'É a tese do projeto integrador numa tela: o dado é o mesmo para todos os grupos; o que muda é a <b>pergunta</b>, os 2 indicadores e a recomendação.',
+      'Demora mais que um tema sozinho (roda os 7), mas continua sendo leitura de arquivo: não toca na rede.',
+    ],
     items: [
       'Rodou os 7 temas em sequência sobre os <b>mesmos dados</b> e fechou com a tabela lado a lado (indicador 1 · indicador 2 · veredito).',
       'O que muda de um grupo para o outro é a <b>pergunta</b>, os indicadores e a recomendação — não o dado.',
@@ -1708,9 +1827,15 @@ const TEST_EXPLAIN = {
   },
   'p2-ml-pm': {
     title: 'O que acabou de acontecer — Predictive Maintenance (RRU perdida)',
+    antes: [
+      'Vai treinar 5 modelos para detectar, <b>pelo lado do celular</b>, se a antena está com as 2 unidades de rádio funcionando ou só com 1 (defeito).',
+      'A graça do caso: o sistema de inventário pode achar que está tudo bem, e o modelo enxerga o defeito pelo comportamento do sinal.',
+      'Como se avalia: treina nos primeiros 70% do tempo, testa nos últimos 30%. Na tela sai a acurácia de cada modelo.',
+      'Se o modelo diz "1 rádio" e o inventário diz "2", isso viraria um alerta de manutenção.',
+    ],
     items: [
       'Treinou 5 classificadores para detectar, pelo lado do UE, se a célula está com <b>2 RRUs (normal) ou 1 (defeito)</b> — mesmo quando o EMS acha que está tudo bem.',
-      'Split temporal 70:30: o <b>Gradient Boosting (~XGBoost) acerta ~92,5%</b>, reproduzindo a Tabela 7.',
+      'Treinando nos primeiros 70% do tempo e testando nos últimos 30%: o <b>Gradient Boosting (equivalente ao XGBoost) acerta cerca de 92,5%</b>, reproduzindo a Tabela 7.',
       'Se o modelo diz 1 e o inventário diz 2, dispara <b>alerta de manutenção</b>.',
     ],
     concl: '✓ Reproduz a Tabela 7 (Instance); a DNN 99,1% famosa é *sequence*.',
@@ -1879,7 +2004,7 @@ const GUIA = {
         ] },
       { ic: '▶', t: 'O que vai acontecer quando você clicar em Iniciar',
         linhas: [
-          'Roda no servidor o comando <code>p2-tema-t1</code> (script <code>scripts/p2_temas.sh t1</code>), que leva <b>~2 segundos</b>.',
+          'Roda no servidor o comando <code>p2-tema-t1</code> (script <code>scripts/p2_temas.sh t1</code>), que leva <b>cerca de 2 segundos</b>.',
           'Ele imprime, nesta ordem: as <b>fórmulas</b> → a <b>tabela por fase</b> (n, média, mediana, p95, PRB) → as <b>correlações</b> global e por fase → a <b>regra do card</b> → o <b>veredito</b>.',
           '<b>Não toca na rede.</b> É leitura de arquivo: nenhum container sobe, nada é reconfigurado. Se ele propuser uma política A1, é <b>dry-run</b> — só o JSON aparece na tela, nada é aplicado.',
           'Deu certo quando aparecer a linha <b>Veredito:</b> no fim e o resumo verde. Se o arquivo não tiver as 3 métricas, ele diz isso em vez de quebrar.',
@@ -1951,9 +2076,13 @@ function preflight(cmd, srcBtn) {
   if (isGuest) return;
   pfClose();
   const ex = TEST_EXPLAIN[cmd];
+  // ANTES do teste usa-se `antes` (o que VAI acontecer, no futuro). Os `items`
+  // são a explicação de DEPOIS, escrita no passado ("leu o log...") — mostrá-los
+  // aqui fazia o pré-voo narrar como já feito algo que nem começou.
+  const linhas = ex && (ex.antes || ex.items.slice(0, 3));
   const what = ex
-    ? '<ul style="margin:4px 0 0 18px;padding:0">' + ex.items.slice(0, 3).map(i => '<li style="margin:3px 0">' + i + '</li>').join('') + '</ul>'
-    : 'Executa <code>' + cmd + '</code> no servidor e streama a saída neste console.';
+    ? '<ul style="margin:4px 0 0 18px;padding:0">' + linhas.map(i => '<li style="margin:4px 0;line-height:1.55">' + i + '</li>').join('') + '</ul>'
+    : 'Executa <code>' + cmd + '</code> no servidor e mostra a saída neste console.';
   const onde = (window.FlowStrip && FlowStrip.sceneInfo(cmd) || []).filter(n => n.o);
   const ondeHtml = onde.length
     ? '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:10px 0 3px">Onde roda (scripts · dados · containers)</div>'
@@ -2520,7 +2649,18 @@ function demoLogLine(text, cls) {
   const ph = demoLogEl.querySelector('.empty'); if (ph) ph.remove();
   const div = document.createElement('div');
   div.className = 'logline' + (cls ? ' ' + cls : '');
-  div.textContent = text;
+  if (cls) {
+    div.textContent = text;              // 'cmd'/'end' têm cor própria
+  } else {
+    // MESMA colorimetria do console (ISO/ANSI + regras + anotação didática):
+    // ao ativar um projeto é aqui que passa a inicialização, e antes tudo saía
+    // no mesmo cinza — o que subiu, o que falhou e o que é aviso ficavam
+    // indistinguíveis. Agora verde = subiu/ok, vermelho = erro, amarelo =
+    // aviso/espera, azul = INFO e o "· o que este componente faz".
+    const { html, color } = renderLogLine(text);
+    if (color) div.style.color = color;
+    div.innerHTML = html;
+  }
   demoLogEl.appendChild(div);
   demoLogEl.scrollTop = demoLogEl.scrollHeight;
 }
@@ -2639,11 +2779,11 @@ const projButtons = document.querySelectorAll('[data-proj]');
 const PROJ_INFO = {
   p1: { title: ['proj.p1_title', 'Alternar para Projeto 1 — Open5GS + UERANSIM'],
         sub: ['proj.p1_sub', 'Desliga o Projeto 2 e sobe o Core Open5GS + RAN UERANSIM.'],
-        confirmDetail: ['proj.p1_confirm', 'Vai desligar o que estiver no ar (inclusive o Projeto 2) e subir o Projeto 1. Leva ~1 min.'],
+        confirmDetail: ['proj.p1_confirm', 'Vai desligar o que estiver no ar (inclusive o Projeto 2) e subir o Projeto 1. Leva cerca de 1 minuto.'],
         doneOk: ['proj.p1_ok', '✓ Projeto 1 no ar. Pode rodar a Demonstração E2E.'] },
   p2: { title: ['proj.p2_title', 'Alternar para Projeto 2 — OAI 5GC + gNB + FlexRIC'],
         sub: ['proj.p2_sub', 'Desliga o Projeto 1 e sobe o OAI Core + near-RT RIC + gNB (E2).'],
-        confirmDetail: ['proj.p2_confirm', 'Vai desligar o Projeto 1 e subir o lab E2 do Projeto 2 (51 PRBs). Leva ~1–2 min.'],
+        confirmDetail: ['proj.p2_confirm', 'Vai desligar o Projeto 1 e subir o lab E2 do Projeto 2 (51 PRBs). Leva de 1 a 2 minutos.'],
         doneOk: ['proj.p2_ok', '✓ Projeto 2 no ar. Veja a Topologia e rode os testes E2/xApp.'] },
   off: { title: ['proj.off_title', 'Desligar tudo'],
          sub: ['proj.off_sub', 'Para os dois projetos e libera os recursos do servidor.'],
@@ -2684,6 +2824,19 @@ function updateProjSelector(groups) {
   });
   // Topo: realça o card do projeto ativo.
   document.querySelectorAll('.proj-card[data-proj-card]').forEach(c => c.classList.toggle('active', c.dataset.projCard === active));
+  // ...e escreve o estado de cada projeto em UMA palavra, verde ou vermelha.
+  // 'parcial' existe porque um projeto pode estar meio no ar (ex.: Core sim,
+  // E2 lab não) — dizer LIGADO nesse caso seria mentir com cor bonita.
+  const PROJ_GRUPOS = { p1: ['p1-core', 'p1-ran'], p2: ['p2-core', 'p2-e2lab', 'p2-nonrt'] };
+  document.querySelectorAll('[data-proj-state]').forEach(el => {
+    const st = PROJ_GRUPOS[el.dataset.projState].map(g => groups[g]).filter(v => v !== undefined);
+    const cls = st.some(v => v === 'loading') ? 'loading'
+      : st.length && st.every(v => v === 'on') ? 'on'
+      : st.some(v => v === 'on') ? 'partial' : 'off';
+    el.className = 'pc-state ' + cls;
+    el.textContent = I18N.t('pc.state_' + cls);
+    el.removeAttribute('data-i18n');   // dinâmico assumiu
+  });
   _activeProj = active;
   // Cabeçalho: indica qual projeto está aberto.
   const apEl = document.getElementById('active-proj');

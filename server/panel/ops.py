@@ -214,10 +214,19 @@ def read_container_stats() -> list[dict]:
     return containers
 
 
-def process_running(pattern: str) -> bool:
+def process_running(name: str) -> bool:
+    """Processo vivo, pelo NOME exato do binario (pgrep -x).
+
+    Era `pgrep -f`, que casa a linha de comando inteira: um `tail -f
+    nr-softmodem.log`, um `pkill -f nr-softmodem` do proprio script de
+    desligar ou qualquer shell de aluno com a palavra na linha acendiam o
+    botao do painel como se o lab estivesse no ar. Todos os chamadores passam
+    nome de binario (nr-softmodem, nr-uesoftmodem, nearRT-RIC), que e como os
+    scripts up_*.sh tambem conferem.
+    """
     try:
         return subprocess.run(
-            ["pgrep", "-f", pattern], capture_output=True, timeout=3
+            ["pgrep", "-x", name], capture_output=True, timeout=3
         ).returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return False
@@ -967,6 +976,65 @@ def kpmdata_status() -> JSONResponse:
     st = _labdata_state()
     return JSONResponse({"source": st.get("kpm", "default"), "has_custom": KPM_CUSTOM.exists(),
                          "rows": st.get("kpm_rows")})
+
+
+@router.get("/api/lab-data/kpm/preview")
+def kpmdata_preview() -> JSONResponse:
+    """As primeiras linhas do dado que o teste VAI usar, para a tela de pré-voo.
+
+    A aula 03 insiste que ninguém analisa o que não olhou: antes de rodar, o
+    aluno vê o arquivo de verdade (a fonte em uso, quantas amostras, quais
+    fases e as primeiras medições), não um exemplo decorativo. Serve tanto para
+    a amostra do professor quanto para o arquivo enviado/colado no painel.
+    """
+    st = _labdata_state()
+    usa_custom = st.get("kpm") == "custom" and KPM_CUSTOM.exists()
+    path = KPM_CUSTOM if usa_custom else KPM_SAMPLE
+    origem = ("arquivo que você enviou/colou no painel" if usa_custom
+              else "amostra oficial do professor (kpm-ue-tp-sample)")
+    linhas: list[dict] = []
+    fases: dict[str, int] = {}
+    total = 0
+    try:
+        with path.open(errors="replace") as fh:
+            for i, raw in enumerate(fh):
+                raw = raw.strip()
+                if not raw:
+                    continue
+                total += 1
+                if raw.startswith("{"):
+                    try:
+                        o = json.loads(raw)
+                    except json.JSONDecodeError:
+                        continue
+                    m = o.get("metrics", o)
+                    fase = str(o.get("phase") or "-")
+                    reg = {"i": o.get("sample_index", i), "fase": fase,
+                           "thp": m.get("DRB.UEThpUl"), "delay": m.get("DRB.RlcSduDelayDl"),
+                           "prb": m.get("RRU.PrbTotUl")}
+                else:  # CSV: devolve a linha crua; a tela mostra como texto
+                    fase = "-"
+                    reg = {"i": i, "fase": fase, "raw": raw[:160]}
+                fases[fase] = fases.get(fase, 0) + 1
+                if len(linhas) < 6:
+                    linhas.append(reg)
+    except OSError:
+        raise HTTPException(404, "dado do lab não encontrado no servidor")
+    return JSONResponse({
+        "origem": origem,
+        "arquivo": path.name,
+        "total": total,
+        "fases": fases,
+        "linhas": linhas,
+        "colunas": [
+            {"k": "DRB.UEThpUl", "nome": "vazão UL do UE", "un": "kbps",
+             "o": "quantos bits o usuário conseguiu subir naquele instante"},
+            {"k": "DRB.RlcSduDelayDl", "nome": "atraso RLC no DL", "un": "µs",
+             "o": "quanto tempo o pacote esperou na camada RLC antes de descer"},
+            {"k": "RRU.PrbTotUl", "nome": "ocupação de PRB no UL", "un": "%",
+             "o": "quanto do rádio (blocos de recurso) estava sendo usado"},
+        ],
+    }, headers=NO_CACHE)
 
 
 @router.get("/api/lab-data/kpm/example")

@@ -287,6 +287,34 @@
             background:rgba(77,171,247,.12); color:#cfe8ff; border:1px solid rgba(77,171,247,.45); transition:background .15s; }
   .ll-btn:hover { background:rgba(77,171,247,.26); }
 
+  /* Guia da aula no pré-voo — vive DENTRO do modal escuro (.en-mod, paleta
+     fixa de console nos dois temas). É a tela que o professor lê em voz alta
+     antes de rodar: o que faz, de onde vem, por onde passa, a fórmula, os
+     dados e o teste. */
+  .en-mod.guia { width:min(940px,96vw); }
+  .gu-chapeu { display:inline-block; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+               color:#ffb84d; border:1px solid #8a5a1a; border-radius:20px; padding:2px 10px; margin:2px 0 6px; }
+  .gu-frase { font-size:13.5px; line-height:1.6; color:#e6e6e6; background:rgba(77,171,247,.07);
+              border-left:3px solid #4dabf7; border-radius:8px; padding:11px 14px; margin:4px 0 2px; }
+  .gu-b { margin:15px 0 0; }
+  .gu-b > h4 { display:flex; align-items:baseline; gap:8px; margin:0 0 7px; font-size:13px; color:#74c0fc; font-weight:600; }
+  .gu-b ol, .gu-b ul { margin:0; padding-left:20px; }
+  .gu-b li { font-size:12.5px; line-height:1.6; color:#c9d1d9; margin:5px 0; }
+  .gu-b li b { color:#e6e6e6; }
+  .gu-b li code, .gu-dados code { color:#74c0fc; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11.5px; }
+  .gu-f { border:1px solid #2c3038; border-radius:8px; padding:9px 12px; margin:7px 0; background:#0d0e11; }
+  .gu-f .n { font-size:12.5px; font-weight:600; color:#e6e6e6; }
+  .gu-f .e { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px; color:#ffb84d; margin:5px 0 6px; }
+  .gu-f .e .un { color:#8a8f98; font-size:10.5px; }
+  .gu-f .leia { font-size:12px; line-height:1.6; color:#c9d1d9; }
+  .gu-av { margin:7px 0 0 !important; }
+  .gu-av li { color:#ffb84d; }
+  .gu-dados table { border-collapse:collapse; width:100%; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11.5px; }
+  .gu-dados th { text-align:right; color:#8a8f98; font-weight:600; border-bottom:1px solid #2c3038; padding:4px 8px; white-space:nowrap; }
+  .gu-dados th:first-child, .gu-dados td:first-child { text-align:left; }
+  .gu-dados td { text-align:right; color:#c9d1d9; padding:3px 8px; border-bottom:1px solid #1a1d23; }
+  .gu-dados .cols div { font-size:11.5px; line-height:1.5; color:#c9d1d9; margin:4px 0; }
+
   /* Console */
   /* a COLUNA rola quando o mapa é aberto em tamanho real; o log (#output) tem
      piso próprio para nunca virar uma linha ilegível no rodapé. */
@@ -1586,14 +1614,16 @@ const TEST_EXPLAIN = {
   // Análise de Dados em Redes de Telecom — os 7 temas do projeto integrador
   // (mesmos dados KPM do professor; muda a pergunta, os 2 indicadores e a recomendação).
   'p2-tema-t1': {
-    title: 'O que acabou de acontecer — T1 Vazão do usuário (UE-TP)',
+    title: 'O que acabou de acontecer — T1 Vazão do usuário (Grupo 6)',
     items: [
-      'Leu o KPM do professor (100 medições, 3 fases: baseline · stress · recovery) da zona <b>silver</b>: <code>thp_ul</code>, <code>delay_dl</code>, <code>prb_ul</code>.',
-      '<b>Indicador 1</b>: média e p95 da vazão UL por fase · <b>Indicador 2</b>: PRB UL médio por fase (<code>GROUP BY fase</code>) — a fórmula sai antes do número.',
-      '<b>Correlação de Pearson</b> global × <b>dentro de cada fase</b>: a global mistura idle com carga; só a relação que sobrevive dentro da fase vale.',
-      'Regra do card: vazão caindo com PRB alto → priorização em política <b>A1 (dry-run)</b>; se não disparou, o script diz por quê.',
+      '<b>O que ele fez</b>: leu o arquivo de medições do rádio (zona <b>bronze</b>), transformou cada linha em número e carimbou a fase (<b>silver</b>), e resumiu tudo numa tabela de 3 linhas — uma por fase (<b>gold</b>). Isso é o ETL da aula 03, do começo ao fim, em 2 segundos.',
+      '<b>Como ler a tabela</b>: cada linha é uma <b>fase</b> (repouso · carga · recuperação). <code>n</code> = quantas medições. <b>média</b> = o valor típico. <b>mediana</b> = o valor do meio, que ignora os picos. <b>p95</b> = o quase-pior caso. <b>PRB médio</b> = quanto do rádio estava ocupado. Compare as linhas de cima para baixo: é o contraste entre as fases que conta a história, nunca um número sozinho.',
+      '<b>As duas correlações</b>: a <b>global</b> junta as três fases no mesmo saco; a <b>de dentro da fase</b> olha uma fase por vez. Quando elas discordam, vale a de dentro — a global está comparando rede parada com rede sob carga e vê uma relação que é só a diferença entre os dois mundos.',
+      '<b>A regra do card</b>: ela procura o caso ruim — vazão <i>baixa</i> com rádio <i>cheio</i>, ou seja, usuário mal servido. Se ela <b>não</b> disparou, isso é uma boa notícia e é resultado: significa que o rádio encheu porque o usuário estava usando, e a rede entregou.',
+      '<b>Para o checkpoint</b>, cada indicador precisa de: nome · fórmula · unidade · granularidade (aqui: amostra KPM agregada por fase) · fonte (a coluna do arquivo) · interpretação · limite de validade. Os dois indicadores do Grupo 6 são a <b>vazão UL por fase</b> (kbps) e a <b>ocupação de PRB por fase</b> (%) — as fórmulas saíram impressas acima dos números, é só copiar.',
+      '<b>O que estes dados NÃO permitem dizer</b>: nada sobre a experiência do usuário (não há nota de vídeo nem MOS no arquivo), nada sobre cobertura ou qualidade de sinal (não há RSRP, SINR nem CQI) e nada sobre outros usuários — é <b>1 UE em simulação (RFSIM), 1 execução</b>. Dizer menos do que os dados sustentam também é resultado.',
     ],
-    concl: '✓ A vazão acompanha o PRB dentro da fase (0,98 no stress); vazão × atraso ≈ 0 dentro da fase — o 0,48 global é confundimento entre fases.',
+    concl: '✓ Na amostra do professor: a vazão acompanha o PRB dentro da fase de carga (r ≈ 0,98) e vazão × atraso fica perto de zero dentro da fase — o r global de 0,48 é a mistura das fases, não uma relação real. Leitura: capacidade sendo usada, não usuário mal servido.',
   },
   'p2-tema-t2': {
     title: 'O que acabou de acontecer — T2 Detecção de anomalia de carga',
@@ -1794,6 +1824,114 @@ async function withLoader(btn, fn) {
 // + scripts/dados (onde roda) + ▶ Iniciar. Reusa o CSS do modal ⚡ (en-*).
 let _pf = null;
 function pfClose() { if (_pf) { _pf.b.remove(); _pf.m.remove(); _pf = null; } }
+// ===== Guia da aula: a tela que se lê ANTES de rodar =========================
+// Pedido do professor-usuário: "o objetivo do app é ensinar quem não sabe
+// mesmo — mostrar o que faz, de onde vem, por onde passa, a fórmula, os dados
+// e o teste". O pré-voo comum (TEST_EXPLAIN) resume; o GUIA abre, em português
+// de gente, para ser LIDO EM VOZ ALTA na frente da turma.
+const GUIA = {
+  'p2-tema-t1': {
+    chapeu: 'Grupo 6 · Tema 1 · Vazão do usuário (UE-TP)',
+    frase: 'Este teste pega <b>100 medições</b> que a rede 5G do laboratório gravou sobre <b>um único usuário</b>, separa em três momentos — rede em repouso, rede sob carga e rede se recuperando — e responde à pergunta do card do Grupo 6: <b>a velocidade desse usuário sobe ou desce junto com a ocupação do rádio e com o atraso?</b>',
+    blocos: [
+      { ic: '📡', t: 'De onde vem esse dado (ninguém digitou esses números)',
+        passos: [
+          'Um <b>celular simulado</b> (RFSIM: não há antena de verdade, o sinal é calculado em software) se conecta à rede do laboratório.',
+          'A <b>antena</b> — o gNB, processo <code>nr-softmodem</code> — mede o que está acontecendo com esse usuário: quantos bits ele conseguiu subir, quanto tempo o pacote esperou na fila, e quanto do rádio estava ocupado.',
+          'Cerca de <b>uma vez por segundo</b> a antena empacota essas medidas num relatório padronizado do O-RAN chamado <b>E2SM-KPM</b> e envia pela interface <b>E2</b> para o RIC (<code>nearRT-RIC</code>).',
+          'Um programa assinante — o <b>xApp</b> — recebe cada relatório e <b>escreve uma linha num arquivo</b>.',
+          'Esse arquivo é o que você vai analisar agora. É <b>o mesmo para os 7 grupos</b>: o que muda de um tema para outro é a pergunta, não o dado.',
+        ] },
+      { ic: '🧪', t: 'Por onde ele passa aqui dentro (o ETL da aula 03)',
+        linhas: [
+          '<b>BRONZE — o dado cru.</b> O arquivo do jeito que caiu: uma linha por medição, texto, sem limpeza. Ninguém decidiu nada ainda. É o que a aula 03 chama de zona bronze do <i>lake</i>.',
+          '<b>SILVER — o dado organizado.</b> O script lê cada linha, transforma texto em número, confere se as 3 métricas existem, carimba a fase (repouso, carga, recuperação) e ordena. Mesmo dado, agora confiável. É aqui que mora o <b>T</b> de ETL: <i>Transform</i>.',
+          '<b>GOLD — o indicador.</b> As 100 linhas viram <b>uma tabela de 3 linhas</b>: uma por fase, com a média e o p95 da vazão e a ocupação média do rádio. É o número que se leva para a reunião — e é o que o Checkpoint 1 pede.',
+          'Em uma frase: <b>Extract</b> (ler o arquivo) → <b>Transform</b> (tipar, carimbar a fase, agrupar) → <b>Load</b> (a tabela do resultado). A <b>EDA</b> é o passo seguinte: olhar essa tabela e perguntar o que ela está dizendo.',
+        ] },
+      { ic: '📐', t: 'A fórmula, símbolo por símbolo',
+        formulas: [
+          { n: 'Indicador 1 — Vazão do usuário por fase', e: 'média(thp_ul) e p95(thp_ul), agrupando por fase', un: 'kbps',
+            leia: '<b>média</b> = some a vazão de todas as medições daquela fase e divida pela quantidade de medições. <b>p95</b> = ordene as medições da menor para a maior e leia o valor que deixa 95% delas abaixo — é o "quase pior caso", e serve porque a média esconde os tombos.' },
+          { n: 'Indicador 2 — Ocupação do rádio por fase', e: 'média(prb_ul), agrupando por fase', un: '% dos PRB',
+            leia: 'PRB é o pedacinho de rádio que a antena entrega a um usuário por vez. 97% significa rádio praticamente cheio; 2% significa rádio vazio.' },
+          { n: 'Correlação de Pearson (r)', e: 'r = cov(x, y) / (sₓ · sᵧ)', un: 'entre −1 e +1',
+            leia: 'Mede se duas medidas <b>andam juntas</b>. <b>r perto de +1</b>: quando uma sobe, a outra sobe. <b>Perto de 0</b>: não têm relação. <b>Perto de −1</b>: quando uma sobe, a outra desce. <code>cov</code> é o quanto elas variam juntas; <code>s</code> é o quanto cada uma varia sozinha — dividir por elas tira a unidade e deixa o número comparável.' },
+        ],
+        avisos: [
+          'Correlação <b>não é causa</b>: duas coisas podem subir juntas sem uma provocar a outra.',
+          'O r calculado sobre <b>todas as fases juntas</b> mistura repouso com carga e infla o resultado. O que vale é o r <b>dentro de cada fase</b> — o script mostra os dois lado a lado justamente para você ver a diferença.',
+        ] },
+      { ic: '▶', t: 'O que vai acontecer quando você clicar em Iniciar',
+        linhas: [
+          'Roda no servidor o comando <code>p2-tema-t1</code> (script <code>scripts/p2_temas.sh t1</code>), que leva <b>~2 segundos</b>.',
+          'Ele imprime, nesta ordem: as <b>fórmulas</b> → a <b>tabela por fase</b> (n, média, mediana, p95, PRB) → as <b>correlações</b> global e por fase → a <b>regra do card</b> → o <b>veredito</b>.',
+          '<b>Não toca na rede.</b> É leitura de arquivo: nenhum container sobe, nada é reconfigurado. Se ele propuser uma política A1, é <b>dry-run</b> — só o JSON aparece na tela, nada é aplicado.',
+          'Deu certo quando aparecer a linha <b>Veredito:</b> no fim e o resumo verde. Se o arquivo não tiver as 3 métricas, ele diz isso em vez de quebrar.',
+        ] },
+      { ic: '👀', t: 'Como ler o resultado (o que dizer quando aparecer)',
+        linhas: [
+          'Se a <b>vazão sobe junto com o PRB</b>: o rádio está cheio <i>porque</i> o usuário está usando. Isso é <b>capacidade</b>, não é defeito — a rede está entregando.',
+          'Se a <b>vazão cai com o PRB alto</b>: aí sim alguém está mal servido com o rádio lotado — é exatamente o caso que a regra do card procura, e o que justificaria priorizar esse usuário.',
+          'Quando o r <b>global</b> e o r <b>dentro da fase</b> discordarem, acredite no de dentro da fase e diga por quê: o global está comparando dois mundos diferentes (rede parada × rede sob carga).',
+          'O que <b>não</b> dá para afirmar com esses dados: nada sobre a experiência do usuário (não há nota de vídeo nem MOS), nada sobre cobertura (não há RSRP nem SINR no arquivo) e nada sobre outros usuários (é 1 UE em simulação).',
+        ] },
+    ],
+    dados: true,
+  },
+};
+
+function guiaEsc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+function guiaSec(t) {
+  return '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:14px 0 3px">' + t + '</div>';
+}
+
+function guiaBloco(b) {
+  let h = '<div class="gu-b"><h4><span>' + b.ic + '</span><span>' + b.t + '</span></h4>';
+  if (b.passos) h += '<ol>' + b.passos.map(x => '<li>' + x + '</li>').join('') + '</ol>';
+  if (b.linhas) h += '<ul>' + b.linhas.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+  if (b.formulas) h += b.formulas.map(f =>
+    '<div class="gu-f"><div class="n">' + f.n + '</div>'
+    + '<div class="e">' + f.e + '   <span class="un">[' + f.un + ']</span></div>'
+    + '<div class="leia">' + f.leia + '</div></div>').join('');
+  if (b.avisos) h += '<ul class="gu-av">' + b.avisos.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+  return h + '</div>';
+}
+
+// "os dados": mostra o ARQUIVO que o teste vai ler — a fonte em uso, quantas
+// medições, as fases e as primeiras linhas. A aula 03 insiste que ninguém
+// analisa o que não olhou; e se o professor trocou a fonte pelo cartão 💾, é
+// o dado dele que aparece aqui.
+async function guiaDados(host) {
+  try {
+    const r = await fetch('/api/lab-data/kpm/preview');
+    if (!r.ok) throw new Error('http ' + r.status);
+    const d = await r.json();
+    const fases = Object.keys(d.fases).map(k => k + ' (' + d.fases[k] + ')').join(' · ');
+    let h = '<div style="font-size:12px;line-height:1.6;color:#c9d1d9;margin-bottom:8px">Fonte em uso: <b style="color:#e6e6e6">'
+      + guiaEsc(d.origem) + '</b> — arquivo <code>' + guiaEsc(d.arquivo) + '</code>, <b style="color:#e6e6e6">'
+      + d.total + '</b> medições. Fases: ' + guiaEsc(fases) + '.</div>';
+    if (d.linhas.length && d.linhas[0].thp !== undefined) {
+      h += '<table><tr><th>#</th><th>fase</th><th>vazão UL (kbps)</th><th>atraso DL (µs)</th><th>PRB UL (%)</th></tr>'
+        + d.linhas.map(l => '<tr><td>' + guiaEsc(l.i) + '</td><td>' + guiaEsc(l.fase) + '</td><td>' + guiaEsc(l.thp)
+          + '</td><td>' + guiaEsc(l.delay) + '</td><td>' + guiaEsc(l.prb) + '</td></tr>').join('')
+        + '</table><div style="font-size:11px;color:#8a8f98;margin-top:5px">as ' + d.linhas.length
+        + ' primeiras de ' + d.total + ' — o teste lê todas</div>';
+    } else if (d.linhas.length) {
+      h += '<div style="font-family:monospace;font-size:11px;color:#c9d1d9;line-height:1.5">'
+        + d.linhas.map(l => guiaEsc(l.raw)).join('<br>') + '</div>';
+    }
+    h += '<div class="cols" style="margin-top:9px">' + d.colunas.map(c =>
+      '<div><code>' + guiaEsc(c.k) + '</code> — <b style="color:#e6e6e6">' + guiaEsc(c.nome) + '</b> ('
+      + guiaEsc(c.un) + '): ' + guiaEsc(c.o) + '</div>').join('') + '</div>';
+    host.innerHTML = h;
+  } catch (e) {
+    host.innerHTML = '<div style="font-size:12px;color:#8a8f98">não consegui ler o arquivo agora ('
+      + guiaEsc(e.message) + ') — o teste roda normalmente mesmo assim</div>';
+  }
+}
+
 function preflight(cmd, srcBtn) {
   if (isGuest) return;
   pfClose();
@@ -1806,20 +1944,35 @@ function preflight(cmd, srcBtn) {
     ? '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:10px 0 3px">Onde roda (scripts · dados · containers)</div>'
       + onde.map(n => '<div style="margin:2px 0;font-size:11px">' + n.txt + ' — <code style="color:#74c0fc;font-size:10.5px">' + n.o + '</code></div>').join('')
     : '';
+  // Guia da aula (GUIA): a versão longa, para LER na frente da turma. Sem guia
+  // para o comando, cai no pré-voo curto de sempre.
+  const g = GUIA[cmd];
+  const corpo = g
+    ? '<div class="gu-chapeu">' + g.chapeu + '</div>'
+      + '<div class="gu-frase">' + g.frase + '</div>'
+      + guiaBloco(g.blocos[0])
+      + guiaSec('Por onde os dados vão correr (clique nos nós ⓘ)')
+      + '<div id="pf-topo"></div>'
+      + (g.blocos[1] ? guiaBloco(g.blocos[1]) : '')
+      + (g.dados ? guiaSec('Os dados que este teste vai ler') + '<div class="gu-dados" id="pf-dados" style="font-size:12px;color:#8a8f98">lendo o arquivo no servidor…</div>' : '')
+      + g.blocos.slice(2).map(guiaBloco).join('')
+      + ondeHtml
+    : '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:8px 0 3px">O que este teste vai fazer</div>'
+      + '<div style="font-size:12px">' + what + '</div>'
+      + '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:10px 0 3px">Por onde os dados vão correr (clique nos nós ⓘ)</div>'
+      + '<div id="pf-topo"></div>' + ondeHtml;
   const b = document.createElement('div'); b.className = 'en-back'; b.onclick = pfClose;
-  const m = document.createElement('div'); m.className = 'en-mod';
+  const m = document.createElement('div'); m.className = 'en-mod' + (g ? ' guia' : '');
   m.innerHTML = '<span class="x" style="position:absolute;top:10px;right:14px;cursor:pointer;color:#8a8f98">✕</span>'
     + '<h3>🧪 ' + prettyCmd(cmd) + '</h3>'
     + '<div class="sub">' + (ex ? ex.title.replace('O que acabou de acontecer — ', '') : cmd) + ' · o percurso abaixo é AO VIVO durante a execução</div>'
-    + '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:8px 0 3px">O que este teste vai fazer</div>'
-    + '<div style="font-size:12px">' + what + '</div>'
-    + '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:10px 0 3px">Por onde os dados vão correr (clique nos nós ⓘ)</div>'
-    + '<div id="pf-topo"></div>' + ondeHtml
-    + '<div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end">'
+    + corpo
+    + '<div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">'
     + '<button id="pf-cancel" style="background:#21242b;border:1px solid #2c3038;color:#8a8f98;padding:7px 14px;border-radius:7px;cursor:pointer">Cancelar</button>'
     + '<button id="pf-go" style="background:#2f9e44;border:none;color:#fff;font-weight:700;padding:7px 18px;border-radius:7px;cursor:pointer">▶ Iniciar teste</button></div>';
   document.body.appendChild(b); document.body.appendChild(m);
   _pf = { b, m };
+  if (g && g.dados) guiaDados(m.querySelector('#pf-dados'));
   if (window.FlowStrip) FlowStrip.preview(cmd, m.querySelector('#pf-topo'));
   const pfmm = document.createElement('div'); m.querySelector('#pf-topo').after(pfmm);
   if (window.MiniMap && window.FlowStrip.sceneName) MiniMap.preview(FlowStrip.sceneName(cmd), pfmm);

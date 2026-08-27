@@ -70,11 +70,11 @@ const EXPECT = {
   const tb = await page.evaluate(() => ({
     panel: document.querySelector('h1 [data-i18n="topbar.panel"]').textContent,
     kiosk: document.getElementById('kiosk-btn').textContent.trim(),
-    proj: document.getElementById('active-proj-label').textContent,
+    proj: document.querySelector('[data-proj-state="p2"]').textContent,
   }));
   assert(tb.panel === '— Panel', `index/es: h1 = "${tb.panel}"`);
   assert(tb.kiosk.includes('Proyección'), `index/es: kiosk = "${tb.kiosk}"`);
-  assert(tb.proj.includes('Ningún proyecto'), `index/es: projeto ativo = "${tb.proj}"`);
+  assert(tb.proj.includes('apagado'), `index/es: estado do projeto = "${tb.proj}"`);
   assert(errors.length === 0, `index/es: pageerror: ${errors.join(' | ')}`);
   console.log('PASS index · topbar em espanhol ao carregar com idioma salvo');
 

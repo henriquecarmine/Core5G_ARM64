@@ -107,9 +107,11 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   await page.evaluate(() => {
     document.querySelectorAll('.tools-set').forEach(s => s.classList.toggle('active', s.dataset.tools === 'p1'));
     document.getElementById('tools-empty').classList.remove('show');
+    // Barra de estado (v0.67): o projeto no ar aparece inteiro, o outro encolhe.
     document.querySelector('.proj-card[data-proj-card="p1"]').classList.add('active');
-    const ap = document.getElementById('active-proj'); ap.classList.add('on');
-    document.getElementById('active-proj-label').textContent = 'Projeto 1 · Open5GS no ar';
+    document.querySelector('.proj-card[data-proj-card="p2"]').classList.add('idle');
+    const st = document.querySelector('[data-proj-state="p1"]');
+    st.className = 'pc-state on'; st.textContent = 'ligado';
     loaderInc();
     btnLoading(document.querySelector('.test-p1[data-cmd]'), true);
     btnLoading(document.getElementById('logs-btn'), true);

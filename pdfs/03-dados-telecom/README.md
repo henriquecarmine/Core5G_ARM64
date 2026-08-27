@@ -22,7 +22,7 @@ indicador → análise → visualização → decisão
 | 01 | 04/08/2026 | 3h30 | Fontes de dados + apresentação do projeto integrador | `aula01-intro_fontes_dados_telecom-2.pdf` |
 | 02 | 06/08/2026 | 3h30 | Lakes/warehouses + definição preliminar do caso | `aula02-data_lakes_big_data.pdf` |
 | 03 | 08/08/2026 | 5h | EDA/ETL + **Checkpoint 1** | `aula03-eda_etl_visualizacao.pdf` |
-| 04 | 25/08/2026 | 3h30 | KPIs/KQIs + **Checkpoint 2** | — |
+| 04 | 25/08/2026 | 3h30 | KPIs/KQIs + **Checkpoint 2** | `aula04-kpis_kqis_qualidade.pdf` |
 | 05 | 27/08/2026 | 3h30 | Capacidade/otimização + checkpoint técnico final | — |
 | 06 | 29/08/2026 | 5h | Apresentações e **defesa** | — |
 
@@ -91,7 +91,9 @@ Vazão do usuário; ver [`projeto/`](projeto/)).
 A disciplina vive no painel como **Estudo 4** (rail do console, dropdown
 *Análise de Dados em Redes de Telecom*): as aulas 01–03 renderizadas dos slides
 (`/lab/estudo/4/aula/{1,2,3}`: objetivos, conceitos, fórmulas, "onde roda" no
-mini-mapa, exercícios, quiz) e **os 7 temas do projeto integrador** como
+mini-mapa, exercícios, quiz), o teste **`p2-kpi-qoe`** com a cadeia da aula 04
+(medida → KPI → KQI → QoS → QoE proxy → anatomia dos indicadores do CP2) e
+**os 7 temas do projeto integrador** como
 comandos (`p2-tema-t1 … p2-tema-all`): cada um imprime a pergunta do card, as
 fórmulas dos 2 indicadores, as tabelas por fase, a leitura e a recomendação como
 política A1 em dry-run, sobre os mesmos dados (`kpm-ue-tp-sample`) ou sobre um

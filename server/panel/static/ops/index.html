@@ -801,6 +801,10 @@
               <button class="test-p2" data-cmd="p2-kpm-analytics" data-i18n="t.p2_analytics">Analisar dados KPM (CSV + KPI)</button>
               <div class="lock-note" data-i18n="rail.lock_p2">Ative o Projeto 2 no topo para rodar estes testes.</div>
             </div>
+            <div class="est-sub" data-i18n="rail.e4_aula04">Aula 04 · indicadores e qualidade</div>
+            <div class="test-block" data-proj-tests="any">
+              <button class="test-any" data-cmd="p2-kpi-qoe" data-i18n="t.p2_kpi_qoe" data-i18n-title="t.p2_kpi_qoe_title" title="A cadeia da aula 04 sobre os mesmos dados: medida KPM → KPI → KQI → QoS (SLA didático) → QoE (proxy) → Checkpoint 2">KPI · KQI · QoS · QoE (cadeia da aula)</button>
+            </div>
             <div class="est-sub" data-i18n="rail.e4_temas">Projeto integrador · 7 temas, mesmos dados</div>
             <div class="test-block" data-proj-tests="any">
               <button class="test-any" data-cmd="p2-tema-t1" data-i18n="t.tema_t1">T1 · Vazão do usuário (UE-TP)</button>
@@ -1013,9 +1017,9 @@
 </div>
 
 <script src="../i18n.js"></script>
-<script src="/static/ops/flow-strip.js?v=0.64.0"></script>
+<script src="/static/ops/flow-strip.js?v=0.65.0"></script>
 <script src="/static/ops/energy.js?v=0.61.3"></script>
-<script src="/static/ops/mini-map.js?v=0.64.3"></script>
+<script src="/static/ops/mini-map.js?v=0.65.0"></script>
 <script>
 // Robustez file:// (smoke do CI): sem os módulos /static/, viram no-ops —
 // a página (i18n, topbar, console) segue funcional.
@@ -1526,6 +1530,18 @@ const TEST_EXPLAIN = {
       'Ao fim, analisa o log (CSV + KPI + sparkline).',
     ],
     concl: '✓ Coleta resiliente e segura. Throughput real (relatório completo) depende de upgrade para 4 vCPU.',
+  },
+  'p2-kpi-qoe': {
+    title: 'O que acabou de acontecer — Aula 04: da medida à experiência percebida',
+    items: [
+      '<b>Medida → métrica</b>: leu o KPM (PRB %, vazão kbps, atraso µs) e mostrou o que o artefato <b>não</b> tem — RSRP, SINR, CQI e contadores de setup/drop/handover.',
+      '<b>KPI</b> (rede): utilização média e p95 de PRB, mediana e p95 da vazão e do atraso, por fase — com a agregação justificada (mediana resiste ao pico do RFSIM; p95 é a cauda).',
+      '<b>KQI</b> (serviço): a fração do tempo com atraso acima do limiar L, calibrado no baseline — sem limiar justificado não existe KQI formal.',
+      '<b>QoS</b>: as 4 cláusulas didáticas (latência, vazão, capacidade, qualidade) confrontadas fase a fase — <b>violada só na carga</b> é evidência; violada também no baseline denuncia limiar errado.',
+      '<b>QoE</b>: só <b>proxy</b>. Não há MOS nem buffering no lab; a saída diz como escrever isso no relatório sem afirmar o que não foi medido.',
+      '<b>Diagnóstico</b>: capacidade (PRB e vazão sobem juntos) × canal/jammer (vazão cai sem PRB explicar) — e qual sensor faltaria para fechar a conta.',
+    ],
+    concl: '✓ Termina na anatomia dos indicadores (nome · fórmula · unidade · granularidade · fonte · alvo · papel · limite de validade): é o entregável do Checkpoint 2.',
   },
   'p2-kpm-analytics': {
     title: 'O que acabou de acontecer — Dados na RAN (do KPM ao KPI)',

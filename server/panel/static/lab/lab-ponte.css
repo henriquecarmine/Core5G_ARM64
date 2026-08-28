@@ -1,0 +1,30 @@
+/* =====================================================================
+   Ponte do Lab para a identidade (docs/identidade-visual.md).
+
+   As 11 páginas do lab tinham CADA UMA a sua cópia da paleta — 26 blocos de
+   cor distintos, com deriva entre eles. Aqui o vocabulário do lab (20 nomes)
+   passa a apontar para os papéis do sistema, uma vez só. As páginas carregam
+   `tokens.css` e depois este arquivo; nenhuma regra de componente muda.
+
+   Some daqui uma linha de cada vez, conforme os usos migrarem para o nome
+   semântico. `--bg`, `--surface`, `--surface-2`, `--ink*`, `--line`,
+   `--accent*`, `--good`, `--warn` e `--bad` já são do sistema e nem precisam
+   de ponte — ficam de fora de propósito.
+   ===================================================================== */
+
+:root {
+  /* o "inset" do lab é o console/poço escuro — escuro NOS DOIS temas, como o
+     terminal do painel. Quem o usa como caixa de texto deve preferir a classe
+     `.superficie-escura`, que resolve os papéis dos filhos junto. */
+  --inset: var(--console-bg);
+
+  /* o par de categorias do Lab de IA: supervisionado x não supervisionado.
+     São duas categorias, não dois estados — por isso saem dos dois acentos e
+     nunca do verde/vermelho. */
+  --sup: var(--accent);
+  --nsup: var(--accent-2);
+
+  /* sombra: no claro é sombra mesmo; no escuro o sistema já troca por
+     superfície mais clara. */
+  --shadow: var(--elev-1);
+}

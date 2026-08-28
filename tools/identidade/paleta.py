@@ -18,6 +18,9 @@ HUE = {
     "g": 150,   # bom
     "w": 80,    # atenção
     "r": 27,    # falha
+    "c": 200,   # contraponto — o SEGUNDO acento. Existe porque o Lab de IA
+                # opõe duas categorias o tempo todo (supervisionado x não
+                # supervisionado) e um par precisa de dois matizes.
     "l": 350,   # ao vivo — a aula sendo transmitida. Não é estado da rede nem
                 # o acento: é o único momento em que a sala inteira está vendo
                 # a mesma tela, e merece cor própria.
@@ -30,6 +33,7 @@ CROMA = {
     "g": {"claro": 0.145, "escuro": 0.150},
     "w": {"claro": 0.150, "escuro": 0.155},
     "r": {"claro": 0.180, "escuro": 0.175},
+    "c": {"claro": 0.120, "escuro": 0.125},
     "l": {"claro": 0.170, "escuro": 0.170},
 }
 
@@ -46,11 +50,31 @@ K = [0.10, 0.16, 0.30, 0.42, 0.52, 0.60, 0.72, 0.88, 1.00, 0.96, 0.80, 0.46]
 # lightness em que ela PARECE a cor padrão. Âmbar a 0.640 vira mostarda;
 # vermelho claro demais vira rosa. É escolha de sinalização, não de rampa.
 SOLIDO_L = {
-    "claro":  {"a": 0.62, "g": 0.62, "w": 0.78, "r": 0.58, "l": 0.60},
-    "escuro": {"a": 0.66, "g": 0.68, "w": 0.82, "r": 0.62, "l": 0.66},
+    "claro":  {"a": 0.62, "g": 0.62, "w": 0.78, "r": 0.58, "c": 0.60, "l": 0.60},
+    "escuro": {"a": 0.66, "g": 0.68, "w": 0.82, "r": 0.62, "c": 0.68, "l": 0.66},
 }
 
-NOMES = {"n": "neutro", "a": "acento", "g": "bom", "w": "atenção", "r": "falha", "l": "ao vivo"}
+# ---- rampa CATEGÓRICA -------------------------------------------------
+# A topologia precisa distinguir 8 DOMÍNIOS de rede (RAN, core plano de
+# controle, core plano de usuário, non-RT RIC, O-RAN SC, externo, admin). Cor
+# ali é IDENTIDADE, não estado — por isso sai de uma rampa própria e nunca do
+# verde/âmbar/vermelho de sinalização.
+#
+# Oito matizes igualmente espaçados (45°), começando no acento: a separação
+# máxima possível para oito categorias. A ordem é FIXA — categoria nova entra
+# no próximo slot, nunca se recicla matiz.
+CAT_HUE = [282, 237, 192, 147, 102, 57, 12, 327]
+CAT_L   = {"claro": 0.56, "escuro": 0.68}
+CAT_C   = {"claro": 0.150, "escuro": 0.135}
+
+
+def categoricas(tema):
+    from oklch import hexof, croma_max
+    L, C = CAT_L[tema], CAT_C[tema]
+    return [hexof(L, croma_max(L, h, C), h) for h in CAT_HUE]
+
+
+NOMES = {"n": "neutro", "a": "acento", "g": "bom", "w": "atenção", "r": "falha", "c": "contraponto", "l": "ao vivo"}
 FUNDO = {"claro": 0, "escuro": 0}      # o fundo é sempre o degrau 1 do neutro
 
 
@@ -87,4 +111,5 @@ if __name__ == "__main__":
     for tema, fams in todas().items():
         print(f"\n===== TEMA {tema.upper()} =====")
         for f, cores in fams.items():
-            print(f"  {NOMES[f]:9} " + " ".join(cores))
+            print(f"  {NOMES[f]:11} " + " ".join(cores))
+        print(f"  {'categórica':11} " + " ".join(categoricas(tema)))

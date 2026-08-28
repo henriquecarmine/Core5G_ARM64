@@ -56,6 +56,21 @@ contraste; e no escuro a elevação é **superfície mais clara**, não sombra
 | `g` bom | 150 | no ar, passou |
 | `w` atenção | 80 | parcial, perto do limite |
 | `r` falha | 27 | fora, erro |
+| `c` contraponto | 200 | **o segundo acento** — existe porque o Lab de IA opõe duas categorias o tempo todo (supervisionado × não supervisionado), e um par precisa de dois matizes |
+| `l` ao vivo | 350 | a aula sendo transmitida. Não é estado da rede nem o acento: é o único momento em que a sala inteira vê a mesma tela |
+
+### A rampa categórica
+
+A topologia distingue **8 domínios de rede** (RAN, core plano de controle, core
+plano de usuário, non-RT RIC, O-RAN SC, externo, admin). Ali a cor é
+**identidade de domínio, não estado** — por isso sai de rampa própria e nunca do
+verde/âmbar/vermelho de sinalização, que naquela tela querem dizer *no ar /
+atenção / fora*.
+
+Oito matizes igualmente espaçados (45°) a partir do acento: `--cat-1` a
+`--cat-8`. **A ordem é fixa** — categoria nova entra no próximo slot, nunca se
+recicla matiz. A atribuição atual segue o matiz que cada domínio já tinha, onde
+isso não criava colisão com um estado.
 
 O acento é **azul-violeta**, não o azul-padrão de dashboard. Isso é deliberado:
 o azul era usado ao mesmo tempo como "clique aqui" e como "informativo", e essa
@@ -157,11 +172,32 @@ python3 tools/identidade/gerar_tokens.py  # escreve server/panel/static/tokens.c
 matemática. Mudou uma cor? Roda `medir.py` **antes** de aceitar — ele reprova
 com código de saída != 0, então serve de porta em CI.
 
-## O que ainda não está feito
+## Onde as telas estão
 
-Os tokens existem e estão medidos, mas **as telas ainda não os usam** — a
-migração dos 225 literais é o próximo passo, junto com a separação entre o
-painel de operação e as telas de aula.
+| | literais de cor |
+|---|--:|
+| `ops/index.html` | 250 → **4** (o scrim de cada tema e dois ANSI sem par) |
+| 11 páginas do lab | 26 blocos de paleta → **0** (ponte única em `lab/lab-ponte.css`) |
+| `login.html` | 24 → **1** |
+| `ops/topology.html` | 66 → **26** (o resto vive no JS de desenho) |
+
+**Falta**: os arquivos JS que desenham (`flow-strip.js`, `energy.js`,
+`mini-map.js`, `i18n.js`) e as cores de gráfico das páginas de ML. E a separação
+entre o painel de operação e as telas de aula.
+
+## O que os testes garantem
+
+- `node test/paginas.js` — toda página HTML tem `<meta charset>` **no primeiro
+  kilobyte** (o navegador não lê além disso) e carrega a identidade se pinta
+  alguma coisa. Este teste nasceu de duas quebras reais: três páginas sem a
+  etiqueta, e sete com a *palavra* "charset" enterrada num script, onde um
+  `grep -L charset` deu falso-negativo. Por isso ele mede **posição**, não
+  presença.
+- `test/visual-smoke.js` 0.b — a folha de identidade carregou de verdade.
+- `test/visual-smoke.js` 0.c — o console é legível **nos dois temas**, texto e
+  cores de log, com piso de 4,5:1.
+- `tools/identidade/medir.py` — contraste de todo par prometido; sai com código
+  != 0 quando reprova.
 
 ## Fontes consultadas
 

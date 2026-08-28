@@ -26,6 +26,7 @@ PARES = [
     ("texto de bom",                    ("g", 11), ("n", 1), 4.5),
     ("texto de atenção",                ("w", 11), ("n", 1), 4.5),
     ("texto de falha",                  ("r", 11), ("n", 1), 4.5),
+    ("texto do contraponto",            ("c", 11), ("n", 1), 4.5),
     ("texto de ao vivo",                ("l", 11), ("n", 1), 4.5),
 ]
 
@@ -48,7 +49,7 @@ for tema in ("claro", "escuro"):
     print(f"  {'OK   ' if ok else 'FALHA'} {v:6.2f}:1  alvo 3.0  --line-strong (degrau {forte}) sobre a superfície")
 
     print("  -- sólidos de sinalização --")
-    for f, nome in (("a", "acento"), ("g", "bom"), ("w", "atenção"), ("r", "falha"), ("l", "ao vivo")):
+    for f, nome in (("a", "acento"), ("g", "bom"), ("w", "atenção"), ("r", "falha"), ("c", "contraponto"), ("l", "ao vivo")):
         s = S[f][8]
         no_fundo = contraste(s, S["n"][0])
         preto, branco = contraste(s, "#000000"), contraste(s, "#ffffff")

@@ -13,7 +13,7 @@ Uso:  python3 tools/identidade/gerar_tokens.py
 import os, sys
 AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
-from paleta import todas, NOMES                      # noqa: E402
+from paleta import todas, categoricas, NOMES         # noqa: E402
 
 RAIZ = os.path.abspath(os.path.join(AQUI, "..", ".."))
 DESTINO = os.path.join(RAIZ, "server", "panel", "static", "tokens.css")
@@ -26,6 +26,13 @@ def primitivas(tema, ind):
         linhas.append(f"{ind}/* {NOMES[fam]} */")
         linhas.append(ind + " ".join(f"--{fam}-{i+1}:{c};" for i, c in enumerate(cores)))
     return "\n".join(linhas)
+
+
+def cat(tema, ind):
+    """Rampa categórica: identidade de domínio, nunca estado."""
+    cores = categoricas(tema)
+    return (f"{ind}/* categórica — 8 domínios, ordem fixa, nunca reciclada */\n"
+            + ind + " ".join(f"--cat-{i+1}:{c};" for i, c in enumerate(cores)))
 
 
 def semanticas(tema, ind):
@@ -53,6 +60,8 @@ def semanticas(tema, ind):
 {ind}--accent:var(--a-9); --accent-hover:var(--a-10);
 {ind}--accent-ink:{tinta_no_acento};
 {ind}--accent-text:var(--a-11); --accent-soft:var(--a-3); --accent-line:var(--a-7);
+{ind}/* contraponto — o segundo acento, para pares de categoria */
+{ind}--accent-2:var(--c-9); --accent-2-text:var(--c-11); --accent-2-soft:var(--c-3);
 {ind}/* estado — sinalização padrão */
 {ind}--good:var(--g-9); --good-text:var(--g-11); --good-soft:var(--g-3);
 {ind}--warn:var(--w-9); --warn-text:var(--w-11); --warn-soft:var(--w-3);
@@ -90,6 +99,7 @@ CSS = f"""/* ===================================================================
 
   /* ---------- primitivas · TEMA CLARO ---------- */
 {primitivas("claro", "  ")}
+{cat("claro", "  ")}
 
   /* ---------- papéis ---------- */
 {semanticas("claro", "  ")}
@@ -123,6 +133,7 @@ CSS = f"""/* ===================================================================
 @media (prefers-color-scheme: dark) {{
   :root:not([data-theme="light"]) {{
 {primitivas("escuro", "    ")}
+{cat("escuro", "    ")}
 {semanticas("escuro", "    ")}
     --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);
     --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);
@@ -130,6 +141,7 @@ CSS = f"""/* ===================================================================
 }}
 :root[data-theme="dark"] {{
 {primitivas("escuro", "  ")}
+{cat("escuro", "  ")}
 {semanticas("escuro", "  ")}
   --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);
   --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);

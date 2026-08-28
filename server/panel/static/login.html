@@ -2,37 +2,16 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="/static/tokens.css?v=0.77.0">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Core5G_ARM64 — Login</title>
 <script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
 <style>
+  /* ===== PONTE PARA A IDENTIDADE (docs/identidade-visual.md) ===== */
   :root {
-    --bg: #16181d;
-    --panel: #1e2128;
-    --border: #2c3038;
-    --text: #e6e6e6;
-    --muted: #8a8f98;
-    --accent: #e8590c;
-    --red: #e03131;
-    --input-bg: #15171c;
-    --btn-bg: #21242b;
-    --err-bg: #3a1616;
-    --err-fg: #ff8787;
-    --shadow: rgba(0,0,0,.35);
-  }
-  :root[data-theme="light"] {
-    --bg: #eef0f4;
-    --panel: #ffffff;
-    --border: #d5dae1;
-    --text: #1c2129;
-    --muted: #5d6570;
-    --accent: #d9500a;
-    --red: #c92a2a;
-    --input-bg: #f7f8fa;
-    --btn-bg: #eef0f3;
-    --err-bg: #fbe1e1;
-    --err-fg: #c22929;
-    --shadow: rgba(25,30,40,.14);
+    --panel:var(--surface); --border:var(--line); --text:var(--ink); --muted:var(--ink-3);
+    --red:var(--bad); --input-bg:var(--well); --btn-bg:var(--n-3);
+    --err-bg:var(--bad-soft); --err-fg:var(--bad-text); --shadow:var(--elev-1);
   }
   * { box-sizing: border-box; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

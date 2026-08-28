@@ -1,0 +1,405 @@
+<meta charset="utf-8">
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Análise · Core5G_ARM64</title>
+<script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
+<link rel="stylesheet" href="/static/tokens.css?v=0.78.0">
+<style>
+  /* =====================================================================
+     Analisador do laboratório. Não é uma parede de badges: cada assunto é um
+     QUADRANTE com moldura e etiqueta encaixada, e dentro dele há LEITURA —
+     número, escala e o que aquilo quer dizer.
+
+     A voz aqui é a do instrumento (monoespaçada, densa, medida em células),
+     como manda docs/identidade-visual.md. Toda cor vem de papel; nenhuma
+     escrita à mão.
+     ===================================================================== */
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:var(--fonte-instrumento);font-size:var(--t-corpo)}
+  a{color:var(--accent-text)}
+
+  .topo{display:flex;align-items:center;gap:var(--e-3);flex-wrap:wrap;
+        padding:var(--e-3) var(--e-5);border-bottom:var(--traco) solid var(--line);
+        background:var(--surface)}
+  .marca{font-weight:700;font-size:var(--t-base);letter-spacing:-.01em}
+  .marca b{color:var(--accent-text)}
+  .voltar{font-size:var(--t-mini);font-weight:700;text-decoration:none}
+  .sep{color:var(--ink-3)}
+  .estado{display:inline-flex;align-items:center;gap:var(--e-2);margin-left:auto;
+          font-size:var(--t-mini);font-weight:700}
+  .relogio{font-size:var(--t-mini);color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .btn{border:var(--traco) solid var(--line-strong);background:transparent;color:var(--ink-2);
+       border-radius:var(--r-sm);padding:5px 11px;font:inherit;font-size:var(--t-mini);
+       font-weight:700;cursor:pointer}
+  .btn:hover{border-color:var(--accent);color:var(--accent-text)}
+
+  .grade{display:grid;gap:var(--e-4);padding:var(--e-5);
+         grid-template-columns:repeat(auto-fit,minmax(330px,1fr));align-items:start}
+  .larga{grid-column:1/-1}
+
+  /* o quadrante: a assinatura da identidade — moldura com etiqueta encaixada */
+  .q{position:relative;border:var(--traco) solid var(--line);border-radius:var(--r-md);
+     background:var(--surface);padding:var(--e-4) var(--e-4) var(--e-3)}
+  .q>.et{position:absolute;top:-7px;left:var(--e-3);background:var(--surface);
+         padding:0 var(--e-2);font-size:var(--t-micro);letter-spacing:var(--tr-etiqueta);
+         text-transform:uppercase;color:var(--ink-3);font-weight:700}
+  .q>.et b{color:var(--ink-2)}
+
+  /* medidor: rótulo · valor · trilho · nota */
+  .med{display:grid;grid-template-columns:52px 1fr 64px;align-items:center;
+       gap:var(--e-2);margin-bottom:var(--e-2)}
+  .med .k{font-size:var(--t-mini);color:var(--ink-3);font-weight:700}
+  .med .v{font-size:var(--t-mini);font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+  .trilho{height:7px;border-radius:var(--r-full);background:var(--well);
+          border:var(--traco) solid var(--line);overflow:hidden}
+  .trilho i{display:block;height:100%;background:var(--accent)}
+  .trilho i.alerta{background:var(--warn)}
+  .trilho i.grave{background:var(--bad)}
+  .rodape-q{margin-top:var(--e-2);padding-top:var(--e-2);border-top:var(--traco) dashed var(--line);
+            font-size:var(--t-micro);color:var(--ink-3)}
+
+  /* rádio: números grandes, porque é o que se lê de longe */
+  .radio{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--e-3)}
+  .rad{border:var(--traco) solid var(--line);border-radius:var(--r-sm);
+       background:var(--surface-2);padding:var(--e-2) var(--e-3)}
+  .rad .k{font-size:var(--t-micro);letter-spacing:var(--tr-etiqueta);text-transform:uppercase;
+          color:var(--ink-3);font-weight:700}
+  .rad .v{font-size:var(--t-med);font-weight:700;font-variant-numeric:tabular-nums;line-height:1.25}
+  .rad .u{font-size:var(--t-mini);color:var(--ink-3);font-weight:500}
+  /* a grade de recursos: a assinatura, literal — PRB ocupados no quadro */
+  .prb{display:grid;grid-template-columns:repeat(auto-fill,minmax(7px,1fr));gap:2px;margin-top:6px}
+  .prb i{aspect-ratio:1;border-radius:1px;background:var(--well);border:var(--traco) solid var(--line)}
+  .prb i.on{background:var(--accent);border-color:var(--accent)}
+  .apagado{opacity:.45}
+
+  /* serviços: uma célula por container, o estado no ponto e na palavra */
+  .servicos{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:var(--e-2)}
+  .srv{display:flex;align-items:center;gap:var(--e-2);border:var(--traco) solid var(--line);
+       border-radius:var(--r-sm);background:var(--surface-2);padding:6px 9px;font-size:var(--t-mini)}
+  .srv .nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .srv .uso{color:var(--ink-3);font-variant-numeric:tabular-nums;font-size:var(--t-micro)}
+
+  /* testes: a faixa de execuções + a lista */
+  .faixa{display:flex;gap:3px;margin-bottom:var(--e-3);flex-wrap:wrap}
+  .faixa i{width:13px;height:22px;border-radius:2px;border:var(--traco) solid var(--line);
+           background:var(--n-4);cursor:help}
+  .faixa i.ok{background:var(--good);border-color:var(--good)}
+  .faixa i.erro{background:var(--bad);border-color:var(--bad)}
+  table{width:100%;border-collapse:collapse;font-size:var(--t-mini)}
+  th{text-align:left;font-size:var(--t-micro);letter-spacing:var(--tr-etiqueta);text-transform:uppercase;
+     color:var(--ink-3);font-weight:700;padding:5px 7px;border-bottom:var(--traco) solid var(--line-strong)}
+  td{padding:6px 7px;border-bottom:var(--traco) solid var(--line);color:var(--ink-2)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+  th.quando,td.quando{width:1%;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+
+  /* leitura: o que os dados dizem e o que fazer */
+  .leitura{display:grid;gap:var(--e-2)}
+  .item{display:grid;grid-template-columns:auto 1fr;gap:var(--e-3);align-items:start;
+        border:var(--traco) solid var(--line);border-left:3px solid var(--line-strong);
+        border-radius:var(--r-sm);background:var(--surface-2);padding:var(--e-3)}
+  .item[data-n="bom"]{border-left-color:var(--good)}
+  .item[data-n="atencao"]{border-left-color:var(--warn)}
+  .item[data-n="falha"]{border-left-color:var(--bad)}
+  .item .g{font-size:var(--t-base);line-height:1}
+  .item h4{margin:0 0 3px;font-size:var(--t-corpo);font-weight:700}
+  .item p{margin:0;font-size:var(--t-mini);color:var(--ink-2);line-height:1.55;
+          font-family:var(--fonte-texto)}
+  .item p b{color:var(--ink)}
+  .item .faz{display:block;margin-top:5px;color:var(--accent-text);font-weight:600}
+  .vazio{color:var(--ink-3);font-size:var(--t-mini);padding:var(--e-2) 0}
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <a class="voltar" href="/">← Painel</a>
+  <span class="sep">·</span>
+  <span class="marca">Core5G<b>_ARM64</b> — Análise</span>
+  <span class="estado">
+    <span class="estado-ponto" id="pt-lab" data-estado="ocioso"></span>
+    <span id="rot-lab">lendo…</span>
+  </span>
+  <span class="relogio" id="relogio">—</span>
+  <button class="btn" id="tema" title="Alternar tema">◐</button>
+</div>
+
+<div class="grade">
+  <div class="q">
+    <span class="et">Servidor · <b id="cpu-modelo">—</b></span>
+    <div id="host"></div>
+  </div>
+
+  <div class="q" id="q-radio">
+    <span class="et">Rádio · <b>gNB OAI (E2)</b></span>
+    <div class="radio" id="radio"></div>
+    <div class="rodape-q" id="radio-nota">—</div>
+  </div>
+
+  <div class="q larga">
+    <span class="et">Serviços · <b id="srv-resumo">—</b></span>
+    <div class="servicos" id="servicos"></div>
+  </div>
+
+  <div class="q larga">
+    <span class="et">Testes · <b id="teste-resumo">—</b></span>
+    <div class="faixa" id="faixa"></div>
+    <div id="testes"></div>
+  </div>
+
+  <div class="q larga">
+    <span class="et">Leitura e sugestões</span>
+    <div class="leitura" id="leitura"></div>
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const num = (v, d = 1) => (v == null || isNaN(v) ? '—' : Number(v).toFixed(d).replace('.', ','));
+
+$('#tema').addEventListener('click', () => {
+  const atual = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = atual;
+  try { localStorage.setItem('c5g-theme', atual); } catch (e) {}
+});
+
+async function pega(url) {
+  try {
+    const r = await fetch(url, { cache: 'no-store' });
+    return r.ok ? await r.json() : null;
+  } catch (e) { return null; }
+}
+
+// ---- SERVIDOR ------------------------------------------------------------
+// Barra + valor + o limiar em que aquele número deixa de ser detalhe. O swap é
+// o único cujo primeiro byte já é aviso: quando o box começa a paginar, o SSH
+// cai antes de a memória acabar.
+function medidor(k, valor, pct, nota, nivel) {
+  const cls = nivel === 'grave' ? ' grave' : nivel === 'alerta' ? ' alerta' : '';
+  return `<div class="med"><span class="k">${k}</span>
+    <span class="trilho"><i class="${cls.trim()}" style="width:${Math.max(0, Math.min(100, pct))}%"></i></span>
+    <span class="v">${valor}</span></div>` + (nota ? `<div class="rodape-q">${nota}</div>` : '');
+}
+
+function pintaHost(t) {
+  const h = (t && t.host) || {};
+  $('#cpu-modelo').textContent = h.cpu_model ? `${h.cpu_count} vCPU · ${h.cpu_model}` : '—';
+  const swapPct = h.swap_total_mb ? (100 * h.swap_used_mb / h.swap_total_mb) : 0;
+  const cargaPct = h.cpu_count ? (100 * h.load1 / h.cpu_count) : 0;
+  $('#host').innerHTML =
+      medidor('CPU', num(h.cpu_pct) + '%', h.cpu_pct || 0, '', h.cpu_pct > 90 ? 'grave' : h.cpu_pct > 70 ? 'alerta' : '')
+    + medidor('RAM', num(h.mem_pct) + '%', h.mem_pct || 0, '', h.mem_pct > 90 ? 'grave' : h.mem_pct > 75 ? 'alerta' : '')
+    + medidor('SWAP', (h.swap_used_mb || 0) + ' MB', swapPct, '', h.swap_used_mb > 0 ? 'grave' : '')
+    + medidor('DISCO', num(h.disk_pct) + '%', h.disk_pct || 0, '', h.disk_pct > 90 ? 'grave' : h.disk_pct > 80 ? 'alerta' : '')
+    + medidor('CARGA', num(h.load1, 2), cargaPct, '', cargaPct > 100 ? 'grave' : cargaPct > 75 ? 'alerta' : '')
+    + `<div class="rodape-q">${(h.mem_used_mb || 0)} de ${(h.mem_total_mb || 0)} MB de RAM ·
+       ${num(h.disk_used_gb)} de ${num(h.disk_total_gb)} GB em disco ·
+       carga de 1 min sobre ${h.cpu_count || '—'} vCPU</div>`;
+}
+
+// ---- RÁDIO ---------------------------------------------------------------
+// Os limiares vêm do deck da aula 04. O RFSIM é canal ideal: por isso BLER 0 e
+// MCS no teto NÃO são elogio à rede, são o simulador dizendo que não há nada
+// atrapalhando. Quem lê a tela precisa saber disso.
+const RADIO = [
+  { k: 'SNR', u: 'dB', get: (g) => g.snr, d: 1, nota: 'acima de 20 dB é canal bom' },
+  { k: 'MCS', u: '', get: (g) => g.mcs, d: 0, nota: '28 é o teto da tabela' },
+  { k: 'BLER', u: '%', get: (g) => g.bler, d: 1, nota: 'canal ideal não erra bloco' },
+];
+
+function pintaRadio(g) {
+  const q = $('#q-radio');
+  if (!g || !g.up) {
+    q.classList.add('apagado');
+    $('#radio').innerHTML = '<div class="vazio">gNB fora do ar — sem leitura de rádio.</div>';
+    $('#radio-nota').textContent = 'Ligue o Projeto 2 no painel para o agente E2 começar a reportar.';
+    return;
+  }
+  const velho = g.age != null && g.age > 10;
+  q.classList.toggle('apagado', velho);
+  const cel = (n, tot) => Array.from({ length: Math.min(tot || 0, 120) },
+    (_, i) => `<i class="${i < (n || 0) ? 'on' : ''}"></i>`).join('');
+  $('#radio').innerHTML = RADIO.map((m) => `
+      <div class="rad"><div class="k">${m.k}</div>
+        <div class="v">${num(m.get(g), m.d)} <span class="u">${m.u}</span></div></div>`).join('')
+    + `<div class="rad"><div class="k">PRB em uso</div>
+        <div class="v">${g.prb ?? '—'} <span class="u">de ${g.nrb ?? '—'}</span></div>
+        <div class="prb">${cel(g.prb, g.nrb)}</div></div>`;
+  $('#radio-nota').innerHTML = velho
+    ? `<b>Número parado há ${num(g.age, 0)} s.</b> O gNB está no ar mas parou de reportar — o que está na tela é passado.`
+    : `Amostra de ${num(g.age, 1)} s · ${RADIO.map((m) => `${m.k}: ${m.nota}`).join(' · ')}. `
+      + 'O rádio é simulado (RFSIM): canal ideal, sem interferência.';
+}
+
+// ---- SERVIÇOS ------------------------------------------------------------
+const ESTADO = { running: 'bom', healthy: 'bom', starting: 'atencao', unhealthy: 'falha',
+                 exited: 'falha', dead: 'falha', created: 'ocioso', paused: 'ocioso' };
+function classe(status) {
+  const s = String(status || '').toLowerCase();
+  for (const k in ESTADO) if (s.includes(k)) return ESTADO[k];
+  return 'ocioso';
+}
+
+function pintaServicos(t) {
+  const cs = (t && t.containers) || [];
+  if (!cs.length) {
+    $('#servicos').innerHTML = '<div class="vazio">Nenhum container no ar.</div>';
+    $('#srv-resumo').textContent = '0 no ar';
+    return;
+  }
+  const bons = cs.filter((c) => classe(c.status) === 'bom').length;
+  $('#srv-resumo').textContent = `${bons} no ar de ${cs.length}`;
+  $('#servicos').innerHTML = cs.map((c) => `
+    <div class="srv" title="${esc(c.name)} — ${esc(c.status)}">
+      <span class="estado-ponto" data-estado="${classe(c.status)}"></span>
+      <span class="nome">${esc(c.name)}</span>
+      <span class="uso">${esc(c.cpu_pct || '')}</span>
+    </div>`).join('');
+}
+
+// ---- TESTES --------------------------------------------------------------
+function quando(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d) ? String(iso).slice(0, 16) : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function pintaTestes(rs) {
+  const lista = (rs && rs.results) || [];
+  if (!lista.length) {
+    $('#teste-resumo').textContent = 'nenhuma execução salva';
+    $('#faixa').innerHTML = '';
+    $('#testes').innerHTML = '<div class="vazio">Nada rodou ainda. Cada teste executado no painel fica guardado aqui, com duração e resultado.</div>';
+    return;
+  }
+  const ult = lista.slice(0, 24);
+  const falhas = ult.filter((r) => r.status !== 'ok').length;
+  $('#teste-resumo').textContent = `${ult.length} execuções · ${ult.length - falhas} ok, ${falhas} com falha`;
+  $('#faixa').innerHTML = ult.slice().reverse().map((r) =>
+    `<i class="${r.status === 'ok' ? 'ok' : 'erro'}" title="${esc(r.label || r.cmd)} — ${esc(r.status)} — ${quando(r.started)}"></i>`).join('');
+  // "por" só vira coluna quando há mais de uma pessoa rodando; com uma só,
+  // repetir o mesmo nome dez vezes é ruído — ele sobe para a etiqueta.
+  const gente = [...new Set(ult.map((r) => r.by).filter(Boolean))];
+  $('#testes').innerHTML = `<table>
+    <tr><th class="quando">quando</th><th>teste</th>${gente.length > 1 ? '<th>por</th>' : ''}
+        <th>resultado</th><th style="text-align:right">duração</th></tr>
+    ${ult.slice(0, 10).map((r) => `<tr>
+      <td class="quando">${quando(r.started)}</td>
+      <td><a href="/?resultado=${encodeURIComponent(r.id)}">${esc(r.label || r.cmd)}</a></td>
+      ${gente.length > 1 ? `<td>${esc(r.by || '—')}</td>` : ''}
+      <td><span class="estado-ponto" data-estado="${r.status === 'ok' ? 'bom' : 'falha'}"></span>
+          ${r.status === 'ok' ? 'ok' : esc(r.status || 'falha')}</td>
+      <td class="num">${r.duration != null ? num(r.duration, 1) + ' s' : '—'}</td></tr>`).join('')}
+  </table>`;
+  if (gente.length === 1) $('#teste-resumo').textContent += ` · por ${gente[0]}`;
+}
+
+// ---- LEITURA -------------------------------------------------------------
+// Cada regra diz TRÊS coisas: o que eu vi, por que importa, o que fazer. Uma
+// tela de análise que só mostra número obriga quem lê a saber o limiar de cor.
+function leitura(t, g, rs) {
+  const h = (t && t.host) || {};
+  const cs = (t && t.containers) || [];
+  const lista = (rs && rs.results) || [];
+  const itens = [];
+  const add = (n, glifo, titulo, texto, faz) => itens.push({ n, glifo, titulo, texto, faz });
+
+  if (h.swap_used_mb > 0) {
+    add('falha', '⚠', `Swap em uso: ${h.swap_used_mb} MB`,
+      'O primeiro byte de swap é o sinal mais confiável de que o box vai travar — quando ele começa a paginar, o SSH cai antes de a memória acabar.',
+      'Desligue o projeto que não está em uso antes de subir o outro.');
+  }
+  if (h.cpu_count && h.load1 > h.cpu_count) {
+    add('atencao', '▲', `Carga ${num(h.load1, 2)} para ${h.cpu_count} vCPU`,
+      'Há mais processos esperando CPU do que núcleos para atendê-los. É neste ponto que o gNB começa a perder quadro e o teste mede a máquina, não a rede.',
+      'Espere a carga baixar antes de rodar o próximo teste.');
+  }
+  if (h.disk_pct > 85) {
+    add('atencao', '▲', `Disco em ${num(h.disk_pct)}%`,
+      'Coleta de KPM e log de container escrevem sem parar.',
+      'Limpe resultados antigos ou logs de containers parados.');
+  }
+  const ruins = cs.filter((c) => classe(c.status) === 'falha');
+  if (ruins.length) {
+    add('falha', '✕', `${ruins.length} ${ruins.length === 1 ? 'serviço fora' : 'serviços fora'}`,
+      `Fora do ar: <b>${ruins.map((c) => esc(c.name)).join(', ')}</b>. Um teste fim-a-fim que dependa deles vai falhar por causa disto, não por causa da rede.`,
+      'Veja o log do serviço no painel antes de repetir o teste.');
+  }
+  if (g && g.up && g.age != null && g.age > 10) {
+    add('atencao', '▲', `Rádio parado há ${num(g.age, 0)} s`,
+      'O gNB está de pé, mas parou de escrever no log. Os números de rádio na tela são os últimos conhecidos — não o agora.',
+      'Rode um teste que gere tráfego para o agente E2 voltar a reportar.');
+  }
+  if (g && g.up && g.snr != null && g.snr < 20 && (g.age == null || g.age <= 10)) {
+    add('atencao', '▲', `SNR em ${num(g.snr)} dB`,
+      'Abaixo de 20 dB o canal deixa de ser bom (referência da aula 04). No RFSIM isso não acontece sozinho: é interferência ou perfil de distância aplicado pelo painel.',
+      'Confira se há interferência ligada antes de atribuir a queda ao core.');
+  }
+  if (g && g.up && g.bler != null && g.bler > 0 && (g.age == null || g.age <= 10)) {
+    add('atencao', '▲', `BLER em ${num(g.bler)}%`,
+      'O rádio é simulado e o canal é ideal — num canal ideal não há bloco com erro. BLER acima de zero quer dizer que alguma coisa está degradando o enlace de propósito, ou que o MCS ficou agressivo demais para o canal.',
+      'Veja se o MCS caiu junto: os dois se movem quando o canal piora.');
+  }
+  if (g && g.up && g.nrb && g.prb != null && (100 * g.prb / g.nrb) > 80) {
+    add('atencao', '▲', `PRB em ${num(100 * g.prb / g.nrb)}%`,
+      'Acima de 80% de blocos ocupados é pressão de capacidade (referência do slide 35 da aula 04): a célula tem pouco a oferecer para um usuário novo.',
+      'Compare a vazão por fase antes de concluir que o problema é canal.');
+  }
+  if (lista.length) {
+    const ult = lista.slice(0, 8);
+    const falhos = ult.filter((r) => r.status !== 'ok');
+    if (falhos.length >= 2) {
+      const porCmd = {};
+      falhos.forEach((r) => { porCmd[r.cmd] = (porCmd[r.cmd] || 0) + 1; });
+      const pior = Object.entries(porCmd).sort((a, b) => b[1] - a[1])[0];
+      const repete = pior[1] >= 2;
+      add('falha', '✕', `${falhos.length} falhas nas últimas ${ult.length} execuções`,
+        repete
+          ? `<b>${esc(pior[0])}</b> falhou ${pior[1]}× — falha que repete no mesmo comando costuma ser dependência, não acaso.`
+          : `As falhas estão <b>espalhadas</b> por ${Object.keys(porCmd).length} comandos diferentes, uma vez cada. Isso aponta para a máquina ou para a bancada, não para um teste específico.`,
+        repete
+          ? 'Abra o resultado da última falha e leia as três primeiras linhas de erro.'
+          : 'Olhe primeiro a carga e os serviços fora do ar, acima nesta tela.');
+    } else if (!falhos.length) {
+      add('bom', '✓', `${ult.length} execuções seguidas sem falha`,
+        'A bancada está estável. É o momento de coletar dado para o relatório, enquanto o estado é reprodutível.',
+        'Rode a coleta de KPM real agora, se ela ainda faltar.');
+    }
+  } else {
+    add('bom', '·', 'Nenhum teste executado ainda',
+      'Esta tela lê o que os testes deixaram: comando, duração, resultado e quem rodou.',
+      'Rode um teste no painel e volte aqui.');
+  }
+  if (!itens.length) {
+    add('bom', '✓', 'Nada pedindo atenção',
+      'Servidor, rádio e serviços dentro do esperado, e nenhuma falha recente.',
+      'Bom momento para apresentar.');
+  }
+
+  $('#leitura').innerHTML = itens.map((i) => `
+    <div class="item" data-n="${i.n}">
+      <span class="g">${i.glifo}</span>
+      <div><h4>${i.titulo}</h4><p>${i.texto}<span class="faz">→ ${i.faz}</span></p></div>
+    </div>`).join('');
+}
+
+// ---- ciclo ---------------------------------------------------------------
+async function ciclo() {
+  const [t, g, rs] = await Promise.all([
+    pega('/api/telemetry'), pega('/api/topology/gnb-stats'), pega('/api/results'),
+  ]);
+  pintaHost(t); pintaRadio(g); pintaServicos(t); pintaTestes(rs); leitura(t, g, rs);
+  const noAr = g && g.up;
+  $('#pt-lab').dataset.estado = noAr ? 'bom' : 'ocioso';
+  $('#rot-lab').textContent = noAr ? 'laboratório no ar' : 'laboratório parado';
+  $('#relogio').textContent = new Date().toLocaleTimeString('pt-BR');
+}
+ciclo();
+setInterval(ciclo, 4000);
+</script>
+</body>
+</html>

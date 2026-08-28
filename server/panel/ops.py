@@ -361,6 +361,14 @@ def topology_page() -> FileResponse:
     return FileResponse(OPS_DIR / "topology.html", headers=NO_CACHE)
 
 
+@router.get("/analise")
+def analise_page() -> FileResponse:
+    """Analisador do laboratório: telemetria, rádio, serviços, testes e a
+    leitura do que tudo isso quer dizer. Lê os mesmos endpoints do painel —
+    não coleta nada por conta própria."""
+    return FileResponse(OPS_DIR / "analise.html", headers=NO_CACHE)
+
+
 @router.get("/api/results")
 def list_results() -> JSONResponse:
     """Resultados salvos (mais recentes primeiro). Aberto a Professor e Aluno."""

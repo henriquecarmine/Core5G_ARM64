@@ -209,6 +209,11 @@
   #ran-live .rl-v i { font-size:10px; font-weight:400; color:var(--muted); font-style:normal; }
   #ran-live .rl-spark { width:38px; height:11px; flex:none; align-self:center; display:none; }
   #ran-live .rl-spark.varia { display:block; }
+  /* Cada sparkline é um gráfico de UMA série — o rótulo ao lado já a nomeia.
+     Cores diferentes por métrica só mentiriam: o BLER em vermelho parecia
+     "ruim" mesmo em zero, e o PRB em verde parecia "bom" mesmo saturado. */
+  .rl-spark .sp-area { fill:var(--accent); opacity:.10; }
+  .rl-spark .sp-linha { fill:none; stroke:var(--accent); stroke-width:1.7; stroke-linejoin:round; stroke-linecap:round; }
 
   /* Layout — rail de ferramentas (do projeto ativo) + console */
   main { display:grid; grid-template-columns:230px 1fr; gap:16px; padding:16px 24px; flex:1; min-height:0; }
@@ -1165,17 +1170,17 @@ document.getElementById('credits-link').onclick = (e) => {
   const b = document.createElement('div'); b.className = 'en-back';
   const m = document.createElement('div'); m.className = 'en-mod';
   m.style.maxWidth = '420px'; m.style.textAlign = 'center';
-  m.innerHTML = '<span class="x" style="position:absolute;top:10px;right:14px;cursor:pointer;color:#8a8f98">✕</span>'
-    + '<div style="background:#fff;border-radius:12px;padding:16px 22px;display:inline-block;margin:6px 0 4px"><img src="/static/ops/cesar-marca.svg?v=1" alt="CESAR School" style="height:84px;display:block"></div>'
-    + '<div style="font-size:10px;letter-spacing:.25em;color:#8a8f98;text-transform:uppercase;margin-bottom:16px">Centro de Estudos e Sistemas Avançados do Recife</div>'
-    + '<div style="border-top:1px solid #2c3038;padding-top:14px;font-size:13px;line-height:2">'
-    + '<div style="font-size:10px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase">Coordenação</div>'
+  m.innerHTML = '<span class="x" style="position:absolute;top:10px;right:14px;cursor:pointer;color:var(--ink-3)">✕</span>'
+    + '<div style="background:var(--surface);border-radius:12px;padding:16px 22px;display:inline-block;margin:6px 0 4px"><img src="/static/ops/cesar-marca.svg?v=1" alt="CESAR School" style="height:84px;display:block"></div>'
+    + '<div style="font-size:10px;letter-spacing:.25em;color:var(--ink-3);text-transform:uppercase;margin-bottom:16px">Centro de Estudos e Sistemas Avançados do Recife</div>'
+    + '<div style="border-top:1px solid var(--line);padding-top:14px;font-size:13px;line-height:2">'
+    + '<div style="font-size:10px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase">Coordenação</div>'
     + '<div><b>Prof. Dr. Jonas A. Kunzler</b> — RIC · Open RAN · Análise de Dados</div>'
     + '<div><b>Prof. Julio C. C. Tesolin</b> — Aplicações de IA e ML em RIC</div>'
-    + '<div style="font-size:10px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin-top:10px">Desenvolvimento e manutenção</div>'
+    + '<div style="font-size:10px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;margin-top:10px">Desenvolvimento e manutenção</div>'
     + '<div><b>Henrique Carmine</b></div>'
     + '</div>'
-    + '<div style="margin-top:14px;font-size:10.5px;color:#5c6370">Core5G_ARM64 — lab Open RAN 100% ARM64 · UE-TP-rApp</div>';
+    + '<div style="margin-top:14px;font-size:10.5px;color:var(--ink-3)">Core5G_ARM64 — lab Open RAN 100% ARM64 · UE-TP-rApp</div>';
   const close = () => { b.remove(); m.remove(); };
   b.onclick = close;
   document.body.appendChild(b); document.body.appendChild(m);
@@ -1194,14 +1199,18 @@ function escHtml(s) {
   return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 }
 
-// Paleta ISO/ANSI FIXA dos consoles. Os consoles são escuros nos DOIS temas,
-// então aqui NUNCA se usa variável de tema (no claro elas resolvem para cores
-// escuras e o log fica ilegível sobre o fundo preto). Tons "bright" da paleta
-// ANSI padrão, calibrados para fundo escuro:
+// Paleta ISO/ANSI dos consoles. Os consoles são escuros nos DOIS temas,
+// então aqui as cores nascem dos PAPÉIS do sistema — o console carrega
+// `.superficie-escura`, onde eles resolvem para a escala escura nos dois temas.
+// (Antes disto o aviso era o oposto: "nunca use variável de tema aqui", porque
+// no claro elas resolviam para cores escuras sobre fundo preto. O escopo
+// resolveu a causa; a regra caiu junto.)
+// Onde ANSI e o sistema querem dizer a mesma coisa, vale o papel. Ciano e
+// magenta não têm equivalente — são a paleta ANSI e continuam constantes.
 const TERM = {
-  red: '#ff6b6b', green: '#69db7c', yellow: '#ffd43b', blue: '#74c0fc',
-  cyan: '#66d9e8', magenta: '#da77f2', gray: '#8a8f98', dim: '#6a7180',
-  text: '#e6e6e6',
+  red: 'var(--bad-text)', green: 'var(--good-text)', yellow: 'var(--warn-text)',
+  blue: 'var(--accent-text)', cyan: '#66d9e8', magenta: '#da77f2',
+  gray: 'var(--ink-3)', dim: 'var(--n-8)', text: 'var(--ink)',
 };
 // Códigos SGR → paleta do console (30-37 normais, 90-97 bright).
 const ANSI_COLORS = {
@@ -1595,9 +1604,9 @@ function uepChart(serie) {
       const x0 = x(ini), x1 = x(i - 1), meio = (x0 + x1) / 2;
       const alt = (ini / Math.max(1, n)) * 0;   // sem alternancia: so a divisa
       bandas += `<rect x="${x0.toFixed(1)}" y="${MT}" width="${(x1 - x0).toFixed(1)}" height="${H - MT - MB}" `
-             + `fill="#ffffff" opacity="${ini === 0 ? 0.012 : 0.028}"/>`;
-      if (ini > 0) bandas += `<line x1="${x0.toFixed(1)}" y1="${MT}" x2="${x0.toFixed(1)}" y2="${H - MB}" stroke="#3a4048" stroke-width="1" stroke-dasharray="3 3"/>`;
-      rotulos += `<text x="${meio.toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#9aa4b2">${escHtml(serie.fases[ini])}</text>`;
+             + `style="fill:var(--uep-ink)" opacity="${ini === 0 ? 0.012 : 0.028}"/>`;
+      if (ini > 0) bandas += `<line x1="${x0.toFixed(1)}" y1="${MT}" x2="${x0.toFixed(1)}" y2="${H - MB}" style="stroke:var(--uep-line)" stroke-width="1" stroke-dasharray="3 3"/>`;
+      rotulos += `<text x="${meio.toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="11" style="fill:var(--uep-ink2)">${escHtml(serie.fases[ini])}</text>`;
       ini = i;
     }
   }
@@ -1605,23 +1614,23 @@ function uepChart(serie) {
   let grade = '';
   for (let k = 0; k <= 2; k++) {
     const val = max * k / 2, yy = y(val);
-    grade += `<line x1="${ML}" y1="${yy.toFixed(1)}" x2="${W - MR}" y2="${yy.toFixed(1)}" stroke="#2c3038" stroke-width="1"/>`
-          +  `<text x="${ML - 8}" y="${(yy + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#9aa4b2">${uepFmt(val)}</text>`;
+    grade += `<line x1="${ML}" y1="${yy.toFixed(1)}" x2="${W - MR}" y2="${yy.toFixed(1)}" style="stroke:var(--uep-line)" stroke-width="1"/>`
+          +  `<text x="${ML - 8}" y="${(yy + 4).toFixed(1)}" text-anchor="end" font-size="11" style="fill:var(--uep-ink2)">${uepFmt(val)}</text>`;
   }
   const d = v.map((val, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(val).toFixed(1)}`).join(' ');
   // rotulo direto SO no pico: e ele que explica media x mediana
   const iMax = v.indexOf(Math.max(...v));
   const alvo = { x: x(iMax), y: y(v[iMax]) };
   const anc = alvo.x > W * 0.75 ? 'end' : 'start';
-  const pico = `<circle cx="${alvo.x.toFixed(1)}" cy="${alvo.y.toFixed(1)}" r="4" fill="#3987e5" stroke="#0d0e11" stroke-width="2"/>`
-    + `<text x="${(alvo.x + (anc === 'end' ? -8 : 8)).toFixed(1)}" y="${(alvo.y + 4).toFixed(1)}" text-anchor="${anc}" font-size="11" fill="#e6e6e6">pico ${uepFmt(v[iMax])}</text>`;
+  const pico = `<circle cx="${alvo.x.toFixed(1)}" cy="${alvo.y.toFixed(1)}" r="4" style="fill:var(--uep-serie);stroke:var(--console-bg)" stroke-width="2"/>`
+    + `<text x="${(alvo.x + (anc === 'end' ? -8 : 8)).toFixed(1)}" y="${(alvo.y + 4).toFixed(1)}" text-anchor="${anc}" font-size="11" style="fill:var(--uep-ink)">pico ${uepFmt(v[iMax])}</text>`;
   return { W, H, ML, MR, MT, MB, n, max,
     svg: `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escHtml(serie.titulo)}">`
        + bandas + grade
-       + `<path d="${d}" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`
+       + `<path d="${d}" fill="none" style="stroke:var(--uep-serie)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`
        + pico + rotulos
-       + `<line class="uep-cross" x1="0" y1="${MT}" x2="0" y2="${H - MB}" stroke="#9aa4b2" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>`
-       + `<circle class="uep-dot" r="4.5" fill="#3987e5" stroke="#0d0e11" stroke-width="2" opacity="0"/>`
+       + `<line class="uep-cross" x1="0" y1="${MT}" x2="0" y2="${H - MB}" style="stroke:var(--uep-ink2)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>`
+       + `<circle class="uep-dot" r="4.5" style="fill:var(--uep-serie);stroke:var(--console-bg)" stroke-width="2" opacity="0"/>`
        + `</svg>` };
 }
 
@@ -2230,7 +2239,7 @@ const GUIA = {
 function guiaEsc(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 
 function guiaSec(t) {
-  return '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:14px 0 3px">' + t + '</div>';
+  return '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;margin:14px 0 3px">' + t + '</div>';
 }
 
 function guiaBloco(b) {
@@ -2255,25 +2264,25 @@ async function guiaDados(host) {
     if (!r.ok) throw new Error('http ' + r.status);
     const d = await r.json();
     const fases = Object.keys(d.fases).map(k => k + ' (' + d.fases[k] + ')').join(' · ');
-    let h = '<div style="font-size:12px;line-height:1.6;color:#c9d1d9;margin-bottom:8px">Fonte em uso: <b style="color:#e6e6e6">'
-      + guiaEsc(d.origem) + '</b> — arquivo <code>' + guiaEsc(d.arquivo) + '</code>, <b style="color:#e6e6e6">'
+    let h = '<div style="font-size:12px;line-height:1.6;color:var(--console-ink);margin-bottom:8px">Fonte em uso: <b style="color:var(--ink)">'
+      + guiaEsc(d.origem) + '</b> — arquivo <code>' + guiaEsc(d.arquivo) + '</code>, <b style="color:var(--ink)">'
       + d.total + '</b> medições. Fases: ' + guiaEsc(fases) + '.</div>';
     if (d.linhas.length && d.linhas[0].thp !== undefined) {
       h += '<table><tr><th>#</th><th>fase</th><th>vazão UL (kbps)</th><th>atraso DL (µs)</th><th>PRB UL (%)</th></tr>'
         + d.linhas.map(l => '<tr><td>' + guiaEsc(l.i) + '</td><td>' + guiaEsc(l.fase) + '</td><td>' + guiaEsc(l.thp)
           + '</td><td>' + guiaEsc(l.delay) + '</td><td>' + guiaEsc(l.prb) + '</td></tr>').join('')
-        + '</table><div style="font-size:11px;color:#8a8f98;margin-top:5px">as ' + d.linhas.length
+        + '</table><div style="font-size:11px;color:var(--ink-3);margin-top:5px">as ' + d.linhas.length
         + ' primeiras de ' + d.total + ' — o teste lê todas</div>';
     } else if (d.linhas.length) {
-      h += '<div style="font-family:monospace;font-size:11px;color:#c9d1d9;line-height:1.5">'
+      h += '<div style="font-family:monospace;font-size:11px;color:var(--console-ink);line-height:1.5">'
         + d.linhas.map(l => guiaEsc(l.raw)).join('<br>') + '</div>';
     }
     h += '<div class="cols" style="margin-top:9px">' + d.colunas.map(c =>
-      '<div><code>' + guiaEsc(c.k) + '</code> — <b style="color:#e6e6e6">' + guiaEsc(c.nome) + '</b> ('
+      '<div><code>' + guiaEsc(c.k) + '</code> — <b style="color:var(--ink)">' + guiaEsc(c.nome) + '</b> ('
       + guiaEsc(c.un) + '): ' + guiaEsc(c.o) + '</div>').join('') + '</div>';
     host.innerHTML = h;
   } catch (e) {
-    host.innerHTML = '<div style="font-size:12px;color:#8a8f98">não consegui ler o arquivo agora ('
+    host.innerHTML = '<div style="font-size:12px;color:var(--ink-3)">não consegui ler o arquivo agora ('
       + guiaEsc(e.message) + ') — o teste roda normalmente mesmo assim</div>';
   }
 }
@@ -2291,8 +2300,8 @@ function preflight(cmd, srcBtn) {
     : 'Executa <code>' + cmd + '</code> no servidor e mostra a saída neste console.';
   const onde = (window.FlowStrip && FlowStrip.sceneInfo(cmd) || []).filter(n => n.o);
   const ondeHtml = onde.length
-    ? '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:10px 0 3px">Onde roda (scripts · dados · containers)</div>'
-      + onde.map(n => '<div style="margin:2px 0;font-size:11px">' + n.txt + ' — <code style="color:#74c0fc;font-size:10.5px">' + n.o + '</code></div>').join('')
+    ? '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;margin:10px 0 3px">Onde roda (scripts · dados · containers)</div>'
+      + onde.map(n => '<div style="margin:2px 0;font-size:11px">' + n.txt + ' — <code style="color:var(--accent-text);font-size:10.5px">' + n.o + '</code></div>').join('')
     : '';
   // Guia da aula (GUIA): a versão longa, para LER na frente da turma. Sem guia
   // para o comando, cai no pré-voo curto de sempre.
@@ -2304,22 +2313,22 @@ function preflight(cmd, srcBtn) {
       + guiaSec('Por onde os dados vão correr (clique nos nós ⓘ)')
       + '<div id="pf-topo"></div>'
       + (g.blocos[1] ? guiaBloco(g.blocos[1]) : '')
-      + (g.dados ? guiaSec('Os dados que este teste vai ler') + '<div class="gu-dados" id="pf-dados" style="font-size:12px;color:#8a8f98">lendo o arquivo no servidor…</div>' : '')
+      + (g.dados ? guiaSec('Os dados que este teste vai ler') + '<div class="gu-dados" id="pf-dados" style="font-size:12px;color:var(--ink-3)">lendo o arquivo no servidor…</div>' : '')
       + g.blocos.slice(2).map(guiaBloco).join('')
       + ondeHtml
-    : '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:8px 0 3px">O que este teste vai fazer</div>'
+    : '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;margin:8px 0 3px">O que este teste vai fazer</div>'
       + '<div style="font-size:12px">' + what + '</div>'
-      + '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:#8a8f98;text-transform:uppercase;margin:10px 0 3px">Por onde os dados vão correr (clique nos nós ⓘ)</div>'
+      + '<div class="sec" style="font-size:9px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;margin:10px 0 3px">Por onde os dados vão correr (clique nos nós ⓘ)</div>'
       + '<div id="pf-topo"></div>' + ondeHtml;
   const b = document.createElement('div'); b.className = 'en-back'; b.onclick = pfClose;
   const m = document.createElement('div'); m.className = 'en-mod' + (g ? ' guia' : '');
-  m.innerHTML = '<span class="x" style="position:absolute;top:10px;right:14px;cursor:pointer;color:#8a8f98">✕</span>'
+  m.innerHTML = '<span class="x" style="position:absolute;top:10px;right:14px;cursor:pointer;color:var(--ink-3)">✕</span>'
     + '<h3>🧪 ' + prettyCmd(cmd) + '</h3>'
     + '<div class="sub">' + (ex ? ex.title.replace('O que acabou de acontecer — ', '') : cmd) + ' · o percurso abaixo é AO VIVO durante a execução</div>'
     + corpo
     + '<div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">'
-    + '<button id="pf-cancel" style="background:#21242b;border:1px solid #2c3038;color:#8a8f98;padding:7px 14px;border-radius:7px;cursor:pointer">Cancelar</button>'
-    + '<button id="pf-go" style="background:#2f9e44;border:none;color:#fff;font-weight:700;padding:7px 18px;border-radius:7px;cursor:pointer">▶ Iniciar teste</button></div>';
+    + '<button id="pf-cancel" style="background:var(--btn-bg);border:1px solid var(--line);color:var(--ink-3);padding:7px 14px;border-radius:7px;cursor:pointer">Cancelar</button>'
+    + '<button id="pf-go" style="background:var(--good);border:none;color:var(--accent-ink);font-weight:700;padding:7px 18px;border-radius:7px;cursor:pointer">▶ Iniciar teste</button></div>';
   document.body.appendChild(b); document.body.appendChild(m);
   _pf = { b, m };
   if (g && g.dados) guiaDados(m.querySelector('#pf-dados'));
@@ -2629,32 +2638,32 @@ async function startTelemetry() {
 
 // ===== Info modal (popovers de explicação) =====
 const INFO_CONTENT = {
-  oranArch: { title: 'Arquitetura O-RAN', html: `<div class="oran-arch"><span style="color:#8a93a8">SMO / Non-RT RIC</span>
+  oranArch: { title: 'Arquitetura O-RAN', html: `<div class="oran-arch"><span style="color:var(--ink-2)">SMO / Non-RT RIC</span>
   rApp · A1 Policy · O1 Management
      ↕ O1 / A1
-<span style="color:#8a93a8">Near-RT RIC</span> (Projeto 2 — FlexRIC)
+<span style="color:var(--ink-2)">Near-RT RIC</span> (Projeto 2 — FlexRIC)
   xApp KPM · xApp RC · E2 termination
      ↕ E2 (E2AP / E2SM-KPM / E2SM-RC)
-<span style="color:#4dabf7">O-gNB</span> (OAI nr-softmodem / UERANSIM)
+<span style="color:var(--accent-text)">O-gNB</span> (OAI nr-softmodem / UERANSIM)
   O-CU-CP · O-CU-UP · O-DU · (O-RU sim)
-  <span style="color:#69db7c">↑ UL</span> DRB.UEThpUl / RRU.PrbTotUl
-  <span style="color:#4dabf7">↓ DL</span> DRB.UEThpDl / RRU.PrbTotDl
+  <span style="color:var(--good-text)">↑ UL</span> DRB.UEThpUl / RRU.PrbTotUl
+  <span style="color:var(--accent-text)">↓ DL</span> DRB.UEThpDl / RRU.PrbTotDl
      ↕ N2 (NGAP) / N3 (GTP-U)
-<span style="color:#4dabf7">5GC Open5GS</span> (Projeto 1)
+<span style="color:var(--accent-text)">5GC Open5GS</span> (Projeto 1)
   AMF · SMF · UPF · AUSF · UDM · PCF
      ↕ N1 (NAS) / N6 (internet)
-<span style="color:#69db7c">UE</span> → uesimtun0 → iperf3</div>` },
-  testFlow: { title: 'Fluxo do teste no contexto O-RAN', html: `<div class="oran-arch"><span style="color:#8a93a8">rApp UE-TP</span> (tema do grupo) → consome KPMs do RIC para prever throughput
+<span style="color:var(--good-text)">UE</span> → uesimtun0 → iperf3</div>` },
+  testFlow: { title: 'Fluxo do teste no contexto O-RAN', html: `<div class="oran-arch"><span style="color:var(--ink-2)">rApp UE-TP</span> (tema do grupo) → consome KPMs do RIC para prever throughput
      ↕ A1 / E2
-<span style="color:#8a93a8">Near-RT RIC</span> → subscreve E2SM-KPM: DRB.UEThpDl/Ul · RRU.PrbTotDl/Ul
+<span style="color:var(--ink-2)">Near-RT RIC</span> → subscreve E2SM-KPM: DRB.UEThpDl/Ul · RRU.PrbTotDl/Ul
      ↕ E2 (por UE)
-<span style="color:#4dabf7">O-gNB</span> [Split 7.2: O-CU-CP + O-CU-UP + O-DU + O-RU (simulado)]
+<span style="color:var(--accent-text)">O-gNB</span> [Split 7.2: O-CU-CP + O-CU-UP + O-DU + O-RU (simulado)]
   n78 · TDD 3.5 GHz · BW 100 MHz · 30 kHz SCS · 66 PRBs
-  <span style="color:#e8590c">tc netem em uesimtun0</span> ← este painel aplica delay/loss aqui
+  <span style="color:var(--accent-text)">tc netem em uesimtun0</span> ← este painel aplica delay/loss aqui
      ↕ N2 (NGAP) / N3 (GTP-U)
-<span style="color:#4dabf7">5GC Open5GS</span> → AMF (registro) · SMF/UPF (sessão PDU · N4/N6)
+<span style="color:var(--accent-text)">5GC Open5GS</span> → AMF (registro) · SMF/UPF (sessão PDU · N4/N6)
      ↕ uesimtun0 (TUN 10.60.0.x)
-<span style="color:#69db7c">UE</span> iperf3 client → DN iperf3 server (<span style="color:#69db7c">mede throughput real aqui</span>)</div>` },
+<span style="color:var(--good-text)">UE</span> iperf3 client → DN iperf3 server (<span style="color:var(--good-text)">mede throughput real aqui</span>)</div>` },
   distFormula: { title: 'Path Loss — distância UE ↔ gNB', html: `<div class="formula-box">PL(d) = 13.54 + 39.08·log₁₀(d) + 20·log₁₀(f_c) − 0.6·(h_UT−1.5)
 [3GPP TR 38.901 · UMa NLOS · f_c = 3.5 GHz · h_UT = 1.5 m]</div>
 <div class="formula-legend">
@@ -3339,8 +3348,7 @@ const RAN_INFO = {
   bler: 'BLER — fração de blocos que chegaram com erro. Sobe quando o canal piora ou quando o MCS foi '
       + 'agressivo demais para o canal. No RFSIM fica em 0: não há erro num canal ideal.',
 };
-const RAN = { snr: [], mcs: [], prb: [], bler: [], max: 40, timer: null,
-  color: { snr: '#4dabf7', mcs: '#e8590c', prb: '#2f9e44', bler: '#e03131' } };
+const RAN = { snr: [], mcs: [], prb: [], bler: [], max: 40, timer: null };
 function ranSparkPath(vals, w = 160, h = 36, pad = 4) {
   if (!vals.length) return '';
   const min = Math.min(...vals), max = Math.max(...vals), rng = (max - min) || 1;
@@ -3350,7 +3358,7 @@ function ranSparkPath(vals, w = 160, h = 36, pad = 4) {
     return (i ? 'L' : 'M') + x.toFixed(1) + ',' + y.toFixed(1);
   }).join(' ');
 }
-function renderSpark(id, vals, color) {
+function renderSpark(id, vals) {
   const svg = document.getElementById(id);
   if (!svg) return;
   // O rádio do lab é simulado: SNR, MCS e PRB ficam parados a maior parte do
@@ -3361,8 +3369,8 @@ function renderSpark(id, vals, color) {
   if (!varia) { svg.innerHTML = ''; return; }
   if (!vals.length) { svg.innerHTML = ''; return; }
   const d = ranSparkPath(vals);
-  svg.innerHTML = `<path d="${d} L160,36 L0,36 Z" fill="${color}" opacity="0.10"/>` +
-    `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>`;
+  svg.innerHTML = `<path class="sp-area" d="${d} L160,36 L0,36 Z"/>`
+                + `<path class="sp-linha" d="${d}"/>`;
 }
 function pushRan(arr, v) { if (v == null || isNaN(v)) return; arr.push(v); if (arr.length > RAN.max) arr.shift(); }
 function ranReset() { RAN.snr = []; RAN.mcs = []; RAN.prb = []; RAN.bler = []; }
@@ -3391,10 +3399,10 @@ async function pollRan() {
       ? 'sem amostra nova há ' + Math.round(d.age) + ' s — o gNB está no ar mas parou de reportar; os números abaixo são a última leitura'
       : (I18N.t('ran.sub') || '');
     pushRan(RAN.snr, d.snr); pushRan(RAN.mcs, d.mcs); pushRan(RAN.prb, d.prb); pushRan(RAN.bler, d.bler);
-    renderSpark('spark-snr', RAN.snr, RAN.color.snr);
-    renderSpark('spark-mcs', RAN.mcs, RAN.color.mcs);
-    renderSpark('spark-prb', RAN.prb, RAN.color.prb);
-    renderSpark('spark-bler', RAN.bler, RAN.color.bler);
+    renderSpark('spark-snr', RAN.snr);
+    renderSpark('spark-mcs', RAN.mcs);
+    renderSpark('spark-prb', RAN.prb);
+    renderSpark('spark-bler', RAN.bler);
   } catch {}
 }
 // pendura as explicações nos instrumentos (uma vez, na carga da página)

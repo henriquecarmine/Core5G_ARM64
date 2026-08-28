@@ -94,7 +94,22 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     });
     const c = razao(con.cor, con.fundo);
     assert(c >= 4.5, `console ilegível no tema ${tema}: ${c.toFixed(2)}:1 (mínimo 4,5)`);
-    console.log(`PASS 0.c · console legível no tema ${tema} · ${c.toFixed(2)}:1`);
+
+    // e as cores ANSI do log, que é o que o console mais mostra
+    const ESC = String.fromCharCode(27);
+    const linha = `${ESC}[32mOK${ESC}[39m ${ESC}[33mATEN${ESC}[39m ${ESC}[31mERRO${ESC}[39m`;
+    const spans = await page.evaluate((txt) => {
+      const o = document.querySelector('#output');
+      const antes = o.innerHTML;
+      o.innerHTML = renderLogLine(txt).html;
+      const cores = [...o.querySelectorAll('span[style]')].map((s) => getComputedStyle(s).color);
+      o.innerHTML = antes;
+      return { cores, fundo: getComputedStyle(o).backgroundColor };
+    }, linha);
+    assert(spans.cores.length === 3, `esperava 3 trechos coloridos no log, vi ${spans.cores.length}`);
+    const pior = Math.min(...spans.cores.map((x) => razao(x, spans.fundo)));
+    assert(pior >= 4.5, `cor de log ilegível no tema ${tema}: ${pior.toFixed(2)}:1`);
+    console.log(`PASS 0.c · console legível no tema ${tema} · texto ${c.toFixed(2)}:1 · pior cor de log ${pior.toFixed(2)}:1`);
   }
   await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
 

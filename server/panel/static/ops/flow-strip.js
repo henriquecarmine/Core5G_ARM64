@@ -20,51 +20,51 @@
 
   var CSS = [
     '.fs-strip{display:none;align-items:center;gap:5px;padding:6px 10px;margin-bottom:6px;',
-    '  background:#12141a;border:1px solid #2c3038;border-radius:6px;overflow-x:auto;',
-    '  font-family:"SF Mono",Menlo,Consolas,monospace;font-size:10.5px;color:#8a8f98;flex:none}',
+    '  background:var(--bg);border:1px solid var(--line);border-radius:6px;overflow-x:auto;',
+    '  font-family:"SF Mono",Menlo,Consolas,monospace;font-size:10.5px;color:var(--ink-3);flex:none}',
     '.fs-strip.on{display:flex}',
     '.fs-node{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;',
-    '  border:1px solid #2c3038;background:#181b22;color:#6b7280;white-space:nowrap;transition:all .25s}',
-    '.fs-node.active{color:#ffb84d;border-color:#8a5a1a;animation:fs-pulse 1.1s infinite}',
-    '.fs-node.done{color:#69db7c;border-color:#2f6b3a}',
-    '.fs-node.fail{color:#ff6b6b;border-color:#7a2e2e}',
-    '.fs-edge{position:relative;flex:0 0 26px;height:2px;background:#2c3038;border-radius:2px;margin:0 1px}',
+    '  border:1px solid var(--line);background:var(--surface);color:var(--ink-3);white-space:nowrap;transition:all .25s}',
+    '.fs-node.active{color:var(--warn-text);border-color:var(--w-8);animation:fs-pulse 1.1s infinite}',
+    '.fs-node.done{color:var(--good-text);border-color:var(--g-8)}',
+    '.fs-node.fail{color:var(--bad-text);border-color:var(--r-8)}',
+    '.fs-edge{position:relative;flex:0 0 26px;height:2px;background:var(--line);border-radius:2px;margin:0 1px}',
     '.fs-edge>i{position:absolute;top:-13px;left:50%;transform:translateX(-50%);',
-    '  font-size:8.5px;font-style:normal;color:#4d5561;letter-spacing:.03em}',
-    '.fs-edge.done{background:#2f6b3a}',
-    '.fs-edge.active{background:#4d3a14}',
+    '  font-size:8.5px;font-style:normal;color:var(--n-8);letter-spacing:.03em}',
+    '.fs-edge.done{background:var(--g-8)}',
+    '.fs-edge.active{background:var(--warn-soft)}',
     '.fs-edge.active::after{content:"";position:absolute;top:-2px;left:0;width:6px;height:6px;',
-    '  border-radius:50%;background:#ffb84d;animation:fs-travel .8s linear infinite}',
+    '  border-radius:50%;background:var(--warn-text);animation:fs-travel .8s linear infinite}',
     '.fs-result{margin-left:auto;padding-left:8px;font-weight:700;visibility:hidden}',
     '.fs-node.hasinfo{cursor:pointer}',
-    '.fs-node.hasinfo:hover{border-color:#5c6370;color:#c9d1d9}',
+    '.fs-node.hasinfo:hover{border-color:var(--ink-3);color:var(--console-ink)}',
     '.fs-node.hasinfo i{font-style:normal;opacity:.55;margin-left:2px;font-size:9px}',
     '.fs-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600}',
-    '.fs-pop{position:fixed;z-index:601;max-width:390px;background:#12141a;border:1px solid #3a3f48;',
+    '.fs-pop{position:fixed;z-index:601;max-width:390px;background:var(--bg);border:1px solid var(--line-2);',
     '  border-radius:10px;padding:14px 16px;box-shadow:0 12px 34px rgba(0,0,0,.5);',
-    '  font-family:-apple-system,"Segoe UI",sans-serif;font-size:12.5px;color:#c9d1d9;line-height:1.5}',
-    '.fs-pop h4{margin:0 0 8px;font-size:13.5px;color:#e6e6e6}',
-    '.fs-pop .sec{font-size:9px;letter-spacing:.08em;color:#8a8f98;margin:9px 0 2px;text-transform:uppercase}',
-    '.fs-pop code{font-family:"SF Mono",Menlo,monospace;font-size:11px;color:#74c0fc;word-break:break-all}',
-    '.fs-pop .hint{margin-top:10px;padding-top:8px;border-top:1px solid #2c3038;color:#8a8f98;font-size:11px}',
-    '.fs-pop .x{position:absolute;top:8px;right:11px;cursor:pointer;color:#8a8f98;font-size:14px}',
+    '  font-family:-apple-system,"Segoe UI",sans-serif;font-size:12.5px;color:var(--console-ink);line-height:1.5}',
+    '.fs-pop h4{margin:0 0 8px;font-size:13.5px;color:var(--ink)}',
+    '.fs-pop .sec{font-size:9px;letter-spacing:.08em;color:var(--ink-3);margin:9px 0 2px;text-transform:uppercase}',
+    '.fs-pop code{font-family:"SF Mono",Menlo,monospace;font-size:11px;color:var(--accent-text);word-break:break-all}',
+    '.fs-pop .hint{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);color:var(--ink-3);font-size:11px}',
+    '.fs-pop .x{position:absolute;top:8px;right:11px;cursor:pointer;color:var(--ink-3);font-size:14px}',
     // Fonte dos dados: cada opção é UMA linha (rádio · rótulo · ação à direita);
     // os meios de envio (arquivo / colar) ficam alinhados sob um rótulo curto.
-    '.fs-src label.opt{display:flex;align-items:center;gap:8px;margin:6px 0 1px;cursor:pointer;color:#c9d1d9;line-height:1.3}',
+    '.fs-src label.opt{display:flex;align-items:center;gap:8px;margin:6px 0 1px;cursor:pointer;color:var(--console-ink);line-height:1.3}',
     '.fs-src label.opt input{margin:0;flex:none;width:auto;height:auto;min-width:0}',   // o painel dá width:100% a todo input: o rádio engolia a linha
     '.fs-src .lbl{flex:1 1 auto;min-width:0;font-weight:600}',
     '.fs-src .act{flex:none;margin-left:auto;white-space:nowrap;font-size:11px}',
-    '.fs-src .exp{margin-left:22px;color:#8a8f98;font-size:11px}',
-    '.fs-src a{color:#74c0fc}',
-    '.fs-src .st{color:#69db7c}',
+    '.fs-src .exp{margin-left:22px;color:var(--ink-3);font-size:11px}',
+    '.fs-src a{color:var(--accent-text)}',
+    '.fs-src .st{color:var(--good-text)}',
     '.fs-src .how{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin:6px 0 0 22px}',
-    '.fs-src .hk{flex:none;width:44px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#8a8f98}',
-    '.fs-src input[type=file]{flex:1 1 180px;min-width:0;margin:0;font-size:11px;color:#8a8f98}',
-    '.fs-src .paste{flex:1 1 100%;order:2;margin-left:52px;font:10.5px "SF Mono",Menlo,monospace;background:#0d0e11;color:#c9d1d9;border:1px solid #2c3038;border-radius:6px;padding:6px 8px;resize:vertical;min-height:58px}',
-    '.fs-src .pastebtn{order:3;margin-left:52px;font:11px -apple-system,"Segoe UI",sans-serif;background:#1c2230;color:#c9d1d9;border:1px solid #2c3038;border-radius:6px;padding:4px 10px;cursor:pointer}',
-    '.fs-src .pastebtn:hover{border-color:#74c0fc;color:#fff}',
-    '.fs-result.ok{visibility:visible;color:#69db7c}',
-    '.fs-result.fail{visibility:visible;color:#ff6b6b}',
+    '.fs-src .hk{flex:none;width:44px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}',
+    '.fs-src input[type=file]{flex:1 1 180px;min-width:0;margin:0;font-size:11px;color:var(--ink-3)}',
+    '.fs-src .paste{flex:1 1 100%;order:2;margin-left:52px;font:10.5px "SF Mono",Menlo,monospace;background:var(--console-bg);color:var(--console-ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;resize:vertical;min-height:58px}',
+    '.fs-src .pastebtn{order:3;margin-left:52px;font:11px -apple-system,"Segoe UI",sans-serif;background:var(--surface-2);color:var(--console-ink);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}',
+    '.fs-src .pastebtn:hover{border-color:var(--accent-text);color:var(--ink)}',
+    '.fs-result.ok{visibility:visible;color:var(--good-text)}',
+    '.fs-result.fail{visibility:visible;color:var(--bad-text)}',
     '@keyframes fs-travel{from{left:0}to{left:calc(100% - 6px)}}',
     '@keyframes fs-pulse{50%{box-shadow:0 0 9px rgba(255,184,77,.35)}}',
   ].join('\n');
@@ -326,7 +326,7 @@
 
   function render(scene, host) {
     var strip = document.createElement('div');
-    strip.className = 'fs-strip on';
+    strip.className = 'fs-strip on superficie-escura';
     var els = { nodes: [], edges: [] };
     scene.nodes.forEach(function (n, i) {
       if (i > 0) {
@@ -452,7 +452,7 @@
       +   '<span class="lbl">1. Sugerida pelo servidor</span>'
       +   '<a href="#" class="see act">👁 ver amostra</a></label>'
       + '<div class="exp">' + s.def + '</div>'
-      + '<div class="smp" style="display:none;margin:5px 0 4px 20px;max-width:345px;overflow-x:auto;border:1px solid #2c3038;border-radius:6px"></div>'
+      + '<div class="smp" style="display:none;margin:5px 0 4px 20px;max-width:345px;overflow-x:auto;border:1px solid var(--line);border-radius:6px"></div>'
       + '<label class="opt"><input type="radio" name="fsrc" value="custom">'
       +   '<span class="lbl">2. Meus dados</span><span class="st act"></span></label>'
       + '<div class="exp">' + s.cus + ' '
@@ -489,7 +489,7 @@
     if (see) see.onclick = function (e) {
       e.preventDefault();
       if (smp.style.display === 'block') { smp.style.display = 'none'; return; }
-      smp.innerHTML = '<div style="padding:6px 9px;color:#8a8f98;font-size:10px">carregando…</div>'; smp.style.display = 'block';
+      smp.innerHTML = '<div style="padding:6px 9px;color:var(--ink-3);font-size:10px">carregando…</div>'; smp.style.display = 'block';
       fetch('/api/lab-data/' + key + '/example').then(function (r) { return r.text(); })
         .then(function (txt) {
           var lines = txt.trim().split('\n').filter(function (l) { return l.trim(); });
@@ -497,17 +497,17 @@
           var html = '<table style="border-collapse:collapse;font-size:9px;font-family:\'SF Mono\',Menlo,monospace"><tr>'
             + cols.map(function (c) {
                 var tip = COLTIPS[c.trim()] || 'coluna do dataset';
-                return '<th title="' + tip.replace(/"/g, '&quot;') + '" style="padding:4px 7px;background:#181b22;color:#74c0fc;border-bottom:1px solid #2c3038;white-space:nowrap;cursor:help;text-align:left">' + c + ' <span style="opacity:.4">ⓘ</span></th>';
+                return '<th title="' + tip.replace(/"/g, '&quot;') + '" style="padding:4px 7px;background:var(--surface);color:var(--accent-text);border-bottom:1px solid var(--line);white-space:nowrap;cursor:help;text-align:left">' + c + ' <span style="opacity:.4">ⓘ</span></th>';
               }).join('') + '</tr>'
             + lines.slice(1).map(function (l) {
                 return '<tr>' + l.split(',').map(function (v) {
-                  return '<td style="padding:3px 7px;color:#9aa4b2;border-bottom:1px solid #1c1f26;white-space:nowrap">' + v + '</td>';
+                  return '<td style="padding:3px 7px;color:var(--ink-2);border-bottom:1px solid var(--surface);white-space:nowrap">' + v + '</td>';
                 }).join('') + '</tr>';
               }).join('')
-            + '</table><div style="padding:5px 9px;color:#5c6370;font-size:9.5px">⋮ primeiras linhas · passe o mouse nos cabeçalhos · ' + ((SRC[key] || SRC.sutd).foot) + '</div>';
+            + '</table><div style="padding:5px 9px;color:var(--ink-3);font-size:9.5px">⋮ primeiras linhas · passe o mouse nos cabeçalhos · ' + ((SRC[key] || SRC.sutd).foot) + '</div>';
           smp.innerHTML = html;
         })
-        .catch(function () { smp.innerHTML = '<div style="padding:6px 9px;color:#ff6b6b;font-size:10px">falhou ao carregar</div>'; });
+        .catch(function () { smp.innerHTML = '<div style="padding:6px 9px;color:var(--bad-text);font-size:10px">falhou ao carregar</div>'; });
     };
     function upload(txt) {
       st.textContent = 'enviando…';

@@ -15,12 +15,12 @@
                    se le, o mapa e para OLHAR quando se quer. A janela abre em
                    'reduzida' (canto, nao tapa o texto) e vai a 'expandida'
                    (modal com fundo escurecido) num clique. */
-    '.mm-box{margin:6px 0;border:1px solid #2c3038;border-radius:8px;background:#0d0e11;overflow:hidden;flex:0 0 auto}',
-    '.mm-head{display:flex;align-items:center;gap:6px;padding:4px 10px;font:10px -apple-system,sans-serif;color:#8a8f98;user-select:none}',
-    '.mm-head b{color:#f59f00}',
+    '.mm-box{margin:6px 0;border:1px solid var(--line);border-radius:8px;background:var(--console-bg);overflow:hidden;flex:0 0 auto}',
+    '.mm-head{display:flex;align-items:center;gap:6px;padding:4px 10px;font:10px -apple-system,sans-serif;color:var(--ink-3);user-select:none}',
+    '.mm-head b{color:var(--warn)}',
     '.mm-head .mm-ct{flex:1 1 auto;min-width:0}',
-    '.mm-head .mm-btn{flex:none;border:1px solid #2c3038;border-radius:5px;padding:0 6px;line-height:16px;font-size:11px;color:#8a8f98;cursor:pointer}',
-    '.mm-head .mm-btn:hover{color:#ffb84d;border-color:#8a5a1a}',
+    '.mm-head .mm-btn{flex:none;border:1px solid var(--line);border-radius:5px;padding:0 6px;line-height:16px;font-size:11px;color:var(--ink-3);cursor:pointer}',
+    '.mm-head .mm-btn:hover{color:var(--warn-text);border-color:var(--w-8)}',
     '.mm-box .mm-vp{overflow:auto;max-height:min(30vh,260px);overscroll-behavior:contain}',
     '.mm-box.full .mm-vp{max-height:none;overflow:visible}',
     '.mm-box svg,.mm-float svg{display:block;width:100%;height:auto}',
@@ -30,16 +30,16 @@
     /* A janela abre À PARTE, sobre a tela, e some ao fechar: nao rouba faixa do
        console nem divide atencao com o resultado do teste. */
     '.mm-float{display:none;position:fixed;z-index:150;left:50%;transform:translateX(-50%);top:8vh;',
-    '  width:min(1180px,92vw);background:#0d0e11;border:1px solid #3a3f48;border-radius:10px;overflow:hidden;',
+    '  width:min(1180px,92vw);background:var(--console-bg);border:1px solid var(--line-2);border-radius:10px;overflow:hidden;',
     '  box-shadow:0 18px 50px rgba(0,0,0,.6)}',
     '.mm-float.open{display:block}',
-    '.mm-float .mm-head{cursor:default;padding:7px 12px;border-bottom:1px solid #2c3038;background:#12141a}',
+    '.mm-float .mm-head{cursor:default;padding:7px 12px;border-bottom:1px solid var(--line);background:var(--bg)}',
     '.mm-float .mm-vp{overflow:auto;max-height:76vh;overscroll-behavior:contain}',
     '.mm-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:149}',
     '.mm-backdrop.on{display:block}',
     /* aviso no botao do console enquanto um teste corre */
     '@keyframes mm-pulse{0%,100%{opacity:1}50%{opacity:.35}}',
-    '#map-btn .mm-live{display:none;width:7px;height:7px;border-radius:50%;background:#ffb84d;box-shadow:0 0 5px #ffb84d}',
+    '#map-btn .mm-live{display:none;width:7px;height:7px;border-radius:50%;background:var(--warn-text);box-shadow:0 0 5px var(--warn-text)}',
     '#map-btn.live .mm-live{display:inline-block;animation:mm-pulse 1.1s ease-in-out infinite}',
   ].join('\n');
   var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
@@ -141,7 +141,7 @@
       var y0 = Math.min.apply(0, ns.map(function (n) { return n.y; })) - 30;
       var x1 = Math.max.apply(0, ns.map(function (n) { return n.x + 184; })) + 24;
       var y1 = Math.max.apply(0, ns.map(function (n) { return n.y + 66; })) + 14;
-      var c = ly.color || '#22262e';
+      var c = ly.color || 'var(--n-4)';
       s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" rx="14" fill="' + c + '" fill-opacity=".05" stroke="' + c + '" stroke-opacity=".35"/>';
       s += '<text x="' + (x0 + 14) + '" y="' + (y0 + 20) + '" font-family="-apple-system,sans-serif" font-size="14" font-weight="600" fill="' + c + '" fill-opacity=".75">' + esc(ly.label || k) + '</text>';
     }
@@ -169,8 +169,8 @@
       if (isFlow(l.from, l.to)) return;
       var ca = center(a), cb = center(b);
       var op = l.planned ? '.35' : '.8';
-      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="#3a4048" stroke-width="1.5" opacity="' + op + '"' + (l.dashed || l.planned ? ' stroke-dasharray="7 6"' : '') + '/>';
-      if (l.iface) s += '<text x="' + ((ca.x + cb.x) / 2) + '" y="' + ((ca.y + cb.y) / 2 - 6) + '" text-anchor="middle" ' + FONT + ' font-size="12" fill="#7d8590" stroke="#0d0e11" stroke-width="4" paint-order="stroke">' + esc(l.iface) + '</text>';
+      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="var(--line-2)" stroke-width="1.5" opacity="' + op + '"' + (l.dashed || l.planned ? ' stroke-dasharray="7 6"' : '') + '/>';
+      if (l.iface) s += '<text x="' + ((ca.x + cb.x) / 2) + '" y="' + ((ca.y + cb.y) / 2 - 6) + '" text-anchor="middle" ' + FONT + ' font-size="12" fill="var(--ink-3)" stroke="var(--console-bg)" stroke-width="4" paint-order="stroke">' + esc(l.iface) + '</text>';
     });
 
     // Rótulos de fluxo/linhagem entram em lbl e são pintados DEPOIS dos nós
@@ -180,42 +180,44 @@
     ghost.forEach(function (f) {
       var a = byId[f[0]], b = byId[f[1]]; if (!a || !b) return;
       var ca = center(a), cb = center(b);
-      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="#f59f00" stroke-width="2.5" opacity=".4" stroke-dasharray="8 7"/>';
+      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="var(--warn)" stroke-width="2.5" opacity=".4" stroke-dasharray="8 7"/>';
       var mx = (ca.x + cb.x) / 2, my = (ca.y + cb.y) / 2;
       var ang = (Math.atan2(cb.y - ca.y, cb.x - ca.x) * 180 / Math.PI).toFixed(1);
-      s += '<polygon points="0,-7 14,0 0,7" fill="#f59f00" opacity=".5" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
+      s += '<polygon points="0,-7 14,0 0,7" fill="var(--warn)" opacity=".5" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
       var glabel = flowLabel(f);
-      if (glabel) lbl += '<text x="' + mx + '" y="' + (my - 12) + '" text-anchor="middle" ' + FONT + ' font-size="14" font-style="italic" fill="#c9974d" stroke="#0d0e11" stroke-width="4" paint-order="stroke">' + esc(glabel) + '</text>';
+      if (glabel) lbl += '<text x="' + mx + '" y="' + (my - 12) + '" text-anchor="middle" ' + FONT + ' font-size="14" font-style="italic" fill="var(--warn-text)" stroke="var(--console-bg)" stroke-width="4" paint-order="stroke">' + esc(glabel) + '</text>';
     });
     // fluxo ativo: linha âmbar + seta no sentido do dado + NOME da interface + pacote
     mm.flows.forEach(function (f) {
       var a = byId[f[0]], b = byId[f[1]]; if (!a || !b) return;
       var ca = center(a), cb = center(b);
-      s += '<line class="mm-flow" x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="#f59f00" stroke-width="3" opacity=".6"/>';
+      s += '<line class="mm-flow" x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="var(--warn)" stroke-width="3" opacity=".6"/>';
       var mx = (ca.x + cb.x) / 2, my = (ca.y + cb.y) / 2;
       var ang = (Math.atan2(cb.y - ca.y, cb.x - ca.x) * 180 / Math.PI).toFixed(1);
-      s += '<polygon class="mm-flow" points="0,-8 16,0 0,8" fill="#f59f00" opacity=".9" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
+      s += '<polygon class="mm-flow" points="0,-8 16,0 0,8" fill="var(--warn)" opacity=".9" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
       var flabel = flowLabel(f);
-      if (flabel) lbl += '<text x="' + mx + '" y="' + (my - 14) + '" text-anchor="middle" ' + FONT + ' font-size="16" font-weight="700" fill="#ffb84d" stroke="#0d0e11" stroke-width="5" paint-order="stroke">' + esc(flabel) + '</text>';
+      if (flabel) lbl += '<text x="' + mx + '" y="' + (my - 14) + '" text-anchor="middle" ' + FONT + ' font-size="16" font-weight="700" fill="var(--warn-text)" stroke="var(--console-bg)" stroke-width="5" paint-order="stroke">' + esc(flabel) + '</text>';
       if (live) {
         var dur = (Math.hypot(cb.x - ca.x, cb.y - ca.y) / 220 + 0.6).toFixed(2);
-        s += '<circle r="7" fill="#ffb84d"><animate attributeName="cx" from="' + ca.x + '" to="' + cb.x + '" dur="' + dur + 's" repeatCount="indefinite"/><animate attributeName="cy" from="' + ca.y + '" to="' + cb.y + '" dur="' + dur + 's" repeatCount="indefinite"/></circle>';
+        s += '<circle r="7" fill="var(--warn-text)"><animate attributeName="cx" from="' + ca.x + '" to="' + cb.x + '" dur="' + dur + 's" repeatCount="indefinite"/><animate attributeName="cy" from="' + ca.y + '" to="' + cb.y + '" dur="' + dur + 's" repeatCount="indefinite"/></circle>';
       }
     });
     // nós: TODOS com nome — aceso (âmbar), origem do dado (âmbar tracejado) ou apagado
     topo.nodes.forEach(function (n) {
       var on = hi[n.id], g = gh[n.id];
       s += '<rect x="' + n.x + '" y="' + n.y + '" width="184" height="66" rx="9" fill="'
-        + (on ? '#2b2313' : g ? '#221d12' : '#181b22') + '" stroke="' + (on ? '#f59f00' : g ? '#8a6d1f' : '#2c313b')
+        + (on ? 'var(--warn-soft)' : g ? 'var(--warn-soft)' : 'var(--surface)') + '" stroke="' + (on ? 'var(--warn)' : g ? 'var(--w-8)' : 'var(--n-4)')
         + '" stroke-width="' + (on ? 3 : g ? 1.5 : 1) + '"' + (g ? ' stroke-dasharray="6 5"' : '') + '/>';
-      s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" ' + FONT + ' font-size="' + (on ? 18 : 15) + '" font-weight="' + (on ? 700 : 500) + '" fill="' + (on ? '#ffb84d' : g ? '#d0a75c' : '#9aa1ab') + '">' + esc(n.label || n.id) + '</text>';
+      s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" ' + FONT + ' font-size="' + (on ? 18 : 15) + '" font-weight="' + (on ? 700 : 500) + '" fill="' + (on ? 'var(--warn-text)' : g ? 'var(--warn-text)' : 'var(--ink-2)') + '">' + esc(n.label || n.id) + '</text>';
     });
     s += lbl + '</svg>';
     var flutua = host === floatHost;
     if (!flutua) host.classList.add('mm-box');
+    // superfície escura nos dois temas: o escopo resolve os papéis dos filhos
+    host.classList.add('superficie-escura');
     var titulo = 'onde está rodando — mapa do projeto (' + mm.proj.toUpperCase() + ') · setas = sentido dos dados'
-      + (mm.ghost ? ' · <span style="color:#8a6d1f">⇢ tracejado = de onde o dado veio</span>' : '')
-      + (mm.note ? ' · <span style="color:#c9974d">' + mm.note + '</span>' : '');
+      + (mm.ghost ? ' · <span style="color:var(--w-8)">⇢ tracejado = de onde o dado veio</span>' : '')
+      + (mm.note ? ' · <span style="color:var(--warn-text)">' + mm.note + '</span>' : '');
     host.innerHTML = '<div class="mm-head"><b>◉</b><span class="mm-ct">' + titulo + '</span>'
       + (flutua ? '<span class="mm-btn mm-x" title="fechar">\u2715</span>'
                 : '<span class="mm-btn mm-zoom"></span><span class="mm-btn mm-caret"></span>')
@@ -270,7 +272,7 @@
       hosts[name] = el;
       if (name === 'console' && el) {          // o do console e a JANELA
         floatHost = el;
-        el.classList.add('mm-float');
+        el.classList.add('mm-float', 'superficie-escura');
         el.style.display = '';                 // quem manda e a classe .open
         document.body.appendChild(el);         // sai da coluna do console
         winApply();
@@ -286,7 +288,7 @@
     end: function (ok) {
       liveBtn(false);
       var h = floatHost; if (!h || !h.innerHTML) return;
-      var c = ok ? '#2f9e44' : '#e03131';
+      var c = ok ? 'var(--good)' : 'var(--bad)';
       h.querySelectorAll('circle').forEach(function (x) { x.remove(); });   // congela: fim do fluxo
       h.querySelectorAll('line.mm-flow').forEach(function (l) { l.setAttribute('stroke', c); });
       h.querySelectorAll('polygon.mm-flow').forEach(function (p) { p.setAttribute('fill', c); });

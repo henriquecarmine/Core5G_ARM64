@@ -10,38 +10,38 @@
   var CSS = [
     '.en-btn{opacity:.45;transition:all .3s;cursor:default;flex:0 0 auto!important;',
     '  background:none!important;border:none!important;padding:2px 6px!important;',
-    '  font-size:16px;line-height:1;width:auto!important;min-width:0!important;color:#8a8f98}',
-    '.en-btn.lit{opacity:1;cursor:pointer;color:#f59f00!important;text-shadow:0 0 8px rgba(245,159,0,.5)}',
+    '  font-size:16px;line-height:1;width:auto!important;min-width:0!important;color:var(--ink-3)}',
+    '.en-btn.lit{opacity:1;cursor:pointer;color:var(--warn)!important;text-shadow:0 0 8px rgba(245,159,0,.5)}',
     '.en-back{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500}',
     '.en-mod{position:fixed;z-index:501;top:50%;left:50%;transform:translate(-50%,-50%);',
-    '  width:min(680px,94vw);max-height:88vh;overflow-y:auto;background:#12141a;',
-    '  border:1px solid #3a3f48;border-radius:12px;padding:18px 20px;color:#c9d1d9;',
+    '  width:min(680px,94vw);max-height:88vh;overflow-y:auto;background:var(--bg);',
+    '  border:1px solid var(--line-2);border-radius:12px;padding:18px 20px;color:var(--console-ink);',
     '  font-family:-apple-system,"Segoe UI",sans-serif;font-size:12.5px;line-height:1.5;',
     '  box-shadow:0 16px 48px rgba(0,0,0,.6)}',
-    '.en-mod h3{margin:0 0 2px;font-size:15px;color:#e6e6e6}',
-    '.en-mod .sub{color:#8a8f98;font-size:11px;margin-bottom:12px}',
-    '.en-mod .x{position:absolute;top:10px;right:14px;cursor:pointer;color:#8a8f98;font-size:15px}',
+    '.en-mod h3{margin:0 0 2px;font-size:15px;color:var(--ink)}',
+    '.en-mod .sub{color:var(--ink-3);font-size:11px;margin-bottom:12px}',
+    '.en-mod .x{position:absolute;top:10px;right:14px;cursor:pointer;color:var(--ink-3);font-size:15px}',
     '.en-t{width:100%;border-collapse:collapse;margin:6px 0 4px}',
-    '.en-t th{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:#8a8f98;',
-    '  text-align:left;padding:5px 8px;border-bottom:1px solid #2c3038}',
-    '.en-t td{padding:6px 8px;border-bottom:1px solid #1c1f26;vertical-align:top}',
-    '.en-t td.n1{color:#69db7c;font-weight:600}',
-    '.en-t td.x86{color:#8a8f98}',
-    '.en-t td.dl{color:#f59f00;font-weight:700;white-space:nowrap}',
-    '.en-t .live{color:#4dabf7;font-size:10px;margin-left:4px}',
-    '.en-t .est{color:#5c6370;font-size:10px;margin-left:4px}',
-    '.en-t .src{color:#5c6370;font-size:10px}',
-    '.en-bar{height:9px;border-radius:5px;background:#1c1f26;overflow:hidden;margin-top:3px}',
+    '.en-t th{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);',
+    '  text-align:left;padding:5px 8px;border-bottom:1px solid var(--line)}',
+    '.en-t td{padding:6px 8px;border-bottom:1px solid var(--surface);vertical-align:top}',
+    '.en-t td.n1{color:var(--good-text);font-weight:600}',
+    '.en-t td.x86{color:var(--ink-3)}',
+    '.en-t td.dl{color:var(--warn);font-weight:700;white-space:nowrap}',
+    '.en-t .live{color:var(--accent-text);font-size:10px;margin-left:4px}',
+    '.en-t .est{color:var(--ink-3);font-size:10px;margin-left:4px}',
+    '.en-t .src{color:var(--ink-3);font-size:10px}',
+    '.en-bar{height:9px;border-radius:5px;background:var(--surface);overflow:hidden;margin-top:3px}',
     '.en-bar>i{display:block;height:100%;border-radius:5px}',
-    '.en-verd{margin:10px 0 4px;padding:10px 12px;border:1px solid #2f6b3a;border-radius:9px;background:#13210f22}',
-    '.en-verd b{color:#69db7c}',
-    '.en-why{margin-top:10px;border-top:1px solid #2c3038;padding-top:9px}',
-    '.en-why>span{cursor:pointer;color:#74c0fc}',
-    '.en-why .body{display:none;margin-top:7px;color:#c9d1d9;font-style:italic}',
+    '.en-verd{margin:10px 0 4px;padding:10px 12px;border:1px solid var(--g-8);border-radius:9px;background:color-mix(in srgb, var(--good) 13%, transparent)}',
+    '.en-verd b{color:var(--good-text)}',
+    '.en-why{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}',
+    '.en-why>span{cursor:pointer;color:var(--accent-text)}',
+    '.en-why .body{display:none;margin-top:7px;color:var(--console-ink);font-style:italic}',
     '.en-why.open .body{display:block}',
-    '.en-cav{margin-top:9px;color:#8a8f98;font-size:10.5px}',
-    '.en-src{margin-top:8px;font-size:10.5px;color:#8a8f98}',
-    '.en-src a{color:#74c0fc;text-decoration:none}',
+    '.en-cav{margin-top:9px;color:var(--ink-3);font-size:10.5px}',
+    '.en-src{margin-top:8px;font-size:10.5px;color:var(--ink-3)}',
+    '.en-src a{color:var(--accent-text);text-decoration:none}',
   ].join('\n');
   var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
 
@@ -58,7 +58,7 @@
     function watts(cfg, u) { return cfg ? (DATA.power.vcpus * (cfg.idle + (cfg.max - cfg.idle) * u / 100)) : 0; }
     var cpu = tele && tele.host && tele.host.cpu_pct != null ? tele.host.cpu_pct : null;
     var liveW = cpu !== null && d.power
-      ? '⚡ AGORA (CPU ' + cpu + '%): N1 ≈ <b style="color:#69db7c">' + watts(d.power.n1, cpu).toFixed(1) + ' W</b> · x86 equivalente ≈ <b style="color:#8a8f98">' + watts(d.power.x86, cpu).toFixed(1) + ' W</b> <span class="est">interp. linear Teads ' + d.power.src + '</span>'
+      ? '⚡ AGORA (CPU ' + cpu + '%): N1 ≈ <b style="color:var(--good-text)">' + watts(d.power.n1, cpu).toFixed(1) + ' W</b> · x86 equivalente ≈ <b style="color:var(--ink-3)">' + watts(d.power.x86, cpu).toFixed(1) + ' W</b> <span class="est">interp. linear Teads ' + d.power.src + '</span>'
       : '';
     var runLine = last
       ? 'Teste: <b>' + last.cmd + '</b> · duração medida: <b>' + fmtDur(last.dur) + '</b> · concluído ' + (last.ok ? '✔' : '✖')
@@ -75,16 +75,16 @@
     }).join('');
     var v = d.verdict;
     var verd = '<div class="en-verd"><b>e. VEREDITO — média ponderada:</b> N1 <b>' + v.n1 + '</b> × ' + v.x86 + ' x86_64'
-      + '<div class="en-bar"><i style="width:' + v.n1 + '%;background:#2f9e44"></i></div>'
-      + '<div class="en-bar"><i style="width:' + v.x86 + '%;background:#5c6370"></i></div>'
-      + '<div style="margin-top:6px;font-size:11px;color:#8a8f98">' + v.pesos + '</div>'
+      + '<div class="en-bar"><i style="width:' + v.n1 + '%;background:var(--good)"></i></div>'
+      + '<div class="en-bar"><i style="width:' + v.x86 + '%;background:var(--ink-3)"></i></div>'
+      + '<div style="margin-top:6px;font-size:11px;color:var(--ink-3)">' + v.pesos + '</div>'
       + '<div style="margin-top:4px">' + v.conclusao + '</div></div>';
     var extras = d.extras.map(function (e) {
       return '<tr><td>' + e.label + ' <span class="src">' + (e.src || '') + '</span></td>'
         + '<td class="n1">' + e.n1 + '</td><td class="x86">' + e.x86 + '</td><td class="dl">' + e.delta + '</td></tr>';
     }).join('');
     var srcs = d.sources.map(function (s) {
-      return '[' + s.n + '] <a href="' + s.url + '" target="_blank" rel="noopener">' + s.title + '</a> <span style="color:#5c6370">(' + s.side + ')</span>';
+      return '[' + s.n + '] <a href="' + s.url + '" target="_blank" rel="noopener">' + s.title + '</a> <span style="color:var(--ink-3)">(' + s.side + ')</span>';
     }).join(' · ');
     return '<span class="x">✕</span>'
       + '<h3>⚡ Eficiência — Arm Neoverse N1 (este servidor) × x86_64 (mesma geração)</h3>'
@@ -107,7 +107,7 @@
       .then(function (res) {
         close();
         var b = document.createElement('div'); b.className = 'en-back'; b.onclick = close;
-        var m = document.createElement('div'); m.className = 'en-mod';
+        var m = document.createElement('div'); m.className = 'en-mod superficie-escura';
         m.innerHTML = render(res[0], res[1]);
         document.body.appendChild(b); document.body.appendChild(m);
         m.querySelector('.x').onclick = close;
@@ -137,10 +137,10 @@
           var eN1 = (p.vcpus * p.n1.max * t / 3600).toFixed(2);
           var eX = (p.vcpus * p.x86.max * t / 3600).toFixed(2);
           var div = document.createElement('div');
-          div.style.cssText = 'margin:4px 0;padding:3px 10px;border-left:2px solid #f59f00;font-size:10.5px;color:#8a8f98';
-          div.innerHTML = '⚡ ' + Math.round(t) + 's · N1 ≈ <b style="color:#69db7c">' + eN1 + ' Wh</b> · x86 eq. ≈ ' + eX + ' Wh · <b style="color:#69db7c">−52%</b> '
-            + '<span style="color:#5c6370">(estimado; teto@100%)</span> · '
-            + '<a href="#" style="color:#74c0fc" onclick="Energy._open();return false">tabela ⚡</a>';
+          div.style.cssText = 'margin:4px 0;padding:3px 10px;border-left:2px solid var(--warn);font-size:10.5px;color:var(--ink-3)';
+          div.innerHTML = '⚡ ' + Math.round(t) + 's · N1 ≈ <b style="color:var(--good-text)">' + eN1 + ' Wh</b> · x86 eq. ≈ ' + eX + ' Wh · <b style="color:var(--good-text)">−52%</b> '
+            + '<span style="color:var(--ink-3)">(estimado; teto@100%)</span> · '
+            + '<a href="#" style="color:var(--accent-text)" onclick="Energy._open();return false">tabela ⚡</a>';
           out.appendChild(div);
           out.scrollTop = out.scrollHeight;
         }).catch(function () {});

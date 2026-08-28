@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Estudo · Core5G_ARM64</title>
-<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.72.0">
+<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.73.0">
 </head>
 <body>
 <div class="wrap">
@@ -37,7 +37,7 @@
   <footer id="footer"></footer>
 </div>
 
-<script src="/static/lab/lab-i18n.js?v=0.72.0"></script>
+<script src="/static/lab/lab-i18n.js?v=0.73.0"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s);
 const T=(k,p)=>window.LABI18N?LABI18N.t(k,p):k;
@@ -136,10 +136,21 @@ async function main(){
       <div class="allrow">${runBtn("p2-tema-all",T("est.all"))}</div>`;
   }
   // ---- exercícios do professor (Plataforma de Atividades da CESAR School)
+  // O aluno faz o exercício LÁ e registra AQUI o que acertou. O que se compara
+  // entre exercícios de tamanhos diferentes (9, 22 pontos) é o PERCENTUAL.
   if(e.atividades&&idx.plataforma){
     const A=e.atividades,P=idx.plataforma;
     const naPlat=h=>esc(P.url+(h||""));
     const platLink=`<a href="${naPlat("")}" target="_blank" rel="noopener">${esc(P.nome)}</a>`;
+    const pct=(a,t)=>t>0?Math.round(a*100/t):0;
+    let RES=null;        // null = ninguém logado · {} = logado, nada registrado
+    let editando=null;   // hash do exercício com o formulário aberto
+
+    try{
+      const r=await fetch("/api/estudos/resultados",{cache:"no-store"});
+      if(r.ok)RES=(await r.json()).resultados||{};
+    }catch(x){}
+
     const prep=p=>{
       if(!p)return"";
       const b=[];
@@ -148,22 +159,86 @@ async function main(){
       if(p.cmd)b.push(runBtn(p.cmd,idx.comandos[p.cmd]||p.cmd));
       return b.length?`<div class="ativ-prep"><span>${T("est.ativ_prep")}</span>${b.join("")}</div>`:"";
     };
-    $("#atividades").innerHTML=`
-      <h2 class="section-h">${T("est.ativ_h")}</h2>
-      <p class="sub">${A.cruzada?T("est.ativ_cruzada",{modulo:esc(A.modulo)}):T("est.ativ_sub",{modulo:esc(A.modulo),plat:platLink})}</p>
-      <p class="ativ-nota">${T("est.ativ_nota")}</p>
-      <div class="ativs">
-        ${A.itens.map(x=>`
-          <div class="ativ">
-            <div class="ativ-rot">${esc(x.rot)}</div>
-            <h4>${esc(x.t)}</h4>
-            <p>${esc(x.d)}</p>
-            <a class="ativ-go" href="${naPlat(x.h)}" target="_blank" rel="noopener">${T("est.ativ_open")}</a>
-            ${prep(x.prep)}
-          </div>`).join("")}
-      </div>
-      <div class="allrow"><a class="runb ghost" href="${naPlat(A.hash)}" target="_blank" rel="noopener">${esc(T("est.ativ_all",{modulo:A.modulo}))}</a></div>`;
-    wireRun($("#atividades"));
+
+    const barra=p=>`<span class="barra"><i style="width:${p}%"></i></span>`;
+
+    const resultado=x=>{
+      if(RES===null)return"";                       // sem sessão não há o que registrar
+      if(editando===x.h){
+        const t=RES[x.h]?RES[x.h].t:x.pts;
+        return `<div class="ativ-res"><form class="ativ-form" data-h="${esc(x.h)}">
+          <span>${T("est.ativ_acertei")}</span>
+          <input name="a" type="number" min="0" step="1" required
+                 max="${t!=null?t:""}" value="${RES[x.h]?RES[x.h].a:""}" autofocus>
+          <span>${T("est.ativ_de")}</span>
+          ${t!=null?`<b>${t}</b>`:`<input name="t" type="number" min="1" step="1" required value="">`}
+          <button class="reg" type="submit">${T("est.ativ_salvar")}</button>
+          <button class="reg sec" type="button" data-cancel="1">✕</button>
+        </form></div>`;
+      }
+      const r=RES[x.h];
+      if(!r)return `<div class="ativ-res vazio"><span>${T("est.ativ_naoreg")}</span>
+        <button class="reg" data-edit="${esc(x.h)}">${T("est.ativ_reg")}</button></div>`;
+      const p=pct(r.a,r.t);
+      return `<div class="ativ-res"><span class="pct">${p}%</span>${barra(p)}
+        <span>${r.a}/${r.t}</span>
+        <button class="reg" data-edit="${esc(x.h)}">✎</button>
+        <button class="reg sec" data-clear="${esc(x.h)}">${T("est.ativ_limpar")}</button></div>`;
+    };
+
+    const resumo=()=>{
+      if(RES===null)return `<p class="ativ-nota">${T("est.ativ_entrar")}</p>`;
+      const feitos=A.itens.filter(x=>RES[x.h]);
+      if(!feitos.length)return `<p class="ativ-resumo">${T("est.ativ_resumo_zero")}</p>`;
+      const pa=feitos.reduce((s,x)=>s+RES[x.h].a,0), pt=feitos.reduce((s,x)=>s+RES[x.h].t,0);
+      const p=pct(pa,pt);
+      return `<div class="ativ-resumo"><span class="pct">${p}%</span>${barra(p)}
+        <span>${T("est.ativ_resumo",{feitos:feitos.length,n:A.itens.length,pa,pt})}</span></div>`;
+    };
+
+    function pinta(){
+      $("#atividades").innerHTML=`
+        <h2 class="section-h">${T("est.ativ_h")}</h2>
+        <p class="sub">${A.cruzada?T("est.ativ_cruzada",{modulo:esc(A.modulo)}):T("est.ativ_sub",{modulo:esc(A.modulo),plat:platLink})}</p>
+        <p class="ativ-nota">${T("est.ativ_nota")}</p>
+        ${resumo()}
+        <div class="ativs">
+          ${A.itens.map(x=>`
+            <div class="ativ">
+              <div class="ativ-topo"><div class="ativ-rot">${esc(x.rot)}</div>
+                ${x.pts!=null?`<span class="ativ-pts" title="${esc(x.partes||"")}">${esc(T("est.ativ_pts",{n:x.pts}))}</span>`:""}</div>
+              <h4>${esc(x.t)}</h4>
+              <p>${esc(x.d)}</p>
+              <a class="ativ-go" href="${naPlat(x.h)}" target="_blank" rel="noopener">${T("est.ativ_open")}</a>
+              ${resultado(x)}
+              ${prep(x.prep)}
+            </div>`).join("")}
+        </div>
+        <div class="allrow"><a class="runb ghost" href="${naPlat(A.hash)}" target="_blank" rel="noopener">${esc(T("est.ativ_all",{modulo:A.modulo}))}</a></div>`;
+      wireRun($("#atividades"));
+      const box=$("#atividades");
+      box.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>{editando=b.dataset.edit;pinta();}));
+      box.querySelectorAll("[data-cancel]").forEach(b=>b.addEventListener("click",()=>{editando=null;pinta();}));
+      box.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",()=>envia({ex:b.dataset.clear,limpar:true})));
+      const f=box.querySelector("form.ativ-form");
+      if(f)f.addEventListener("submit",ev=>{
+        ev.preventDefault();
+        const fd=new FormData(f);
+        envia({ex:f.dataset.h,acertos:Number(fd.get("a")),total:Number(fd.get("t")||0)});
+      });
+    }
+
+    async function envia(body){
+      try{
+        const r=await fetch("/api/estudos/resultado",{method:"POST",
+          headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+        if(!r.ok)throw new Error(await r.text());
+        RES=(await r.json()).resultados||{};
+        editando=null; pinta();
+      }catch(x){ alert(T("est.ativ_erro")); }
+    }
+
+    pinta();
   }
   if(e.proximas){
     $("#proximas").innerHTML=`<h2 class="section-h">${T("est.proximas")}</h2>

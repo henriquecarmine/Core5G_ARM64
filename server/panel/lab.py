@@ -144,3 +144,84 @@ def lab_questions(request: Request) -> JSONResponse:
         pass
     items.reverse()
     return JSONResponse({"questions": items})
+
+
+# ===========================================================================
+# Exercícios do professor: o aluno registra o que acertou; o painel guarda e
+# consolida o PERCENTUAL. A pontuação bruta não interessa — o que se compara
+# entre exercícios de tamanhos diferentes (9, 22 pontos) é a fração acertada.
+#
+# A chave é o E-MAIL do aluno, não o login: os alunos entram todos pelo mesmo
+# usuário convidado (`GUEST_USER`) e se identificam com nome + e-mail. Cada um
+# lê e escreve só o próprio registro; ninguém vê o de ninguém.
+# ===========================================================================
+_ESTUDOS_RES_FILE = RESULTS_DIR / "estudos_resultados.json"
+_estudos_res_lock = threading.Lock()
+
+
+def _quem(request: Request) -> str | None:
+    """Chave de quem está logado: e-mail do Aluno, ou o login do Professor."""
+    user, _, email, _ = parse_session(request)
+    if not user:
+        return None
+    return email.strip().lower() or user
+
+
+def _exercicios_validos() -> dict[str, int | None]:
+    """{hash do exercício: total de pontos ou None} lidos do catálogo — a API
+    não aceita chave inventada, e o total vem do catálogo, não do navegador."""
+    try:
+        cat = json.loads((LAB_DIR / "estudos" / "index.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {i["h"]: i.get("pts")
+            for e in cat.get("estudos", [])
+            for i in (e.get("atividades") or {}).get("itens", [])}
+
+
+def _ler_resultados() -> dict:
+    try:
+        return json.loads(_ESTUDOS_RES_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+@router.get("/api/estudos/resultados")
+def estudos_resultados(request: Request) -> JSONResponse:
+    quem = _quem(request)
+    if quem is None:
+        raise HTTPException(401, "sessão inválida")
+    return JSONResponse({"resultados": _ler_resultados().get(quem, {})})
+
+
+@router.post("/api/estudos/resultado")
+def estudos_resultado(payload: dict, request: Request) -> JSONResponse:
+    quem = _quem(request)
+    if quem is None:
+        raise HTTPException(401, "sessão inválida")
+    ex = str(payload.get("ex", ""))
+    validos = _exercicios_validos()
+    if ex not in validos:
+        raise HTTPException(400, "exercício desconhecido")
+
+    with _estudos_res_lock:
+        todos = _ler_resultados()
+        meus = dict(todos.get(quem, {}))
+        if payload.get("limpar"):
+            meus.pop(ex, None)
+        else:
+            try:
+                acertos = int(payload.get("acertos"))
+                # o total vem do catálogo; só os 3 exercícios sem `pts` o pedem
+                total = int(payload.get("total")) if validos[ex] is None else int(validos[ex])
+            except (TypeError, ValueError):
+                raise HTTPException(400, "acertos e total precisam ser números")
+            if total <= 0 or not 0 <= acertos <= total:
+                raise HTTPException(400, "acertos fora do intervalo do exercício")
+            meus[ex] = {"a": acertos, "t": total, "ts": time.time()}
+        todos[quem] = meus
+        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = _ESTUDOS_RES_FILE.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(todos, ensure_ascii=False), encoding="utf-8")
+        tmp.replace(_ESTUDOS_RES_FILE)      # troca atômica: nunca um arquivo pela metade
+    return JSONResponse({"ok": True, "resultados": meus})

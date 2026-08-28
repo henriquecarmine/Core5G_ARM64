@@ -49,16 +49,16 @@
       "atividades": {
         "modulo": "Module 05", "hash": "#oran",
         "itens": [
-          {"rot": "Aula 01", "t": "Introdução Open RAN", "d": "Quiz e mapeamento de papéis RU/DU/CU.", "h": "#oran/aula01", "prep": {"aula": 1}},
+          {"rot": "Aula 01", "t": "Introdução Open RAN", "d": "Quiz e mapeamento de papéis RU/DU/CU.", "h": "#oran/aula01", "pts": 9, "partes": "Bloco 1, Bloco 2 e Bloco 3 · 3 pontos cada", "prep": {"aula": 1}},
           {"rot": "Aula 02", "t": "Aventura O-RAN", "d": "Circuito completo: ecossistema, split e comparação.", "h": "#oran/aula02", "prep": {"aula": 1}},
-          {"rot": "Interface A1", "t": "Políticas Non-RT ↔ Near-RT", "d": "Intents, compatibilidade e ciclo política → ação.", "h": "#oran/aulaa1", "prep": {"cmd": "p2-test-a1"}},
-          {"rot": "Interface E2", "t": "Controle near-real-time", "d": "E2AP, nós E2 e serviços REPORT/CONTROL.", "h": "#oran/aulae2", "prep": {"cmd": "p2-test-e2-sm"}},
-          {"rot": "Interface O1", "t": "OAM / FCAPS", "d": "Gestão, PM/FM e telemetria O1.", "h": "#oran/aulao1"},
-          {"rot": "Interface O2", "t": "O-Cloud", "d": "Orquestração e inventário de infraestrutura.", "h": "#oran/aulao2"},
-          {"rot": "Aula 04 · Intervalo 1", "t": "Open Fronthaul", "d": "Split 7.2x e fronthaul aberto.", "h": "#oran/aula04i1"},
-          {"rot": "Aula 04 · Intervalo 2", "t": "eCPRI e sincronismo", "d": "Taxa IQ, eCPRI e requisitos de sync.", "h": "#oran/aula04i2"},
-          {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
-          {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
+          {"rot": "Interface A1", "t": "Políticas Non-RT ↔ Near-RT", "d": "Intents, compatibilidade e ciclo política → ação.", "h": "#oran/aulaa1", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Fluxo e governança 3 · Ordenar o ciclo 10", "prep": {"cmd": "p2-test-a1"}},
+          {"rot": "Interface E2", "t": "Controle near-real-time", "d": "E2AP, nós E2 e serviços REPORT/CONTROL.", "h": "#oran/aulae2", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Ordenar o ciclo E2 10", "prep": {"cmd": "p2-test-e2-sm"}},
+          {"rot": "Interface O1", "t": "OAM / FCAPS", "d": "Gestão, PM/FM e telemetria O1.", "h": "#oran/aulao1", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Governança e modelo 3 · Ordenar mudança assistida 10"},
+          {"rot": "Interface O2", "t": "O-Cloud", "d": "Orquestração e inventário de infraestrutura.", "h": "#oran/aulao2", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Operação contínua 3 · Ordenar rollout típico 10"},
+          {"rot": "Aula 04 · Intervalo 1", "t": "Open Fronthaul", "d": "Split 7.2x e fronthaul aberto.", "h": "#oran/aula04i1", "pts": 9, "partes": "Quiz 3 · Situações 6"},
+          {"rot": "Aula 04 · Intervalo 2", "t": "eCPRI e sincronismo", "d": "Taxa IQ, eCPRI e requisitos de sync.", "h": "#oran/aula04i2", "pts": 9, "partes": "Quiz 3 · Situações 6"},
+          {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
+          {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
           {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenho 28×28 e predição (endpoint GCP opcional).", "h": "#oran/aula05digit", "prep": {"href": "/lab/classificacao", "rot": "Classificação"}},
           {"rot": "Lab Open5GS", "t": "Core e E2E", "d": "N2/N3, registro UE e troubleshooting.", "h": "#oran/lab-open5gs", "prep": {"cmd": "test-ue-connection"}}
         ]
@@ -76,13 +76,13 @@
       "atividades": {
         "modulo": "Module 07", "hash": "#ric",
         "itens": [
-          {"rot": "Aula 01", "t": "Retomada O-RAN + lab", "d": "Interfaces A1/E2/O1/O2 e revisão N1/N2/N3.", "h": "#ric/aula01", "prep": {"aula": 1}},
-          {"rot": "Aula 02", "t": "Artigo NGO — OSS RIC", "d": "Plataformas OSS e preparação de projeto.", "h": "#ric/aula02", "prep": {"aula": 2}},
-          {"rot": "Aula 03", "t": "Projeto 1 · A1", "d": "Políticas Non-RT ↔ Near-RT.", "h": "#ric/aula03", "prep": {"aula": 3, "cmd": "p2-test-a1"}},
-          {"rot": "Aula 04", "t": "xApps e open source", "d": "O-RAN SC, FlexRIC e lifecycle.", "h": "#ric/aula04", "prep": {"aula": 4, "cmd": "p2-test-e2-sm"}},
-          {"rot": "Aula 05", "t": "Design e SMO", "d": "SDK, callbacks E2 e integração SMO.", "h": "#ric/aula05", "prep": {"aula": 5}},
-          {"rot": "Aula 06", "t": "Testes e seminários", "d": "Troubleshooting e Projeto 2.", "h": "#ric/aula06", "prep": {"aula": 6, "cmd": "p2-test-e2-kpm"}},
-          {"rot": "Lab OAI+FlexRIC", "t": "E2, E2SM e xApps", "d": "Roteiro oai-cn-gnb: core, gNB RFSIM, FlexRIC.", "h": "#ric/lab-oai", "prep": {"cmd": "p2-kpm-real"}}
+          {"rot": "Aula 01", "t": "Retomada O-RAN + lab", "d": "Interfaces A1/E2/O1/O2 e revisão N1/N2/N3.", "h": "#ric/aula01", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 1}},
+          {"rot": "Aula 02", "t": "Artigo NGO — OSS RIC", "d": "Plataformas OSS e preparação de projeto.", "h": "#ric/aula02", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 2}},
+          {"rot": "Aula 03", "t": "Projeto 1 · A1", "d": "Políticas Non-RT ↔ Near-RT.", "h": "#ric/aula03", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 3, "cmd": "p2-test-a1"}},
+          {"rot": "Aula 04", "t": "xApps e open source", "d": "O-RAN SC, FlexRIC e lifecycle.", "h": "#ric/aula04", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 4, "cmd": "p2-test-e2-sm"}},
+          {"rot": "Aula 05", "t": "Design e SMO", "d": "SDK, callbacks E2 e integração SMO.", "h": "#ric/aula05", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 5}},
+          {"rot": "Aula 06", "t": "Testes e seminários", "d": "Troubleshooting e Projeto 2.", "h": "#ric/aula06", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 6, "cmd": "p2-test-e2-kpm"}},
+          {"rot": "Lab OAI+FlexRIC", "t": "E2, E2SM e xApps", "d": "Roteiro oai-cn-gnb: core, gNB RFSIM, FlexRIC.", "h": "#ric/lab-oai", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-kpm-real"}}
         ]
       }
     },
@@ -109,8 +109,8 @@
       "atividades": {
         "modulo": "Module 05", "hash": "#oran", "cruzada": true,
         "itens": [
-          {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
-          {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
+          {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
+          {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
           {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenho 28×28 e predição (endpoint GCP opcional).", "h": "#oran/aula05digit", "prep": {"href": "/lab/classificacao", "rot": "Classificação"}}
         ]
       }
@@ -199,13 +199,13 @@
       "atividades": {
         "modulo": "Module 09", "hash": "#data",
         "itens": [
-          {"rot": "Aula 01", "t": "DIKW, mapas e fontes", "d": "DIKW · mapas Open5GS/O-RAN · SMO/O1/E2 · PM/FM/KPM · lab UE-TP (Tripathi + Wong 1–3).", "h": "#data/aula01", "prep": {"aula": 1}},
-          {"rot": "Aula 02", "t": "Lakes e O-Cloud", "d": "Lake vs warehouse, lote/streaming e localidade edge/regional (Wong Cap. 4).", "h": "#data/aula02", "prep": {"aula": 2}},
-          {"rot": "Aula 03", "t": "EDA, ETL e BI", "d": "Loops non/near-RT, data pipeline ML e laboratório SUTD (Wong Cap. 5).", "h": "#data/aula03", "prep": {"aula": 3, "cmd": "p2-kpm-analytics"}},
-          {"rot": "Aula 04", "t": "KPIs e QoE", "d": "Medida → KPI → KQI → QoE, E2SM e slice SLA.", "h": "#data/aula04", "prep": {"aula": 4, "cmd": "p2-kpi-qoe"}},
-          {"rot": "Aula 05", "t": "Capacidade e otimização", "d": "CPM, CCO, energy saving, RL no RIC e CI/CD.", "h": "#data/aula05", "prep": {"cmd": "p2-tema-t6"}},
-          {"rot": "Aula 06", "t": "Consolidação", "d": "Pipeline completo, reprodutibilidade e temas Wong 8–12.", "h": "#data/aula06", "prep": {"cmd": "p2-tema-all"}},
-          {"rot": "Lab OAI · UE-TP / KPM→A1", "t": "Projeto prático M09", "d": "Pipeline KPM→SQLite/JSONL→IA→policy A1 (oai-cn-gnb-nonrt-nearrt).", "h": "#data/lab", "prep": {"cmd": "p2-ml-uetp"}}
+          {"rot": "Aula 01", "t": "DIKW, mapas e fontes", "d": "DIKW · mapas Open5GS/O-RAN · SMO/O1/E2 · PM/FM/KPM · lab UE-TP (Tripathi + Wong 1–3).", "h": "#data/aula01", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 1}},
+          {"rot": "Aula 02", "t": "Lakes e O-Cloud", "d": "Lake vs warehouse, lote/streaming e localidade edge/regional (Wong Cap. 4).", "h": "#data/aula02", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 2}},
+          {"rot": "Aula 03", "t": "EDA, ETL e BI", "d": "Loops non/near-RT, data pipeline ML e laboratório SUTD (Wong Cap. 5).", "h": "#data/aula03", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 3, "cmd": "p2-kpm-analytics"}},
+          {"rot": "Aula 04", "t": "KPIs e QoE", "d": "Medida → KPI → KQI → QoE, E2SM e slice SLA.", "h": "#data/aula04", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 4, "cmd": "p2-kpi-qoe"}},
+          {"rot": "Aula 05", "t": "Capacidade e otimização", "d": "CPM, CCO, energy saving, RL no RIC e CI/CD.", "h": "#data/aula05", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-tema-t6"}},
+          {"rot": "Aula 06", "t": "Consolidação", "d": "Pipeline completo, reprodutibilidade e temas Wong 8–12.", "h": "#data/aula06", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-tema-all"}},
+          {"rot": "Lab OAI · UE-TP / KPM→A1", "t": "Projeto prático M09", "d": "Pipeline KPM→SQLite/JSONL→IA→policy A1 (oai-cn-gnb-nonrt-nearrt).", "h": "#data/lab", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-ml-uetp"}}
         ]
       }
     }

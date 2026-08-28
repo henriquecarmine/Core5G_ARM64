@@ -124,6 +124,38 @@ Renderiza no fim de `/lab/estudo/N`, depois de "Próximas aulas": cartão por
 exercício com rótulo, título, descrição, o botão **Abrir ↗** (ação principal,
 abre em outra aba) e a linha "Prepare-se aqui" com os atalhos do nosso lab.
 
+### Registro do resultado e o percentual (v0.73.0)
+
+O que interessa entre exercícios de tamanhos diferentes não é a pontuação
+bruta, é a **fração acertada**. O aluno faz o exercício na plataforma e
+registra aqui quanto acertou; o painel calcula o percentual e consolida a
+cadeira. Ninguém vê o resultado de ninguém.
+
+O **denominador** saiu do bundle da própria plataforma (estrutura de pontuação
+dos componentes React), não de estimativa — 23 dos 26 exercícios:
+
+| Exercícios | Composição | Total |
+|---|---|--:|
+| 14 aulas dos Módulos 07 e 09 | Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10 | 22 |
+| Interfaces A1, E2, O1, O2 (M05) | mesma composição, rótulos próprios | 22 |
+| Fronthaul, eCPRI, ML na RAN, Workflow IA/ML (M05) | Quiz 3 · Situações 6 | 9 |
+| Aula 01 do M05 | Bloco 1 · 2 · 3, 3 pontos cada | 9 |
+| Aventura O-RAN, Lab de dígitos, Lab Open5GS | componente próprio | **sem `pts`** |
+
+Sem `pts` no item, o formulário pede os **dois** números; com `pts`, pede só os
+acertos e o total vem do catálogo (o navegador não escolhe o denominador).
+
+Endpoints em `lab.py`, guardando em `RESULTS_DIR/estudos_resultados.json`
+(escrita atômica via arquivo temporário + `replace`):
+
+- `GET /api/estudos/resultados` — só o registro de quem está logado.
+- `POST /api/estudos/resultado` — `{ex, acertos[, total]}` ou `{ex, limpar}`.
+  Recusa hash fora do catálogo (400) e acerto fora do intervalo (400).
+
+**A chave é o e-mail, não o login**: os alunos entram todos pelo mesmo usuário
+convidado e se identificam com nome + e-mail (o mesmo par que a presença já
+usa). O Professor, que tem login próprio, é chaveado pelo login.
+
 ## Testes
 
 - `cd server/panel/test && node i18n-parity.js` — as chaves novas

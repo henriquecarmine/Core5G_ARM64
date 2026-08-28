@@ -286,6 +286,13 @@ def nav(payload: dict, request: Request) -> JSONResponse:
     return JSONResponse({"ok": True})
 
 
+@app.get("/favicon.ico")
+def favicon() -> FileResponse:
+    """O navegador pede /favicon.ico mesmo com <link rel="icon"> apontando para
+    outro arquivo — sem esta rota, toda visita gera um 404 no log."""
+    return FileResponse(STATIC_DIR / "favicon.svg", media_type="image/svg+xml")
+
+
 @app.get("/api/version")
 def version_endpoint() -> JSONResponse:
     return JSONResponse({"version": VERSION})

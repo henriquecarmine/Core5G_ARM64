@@ -48,7 +48,11 @@ for (const arq of paginas) {
     if (bytes > LIMITE) erros.push(`${rel}: <meta charset> no byte ${bytes} (o navegador só lê os primeiros ${LIMITE})`);
   }
 
-  // 2) quem pinta, carrega a identidade
+  // 2) ícone da aba: sem ele o navegador pede /favicon.ico e leva 404 em toda
+  //    visita, e a aba fica com o ícone genérico do navegador.
+  if (!/rel="icon"/.test(texto)) erros.push(`${rel}: sem <link rel="icon">`);
+
+  // 3) quem pinta, carrega a identidade
   const pinta = /<style[\s>]/.test(texto);
   const temIdentidade = /href="\/static\/tokens\.css/.test(texto);
   if (pinta && !temIdentidade) erros.push(`${rel}: tem <style> mas não carrega /static/tokens.css`);
@@ -59,4 +63,4 @@ if (erros.length) {
   erros.forEach((e) => console.error('  -', e));
   process.exit(1);
 }
-console.log(`✅ ${paginas.length} páginas OK — <meta charset> no primeiro kilobyte e identidade carregada em todas que pintam`);
+console.log(`✅ ${paginas.length} páginas OK — <meta charset> no primeiro kilobyte, ícone da aba e identidade carregada em todas que pintam`);

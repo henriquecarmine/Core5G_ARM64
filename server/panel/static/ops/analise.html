@@ -1,11 +1,13 @@
 <meta charset="utf-8">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <!doctype html>
 <html lang="pt-BR">
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Análise · Core5G_ARM64</title>
 <script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
-<link rel="stylesheet" href="/static/tokens.css?v=0.78.0">
+<link rel="stylesheet" href="/static/tokens.css?v=0.79.0">
+<script src="/static/i18n.js"></script>
 <style>
   /* =====================================================================
      Analisador do laboratório. Não é uma parede de badges: cada assunto é um
@@ -76,7 +78,13 @@
   .apagado{opacity:.45}
 
   /* serviços: uma célula por container, o estado no ponto e na palavra */
-  .servicos{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:var(--e-2)}
+  .servicos{display:grid;gap:var(--e-3)}
+  .conj-t{display:flex;align-items:baseline;gap:var(--e-2);font-size:var(--t-micro);
+          letter-spacing:var(--tr-etiqueta);text-transform:uppercase;color:var(--ink-2);
+          font-weight:700;margin-bottom:5px}
+  .conj-t span{color:var(--ink-3);font-weight:500;letter-spacing:0;text-transform:none}
+  .conj-i{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:var(--e-2)}
+  .conj.parado{opacity:.55}
   .srv{display:flex;align-items:center;gap:var(--e-2);border:var(--traco) solid var(--line);
        border-radius:var(--r-sm);background:var(--surface-2);padding:6px 9px;font-size:var(--t-mini)}
   .srv .nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -118,46 +126,54 @@
 <div class="topo">
   <a class="voltar" href="/">← Painel</a>
   <span class="sep">·</span>
-  <span class="marca">Core5G<b>_ARM64</b> — Análise</span>
+  <span class="marca">Core5G<b>_ARM64</b> — <span data-i18n="an.titulo">Análise</span></span>
   <span class="estado">
     <span class="estado-ponto" id="pt-lab" data-estado="ocioso"></span>
-    <span id="rot-lab">lendo…</span>
+    <span id="rot-lab">…</span>   <!-- texto vem do ciclo; sem data-i18n, senão o apply() o sobrescreve -->
   </span>
   <span class="relogio" id="relogio">—</span>
+  <div id="lang-menu"></div>
   <button class="btn" id="tema" title="Alternar tema">◐</button>
 </div>
 
 <div class="grade">
   <div class="q">
-    <span class="et">Servidor · <b id="cpu-modelo">—</b></span>
+    <span class="et"><span data-i18n="an.servidor">Servidor</span> · <b id="cpu-modelo">—</b></span>
     <div id="host"></div>
   </div>
 
   <div class="q" id="q-radio">
-    <span class="et">Rádio · <b>gNB OAI (E2)</b></span>
+    <span class="et"><span data-i18n="an.radio">Rádio</span> · <b>gNB OAI (E2)</b></span>
     <div class="radio" id="radio"></div>
     <div class="rodape-q" id="radio-nota">—</div>
   </div>
 
   <div class="q larga">
-    <span class="et">Serviços · <b id="srv-resumo">—</b></span>
+    <span class="et"><span data-i18n="an.servicos">Serviços</span> · <b id="srv-resumo">—</b></span>
     <div class="servicos" id="servicos"></div>
   </div>
 
   <div class="q larga">
-    <span class="et">Testes · <b id="teste-resumo">—</b></span>
+    <span class="et"><span data-i18n="an.testes">Testes</span> · <b id="teste-resumo">—</b></span>
     <div class="faixa" id="faixa"></div>
     <div id="testes"></div>
   </div>
 
   <div class="q larga">
-    <span class="et">Leitura e sugestões</span>
+    <span class="et" data-i18n="an.leitura">Leitura e sugestões</span>
     <div class="leitura" id="leitura"></div>
   </div>
 </div>
 
 <script>
 const $ = (s) => document.querySelector(s);
+// A tela é redesenhada a cada ciclo, então o texto dinâmico pede tradução na
+// hora — `data-i18n` só resolve o que já está no HTML.
+// `I18N` é declarado com `const` no topo do i18n.js, e const global NÃO vira
+// propriedade de window: testar `window.I18N` dava sempre undefined, e a tela
+// mostrava as chaves cruas ("an.no_ar") em vez do texto.
+const temI18n = typeof I18N !== 'undefined';
+const T = (k, p) => (temI18n ? I18N.t(k, p) : k);
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const num = (v, d = 1) => (v == null || isNaN(v) ? '—' : Number(v).toFixed(d).replace('.', ','));
 
@@ -196,9 +212,8 @@ function pintaHost(t) {
     + medidor('SWAP', (h.swap_used_mb || 0) + ' MB', swapPct, '', h.swap_used_mb > 0 ? 'grave' : '')
     + medidor('DISCO', num(h.disk_pct) + '%', h.disk_pct || 0, '', h.disk_pct > 90 ? 'grave' : h.disk_pct > 80 ? 'alerta' : '')
     + medidor('CARGA', num(h.load1, 2), cargaPct, '', cargaPct > 100 ? 'grave' : cargaPct > 75 ? 'alerta' : '')
-    + `<div class="rodape-q">${(h.mem_used_mb || 0)} de ${(h.mem_total_mb || 0)} MB de RAM ·
-       ${num(h.disk_used_gb)} de ${num(h.disk_total_gb)} GB em disco ·
-       carga de 1 min sobre ${h.cpu_count || '—'} vCPU</div>`;
+    + `<div class="rodape-q">${T('an.host_rodape', { usada: h.mem_used_mb || 0, total: h.mem_total_mb || 0,
+         du: num(h.disk_used_gb), dt: num(h.disk_total_gb), n: h.cpu_count || '—' })}</div>`;
 }
 
 // ---- RÁDIO ---------------------------------------------------------------
@@ -215,8 +230,8 @@ function pintaRadio(g) {
   const q = $('#q-radio');
   if (!g || !g.up) {
     q.classList.add('apagado');
-    $('#radio').innerHTML = '<div class="vazio">gNB fora do ar — sem leitura de rádio.</div>';
-    $('#radio-nota').textContent = 'Ligue o Projeto 2 no painel para o agente E2 começar a reportar.';
+    $('#radio').innerHTML = `<div class="vazio">${T('an.sem_radio')}</div>`;
+    $('#radio-nota').textContent = T('an.sem_radio_faz');
     return;
   }
   const velho = g.age != null && g.age > 10;
@@ -226,13 +241,12 @@ function pintaRadio(g) {
   $('#radio').innerHTML = RADIO.map((m) => `
       <div class="rad"><div class="k">${m.k}</div>
         <div class="v">${num(m.get(g), m.d)} <span class="u">${m.u}</span></div></div>`).join('')
-    + `<div class="rad"><div class="k">PRB em uso</div>
-        <div class="v">${g.prb ?? '—'} <span class="u">de ${g.nrb ?? '—'}</span></div>
+    + `<div class="rad"><div class="k">${T('an.prb')}</div>
+        <div class="v">${g.prb ?? '—'} <span class="u">${T('an.de')} ${g.nrb ?? '—'}</span></div>
         <div class="prb">${cel(g.prb, g.nrb)}</div></div>`;
   $('#radio-nota').innerHTML = velho
-    ? `<b>Número parado há ${num(g.age, 0)} s.</b> O gNB está no ar mas parou de reportar — o que está na tela é passado.`
-    : `Amostra de ${num(g.age, 1)} s · ${RADIO.map((m) => `${m.k}: ${m.nota}`).join(' · ')}. `
-      + 'O rádio é simulado (RFSIM): canal ideal, sem interferência.';
+    ? T('an.radio_velho', { s: num(g.age, 0) })
+    : T('an.radio_notas', { s: num(g.age, 1) });
 }
 
 // ---- SERVIÇOS ------------------------------------------------------------
@@ -247,20 +261,45 @@ function classe(status) {
   return ESTADO[String(status || '').toLowerCase()] || 'ocioso';
 }
 
+// Um conjunto INTEIRO parado não é incidente: é um laboratório que não foi
+// levantado. Incidente é o container caído com os irmãos de pé. A tela mostra
+// os dois, mas não confunde um com o outro — e a leitura só acusa o segundo.
+const CHAVE_CONJUNTO = { 'p1': 'an.conj_p1', 'p2-core': 'an.conj_p2core',
+  'p2-nonrt': 'an.conj_nonrt', 'p2-oransc': 'an.conj_oransc', 'outro': 'an.conj_outro' };
+const conjNome = (c) => (CHAVE_CONJUNTO[c] ? T(CHAVE_CONJUNTO[c]) : c);
+
+function porConjunto(cs) {
+  const g = {};
+  cs.forEach((c) => { (g[c.grupo || 'outro'] ||= []).push(c); });
+  return Object.entries(g).map(([chave, itens]) => ({
+    chave, itens,
+    noAr: itens.filter((c) => classe(c.status) === 'bom').length,
+    ligado: itens.some((c) => classe(c.status) === 'bom'),
+  })).sort((a, b) => (b.ligado - a.ligado) || a.chave.localeCompare(b.chave));
+}
+
 function pintaServicos(t) {
   const cs = (t && t.containers) || [];
   if (!cs.length) {
-    $('#servicos').innerHTML = '<div class="vazio">Nenhum container no ar.</div>';
-    $('#srv-resumo').textContent = '0 no ar';
+    $('#servicos').innerHTML = `<div class="vazio">${T('an.sem_containers')}</div>`;
+    $('#srv-resumo').textContent = T('an.nada_no_ar');
     return;
   }
-  const bons = cs.filter((c) => classe(c.status) === 'bom').length;
-  $('#srv-resumo').textContent = `${bons} no ar de ${cs.length}`;
-  $('#servicos').innerHTML = cs.map((c) => `
-    <div class="srv" title="${esc(c.name)} — ${esc(c.status)}">
-      <span class="estado-ponto" data-estado="${classe(c.status)}"></span>
-      <span class="nome">${esc(c.name)}</span>
-      <span class="uso">${esc(c.cpu_pct || '')}</span>
+  const gs = porConjunto(cs);
+  const ligados = gs.filter((g) => g.ligado);
+  const parados = gs.filter((g) => !g.ligado);
+  $('#srv-resumo').textContent = ligados.map((g) => `${conjNome(g.chave)}: ${g.noAr}/${g.itens.length}`).join(' · ')
+    + (parados.length ? ` · ${T(parados.length === 1 ? 'an.conj_parado' : 'an.conj_parados', { n: parados.length })}` : '');
+  $('#servicos').innerHTML = gs.map((g) => `
+    <div class="conj${g.ligado ? '' : ' parado'}">
+      <div class="conj-t">${esc(conjNome(g.chave))}
+        <span>${g.ligado ? T('an.no_ar_de', { n: g.noAr, total: g.itens.length }) : T('an.nao_levantado')}</span></div>
+      <div class="conj-i">${g.itens.map((c) => `
+        <div class="srv" title="${esc(c.name)} — ${esc(c.status)}">
+          <span class="estado-ponto" data-estado="${classe(c.status)}"></span>
+          <span class="nome">${esc(c.name)}</span>
+          <span class="uso">${esc(c.cpu_pct || '')}</span>
+        </div>`).join('')}</div>
     </div>`).join('');
 }
 
@@ -278,22 +317,22 @@ function quando(t) {
 function pintaTestes(rs) {
   const lista = (rs && rs.results) || [];
   if (!lista.length) {
-    $('#teste-resumo').textContent = 'nenhuma execução salva';
+    $('#teste-resumo').textContent = T('an.sem_exec');
     $('#faixa').innerHTML = '';
-    $('#testes').innerHTML = '<div class="vazio">Nada rodou ainda. Cada teste executado no painel fica guardado aqui, com duração e resultado.</div>';
+    $('#testes').innerHTML = `<div class="vazio">${T('an.sem_exec_txt')}</div>`;
     return;
   }
   const ult = lista.slice(0, 24);
   const falhas = ult.filter((r) => r.status !== 'ok').length;
-  $('#teste-resumo').textContent = `${ult.length} execuções · ${ult.length - falhas} ok, ${falhas} com falha`;
+  $('#teste-resumo').textContent = T('an.exec_resumo', { n: ult.length, ok: ult.length - falhas, f: falhas });
   $('#faixa').innerHTML = ult.slice().reverse().map((r) =>
     `<i class="${r.status === 'ok' ? 'ok' : 'erro'}" title="${esc(r.label || r.cmd)} — ${esc(r.status)} — ${quando(r.started)}"></i>`).join('');
   // "por" só vira coluna quando há mais de uma pessoa rodando; com uma só,
   // repetir o mesmo nome dez vezes é ruído — ele sobe para a etiqueta.
   const gente = [...new Set(ult.map((r) => r.by).filter(Boolean))];
   $('#testes').innerHTML = `<table>
-    <tr><th class="quando">quando</th><th>teste</th>${gente.length > 1 ? '<th>por</th>' : ''}
-        <th>resultado</th><th style="text-align:right">duração</th></tr>
+    <tr><th class="quando">${T('an.col_quando')}</th><th>${T('an.col_teste')}</th>${gente.length > 1 ? `<th>${T('an.col_por')}</th>` : ''}
+        <th>${T('an.col_resultado')}</th><th style="text-align:right">${T('an.col_duracao')}</th></tr>
     ${ult.slice(0, 10).map((r) => `<tr>
       <td class="quando">${quando(r.started)}</td>
       <td><a href="/?resultado=${encodeURIComponent(r.id)}">${esc(r.label || r.cmd)}</a></td>
@@ -302,7 +341,7 @@ function pintaTestes(rs) {
           ${r.status === 'ok' ? 'ok' : esc(r.status || 'falha')}</td>
       <td class="num">${r.duration != null ? num(r.duration, 1) + ' s' : '—'}</td></tr>`).join('')}
   </table>`;
-  if (gente.length === 1) $('#teste-resumo').textContent += ` · por ${gente[0]}`;
+  if (gente.length === 1) $('#teste-resumo').textContent += ` · ${T('an.exec_por', { quem: gente[0] })}`;
 }
 
 // ---- LEITURA -------------------------------------------------------------
@@ -316,45 +355,50 @@ function leitura(t, g, rs) {
   const add = (n, glifo, titulo, texto, faz) => itens.push({ n, glifo, titulo, texto, faz });
 
   if (h.swap_used_mb > 0) {
-    add('falha', '⚠', `Swap em uso: ${h.swap_used_mb} MB`,
-      'O primeiro byte de swap é o sinal mais confiável de que o box vai travar — quando ele começa a paginar, o SSH cai antes de a memória acabar.',
-      'Desligue o projeto que não está em uso antes de subir o outro.');
+    add('falha', '⚠', T('an.r_swap_t', { mb: h.swap_used_mb }), T('an.r_swap_d'), T('an.r_swap_f'));
   }
+  // Carga alta COM o rádio no ar é o normal deste laboratório, não incidente:
+  // o gNB e o UE do RFSIM fazem processamento de sinal e consomem ~280% de CPU
+  // sozinhos. Dizer "espere a carga baixar" ali seria um alarme que nunca
+  // apaga — e ensinaria a coisa errada. O sinal que importa é o swap.
   if (h.cpu_count && h.load1 > h.cpu_count) {
-    add('atencao', '▲', `Carga ${num(h.load1, 2)} para ${h.cpu_count} vCPU`,
-      'Há mais processos esperando CPU do que núcleos para atendê-los. É neste ponto que o gNB começa a perder quadro e o teste mede a máquina, não a rede.',
-      'Espere a carga baixar antes de rodar o próximo teste.');
+    const radioNoAr = g && g.up;
+    add(radioNoAr ? 'bom' : 'atencao', radioNoAr ? '·' : '▲',
+      T('an.r_carga_t', { c: num(h.load1, 2), n: h.cpu_count }),
+      T(radioNoAr ? 'an.r_carga_ok' : 'an.r_carga_ruim'),
+      T(radioNoAr ? 'an.r_carga_ok_f' : 'an.r_carga_ruim_f'));
   }
   if (h.disk_pct > 85) {
-    add('atencao', '▲', `Disco em ${num(h.disk_pct)}%`,
-      'Coleta de KPM e log de container escrevem sem parar.',
-      'Limpe resultados antigos ou logs de containers parados.');
+    add('atencao', '▲', T('an.r_disco_t', { p: num(h.disk_pct) }), T('an.r_disco_d'), T('an.r_disco_f'));
   }
-  const ruins = cs.filter((c) => classe(c.status) === 'falha');
-  if (ruins.length) {
-    add('falha', '✕', `${ruins.length} ${ruins.length === 1 ? 'serviço fora' : 'serviços fora'}`,
-      `Fora do ar: <b>${ruins.map((c) => esc(c.name)).join(', ')}</b>. Um teste fim-a-fim que dependa deles vai falhar por causa disto, não por causa da rede.`,
-      'Veja o log do serviço no painel antes de repetir o teste.');
+  // só é incidente quem caiu COM OS IRMÃOS DE PÉ. Conjunto inteiro parado é
+  // laboratório não levantado, e dizer "serviço fora" ali é alarme falso — foi
+  // o que aconteceu com o ric_dbaas e o ric_a1mediator, parados havia duas
+  // semanas e acusados como se fossem falha do momento.
+  const conjuntos = porConjunto(cs);
+  const caidos = conjuntos.filter((x) => x.ligado)
+    .flatMap((x) => x.itens.filter((c) => classe(c.status) === 'falha'));
+  if (caidos.length) {
+    add('falha', '✕', T(caidos.length === 1 ? 'an.r_caiu_t' : 'an.r_caiu_t2', { n: caidos.length }),
+      T('an.r_caiu_d', { q: caidos.map((c) => esc(c.name)).join(', ') }), T('an.r_caiu_f'));
+  }
+  const desligados = conjuntos.filter((x) => !x.ligado);
+  if (desligados.length) {
+    add('bom', '·', T(desligados.length === 1 ? 'an.r_desl_t' : 'an.r_desl_t2', { n: desligados.length }),
+      T('an.r_desl_d', { q: desligados.map((x) => esc(conjNome(x.chave))).join(', ') }), T('an.r_desl_f'));
   }
   if (g && g.up && g.age != null && g.age > 10) {
-    add('atencao', '▲', `Rádio parado há ${num(g.age, 0)} s`,
-      'O gNB está de pé, mas parou de escrever no log. Os números de rádio na tela são os últimos conhecidos — não o agora.',
-      'Rode um teste que gere tráfego para o agente E2 voltar a reportar.');
+    add('atencao', '▲', T('an.r_velho_t', { s: num(g.age, 0) }), T('an.r_velho_d'), T('an.r_velho_f'));
   }
-  if (g && g.up && g.snr != null && g.snr < 20 && (g.age == null || g.age <= 10)) {
-    add('atencao', '▲', `SNR em ${num(g.snr)} dB`,
-      'Abaixo de 20 dB o canal deixa de ser bom (referência da aula 04). No RFSIM isso não acontece sozinho: é interferência ou perfil de distância aplicado pelo painel.',
-      'Confira se há interferência ligada antes de atribuir a queda ao core.');
+  const radioFresco = g && g.up && (g.age == null || g.age <= 10);
+  if (radioFresco && g.snr != null && g.snr < 20) {
+    add('atencao', '▲', T('an.r_snr_t', { v: num(g.snr) }), T('an.r_snr_d'), T('an.r_snr_f'));
   }
-  if (g && g.up && g.bler != null && g.bler > 0 && (g.age == null || g.age <= 10)) {
-    add('atencao', '▲', `BLER em ${num(g.bler)}%`,
-      'O rádio é simulado e o canal é ideal — num canal ideal não há bloco com erro. BLER acima de zero quer dizer que alguma coisa está degradando o enlace de propósito, ou que o MCS ficou agressivo demais para o canal.',
-      'Veja se o MCS caiu junto: os dois se movem quando o canal piora.');
+  if (radioFresco && g.bler != null && g.bler > 0) {
+    add('atencao', '▲', T('an.r_bler_t', { v: num(g.bler) }), T('an.r_bler_d'), T('an.r_bler_f'));
   }
-  if (g && g.up && g.nrb && g.prb != null && (100 * g.prb / g.nrb) > 80) {
-    add('atencao', '▲', `PRB em ${num(100 * g.prb / g.nrb)}%`,
-      'Acima de 80% de blocos ocupados é pressão de capacidade (referência do slide 35 da aula 04): a célula tem pouco a oferecer para um usuário novo.',
-      'Compare a vazão por fase antes de concluir que o problema é canal.');
+  if (radioFresco && g.nrb && g.prb != null && (100 * g.prb / g.nrb) > 80) {
+    add('atencao', '▲', T('an.r_prb_t', { p: num(100 * g.prb / g.nrb) }), T('an.r_prb_d'), T('an.r_prb_f'));
   }
   if (lista.length) {
     const ult = lista.slice(0, 8);
@@ -364,27 +408,18 @@ function leitura(t, g, rs) {
       falhos.forEach((r) => { porCmd[r.cmd] = (porCmd[r.cmd] || 0) + 1; });
       const pior = Object.entries(porCmd).sort((a, b) => b[1] - a[1])[0];
       const repete = pior[1] >= 2;
-      add('falha', '✕', `${falhos.length} falhas nas últimas ${ult.length} execuções`,
-        repete
-          ? `<b>${esc(pior[0])}</b> falhou ${pior[1]}× — falha que repete no mesmo comando costuma ser dependência, não acaso.`
-          : `As falhas estão <b>espalhadas</b> por ${Object.keys(porCmd).length} comandos diferentes, uma vez cada. Isso aponta para a máquina ou para a bancada, não para um teste específico.`,
-        repete
-          ? 'Abra o resultado da última falha e leia as três primeiras linhas de erro.'
-          : 'Olhe primeiro a carga e os serviços fora do ar, acima nesta tela.');
+      add('falha', '✕', T('an.r_falhas_t', { n: falhos.length, tot: ult.length }),
+        repete ? T('an.r_falhas_rep', { cmd: esc(pior[0]), n: pior[1] })
+               : T('an.r_falhas_esp', { n: Object.keys(porCmd).length }),
+        T(repete ? 'an.r_falhas_rep_f' : 'an.r_falhas_esp_f'));
     } else if (!falhos.length) {
-      add('bom', '✓', `${ult.length} execuções seguidas sem falha`,
-        'A bancada está estável. É o momento de coletar dado para o relatório, enquanto o estado é reprodutível.',
-        'Rode a coleta de KPM real agora, se ela ainda faltar.');
+      add('bom', '✓', T('an.r_limpo_t', { n: ult.length }), T('an.r_limpo_d'), T('an.r_limpo_f'));
     }
   } else {
-    add('bom', '·', 'Nenhum teste executado ainda',
-      'Esta tela lê o que os testes deixaram: comando, duração, resultado e quem rodou.',
-      'Rode um teste no painel e volte aqui.');
+    add('bom', '·', T('an.r_nada_t'), T('an.r_nada_d'), T('an.r_nada_f'));
   }
   if (!itens.length) {
-    add('bom', '✓', 'Nada pedindo atenção',
-      'Servidor, rádio e serviços dentro do esperado, e nenhuma falha recente.',
-      'Bom momento para apresentar.');
+    add('bom', '✓', T('an.r_ok_t'), T('an.r_ok_d'), T('an.r_ok_f'));
   }
 
   $('#leitura').innerHTML = itens.map((i) => `
@@ -402,8 +437,12 @@ async function ciclo() {
   pintaHost(t); pintaRadio(g); pintaServicos(t); pintaTestes(rs); leitura(t, g, rs);
   const noAr = g && g.up;
   $('#pt-lab').dataset.estado = noAr ? 'bom' : 'ocioso';
-  $('#rot-lab').textContent = noAr ? 'laboratório no ar' : 'laboratório parado';
-  $('#relogio').textContent = new Date().toLocaleTimeString('pt-BR');
+  $('#relogio').textContent = new Date().toLocaleTimeString();
+  if (temI18n) {
+    I18N.apply();                       // rótulos estáticos
+    document.title = I18N.t('an.titulo') + ' · Core5G_ARM64';
+    $('#rot-lab').textContent = T(noAr ? 'an.no_ar' : 'an.parado');   // depois do apply
+  }
 }
 ciclo();
 setInterval(ciclo, 4000);

@@ -273,6 +273,29 @@ def container_status(state: str, health: str) -> str:
     return "down"
 
 
+# A que CONJUNTO cada container pertence. Sem isto o painel só sabe dizer
+# "está parado", e não sabe se isso é incidente ou se o conjunto inteiro
+# simplesmente não foi levantado — que é uma diferença enorme para quem lê.
+CONJUNTOS = (
+    ("p1", lambda n: n.startswith("open5gs") or n == "ueransim"),
+    ("p2-core", lambda n: n.startswith("oai-") or n == "mysql"),
+    # o agrupamento segue as BANDAS da topologia (openran-topology.json):
+    # `a1sim` e `nonrt-pms` são da banda "nonrt"; `a1mediator` é da "oransc".
+    # Aqui já esteve o a1-sim junto do ric_, e a tela concluiu que dois
+    # containers parados havia duas semanas eram irmãos caídos de um conjunto
+    # no ar — alarme falso nascido de agrupamento chutado.
+    ("p2-nonrt", lambda n: n.startswith("nonrt") or n.lower().startswith("a1-sim")),
+    ("p2-oransc", lambda n: n.startswith("ric_")),
+)
+
+
+def container_group(nome: str) -> str:
+    for chave, pred in CONJUNTOS:
+        if pred(nome):
+            return chave
+    return "outro"
+
+
 def read_group_status(states: dict[str, dict]) -> dict[str, str]:
     """Estado tri-state dos toggles do painel ('on' | 'loading' | 'off').
     Projeto 1/2 via docker (containers do compose); E2 lab via processo
@@ -329,6 +352,7 @@ def collect_telemetry() -> dict:
             "cpu_pct": s.get("cpu_pct", ""),
             "mem_usage": s.get("mem_usage", ""),
             "status": container_status(states[name]["state"], states[name]["health"]),
+            "grupo": container_group(name),
         })
     return {"host": host, "containers": containers, "groups": read_group_status(states)}
 

@@ -60,7 +60,7 @@
   // navegador. Fechada por padrao — quem manda na tela e o resultado do teste.
   var WIN_KEY = 'c5g-minimap-win', win = { open: false };
   try { var _w = JSON.parse(localStorage.getItem(WIN_KEY) || 'null'); if (_w) win = _w; } catch (e) {}
-  var backdrop = null, floatHost = null;
+  var backdrop = null, floatHost = null, projFoco = 'p2';
   function winSave() { try { localStorage.setItem(WIN_KEY, JSON.stringify(win)); } catch (e) {} }
   function winApply() {
     if (!floatHost) return;
@@ -74,15 +74,14 @@
     var b = document.getElementById('map-btn');
     if (b) b.classList.toggle('on', !!win.open);
   }
+  function redeDoProjeto(p) { show('__rede_' + (p === 'p1' ? 'p1' : 'p2'), floatHost, false); }
   function winSet(open) {
     win.open = open;
     winSave(); winApply();
-    if (open && floatHost && !floatHost.innerHTML) {
-      floatHost.innerHTML = '<div class="mm-head"><b>\u25c9</b><span class="mm-ct">nenhum teste rodou ainda — o mapa acende quando um teste comeca</span>'
-        + '<span class="mm-btn mm-x" title="fechar">\u2715</span></div>';
-      floatHost.querySelector('.mm-x').onclick = function () { winSet(false); };
-      winApply();
-    }
+    // Sem teste rodado, desenha a REDE do projeto, tudo apagado. Antes abria uma
+    // janela com um aviso: quem clicava para apresentar a infraestrutura nao via
+    // desenho nenhum.
+    if (open && floatHost && !floatHost.innerHTML) redeDoProjeto(projFoco);
   }
 
   // cena → projeto + nós acesos + fluxos (sentido do dado) no mapa real.
@@ -233,6 +232,7 @@
       applyView(host);
       host.style.display = 'block';
     }
+    if (host === floatHost) host.dataset.proj = mm.proj;
     centerOnLit(host, mm, byId, H);
   }
 
@@ -248,7 +248,11 @@
   }
 
   function show(name, host, live) {
-    var mm = MMAP[name];
+    // "__rede_pN": o mapa do projeto sem nada aceso — a rede como ela e.
+    var mm = name.indexOf('__rede_') === 0
+      ? { proj: name.slice(7), nodes: [], flows: [],
+          note: 'a rede inteira do projeto; os componentes acendem quando um teste roda' }
+      : MMAP[name];
     if (!mm || !host) {
       if (host && host !== floatHost) { host.style.display = 'none'; host.innerHTML = ''; }
       return;
@@ -288,7 +292,13 @@
       h.querySelectorAll('polygon.mm-flow').forEach(function (p) { p.setAttribute('fill', c); });
     },
     // botao do console
-    toggle: function () { winSet(!win.open); },
+    // O botao do menu manda qual projeto mostrar (o rail sabe; este arquivo nao).
+    toggle: function (proj) {
+      if (proj) projFoco = proj;
+      // trocou de projeto com a janela ja desenhada por outro: redesenha
+      if (!win.open && floatHost && floatHost.dataset.proj && floatHost.dataset.proj !== projFoco) floatHost.innerHTML = '';
+      winSet(!win.open);
+    },
     isOpen: function () { return !!win.open; },
   };
 })();

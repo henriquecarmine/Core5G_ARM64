@@ -257,6 +257,13 @@
   .rail-item { display:flex; align-items:center; gap:11px; width:100%; text-align:left; margin:0; padding:9px 11px; background:var(--btn-bg); border:1px solid var(--border); border-radius:8px; color:var(--text); text-decoration:none; font-size:13px; cursor:pointer; transition:border-color .15s, background .15s; }
   .rail-item:hover:not(:disabled) { border-color:var(--accent); background:var(--btn-hover); }
   .rail-item:disabled { opacity:.4; cursor:not-allowed; }
+  /* Apresentar: apagado enquanto nao ha projeto no ar, aceso quando liga — as
+     telas mostram a rede DE VERDADE (status vivo de cada no/container), entao o
+     brilho conta o mesmo que elas vao contar. Continuam clicaveis: a arquitetura
+     e conteudo fixo e vale mesmo com tudo parado. */
+  #apresentar-group.off .rail-item { opacity:.45; }
+  #apresentar-group.off .rail-item:hover { opacity:.8; }
+  #apresentar-group .rail-item { transition:opacity .25s; }
   .rail-item svg { width:19px; height:19px; min-width:19px; stroke:var(--muted); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; transition:stroke .15s; }
   .rail-item:hover:not(:disabled) svg { stroke:var(--accent); }
   .panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0 0 8px 0; }
@@ -837,27 +844,6 @@
     <div id="sidebar-inner">
       <div class="rail-title"><span class="rt-dot"></span><span id="rail-proj-label" data-i18n="rail.tools">Ferramentas</span></div>
 
-      <div id="tools-empty" data-i18n="rail.empty">Ative um projeto no topo (P1 ou P2) para usar suas ferramentas e testes.</div>
-
-      <!-- ===== Ferramentas do Projeto 1 ===== -->
-      <div class="tools-set" data-tools="p1">
-        <button class="rail-item" id="uelab-open-btn">
-          <svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L5 19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1l-5-10V3"/><path d="M7.5 14h9"/></svg>
-          <span>UE Lab</span>
-        </button>
-        <button class="rail-item" id="demo-e2e-btn">
-          <svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
-          <span data-i18n="rail.demo">Demonstração E2E</span>
-        </button>
-      </div>
-
-      <!-- ===== Ferramentas do Projeto 2 ===== -->
-      <div class="tools-set" data-tools="p2">
-      </div>
-
-      <!-- ===== Estudos por cadeira: exercícios (testes) e aulas de cada disciplina.
-           Sempre visíveis; cada bloco de testes trava com o projeto que não está no
-           ar (data-proj-tests=p1|p2); "any" roda sem RAN (análise sobre arquivo). ===== -->
       <!-- Apresentar: as telas que explicam a infraestrutura. Ficam FORA dos
            conjuntos por projeto porque explicar a rede não depende de ter um
            projeto no ar — e era isso que as escondia. -->
@@ -881,6 +867,24 @@
         </button>
       </div>
 
+      <div id="tools-empty" data-i18n="rail.empty">Ative um projeto no topo (P1 ou P2) para usar suas ferramentas e testes.</div>
+
+      <!-- ===== Ferramentas do Projeto 1 ===== -->
+      <div class="tools-set" data-tools="p1">
+        <button class="rail-item" id="uelab-open-btn">
+          <svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L5 19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1l-5-10V3"/><path d="M7.5 14h9"/></svg>
+          <span>UE Lab</span>
+        </button>
+        <button class="rail-item" id="demo-e2e-btn">
+          <svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <span data-i18n="rail.demo">Demonstração E2E</span>
+        </button>
+      </div>
+
+      <!-- ===== Ferramentas do Projeto 2 ===== -->
+      <!-- ===== Estudos por cadeira: exercícios (testes) e aulas de cada disciplina.
+           Sempre visíveis; cada bloco de testes trava com o projeto que não está no
+           ar (data-proj-tests=p1|p2); "any" roda sem RAN (análise sobre arquivo). ===== -->
       <div id="estudos-group">
         <div class="rail-group-label" data-i18n="rail.estudos">Estudos · por cadeira</div>
 
@@ -1162,7 +1166,7 @@
 <script src="../i18n.js"></script>
 <script src="/static/ops/flow-strip.js?v=0.65.0"></script>
 <script src="/static/ops/energy.js?v=0.61.3"></script>
-<script src="/static/ops/mini-map.js?v=0.70.0"></script>
+<script src="/static/ops/mini-map.js?v=0.71.1"></script>
 <script>
 // Robustez file:// (smoke do CI): sem os módulos /static/, viram no-ops —
 // a página (i18n, topbar, console) segue funcional.
@@ -1179,7 +1183,8 @@ MiniMap.attach('console', document.getElementById('mini-map-console'));
 // O mapa vive numa JANELA propria (fora da coluna do console): o botao abre e
 // fecha, e ele pisca enquanto um teste corre. A tela do console fica inteira
 // para o resultado do teste, que e o que se le.
-document.getElementById('map-btn').addEventListener('click', () => MiniMap.toggle());
+document.getElementById('map-btn').addEventListener('click', () =>
+  MiniMap.toggle(_activeProj === 'off' ? projSelect.value : _activeProj));
 Energy.attach(document.getElementById('energy-btn'), false, document.getElementById('output'));
 // ---- Modal de créditos (rodapé) ----
 document.getElementById('credits-link').onclick = (e) => {
@@ -2713,7 +2718,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInfoMod
 // ===== UE Lab =====
 document.getElementById('uelab-open-btn').addEventListener('click', openUeLab);
 // ---- Apresentar: as quatro telas que explicam a infraestrutura ----
-document.getElementById('apr-mapa').addEventListener('click', () => MiniMap.toggle());
+document.getElementById('apr-mapa').addEventListener('click', () =>
+  MiniMap.toggle(_activeProj === 'off' ? projSelect.value : _activeProj));
 document.getElementById('apr-arq').addEventListener('click', () => openInfoModal('oranArch'));
 // A tabela de containers (nome · função · CPU · RAM) já existe no cabeçalho:
 // o item do menu abre e leva o olho até ela, em vez de duplicar a lista.
@@ -3127,6 +3133,8 @@ function updateProjSelector(groups) {
   // do curso). Antes eram dois links, um dentro de cada conjunto por projeto.
   const topoLink = document.getElementById('apr-topo');
   if (topoLink) topoLink.href = '/topology?proj=' + (active === 'p1' ? 'p1' : 'p2');
+  // Apagado sem projeto no ar; acende quando liga.
+  document.getElementById('apresentar-group').classList.toggle('off', active === 'off');
   // Lateral: mostra as ferramentas do projeto ativo (troca conforme o projeto).
   document.querySelectorAll('.tools-set').forEach(s => s.classList.toggle('active', s.dataset.tools === active));
   document.getElementById('tools-empty').classList.toggle('show', active === 'off');

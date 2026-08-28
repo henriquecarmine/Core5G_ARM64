@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Identidade visual · Core5G_ARM64</title>
+<link rel="stylesheet" href="/static/tokens.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface);color:var(--ink);font-family:var(--fonte-texto);font-size:var(--t-corpo)}
+  .folha{max-width:1180px;margin:0 auto;padding:var(--e-6) var(--e-5)}
+
+  /* etiqueta: a voz do instrumento */
+  .et{font-family:var(--fonte-instrumento);font-size:var(--t-micro);letter-spacing:var(--tr-etiqueta);
+      text-transform:uppercase;color:var(--ink-3);font-weight:700}
+  h1{font-family:var(--fonte-instrumento);font-size:var(--t-disp);font-weight:700;letter-spacing:-.01em;margin:var(--e-2) 0 var(--e-3)}
+  h2{font-family:var(--fonte-instrumento);font-size:var(--t-med);font-weight:700;margin:0 0 var(--e-1)}
+  p{margin:0 0 var(--e-3);color:var(--ink-2);max-width:64ch;line-height:1.6}
+
+  /* SIGNATURE: o grid de recursos. A moldura de tudo é uma célula da grade
+     tempo×frequência — o artefato mais característico de um rádio 5G. */
+  .quadro{border:var(--traco) solid var(--line);border-radius:var(--r-md);background:var(--surface-2);
+          padding:var(--e-4);margin-bottom:var(--e-4);position:relative}
+  .quadro>.et{position:absolute;top:-7px;left:var(--e-3);background:var(--surface-2);padding:0 var(--e-2)}
+  .cols{display:grid;gap:var(--e-4);grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+
+  .rampa{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin:var(--e-2) 0 var(--e-1)}
+  .rampa i{height:34px;border-radius:3px;display:block}
+  .rampa-n{display:grid;grid-template-columns:repeat(12,1fr);gap:2px}
+  .rampa-n span{font-family:var(--fonte-instrumento);font-size:9px;color:var(--ink-3);text-align:center}
+  .fam{margin-bottom:var(--e-3)}
+  .fam b{font-family:var(--fonte-instrumento);font-size:var(--t-mini);font-weight:700}
+  .fam small{color:var(--ink-3);font-family:var(--fonte-instrumento);font-size:var(--t-micro)}
+
+  /* papéis */
+  .papeis{display:grid;gap:var(--e-1)}
+  .papel{display:flex;align-items:center;gap:var(--e-2);font-family:var(--fonte-instrumento);font-size:var(--t-mini)}
+  .amostra{width:26px;height:18px;border-radius:4px;border:var(--traco) solid var(--line-strong);flex:none}
+  .papel code{color:var(--ink-2)} .papel em{color:var(--ink-3);font-style:normal;margin-left:auto;font-size:var(--t-micro)}
+
+  /* estados — cor + glifo + palavra, nunca cor sozinha */
+  .estados{display:flex;flex-wrap:wrap;gap:var(--e-2)}
+  .chip{display:inline-flex;align-items:center;gap:var(--e-2);border:var(--traco) solid var(--line);
+        border-radius:var(--r-full);padding:5px 12px 5px 9px;font-family:var(--fonte-instrumento);
+        font-size:var(--t-mini);font-weight:700;background:var(--surface)}
+  .chip .g{font-size:11px;width:12px;text-align:center}
+  .chip[data-e="bom"]{color:var(--good-text);border-color:var(--good)}
+  .chip[data-e="atencao"]{color:var(--warn-text);border-color:var(--warn)}
+  .chip[data-e="falha"]{color:var(--bad-text);border-color:var(--bad)}
+  .chip[data-e="ocioso"]{color:var(--ink-3)}
+
+  /* componentes reais */
+  .btn{font-family:var(--fonte-instrumento);font-size:var(--t-mini);font-weight:700;border-radius:var(--r-sm);
+       padding:8px 14px;border:var(--traco) solid transparent;cursor:pointer}
+  .btn-1{background:var(--accent);color:var(--accent-ink)}
+  .btn-2{background:transparent;color:var(--accent-text);border-color:var(--accent-line)}
+  .btn-3{background:transparent;color:var(--ink-2);border-color:var(--line-strong)}
+
+  .medidor{margin-top:var(--e-3)}
+  .medidor .top{display:flex;justify-content:space-between;font-family:var(--fonte-instrumento);font-size:var(--t-mini)}
+  .medidor .val{font-weight:700}
+  .trilho{height:8px;border-radius:var(--r-full);background:var(--surface-inset);
+          border:var(--traco) solid var(--line);overflow:hidden;margin-top:5px}
+  .trilho i{display:block;height:100%;background:var(--accent)}
+
+  /* PRB grid — a assinatura, literal */
+  .prb{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin-top:var(--e-2)}
+  .prb i{aspect-ratio:1;border-radius:2px;background:var(--surface-inset);border:var(--traco) solid var(--line)}
+  .prb i.on{background:var(--accent);border-color:var(--accent)}
+  .prb i.hot{background:var(--warn);border-color:var(--warn)}
+
+  .log{font-family:var(--fonte-instrumento);font-size:var(--t-mini);line-height:1.7;
+       background:var(--surface-inset);border:var(--traco) solid var(--line);border-radius:var(--r-sm);
+       padding:var(--e-3);white-space:pre-wrap;margin-top:var(--e-2)}
+  .log .h{color:var(--ink-3)} .log .ok{color:var(--good-text)} .log .at{color:var(--warn-text)}
+  .log .er{color:var(--bad-text)} .log .in{color:var(--accent-text)}
+
+  table{width:100%;border-collapse:collapse;font-size:var(--t-mini);margin-top:var(--e-2)}
+  th{font-family:var(--fonte-instrumento);font-size:var(--t-micro);letter-spacing:var(--tr-etiqueta);
+     text-transform:uppercase;color:var(--ink-3);text-align:left;font-weight:700;padding:6px 8px;
+     border-bottom:var(--traco) solid var(--line-strong)}
+  td{padding:7px 8px;border-bottom:var(--traco) solid var(--line);color:var(--ink-2)}
+  td.num{font-family:var(--fonte-instrumento);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+
+  .prosa{font-family:var(--fonte-texto);max-width:60ch}
+  .prosa h3{font-family:var(--fonte-texto);font-size:var(--t-med);font-weight:700;margin:0 0 var(--e-2);letter-spacing:-.01em}
+  .prosa p{font-size:var(--t-base);line-height:1.7}
+
+  .medida{font-family:var(--fonte-instrumento);font-size:var(--t-micro);color:var(--ink-3);margin-top:var(--e-2)}
+  .medida b{color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div class="folha">
+
+  <div class="et">Core5G_ARM64 · sistema de identidade</div>
+  <h1>Duas vozes, um sistema</h1>
+  <p class="prosa">O laboratório é um <b>instrumento</b> e a aula é um <b>texto</b>. Eles não deveriam parecer a mesma coisa
+  nem viver na mesma tela — mas devem sair da mesma paleta, do mesmo ritmo e das mesmas regras de contraste.
+  O painel fala em monoespaçada, denso, medido em células. A aula fala em sans, com medida de leitura e ar.</p>
+
+  <div class="quadro">
+    <span class="et">Escalas · 12 degraus por família</span>
+    <div class="fam"><b>neutro</b> <small>— hue 262, croma baixo: o cinza é levemente azulado, nunca morto</small>
+      <div class="rampa"><i style="background:var(--n-1)"></i><i style="background:var(--n-2)"></i><i style="background:var(--n-3)"></i><i style="background:var(--n-4)"></i><i style="background:var(--n-5)"></i><i style="background:var(--n-6)"></i><i style="background:var(--n-7)"></i><i style="background:var(--n-8)"></i><i style="background:var(--n-9)"></i><i style="background:var(--n-10)"></i><i style="background:var(--n-11)"></i><i style="background:var(--n-12)"></i></div>
+      <div class="rampa-n"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span></div>
+      <div class="medida">1–2 fundo · 3–5 componente · 6–8 traço · 9–10 sólido · 11–12 texto</div>
+    </div>
+    <div class="fam"><b>acento</b> <small>— hue 282, azul-violeta: a cor do produto, nunca um estado</small>
+      <div class="rampa"><i style="background:var(--a-1)"></i><i style="background:var(--a-2)"></i><i style="background:var(--a-3)"></i><i style="background:var(--a-4)"></i><i style="background:var(--a-5)"></i><i style="background:var(--a-6)"></i><i style="background:var(--a-7)"></i><i style="background:var(--a-8)"></i><i style="background:var(--a-9)"></i><i style="background:var(--a-10)"></i><i style="background:var(--a-11)"></i><i style="background:var(--a-12)"></i></div></div>
+    <div class="cols">
+      <div class="fam"><b>bom</b> <small>— hue 150</small>
+        <div class="rampa"><i style="background:var(--g-3)"></i><i style="background:var(--g-6)"></i><i style="background:var(--g-9)"></i><i style="background:var(--g-11)"></i></div></div>
+      <div class="fam"><b>atenção</b> <small>— hue 80</small>
+        <div class="rampa"><i style="background:var(--w-3)"></i><i style="background:var(--w-6)"></i><i style="background:var(--w-9)"></i><i style="background:var(--w-11)"></i></div></div>
+      <div class="fam"><b>falha</b> <small>— hue 27</small>
+        <div class="rampa"><i style="background:var(--r-3)"></i><i style="background:var(--r-6)"></i><i style="background:var(--r-9)"></i><i style="background:var(--r-11)"></i></div></div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="quadro">
+      <span class="et">Papéis · o que a tela usa</span>
+      <div class="papeis">
+        <div class="papel"><span class="amostra" style="background:var(--surface)"></span><code>--surface</code><em>fundo da página</em></div>
+        <div class="papel"><span class="amostra" style="background:var(--surface-2)"></span><code>--surface-2</code><em>cartão</em></div>
+        <div class="papel"><span class="amostra" style="background:var(--surface-inset)"></span><code>--surface-inset</code><em>console, trilho</em></div>
+        <div class="papel"><span class="amostra" style="background:var(--line)"></span><code>--line</code><em>divisória</em></div>
+        <div class="papel"><span class="amostra" style="background:var(--line-strong)"></span><code>--line-strong</code><em>limite de controle · 3:1</em></div>
+        <div class="papel"><span class="amostra" style="background:var(--ink)"></span><code>--ink</code><em>texto · 13,4:1</em></div>
+        <div class="papel"><span class="amostra" style="background:var(--ink-2)"></span><code>--ink-2</code><em>texto 2º · 5,4:1</em></div>
+        <div class="papel"><span class="amostra" style="background:var(--accent)"></span><code>--accent</code><em>ação, foco, seleção</em></div>
+      </div>
+    </div>
+
+    <div class="quadro">
+      <span class="et">Estado · nunca por cor sozinha</span>
+      <div class="estados">
+        <span class="chip" data-e="bom"><span class="estado-ponto" data-estado="bom"></span><span class="g">✓</span>NO AR</span>
+        <span class="chip" data-e="atencao"><span class="estado-ponto" data-estado="atencao"></span><span class="g">!</span>PARCIAL</span>
+        <span class="chip" data-e="falha"><span class="estado-ponto" data-estado="falha"></span><span class="g">✕</span>FORA</span>
+        <span class="chip" data-e="ocioso"><span class="estado-ponto" data-estado="ocioso"></span><span class="g">·</span>OCIOSO</span>
+      </div>
+      <div class="medida">Sob <b>protanopia</b> o par verde/âmbar mede ΔE <b>7,3</b> — abaixo do alvo 8.
+        Verde × vermelho mede <b>9,5</b>. O glifo e a palavra não são enfeite: são o que
+        torna a leitura segura para quem não separa as duas cores.</div>
+      <div style="margin-top:var(--e-4);display:flex;gap:var(--e-2);flex-wrap:wrap">
+        <button class="btn btn-1">Ligar o laboratório</button>
+        <button class="btn btn-2">Ver o log</button>
+        <button class="btn btn-3">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="quadro">
+      <span class="et">Instrumento · o painel</span>
+      <div class="medidor">
+        <div class="top"><span>CPU</span><span class="val">34%</span></div>
+        <div class="trilho"><i style="width:34%"></i></div>
+      </div>
+      <div class="medidor">
+        <div class="top"><span>PRB UL · 5 de 51</span><span class="val">9,8%</span></div>
+        <div class="prb">
+          <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="hot"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </div>
+      <table>
+        <tr><th>Serviço</th><th>Estado</th><th style="text-align:right">CPU</th></tr>
+        <tr><td>amf</td><td><span class="estado-ponto" data-estado="bom"></span> no ar</td><td class="num">2,1%</td></tr>
+        <tr><td>upf-a</td><td><span class="estado-ponto" data-estado="atencao"></span> parcial</td><td class="num">18,4%</td></tr>
+        <tr><td>nrf</td><td><span class="estado-ponto" data-estado="falha"></span> fora</td><td class="num">—</td></tr>
+      </table>
+      <div class="log"><span class="h">14:02:11</span> <span class="in">INFO</span>  E2 SETUP RESPONSE rx
+<span class="h">14:02:12</span> <span class="ok">OK</span>    xApp KPM subscrito (RAN_FUNC_ID 2)
+<span class="h">14:02:19</span> <span class="at">ATEN</span>  PRB UL acima de 80% por 3s
+<span class="h">14:02:23</span> <span class="er">ERRO</span>  nrf: conexão recusada</div>
+    </div>
+
+    <div class="quadro">
+      <span class="et">Texto · a aula</span>
+      <div class="prosa">
+        <h3>Da medida à experiência</h3>
+        <p>Um contador que o rádio publica não é um indicador, e um indicador não é a
+        experiência de quem usa a rede. Entre um e outro existem três traduções, e cada
+        uma delas descarta alguma coisa.</p>
+        <p>A mesma paleta, o mesmo ritmo de 4px, o mesmo contraste — mas medida de leitura
+        de 60 caracteres, entrelinha de 1,7 e a sans no lugar da monoespaçada. Não é outra
+        marca: é a mesma marca falando com outra pessoa.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

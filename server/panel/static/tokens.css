@@ -1,0 +1,170 @@
+/* =====================================================================
+   Core5G_ARM64 — identidade visual.  ARQUIVO GERADO, não edite à mão:
+   a receita está em docs/identidade-visual.md e o gerador imprime as
+   escalas em OKLCH (lightness perceptualmente uniforme) e converte p/ sRGB.
+
+   Duas camadas: PRIMITIVA (a cor) e SEMÂNTICA (o papel). As telas usam
+   SÓ a semântica — é isso que faz o tema claro e o escuro serem coerentes
+   em vez de duas pinturas independentes.
+
+   Papéis dos 12 degraus (convenção Radix, verificada por medição):
+     1-2 fundo · 3-5 fundo de componente · 6-8 traço · 9-10 sólido · 11-12 texto
+
+   O claro e o escuro NÃO são inversão um do outro: cada um tem a sua curva
+   de lightness e de croma. O escuro parte de #111112, não de preto puro.
+   ===================================================================== */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---------- primitivas · TEMA CLARO ---------- */
+  /* neutro */
+  --n-1:#fcfdfe; --n-2:#f6f7fa; --n-3:#eef0f4; --n-4:#e6e9ef; --n-5:#dde1e8; --n-6:#d3d8e0; --n-7:#c6cbd5; --n-8:#b3b9c4; --n-9:#868c99; --n-10:#777e89; --n-11:#646972; --n-12:#2b2e33;
+  /* acento */
+  --a-1:#fcfcff; --a-2:#f6f7fe; --a-3:#edeffe; --a-4:#e5e7fe; --a-5:#dcdeff; --a-6:#d0d3ff; --a-7:#c2c6fe; --a-8:#adb0ff; --a-9:#635bcd; --a-10:#716cda; --a-11:#5e5cb4; --a-12:#282753;
+  /* bom */
+  --g-1:#f8fff9; --g-2:#edfcef; --g-3:#dcf9e1; --g-4:#cdf5d4; --g-5:#bef0c7; --g-6:#afe8b9; --g-7:#99dfa7; --g-8:#79d08d; --g-9:#2e9e52; --g-10:#2e934e; --g-11:#2c7b43; --g-12:#0f371b;
+  /* atenção */
+  --w-1:#fffcf9; --w-2:#fff6e9; --w-3:#ffeed2; --w-4:#ffe5bb; --w-5:#fddca6; --w-6:#f7d293; --w-7:#f0c477; --w-8:#e5ae4a; --w-9:#dc9e12; --w-10:#a37401; --w-11:#896100; --w-12:#3e2900;
+  /* falha */
+  --r-1:#fefcfc; --r-2:#fff5f3; --r-3:#ffebe8; --r-4:#ffe1dd; --r-5:#fed6d1; --r-6:#fec9c2; --r-7:#feb6ad; --r-8:#fe988d; --r-9:#ba2b28; --r-10:#d04841; --r-11:#ac4039; --r-12:#501916;
+
+  /* ---------- papéis ---------- */
+  /* superfícies — do fundo da página ao painel elevado */
+  --surface:var(--n-1); --surface-2:var(--n-2); --surface-3:var(--n-3);
+  --surface-inset:var(--n-2);
+  /* traços */
+  --line:var(--n-6); --line-2:var(--n-7); --line-strong:var(--n-9);
+  /* tinta */
+  --ink:var(--n-12); --ink-2:var(--n-11); --ink-3:var(--n-9);
+  /* acento — a cor do produto: foco, seleção, ação principal, link */
+  --accent:var(--a-9); --accent-hover:var(--a-10);
+  --accent-ink:#ffffff;
+  --accent-text:var(--a-11); --accent-soft:var(--a-3); --accent-line:var(--a-7);
+  /* estado — ISO. NUNCA sozinho: sempre com glifo e palavra. */
+  --good:var(--g-9); --good-text:var(--g-11); --good-soft:var(--g-3);
+  --warn:var(--w-9); --warn-text:var(--w-11); --warn-soft:var(--w-3);
+  --bad:var(--r-9);  --bad-text:var(--r-11);  --bad-soft:var(--r-3);
+  /* foco visível — obrigatório, e nunca só por cor */
+  --focus:var(--a-9);
+
+  /* ---------- tipografia ----------
+     Duas vozes, um sistema: o SISTEMA fala em monoespaçada (é um
+     instrumento; e tabela de teste precisa de dígito de largura fixa);
+     a AULA fala em sans (é texto para ler). */
+  --fonte-instrumento: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Roboto Mono", monospace;
+  --fonte-texto: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* escala de tipo — razão 1.25, ancorada em 16px */
+  --t-micro:0.6875rem; --t-mini:0.75rem; --t-corpo:0.875rem; --t-base:1rem;
+  --t-med:1.25rem; --t-gr:1.5rem; --t-disp:clamp(1.5rem, 1.1rem + 1.8vw, 2.25rem);
+  --tr-etiqueta:0.08em;   /* entreletra das etiquetas em caixa alta */
+
+  /* ---------- ritmo · múltiplos de 4 ---------- */
+  --e-1:4px; --e-2:8px; --e-3:12px; --e-4:16px; --e-5:24px; --e-6:32px; --e-7:48px;
+
+  /* ---------- forma ---------- */
+  --r-sm:6px; --r-md:10px; --r-lg:14px; --r-full:999px;
+  --traco:1px;
+
+  /* ---------- elevação ----------
+     No claro a elevação é sombra; no escuro é SUPERFÍCIE MAIS CLARA
+     (sombra não se enxerga sobre fundo escuro). */
+  --elev-1:0 1px 2px rgb(16 24 40 / .06), 0 4px 12px rgb(16 24 40 / .06);
+  --elev-2:0 2px 4px rgb(16 24 40 / .07), 0 12px 32px rgb(16 24 40 / .09);
+}
+
+/* ===================== TEMA ESCURO =====================
+   Só as primitivas e os poucos papéis que mudam de degrau são redefinidos;
+   os nomes semânticos continuam iguais. Duas portas: a escolha explícita
+   (data-theme) e a preferência do sistema. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* neutro */
+    --n-1:#111112; --n-2:#17181a; --n-3:#1f2125; --n-4:#26292e; --n-5:#2d3137; --n-6:#373b43; --n-7:#454b54; --n-8:#5c636f; --n-9:#848d9b; --n-10:#959dab; --n-11:#b2b9c5; --n-12:#e6eaf1;
+    /* acento */
+    --a-1:#101018; --a-2:#161624; --a-3:#1e1e38; --a-4:#242349; --a-5:#2b295a; --a-6:#34326c; --a-7:#423f88; --a-8:#5853b1; --a-9:#736ee1; --a-10:#8f8dfb; --a-11:#adb0ff; --a-12:#e6e8fe;
+    /* bom */
+    --g-1:#0c130e; --g-2:#101b12; --g-3:#102715; --g-4:#0c3117; --g-5:#093b1a; --g-6:#0a4720; --g-7:#095a28; --g-8:#0d7636; --g-9:#45b164; --g-10:#4fb56b; --g-11:#7dce8f; --g-12:#caf8d2;
+    /* atenção */
+    --w-1:#151009; --w-2:#1e170a; --w-3:#2d1e03; --w-4:#382500; --w-5:#422c00; --w-6:#4f3600; --w-7:#624400; --w-8:#815b01; --w-9:#f0b135; --w-10:#ca9105; --w-11:#e2af53; --w-12:#fee6bf;
+    /* falha */
+    --r-1:#180e0d; --r-2:#231311; --r-3:#361613; --r-4:#461714; --r-5:#561916; --r-6:#671e1a; --r-7:#812621; --r-8:#a8332e; --r-9:#cf413a; --r-10:#f36c61; --r-11:#fe988d; --r-12:#fee3df;
+    /* superfícies — do fundo da página ao painel elevado */
+    --surface:var(--n-1); --surface-2:var(--n-2); --surface-3:var(--n-3);
+    --surface-inset:var(--n-1);
+    /* traços */
+    --line:var(--n-6); --line-2:var(--n-7); --line-strong:var(--n-8);
+    /* tinta */
+    --ink:var(--n-12); --ink-2:var(--n-11); --ink-3:var(--n-9);
+    /* acento — a cor do produto: foco, seleção, ação principal, link */
+    --accent:var(--a-9); --accent-hover:var(--a-10);
+    --accent-ink:#0d0d14;
+    --accent-text:var(--a-11); --accent-soft:var(--a-3); --accent-line:var(--a-7);
+    /* estado — ISO. NUNCA sozinho: sempre com glifo e palavra. */
+    --good:var(--g-9); --good-text:var(--g-11); --good-soft:var(--g-3);
+    --warn:var(--w-9); --warn-text:var(--w-11); --warn-soft:var(--w-3);
+    --bad:var(--r-9);  --bad-text:var(--r-11);  --bad-soft:var(--r-3);
+    /* foco visível — obrigatório, e nunca só por cor */
+    --focus:var(--a-9);
+    --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);
+    --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);
+  }
+}
+:root[data-theme="dark"] {
+  /* neutro */
+  --n-1:#111112; --n-2:#17181a; --n-3:#1f2125; --n-4:#26292e; --n-5:#2d3137; --n-6:#373b43; --n-7:#454b54; --n-8:#5c636f; --n-9:#848d9b; --n-10:#959dab; --n-11:#b2b9c5; --n-12:#e6eaf1;
+  /* acento */
+  --a-1:#101018; --a-2:#161624; --a-3:#1e1e38; --a-4:#242349; --a-5:#2b295a; --a-6:#34326c; --a-7:#423f88; --a-8:#5853b1; --a-9:#736ee1; --a-10:#8f8dfb; --a-11:#adb0ff; --a-12:#e6e8fe;
+  /* bom */
+  --g-1:#0c130e; --g-2:#101b12; --g-3:#102715; --g-4:#0c3117; --g-5:#093b1a; --g-6:#0a4720; --g-7:#095a28; --g-8:#0d7636; --g-9:#45b164; --g-10:#4fb56b; --g-11:#7dce8f; --g-12:#caf8d2;
+  /* atenção */
+  --w-1:#151009; --w-2:#1e170a; --w-3:#2d1e03; --w-4:#382500; --w-5:#422c00; --w-6:#4f3600; --w-7:#624400; --w-8:#815b01; --w-9:#f0b135; --w-10:#ca9105; --w-11:#e2af53; --w-12:#fee6bf;
+  /* falha */
+  --r-1:#180e0d; --r-2:#231311; --r-3:#361613; --r-4:#461714; --r-5:#561916; --r-6:#671e1a; --r-7:#812621; --r-8:#a8332e; --r-9:#cf413a; --r-10:#f36c61; --r-11:#fe988d; --r-12:#fee3df;
+  /* superfícies — do fundo da página ao painel elevado */
+  --surface:var(--n-1); --surface-2:var(--n-2); --surface-3:var(--n-3);
+  --surface-inset:var(--n-1);
+  /* traços */
+  --line:var(--n-6); --line-2:var(--n-7); --line-strong:var(--n-8);
+  /* tinta */
+  --ink:var(--n-12); --ink-2:var(--n-11); --ink-3:var(--n-9);
+  /* acento — a cor do produto: foco, seleção, ação principal, link */
+  --accent:var(--a-9); --accent-hover:var(--a-10);
+  --accent-ink:#0d0d14;
+  --accent-text:var(--a-11); --accent-soft:var(--a-3); --accent-line:var(--a-7);
+  /* estado — ISO. NUNCA sozinho: sempre com glifo e palavra. */
+  --good:var(--g-9); --good-text:var(--g-11); --good-soft:var(--g-3);
+  --warn:var(--w-9); --warn-text:var(--w-11); --warn-soft:var(--w-3);
+  --bad:var(--r-9);  --bad-text:var(--r-11);  --bad-soft:var(--r-3);
+  /* foco visível — obrigatório, e nunca só por cor */
+  --focus:var(--a-9);
+  --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);
+  --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);
+}
+
+/* ===================== regras que a identidade impõe ===================== */
+
+/* Estado NUNCA por cor sozinha: o ponto de estado leva anel, e o componente
+   que o usa leva glifo e palavra. Sob protanopia o par verde/âmbar mede 7,3
+   — abaixo do alvo 8 —, e é o reforço que torna a leitura segura. */
+.estado-ponto {
+  width:8px; height:8px; border-radius:var(--r-full);
+  box-shadow:0 0 0 1px var(--line-strong);   /* garante o limite mesmo com fundo de baixo contraste */
+  display:inline-block; flex:none;
+}
+.estado-ponto[data-estado="bom"]{background:var(--good)}
+.estado-ponto[data-estado="atencao"]{background:var(--warn)}
+.estado-ponto[data-estado="falha"]{background:var(--bad)}
+.estado-ponto[data-estado="ocioso"]{background:var(--n-8)}
+
+/* Foco sempre visível, e não só por cor: anel com deslocamento. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline:2px solid var(--focus); outline-offset:2px; border-radius:var(--r-sm);
+}
+
+/* Quem pediu menos movimento, recebe menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important;
+    transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}

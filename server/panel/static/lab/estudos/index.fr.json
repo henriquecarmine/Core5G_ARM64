@@ -1,5 +1,5 @@
 {
-  "_comment": "Catalogue des Études (matières) du panneau : chaque cours détaillé vit dans <id>.json (extrait des diapositives). Les exercices sont des commandes de la console (/api/run). L'Étude 3 renvoie aux pages du Lab d'IA déjà existantes.",
+  "_comment": "Catalogue des Études (matières) du panneau : chaque cours détaillé vit dans <id>.json (extrait des diapositives). Les exercices sont des commandes de la console (/api/run). L'Étude 3 renvoie aux pages du Lab d'IA déjà existantes. Os exercícios do professor (`atividades`) ficam na Plataforma de Atividades da CESAR School: guardamos só o hash de cada um; o domínio vive em `plataforma.url`.",
   "comandos": {
     "status": "Statut / Healthcheck",
     "test-system-status": "Statut détaillé de tous les NF",
@@ -19,6 +19,7 @@
     "p2-ml-uetp": "IA : prédire le débit (UE-TP)",
     "p2-ml-localizacao": "IA : localiser l'étage (Localization)",
     "p2-ml-pm": "IA : détecter la RRU perdue (PM)",
+    "p2-kpi-qoe": "Chaîne mesure → KPI → KQI → QoE",
     "p2-tema-t1": "T1 Débit de l'utilisateur",
     "p2-tema-t2": "T2 Anomalie de charge",
     "p2-tema-t3": "T3 Latence et QoE",
@@ -33,6 +34,7 @@
     "p2": "Projet 2 : OAI + FlexRIC + Non-RT RIC",
     "any": "tourne sur fichier, sans avoir besoin de la RAN"
   },
+  "plataforma": {"nome": "Plataforma de Atividades — CESAR School", "url": "https://cesar-activities-cxapa2g7ia-rj.a.run.app/"},
   "estudos": [
     {
       "id": "e1", "n": 1, "icon": "🛰️", "bancada": "p1",
@@ -43,7 +45,24 @@
       "pdfs": "pdfs/00-interfaces-oran",
       "nota": "Seul le cours 01 a été partagé en PDF ; les autres ont été présentés en classe.",
       "aulas": ["e1a01"],
-      "exercicios": ["status", "test-system-status", "test-ng-setup", "test-registration", "test-config-coherence", "test-ue-connection", "test-throughput", "test-upf-failover"]
+      "exercicios": ["status", "test-system-status", "test-ng-setup", "test-registration", "test-config-coherence", "test-ue-connection", "test-throughput", "test-upf-failover"],
+      "atividades": {
+        "modulo": "Module 05", "hash": "#oran",
+        "itens": [
+          {"rot": "Aula 01", "t": "Introdução Open RAN", "d": "Quiz e mapeamento de papéis RU/DU/CU.", "h": "#oran/aula01", "prep": {"aula": 1}},
+          {"rot": "Aula 02", "t": "Aventura O-RAN", "d": "Circuito completo: ecossistema, split e comparação.", "h": "#oran/aula02", "prep": {"aula": 1}},
+          {"rot": "Interface A1", "t": "Políticas Non-RT ↔ Near-RT", "d": "Intents, compatibilidade e ciclo política → ação.", "h": "#oran/aulaa1", "prep": {"cmd": "p2-test-a1"}},
+          {"rot": "Interface E2", "t": "Controle near-real-time", "d": "E2AP, nós E2 e serviços REPORT/CONTROL.", "h": "#oran/aulae2", "prep": {"cmd": "p2-test-e2-sm"}},
+          {"rot": "Interface O1", "t": "OAM / FCAPS", "d": "Gestão, PM/FM e telemetria O1.", "h": "#oran/aulao1"},
+          {"rot": "Interface O2", "t": "O-Cloud", "d": "Orquestração e inventário de infraestrutura.", "h": "#oran/aulao2"},
+          {"rot": "Aula 04 · Intervalo 1", "t": "Open Fronthaul", "d": "Split 7.2x e fronthaul aberto.", "h": "#oran/aula04i1"},
+          {"rot": "Aula 04 · Intervalo 2", "t": "eCPRI e sincronismo", "d": "Taxa IQ, eCPRI e requisitos de sync.", "h": "#oran/aula04i2"},
+          {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
+          {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
+          {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenho 28×28 e predição (endpoint GCP opcional).", "h": "#oran/aula05digit", "prep": {"href": "/lab/classificacao", "rot": "Classificação"}},
+          {"rot": "Lab Open5GS", "t": "Core e E2E", "d": "N2/N3, registro UE e troubleshooting.", "h": "#oran/lab-open5gs", "prep": {"cmd": "test-ue-connection"}}
+        ]
+      }
     },
     {
       "id": "e2", "n": 2, "icon": "🧠", "bancada": "p2",
@@ -53,7 +72,19 @@
       "resumo": "Le contrôleur intelligent de la RAN : near-RT et non-RT RIC, les interfaces E2 et A1, xApps et rApps, le SMO et la façon de tester tout cela. Dans le lab, c'est le Projet 2 : un gNB OAI avec agent E2 qui dialogue avec le FlexRIC, des xApps de KPM et de contrôle, et un Non-RT RIC qui fait descendre des politiques par l'A1.",
       "pdfs": "pdfs/01-ric",
       "aulas": ["e2a01", "e2a02", "e2a03", "e2a04", "e2a05", "e2a06"],
-      "exercicios": ["p2-test-e2-sm", "p2-test-e2-kpm", "p2-test-e2-kpm-traffic", "p2-test-e2-rc", "p2-kpm-real", "p2-test-a1"]
+      "exercicios": ["p2-test-e2-sm", "p2-test-e2-kpm", "p2-test-e2-kpm-traffic", "p2-test-e2-rc", "p2-kpm-real", "p2-test-a1"],
+      "atividades": {
+        "modulo": "Module 07", "hash": "#ric",
+        "itens": [
+          {"rot": "Aula 01", "t": "Retomada O-RAN + lab", "d": "Interfaces A1/E2/O1/O2 e revisão N1/N2/N3.", "h": "#ric/aula01", "prep": {"aula": 1}},
+          {"rot": "Aula 02", "t": "Artigo NGO — OSS RIC", "d": "Plataformas OSS e preparação de projeto.", "h": "#ric/aula02", "prep": {"aula": 2}},
+          {"rot": "Aula 03", "t": "Projeto 1 · A1", "d": "Políticas Non-RT ↔ Near-RT.", "h": "#ric/aula03", "prep": {"aula": 3, "cmd": "p2-test-a1"}},
+          {"rot": "Aula 04", "t": "xApps e open source", "d": "O-RAN SC, FlexRIC e lifecycle.", "h": "#ric/aula04", "prep": {"aula": 4, "cmd": "p2-test-e2-sm"}},
+          {"rot": "Aula 05", "t": "Design e SMO", "d": "SDK, callbacks E2 e integração SMO.", "h": "#ric/aula05", "prep": {"aula": 5}},
+          {"rot": "Aula 06", "t": "Testes e seminários", "d": "Troubleshooting e Projeto 2.", "h": "#ric/aula06", "prep": {"aula": 6, "cmd": "p2-test-e2-kpm"}},
+          {"rot": "Lab OAI+FlexRIC", "t": "E2, E2SM e xApps", "d": "Roteiro oai-cn-gnb: core, gNB RFSIM, FlexRIC.", "h": "#ric/lab-oai", "prep": {"cmd": "p2-kpm-real"}}
+        ]
+      }
     },
     {
       "id": "e3", "n": 3, "icon": "🎓", "bancada": "p2",
@@ -74,7 +105,15 @@
         {"icon": "🧭", "titulo": "PCA", "one": "Résumer beaucoup de KPI en quelques-uns.", "href": "/lab/pca"},
         {"icon": "📄", "titulo": "Projet final", "one": "Appliquer une technique à un cas d'usage et livrer le rapport.", "href": "/lab/projeto"}
       ],
-      "exercicios": ["p2-ml-uetp", "p2-ml-localizacao", "p2-ml-pm"]
+      "exercicios": ["p2-ml-uetp", "p2-ml-localizacao", "p2-ml-pm"],
+      "atividades": {
+        "modulo": "Module 05", "hash": "#oran", "cruzada": true,
+        "itens": [
+          {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
+          {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
+          {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenho 28×28 e predição (endpoint GCP opcional).", "h": "#oran/aula05digit", "prep": {"href": "/lab/classificacao", "rot": "Classificação"}}
+        ]
+      }
     },
     {
       "id": "e4", "n": 4, "icon": "📊", "bancada": "p2",
@@ -156,7 +195,19 @@
          ],
          "extra": "Le filtre de persistance évite de réagir à un pic isolé (fausses alertes dans le baseline et le recovery). La frise chronologique ASCII montre où la règle se déclenche.",
          "rec": "Politique A1 candidate (portée UE/QoS, priorité, steering) avec validation humaine avant d'automatiser. Nous n'affirmons pas que le handover ou le path ont changé."}
-      ]
+      ],
+      "atividades": {
+        "modulo": "Module 09", "hash": "#data",
+        "itens": [
+          {"rot": "Aula 01", "t": "DIKW, mapas e fontes", "d": "DIKW · mapas Open5GS/O-RAN · SMO/O1/E2 · PM/FM/KPM · lab UE-TP (Tripathi + Wong 1–3).", "h": "#data/aula01", "prep": {"aula": 1}},
+          {"rot": "Aula 02", "t": "Lakes e O-Cloud", "d": "Lake vs warehouse, lote/streaming e localidade edge/regional (Wong Cap. 4).", "h": "#data/aula02", "prep": {"aula": 2}},
+          {"rot": "Aula 03", "t": "EDA, ETL e BI", "d": "Loops non/near-RT, data pipeline ML e laboratório SUTD (Wong Cap. 5).", "h": "#data/aula03", "prep": {"aula": 3, "cmd": "p2-kpm-analytics"}},
+          {"rot": "Aula 04", "t": "KPIs e QoE", "d": "Medida → KPI → KQI → QoE, E2SM e slice SLA.", "h": "#data/aula04", "prep": {"aula": 4, "cmd": "p2-kpi-qoe"}},
+          {"rot": "Aula 05", "t": "Capacidade e otimização", "d": "CPM, CCO, energy saving, RL no RIC e CI/CD.", "h": "#data/aula05", "prep": {"cmd": "p2-tema-t6"}},
+          {"rot": "Aula 06", "t": "Consolidação", "d": "Pipeline completo, reprodutibilidade e temas Wong 8–12.", "h": "#data/aula06", "prep": {"cmd": "p2-tema-all"}},
+          {"rot": "Lab OAI · UE-TP / KPM→A1", "t": "Projeto prático M09", "d": "Pipeline KPM→SQLite/JSONL→IA→policy A1 (oai-cn-gnb-nonrt-nearrt).", "h": "#data/lab", "prep": {"cmd": "p2-ml-uetp"}}
+        ]
+      }
     }
   ]
 }

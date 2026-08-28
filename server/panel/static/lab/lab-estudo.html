@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Estudo · Core5G_ARM64</title>
-<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.64.2">
+<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.72.0">
 </head>
 <body>
 <div class="wrap">
@@ -32,11 +32,12 @@
   <div class="exlist" id="ex"></div>
 
   <div id="proximas"></div>
+  <div id="atividades"></div>
 
   <footer id="footer"></footer>
 </div>
 
-<script src="/static/lab/lab-i18n.js?v=0.64.2"></script>
+<script src="/static/lab/lab-i18n.js?v=0.72.0"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s);
 const T=(k,p)=>window.LABI18N?LABI18N.t(k,p):k;
@@ -133,6 +134,36 @@ async function main(){
           </div>`).join("")}
       </div>
       <div class="allrow">${runBtn("p2-tema-all",T("est.all"))}</div>`;
+  }
+  // ---- exercícios do professor (Plataforma de Atividades da CESAR School)
+  if(e.atividades&&idx.plataforma){
+    const A=e.atividades,P=idx.plataforma;
+    const naPlat=h=>esc(P.url+(h||""));
+    const platLink=`<a href="${naPlat("")}" target="_blank" rel="noopener">${esc(P.nome)}</a>`;
+    const prep=p=>{
+      if(!p)return"";
+      const b=[];
+      if(p.aula)b.push(`<a class="prepl" href="/lab/estudo/${e.n}/aula/${p.aula}">${esc(T("est.ativ_aula",{n:p.aula}))}</a>`);
+      if(p.href)b.push(`<a class="prepl" href="${esc(p.href)}">${esc(p.rot)}</a>`);
+      if(p.cmd)b.push(runBtn(p.cmd,idx.comandos[p.cmd]||p.cmd));
+      return b.length?`<div class="ativ-prep"><span>${T("est.ativ_prep")}</span>${b.join("")}</div>`:"";
+    };
+    $("#atividades").innerHTML=`
+      <h2 class="section-h">${T("est.ativ_h")}</h2>
+      <p class="sub">${A.cruzada?T("est.ativ_cruzada",{modulo:esc(A.modulo)}):T("est.ativ_sub",{modulo:esc(A.modulo),plat:platLink})}</p>
+      <p class="ativ-nota">${T("est.ativ_nota")}</p>
+      <div class="ativs">
+        ${A.itens.map(x=>`
+          <div class="ativ">
+            <div class="ativ-rot">${esc(x.rot)}</div>
+            <h4>${esc(x.t)}</h4>
+            <p>${esc(x.d)}</p>
+            <a class="ativ-go" href="${naPlat(x.h)}" target="_blank" rel="noopener">${T("est.ativ_open")}</a>
+            ${prep(x.prep)}
+          </div>`).join("")}
+      </div>
+      <div class="allrow"><a class="runb ghost" href="${naPlat(A.hash)}" target="_blank" rel="noopener">${esc(T("est.ativ_all",{modulo:A.modulo}))}</a></div>`;
+    wireRun($("#atividades"));
   }
   if(e.proximas){
     $("#proximas").innerHTML=`<h2 class="section-h">${T("est.proximas")}</h2>

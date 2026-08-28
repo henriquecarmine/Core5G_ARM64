@@ -22,6 +22,14 @@
       "est.ex_p2": "Rodam na bancada do <b>Projeto 2</b> (ative no topo do painel).",
       "est.ex_p2_temas": " Os 7 temas rodam sobre arquivo e não precisam da RAN no ar.",
       "est.ex_p1": "Rodam na bancada do <b>Projeto 1</b> (ative no topo do painel).",
+      "est.ativ_h": "🎓 Exercícios do professor",
+      "est.ativ_sub": "Os exercícios do <b>{modulo}</b> ficam na {plat} e abrem em outra aba.",
+      "est.ativ_nota": "Participação e conclusão contam na nota — a plataforma registra por e-mail ao docente.",
+      "est.ativ_cruzada": "Esta cadeira não tem módulo próprio na plataforma. Estes exercícios são do <b>{modulo}</b>, mas são os que tocam IA/ML.",
+      "est.ativ_open": "Abrir ↗",
+      "est.ativ_prep": "Prepare-se aqui:",
+      "est.ativ_aula": "Aula {n} desta cadeira",
+      "est.ativ_all": "Ver o {modulo} inteiro ↗",
       "est.dados_h": "💾 Os dados do projeto integrador",
       "est.col": "coluna",
       "est.kpm": "nome KPM",
@@ -171,6 +179,14 @@
       "est.ex_p2": "They run on the <b>Project 2</b> bench (activate it at the top of the panel).",
       "est.ex_p2_temas": " The 7 themes run on a file and do not need the RAN up.",
       "est.ex_p1": "They run on the <b>Project 1</b> bench (activate it at the top of the panel).",
+      "est.ativ_h": "🎓 The professor's exercises",
+      "est.ativ_sub": "The <b>{modulo}</b> exercises live on {plat} and open in another tab.",
+      "est.ativ_nota": "Taking part and finishing them counts towards the grade — the platform reports it to the professor by e-mail.",
+      "est.ativ_cruzada": "This course has no module of its own on the platform. These exercises belong to <b>{modulo}</b>, but they are the ones that touch AI/ML.",
+      "est.ativ_open": "Open ↗",
+      "est.ativ_prep": "Get ready here:",
+      "est.ativ_aula": "Lesson {n} of this course",
+      "est.ativ_all": "See the whole {modulo} ↗",
       "est.dados_h": "💾 The capstone project data",
       "est.col": "column",
       "est.kpm": "KPM name",
@@ -307,6 +323,14 @@
       "est.ex_p2": "Corren en el banco del <b>Proyecto 2</b> (actívelo arriba en el panel).",
       "est.ex_p2_temas": " Los 7 temas corren sobre archivo y no necesitan la RAN encendida.",
       "est.ex_p1": "Corren en el banco del <b>Proyecto 1</b> (actívelo arriba en el panel).",
+      "est.ativ_h": "🎓 Ejercicios del profesor",
+      "est.ativ_sub": "Los ejercicios del <b>{modulo}</b> están en {plat} y se abren en otra pestaña.",
+      "est.ativ_nota": "La participación y la conclusión cuentan en la nota — la plataforma avisa al docente por correo.",
+      "est.ativ_cruzada": "Esta asignatura no tiene módulo propio en la plataforma. Estos ejercicios son del <b>{modulo}</b>, pero son los que tocan IA/ML.",
+      "est.ativ_open": "Abrir ↗",
+      "est.ativ_prep": "Prepárate aquí:",
+      "est.ativ_aula": "Clase {n} de esta asignatura",
+      "est.ativ_all": "Ver el {modulo} completo ↗",
       "est.dados_h": "💾 Los datos del proyecto integrador",
       "est.col": "columna",
       "est.kpm": "nombre KPM",
@@ -443,6 +467,14 @@
       "est.ex_p2": "Ils tournent sur le banc du <b>Projet 2</b> (activez-le en haut du panneau).",
       "est.ex_p2_temas": " Les 7 thèmes tournent sur un fichier et n'ont pas besoin de la RAN allumée.",
       "est.ex_p1": "Ils tournent sur le banc du <b>Projet 1</b> (activez-le en haut du panneau).",
+      "est.ativ_h": "🎓 Les exercices du professeur",
+      "est.ativ_sub": "Les exercices du <b>{modulo}</b> se trouvent sur {plat} et s'ouvrent dans un autre onglet.",
+      "est.ativ_nota": "La participation et l'achèvement comptent dans la note — la plateforme prévient l'enseignant par e-mail.",
+      "est.ativ_cruzada": "Cette matière n'a pas de module propre sur la plateforme. Ces exercices appartiennent au <b>{modulo}</b>, mais ce sont ceux qui touchent l'IA/ML.",
+      "est.ativ_open": "Ouvrir ↗",
+      "est.ativ_prep": "Préparez-vous ici :",
+      "est.ativ_aula": "Leçon {n} de cette matière",
+      "est.ativ_all": "Voir tout le {modulo} ↗",
       "est.dados_h": "💾 Les données du projet intégrateur",
       "est.col": "colonne",
       "est.kpm": "nom KPM",
@@ -592,7 +624,7 @@
     try { localStorage.setItem("c5g-lang", l); } catch (e) {}
     apply(); mountSelector(); subs.forEach(fn => { try { fn(); } catch (e) {} });
   }
-  window.LABI18N = { t, apply, mountSelector, setLang, onChange: fn => subs.push(fn), get lang() { return lang; } };
+  window.LABI18N = { t, apply, mountSelector, setLang, onChange: fn => subs.push(fn), dicts: D, get lang() { return lang; } };
   if (document.readyState !== "loading") { mountSelector(); apply(); }
   else document.addEventListener("DOMContentLoaded", () => { mountSelector(); apply(); });
 })();

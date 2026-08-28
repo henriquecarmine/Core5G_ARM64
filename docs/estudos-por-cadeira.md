@@ -79,11 +79,58 @@ baseline (o script avisa). Endpoints: `GET /api/lab-data/kpm`,
 professor). O arquivo fica em `panel_uploads/labdata/kpm/kpm_custom.txt` e
 `run_command` injeta `KPM_FILE` nos comandos `p2-tema-*`.
 
+## Exercícios do professor (Plataforma de Atividades — v0.72.0)
+
+O Prof. Jonas mantém os exercícios das três cadeiras numa aplicação própria, a
+**Plataforma de Atividades da CESAR School** (Cloud Run, pública, rotas por
+hash). Participação e conclusão contam na nota — a plataforma avisa o docente
+por e-mail. O painel **não reproduz os enunciados nem responde nada por lá**:
+lista os exercícios e leva até eles, e liga cada um ao que já temos.
+
+| Plataforma | Cadeira do painel | Exercícios |
+|------------|-------------------|-----------:|
+| Módulo 05 `#oran` — Interfaces e Protocolos O-RAN | Estudo 1 | 12 |
+| Módulo 07 `#ric` — RAN Intelligent Controller (RIC) | Estudo 2 | 7 |
+| Módulo 09 `#data` — Análise de Dados em Redes de Telecom | Estudo 4 | 7 |
+| — | Estudo 3 (IA/ML em RIC) | 3, por referência cruzada ao Módulo 05 |
+
+O Estudo 3 não tem módulo próprio na plataforma; recebe os três exercícios de
+IA/ML que vivem no Módulo 05, com o aviso na tela de que vêm de lá.
+
+Schema, dentro de cada estudo do `index.json`:
+
+```jsonc
+"atividades": {
+  "modulo": "Módulo 09", "hash": "#data",   // "cruzada": true no Estudo 3
+  "itens": [
+    {"rot": "Aula 04", "t": "KPIs e QoE", "d": "…", "h": "#data/aula04",
+     "prep": {"aula": 4, "cmd": "p2-kpi-qoe"}}
+  ]
+}
+```
+
+`prep` é a ponte para o nosso lab e aceita três formas, combináveis:
+`{"aula": n}` (aula desta cadeira), `{"cmd": "id"}` (comando do console, rótulo
+vindo de `index.comandos`) e `{"href": "/lab/…", "rot": "…"}` (página do Lab de
+IA). O domínio da plataforma fica **uma vez só**, em `index.plataforma.url`; os
+itens guardam apenas o hash.
+
+Os textos dos exercícios são **citação literal** da plataforma e ficam em
+português nos quatro `index*.json` — é o que o aluno vê ao clicar. Só a moldura
+da seção é traduzida (chaves `est.ativ_*` em `lab-i18n.js`); `atividades.modulo`
+vira "Module 0N" em en/fr.
+
+Renderiza no fim de `/lab/estudo/N`, depois de "Próximas aulas": cartão por
+exercício com rótulo, título, descrição, o botão **Abrir ↗** (ação principal,
+abre em outra aba) e a linha "Prepare-se aqui" com os atalhos do nosso lab.
+
 ## Testes
 
 - `cd server/panel/test && node i18n-parity.js` — as chaves novas
-  (`rail.estudos`, `rail.e1..e4`, `rail.aulas*`, `t.tema_*`) existem nos 4
-  idiomas.
+  (`rail.estudos`, `rail.e1..e4`, `rail.aulas*`, `t.tema_*`, `est.ativ_*`)
+  existem nos 4 idiomas. Desde a 0.72.0 o teste cobre **dois** dicionários:
+  `static/i18n.js` e `static/lab/lab-i18n.js` (este último estava fora, e é
+  onde vive toda a moldura dos Estudos).
 - `python3 server/oai-cn-gnb-e2/scripts/temas/temas_projeto.py --tema all --file
   server/oai-cn-gnb-e2/scripts/temas/samples/kpm_ue_tp_sample.jsonl` — rc 0 e a
   tabela "7 temas lado a lado".

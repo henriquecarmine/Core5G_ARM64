@@ -1,4 +1,4 @@
-# Identidade visual — Core5G_ARM64 (v0.74.0)
+# Identidade visual — Core5G_ARM64 (v0.74.1)
 
 > **Duas vozes, um sistema.** O laboratório é um *instrumento*; a aula é um
 > *texto*. Não devem parecer a mesma coisa nem viver na mesma tela — mas saem da
@@ -72,7 +72,10 @@ e nenhuma regra de componente precisa saber disso.
 
 ## As medições
 
-Tudo abaixo foi **medido**, não julgado a olho (`tools/identidade/medir_cvd.py`).
+Colorimetria a serviço da **programação visual**: nenhuma cor entra no sistema
+sem passar pelo contraste.
+
+Tudo abaixo foi **medido**, não julgado a olho (`tools/identidade/medir.py`).
 
 ### Contraste (WCAG)
 
@@ -85,35 +88,26 @@ Tudo abaixo foi **medido**, não julgado a olho (`tools/identidade/medir_cvd.py`
 | texto colorido (degrau 11), pior caso | 5,1:1 | 9,1:1 | 4,5 |
 | `--line-strong` sobre `--surface` | 3,4:1 | 3,1:1 | 3,0 |
 
+**O anel do ponto de estado.** O âmbar sobre fundo claro mede **2,0:1** — é a
+natureza do âmbar sobre branco, não um erro de escolha. Por isso `.estado-ponto`
+carrega um anel em `--line-strong`: é ele que desenha o limite quando o
+preenchimento não tem contraste para isso sozinho.
+
 **Nota sobre `--line-strong`:** no tema claro o degrau 8 mede só **1,94:1** e não
 serve como limite de componente (o mínimo é 3:1). Em vez de torcer a rampa, o
 papel foi mapeado no degrau que mede: **9 no claro, 8 no escuro**. É exatamente
 para isso que a camada semântica existe.
 
-### Daltonismo (ΔE em OKLab ×100, simulação de Viénot)
+### Adaptação para daltonismo — fora do escopo
 
-| par | visão normal | pior dicromacia | |
-|---|--:|--:|---|
-| verde × vermelho | 30,7 | **9,5** | acima do alvo 8 ✅ |
-| verde × âmbar | 21,1 | **7,3** | faixa de piso (6–8) ⚠️ |
-| âmbar × vermelho | 26,6 | 17,2 | ✅ |
-| acento × qualquer estado | ≥29 | ≥7,3 | ✅ |
-| **pior par do conjunto** | **21,1** | **7,3** | |
+A paleta segue a **tabela normal** de sinalização: verde, âmbar e vermelho como
+se espera que sejam, cada um na lightness em que *parece* a cor padrão. Não
+distorcemos as cores para maximizar separação sob dicromacia — quando isso foi
+tentado, o resultado foi um verde quase branco e um vermelho que sumia no fundo
+escuro: otimizava a métrica, não a tela.
 
-O par que assusta — verde × vermelho — passa. O par verde × âmbar fica em 7,3 sob
-**protanopia**, na faixa que só é legítima **com codificação secundária**.
-
-Tentei resolver por otimização e o resultado foi instrutivo: maximizando ΔE o
-buscador entregou um verde quase branco e um vermelho que sumia no fundo escuro.
-Estava otimizando a métrica, não a tela. A resposta certa é de projeto, não de
-busca:
-
-> ### Regra dura: estado nunca por cor sozinha
-> Todo indicador de estado carrega **cor + glifo + palavra**. O ponto de estado
-> leva um anel em `--line-strong`, que garante o limite visível mesmo quando o
-> preenchimento tem contraste baixo (o âmbar sobre fundo claro mede 2,3:1 — o
-> anel resolve). Isto não é enfeite: é o que torna a leitura segura para as ~8%
-> de pessoas que não separam verde de vermelho, numa tela projetada para a turma.
+Adaptação para daltonismo é **estudo à parte**, para depois, e se aplica como
+**função sobre esta tabela** (filtro de paleta), não redesenhando a paleta.
 
 ## Tipografia — as duas vozes
 
@@ -151,13 +145,14 @@ moldura com etiqueta encaixada que envolve cada assunto do painel.
 ## Como regerar
 
 ```bash
-python3 tools/identidade/escalas.py       # imprime as 5 famílias, 2 temas
-python3 tools/identidade/medir_cvd.py     # contraste + separação sob dicromacia
+python3 tools/identidade/paleta.py        # imprime as 5 famílias nos 2 temas
+python3 tools/identidade/medir.py         # contraste WCAG — sai != 0 se reprovar
 python3 tools/identidade/gerar_tokens.py  # escreve server/panel/static/tokens.css
 ```
 
-Mudou uma cor? Roda a medição **antes** de aceitar. Nenhuma cor entra no sistema
-sem passar pelo contraste e pelo ΔE.
+`paleta.py` é a receita: matiz, curva de lightness e croma. `oklch.py` é a
+matemática. Mudou uma cor? Roda `medir.py` **antes** de aceitar — ele reprova
+com código de saída != 0, então serve de porta em CI.
 
 ## O que ainda não está feito
 
@@ -172,5 +167,4 @@ painel de operação e as telas de aula.
 - [Color tokens: guide to light and dark modes in design systems](https://medium.com/design-bootcamp/color-tokens-guide-to-light-and-dark-modes-in-design-systems-146ab33023ac)
 - [Building a Dark Mode Color Palette: Beyond Inverting Light Mode](https://colorarchive.org/guides/dark-mode-palette-guide/)
 - [Mastering Elevation for Dark UI](https://medium.muz.li/mastering-elevation-for-dark-ui-a-comprehensive-guide-04cc770dd0d6)
-- [ISO 22324 — cores de código para alerta](https://en.wikipedia.org/wiki/ISO_22324)
 - [Color Token Naming Conventions: Primitive, Semantic, and Component Layers](https://colorarchive.org/guides/color-token-naming-guide/)

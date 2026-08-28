@@ -18,6 +18,9 @@ HUE = {
     "g": 150,   # bom
     "w": 80,    # atenção
     "r": 27,    # falha
+    "l": 350,   # ao vivo — a aula sendo transmitida. Não é estado da rede nem
+                # o acento: é o único momento em que a sala inteira está vendo
+                # a mesma tela, e merece cor própria.
 }
 
 # croma de pico por família e tema
@@ -27,6 +30,7 @@ CROMA = {
     "g": {"claro": 0.145, "escuro": 0.150},
     "w": {"claro": 0.150, "escuro": 0.155},
     "r": {"claro": 0.180, "escuro": 0.175},
+    "l": {"claro": 0.170, "escuro": 0.170},
 }
 
 # curva de lightness dos 12 degraus
@@ -42,11 +46,11 @@ K = [0.10, 0.16, 0.30, 0.42, 0.52, 0.60, 0.72, 0.88, 1.00, 0.96, 0.80, 0.46]
 # lightness em que ela PARECE a cor padrão. Âmbar a 0.640 vira mostarda;
 # vermelho claro demais vira rosa. É escolha de sinalização, não de rampa.
 SOLIDO_L = {
-    "claro":  {"a": 0.62, "g": 0.62, "w": 0.78, "r": 0.58},
-    "escuro": {"a": 0.66, "g": 0.68, "w": 0.82, "r": 0.62},
+    "claro":  {"a": 0.62, "g": 0.62, "w": 0.78, "r": 0.58, "l": 0.60},
+    "escuro": {"a": 0.66, "g": 0.68, "w": 0.82, "r": 0.62, "l": 0.66},
 }
 
-NOMES = {"n": "neutro", "a": "acento", "g": "bom", "w": "atenção", "r": "falha"}
+NOMES = {"n": "neutro", "a": "acento", "g": "bom", "w": "atenção", "r": "falha", "l": "ao vivo"}
 FUNDO = {"claro": 0, "escuro": 0}      # o fundo é sempre o degrau 1 do neutro
 
 

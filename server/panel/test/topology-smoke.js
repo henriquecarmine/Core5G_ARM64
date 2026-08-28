@@ -16,11 +16,12 @@
  *       CHROME_PATH=/usr/bin/chromium npm run test:topo
  */
 const puppeteer = require('puppeteer-core');
+const { subir } = require('./servidor');
 const path = require('path');
 const fs = require('fs');
 
 const STATIC = path.resolve(__dirname, '..', 'static', 'ops');
-const PAGE = 'file://' + path.join(STATIC, 'topology.html');
+const CAMINHO = '/static/ops/topology.html';   // servido por HTTP: ver servidor.js
 const SHOTS = path.resolve(__dirname, 'screenshots');
 const P2 = fs.readFileSync(path.join(STATIC, 'openran-topology.json'), 'utf8');
 const P1 = fs.readFileSync(path.join(STATIC, 'openran-topology-p1.json'), 'utf8');
@@ -39,6 +40,8 @@ function findChrome() {
 const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
 
 (async () => {
+  const srv = await subir();
+  const PAGE = srv.url(CAMINHO);
   fs.mkdirSync(SHOTS, { recursive: true });
   const browser = await puppeteer.launch({
     executablePath: findChrome(),
@@ -167,5 +170,7 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   }
 
   await browser.close();
+
+  await srv.fechar();
   console.log('✅ SMOKE DA TOPOLOGIA PASSOU (p2 + p1)');
 })().catch(e => { console.error(e.message); process.exit(1); });

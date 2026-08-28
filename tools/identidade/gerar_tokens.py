@@ -34,11 +34,17 @@ def semanticas(tema, ind):
     # rampa, o papel foi mapeado no degrau que mede — é para isso que a camada
     # semântica existe.
     forte = 9 if tema == "claro" else 8
-    inset = 2 if tema == "claro" else 1
     tinta_no_acento = "#ffffff" if tema == "claro" else "#0d0d14"
-    return f"""{ind}/* superfícies — da página ao painel elevado */
-{ind}--surface:var(--n-1); --surface-2:var(--n-2); --surface-3:var(--n-3);
-{ind}--surface-inset:var(--n-{inset});
+    # A página e o cartão TROCAM de degrau entre os temas, e é de propósito:
+    # no claro a elevação sobe para o branco (página cinza, cartão branco);
+    # no escuro ela sobe para o cinza (página quase preta, cartão mais claro).
+    # Sombra não se enxerga sobre fundo escuro — lá a elevação é superfície.
+    pagina, cartao, aninhado, poco = ("--n-2", "--n-1", "--n-3", "--n-3") if tema == "claro" \
+                                else ("--n-1", "--n-2", "--n-3", "--n-1")
+    return f"""{ind}/* superfícies — página, cartão, painel aninhado, poço (campo/trilho) */
+{ind}--bg:var({pagina}); --surface:var({cartao}); --surface-2:var({aninhado}); --well:var({poco});
+{ind}/* o console é escuro NOS DOIS TEMAS: é um terminal, não um cartão */
+{ind}--console-bg:#0d0e11; --console-ink:#d7dbe0; --console-line:#1c1f26;
 {ind}/* traços */
 {ind}--line:var(--n-6); --line-2:var(--n-7); --line-strong:var(--n-{forte});
 {ind}/* tinta */
@@ -51,6 +57,7 @@ def semanticas(tema, ind):
 {ind}--good:var(--g-9); --good-text:var(--g-11); --good-soft:var(--g-3);
 {ind}--warn:var(--w-9); --warn-text:var(--w-11); --warn-soft:var(--w-3);
 {ind}--bad:var(--r-9);  --bad-text:var(--r-11);  --bad-soft:var(--r-3);
+{ind}--live:var(--l-9); --live-text:var(--l-11); --live-soft:var(--l-3);
 {ind}/* foco visível */
 {ind}--focus:var(--a-9);"""
 

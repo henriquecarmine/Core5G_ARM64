@@ -10,6 +10,8 @@
 const path = require('path');
 const fs = require('fs');
 const puppeteer = require('puppeteer-core');
+const { subir } = require('./servidor');
+let SRV;
 
 const STATIC = path.resolve(__dirname, '..', 'static');
 const SHOTS = path.resolve(__dirname, 'screenshots');
@@ -30,6 +32,7 @@ const EXPECT = {
 };
 
 (async () => {
+  SRV = await subir();
   fs.mkdirSync(SHOTS, { recursive: true });
   const browser = await puppeteer.launch({
     executablePath: findChrome(), headless: 'new',
@@ -39,7 +42,7 @@ const EXPECT = {
   // ---- login.html: troca de idioma pelo seletor + persistência ----
   let page = await browser.newPage();
   await page.evaluateOnNewDocument(() => { try { localStorage.setItem('c5g-lang', 'pt'); } catch {} });
-  await page.goto('file://' + path.join(STATIC, 'login.html'), { waitUntil: 'domcontentloaded' });
+  await page.goto(SRV.url('/static/login.html'), { waitUntil: 'domcontentloaded' });
   await new Promise(r => setTimeout(r, 300));
   for (const lang of ['pt', 'en', 'es', 'fr']) {
     await page.click('#lang-menu .lang-btn');                 // abre o seletor com bandeira
@@ -65,7 +68,7 @@ const EXPECT = {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.evaluateOnNewDocument(() => { try { localStorage.setItem('c5g-lang', 'es'); } catch {} });
-  await page.goto('file://' + path.join(STATIC, 'ops', 'index.html'), { waitUntil: 'domcontentloaded' });
+  await page.goto(SRV.url('/static/ops/index.html'), { waitUntil: 'domcontentloaded' });
   await new Promise(r => setTimeout(r, 400));
   const tb = await page.evaluate(() => ({
     panel: document.querySelector('h1 [data-i18n="topbar.panel"]').textContent,
@@ -97,5 +100,7 @@ const EXPECT = {
   await page.close();
 
   await browser.close();
+
+  await SRV.fechar();
   console.log('✅ SMOKE i18n PASSOU (login 4 idiomas + topbar)');
 })().catch(e => { console.error(e.message); process.exit(1); });

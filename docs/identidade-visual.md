@@ -14,11 +14,14 @@ Arquivo de tokens: **`server/panel/static/tokens.css`** — **gerado**, não se 
 
 Antes disto o painel tinha **225 literais de cor distintos** em 20 arquivos, 114
 só em `ops/index.html`, e **186 dos 250 usos escritos direto na regra**, furando
-os tokens. Dois azuis significavam a mesma coisa (`#1f6fe5` no lab, `#4d90ff` no
-ops) e três nomes diziam "deu certo" (`--good`, `--green`, `#69db7c` solto). Pior:
-no `ops/index.html` e no `topology.html` **o tema claro era a única definição
-existente** — o escuro era o que sobrava; no lab, o contrário. Os dois lados da
-casa foram construídos com regras opostas.
+os tokens. Três nomes diziam "deu certo" (`--good`, `--green`, `#69db7c` solto),
+e o acento do painel era **laranja** (`#e8590c`) — vizinho do âmbar de atenção,
+duas cores brigando pelo mesmo significado.
+
+Os dois lados da casa foram construídos com **convenções opostas**: o `ops`
+declara o tema **escuro** no `:root` e o claro como sobreposição; o lab faz o
+contrário. Ambos completos — mas o `ops` não atendia `prefers-color-scheme`, e
+nenhuma cor tinha o mesmo nome nos dois lados.
 
 Não era questão de gosto. Era ausência de sistema.
 

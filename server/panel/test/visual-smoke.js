@@ -14,10 +14,11 @@
  * Sai com código != 0 se qualquer asserção falhar (CI-friendly).
  */
 const puppeteer = require('puppeteer-core');
+const { subir } = require('./servidor');
 const path = require('path');
 const fs = require('fs');
 
-const INDEX = 'file://' + path.resolve(__dirname, '..', 'static', 'ops', 'index.html');
+const CAMINHO = '/static/ops/index.html';   // servido por HTTP: ver servidor.js
 const SHOTS = path.resolve(__dirname, 'screenshots');
 
 function findChrome() {
@@ -35,6 +36,8 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
 
 (async () => {
   fs.mkdirSync(SHOTS, { recursive: true });
+  const srv = await subir();
+  const INDEX = srv.url(CAMINHO);
   const browser = await puppeteer.launch({
     executablePath: findChrome(),
     headless: 'new',
@@ -55,6 +58,21 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     typeof btnLoading === 'function' && typeof withLoader === 'function' &&
     !!document.getElementById('top-loader')), 'helpers do loader presentes');
   console.log('PASS 0 · helpers + #top-loader presentes');
+
+  // 0.b) a folha de identidade REALMENTE carregou.
+  // Sem isto o teste é cego: com `file://` o `/static/tokens.css` aponta para a
+  // raiz do disco, a página renderiza sem tokens e tudo "passa" mesmo assim.
+  const ident = await page.evaluate(() => {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (n) => cs.getPropertyValue(n).trim();
+    return { surface: v('--surface'), ink: v('--ink'), accent: v('--accent'),
+             ponte: v('--panel'), tema: document.documentElement.dataset.theme };
+  });
+  assert(/^#[0-9a-f]{6}$/i.test(ident.surface) && /^#[0-9a-f]{6}$/i.test(ident.ink),
+    `tokens.css não carregou (--surface=${ident.surface || 'vazio'})`);
+  assert(/^#[0-9a-f]{6}$/i.test(ident.ponte),
+    `a ponte de nomes antigos quebrou (--panel=${ident.ponte || 'vazio'})`);
+  console.log(`PASS 0.b · identidade carregada · tema=${ident.tema} · superfície ${ident.surface} · tinta ${ident.ink} · acento ${ident.accent}`);
 
   // 1) repouso
   assert((await loaderOn()) === false, 'barra apagada em repouso');
@@ -125,4 +143,5 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   console.log('\nScreenshot: ' + path.join(SHOTS, 'loaders.png'));
   console.log('✅ TODOS OS TESTES PASSARAM (0–7).');
   await browser.close();
+  await srv.fechar();
 })().catch(e => { console.error('\n❌ ' + e.message); process.exit(1); });

@@ -35,11 +35,14 @@
   --w-1:#fffcf9; --w-2:#fff6e9; --w-3:#ffeed2; --w-4:#ffe5bb; --w-5:#fddca6; --w-6:#f7d293; --w-7:#f0c477; --w-8:#e5ae4a; --w-9:#e9ab2b; --w-10:#d79c1e; --w-11:#896100; --w-12:#3e2900;
   /* falha */
   --r-1:#fefcfc; --r-2:#fff5f3; --r-3:#ffebe8; --r-4:#ffe1dd; --r-5:#fed6d1; --r-6:#fec9c2; --r-7:#feb6ad; --r-8:#fe988d; --r-9:#cf413a; --r-10:#bb342f; --r-11:#ac4039; --r-12:#501916;
+  /* ao vivo */
+  --l-1:#fefcfd; --l-2:#fff4f9; --l-3:#feeaf2; --l-4:#ffdfec; --l-5:#fed3e6; --l-6:#fec4de; --l-7:#ffb0d5; --l-8:#ff8ec6; --l-9:#c74c8e; --l-10:#b3407f; --l-11:#a04274; --l-12:#491b33;
 
   /* ---------- papéis ---------- */
-  /* superfícies — da página ao painel elevado */
-  --surface:var(--n-1); --surface-2:var(--n-2); --surface-3:var(--n-3);
-  --surface-inset:var(--n-2);
+  /* superfícies — página, cartão, painel aninhado, poço (campo/trilho) */
+  --bg:var(--n-2); --surface:var(--n-1); --surface-2:var(--n-3); --well:var(--n-3);
+  /* o console é escuro NOS DOIS TEMAS: é um terminal, não um cartão */
+  --console-bg:#0d0e11; --console-ink:#d7dbe0; --console-line:#1c1f26;
   /* traços */
   --line:var(--n-6); --line-2:var(--n-7); --line-strong:var(--n-9);
   /* tinta */
@@ -52,6 +55,7 @@
   --good:var(--g-9); --good-text:var(--g-11); --good-soft:var(--g-3);
   --warn:var(--w-9); --warn-text:var(--w-11); --warn-soft:var(--w-3);
   --bad:var(--r-9);  --bad-text:var(--r-11);  --bad-soft:var(--r-3);
+  --live:var(--l-9); --live-text:var(--l-11); --live-soft:var(--l-3);
   /* foco visível */
   --focus:var(--a-9);
 
@@ -93,9 +97,12 @@
     --w-1:#151009; --w-2:#1e170a; --w-3:#2d1e03; --w-4:#382500; --w-5:#422c00; --w-6:#4f3600; --w-7:#624400; --w-8:#815b01; --w-9:#f8b734; --w-10:#ffcf7e; --w-11:#e2af53; --w-12:#fee6bf;
     /* falha */
     --r-1:#180e0d; --r-2:#231311; --r-3:#361613; --r-4:#461714; --r-5:#561916; --r-6:#671e1a; --r-7:#812621; --r-8:#a8332e; --r-9:#dc5148; --r-10:#ee685d; --r-11:#fe988d; --r-12:#fee3df;
-    /* superfícies — da página ao painel elevado */
-    --surface:var(--n-1); --surface-2:var(--n-2); --surface-3:var(--n-3);
-    --surface-inset:var(--n-1);
+    /* ao vivo */
+    --l-1:#170e12; --l-2:#21131a; --l-3:#331625; --l-4:#41172d; --l-5:#501a37; --l-6:#602042; --l-7:#782754; --l-8:#9d356e; --l-9:#db5fa1; --l-10:#ee75b3; --l-11:#f993c5; --l-12:#ffe0ed;
+    /* superfícies — página, cartão, painel aninhado, poço (campo/trilho) */
+    --bg:var(--n-1); --surface:var(--n-2); --surface-2:var(--n-3); --well:var(--n-1);
+    /* o console é escuro NOS DOIS TEMAS: é um terminal, não um cartão */
+    --console-bg:#0d0e11; --console-ink:#d7dbe0; --console-line:#1c1f26;
     /* traços */
     --line:var(--n-6); --line-2:var(--n-7); --line-strong:var(--n-8);
     /* tinta */
@@ -108,6 +115,7 @@
     --good:var(--g-9); --good-text:var(--g-11); --good-soft:var(--g-3);
     --warn:var(--w-9); --warn-text:var(--w-11); --warn-soft:var(--w-3);
     --bad:var(--r-9);  --bad-text:var(--r-11);  --bad-soft:var(--r-3);
+    --live:var(--l-9); --live-text:var(--l-11); --live-soft:var(--l-3);
     /* foco visível */
     --focus:var(--a-9);
     --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);
@@ -125,9 +133,12 @@
   --w-1:#151009; --w-2:#1e170a; --w-3:#2d1e03; --w-4:#382500; --w-5:#422c00; --w-6:#4f3600; --w-7:#624400; --w-8:#815b01; --w-9:#f8b734; --w-10:#ffcf7e; --w-11:#e2af53; --w-12:#fee6bf;
   /* falha */
   --r-1:#180e0d; --r-2:#231311; --r-3:#361613; --r-4:#461714; --r-5:#561916; --r-6:#671e1a; --r-7:#812621; --r-8:#a8332e; --r-9:#dc5148; --r-10:#ee685d; --r-11:#fe988d; --r-12:#fee3df;
-  /* superfícies — da página ao painel elevado */
-  --surface:var(--n-1); --surface-2:var(--n-2); --surface-3:var(--n-3);
-  --surface-inset:var(--n-1);
+  /* ao vivo */
+  --l-1:#170e12; --l-2:#21131a; --l-3:#331625; --l-4:#41172d; --l-5:#501a37; --l-6:#602042; --l-7:#782754; --l-8:#9d356e; --l-9:#db5fa1; --l-10:#ee75b3; --l-11:#f993c5; --l-12:#ffe0ed;
+  /* superfícies — página, cartão, painel aninhado, poço (campo/trilho) */
+  --bg:var(--n-1); --surface:var(--n-2); --surface-2:var(--n-3); --well:var(--n-1);
+  /* o console é escuro NOS DOIS TEMAS: é um terminal, não um cartão */
+  --console-bg:#0d0e11; --console-ink:#d7dbe0; --console-line:#1c1f26;
   /* traços */
   --line:var(--n-6); --line-2:var(--n-7); --line-strong:var(--n-8);
   /* tinta */
@@ -140,6 +151,7 @@
   --good:var(--g-9); --good-text:var(--g-11); --good-soft:var(--g-3);
   --warn:var(--w-9); --warn-text:var(--w-11); --warn-soft:var(--w-3);
   --bad:var(--r-9);  --bad-text:var(--r-11);  --bad-soft:var(--r-3);
+  --live:var(--l-9); --live-text:var(--l-11); --live-soft:var(--l-3);
   /* foco visível */
   --focus:var(--a-9);
   --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);

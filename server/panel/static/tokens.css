@@ -158,6 +158,49 @@
   --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);
 }
 
+/* ===================== superfície escura em tema claro =====================
+   O console é um terminal: fica escuro NOS DOIS TEMAS. Sem isto, cada regra
+   filha teria de fixar cor à mão — e foi exatamente assim que o texto do
+   console virou 1,42:1 no tema claro quando as cores fixas viraram tokens.
+   Aqui o escopo redefine as PRIMITIVAS para a escala escura, e toda regra que
+   usa `var(--ink)`, `var(--line)`, `var(--surface)` acerta sozinha. */
+.superficie-escura {
+  /* neutro */
+  --n-1:#111112; --n-2:#17181a; --n-3:#1f2125; --n-4:#26292e; --n-5:#2d3137; --n-6:#373b43; --n-7:#454b54; --n-8:#5c636f; --n-9:#848d9b; --n-10:#959dab; --n-11:#b2b9c5; --n-12:#e6eaf1;
+  /* acento */
+  --a-1:#101018; --a-2:#161624; --a-3:#1e1e38; --a-4:#242349; --a-5:#2b295a; --a-6:#34326c; --a-7:#423f88; --a-8:#5853b1; --a-9:#8482f3; --a-10:#9797fe; --a-11:#adb0ff; --a-12:#e6e8fe;
+  /* bom */
+  --g-1:#0c130e; --g-2:#101b12; --g-3:#102715; --g-4:#0c3117; --g-5:#093b1a; --g-6:#0a4720; --g-7:#095a28; --g-8:#0d7636; --g-9:#45b164; --g-10:#5fc479; --g-11:#7dce8f; --g-12:#caf8d2;
+  /* atenção */
+  --w-1:#151009; --w-2:#1e170a; --w-3:#2d1e03; --w-4:#382500; --w-5:#422c00; --w-6:#4f3600; --w-7:#624400; --w-8:#815b01; --w-9:#f8b734; --w-10:#ffcf7e; --w-11:#e2af53; --w-12:#fee6bf;
+  /* falha */
+  --r-1:#180e0d; --r-2:#231311; --r-3:#361613; --r-4:#461714; --r-5:#561916; --r-6:#671e1a; --r-7:#812621; --r-8:#a8332e; --r-9:#dc5148; --r-10:#ee685d; --r-11:#fe988d; --r-12:#fee3df;
+  /* ao vivo */
+  --l-1:#170e12; --l-2:#21131a; --l-3:#331625; --l-4:#41172d; --l-5:#501a37; --l-6:#602042; --l-7:#782754; --l-8:#9d356e; --l-9:#db5fa1; --l-10:#ee75b3; --l-11:#f993c5; --l-12:#ffe0ed;
+  /* superfícies — página, cartão, painel aninhado, poço (campo/trilho) */
+  --bg:var(--n-1); --surface:var(--n-2); --surface-2:var(--n-3); --well:var(--n-1);
+  /* o console é escuro NOS DOIS TEMAS: é um terminal, não um cartão */
+  --console-bg:#0d0e11; --console-ink:#d7dbe0; --console-line:#1c1f26;
+  /* traços */
+  --line:var(--n-6); --line-2:var(--n-7); --line-strong:var(--n-8);
+  /* tinta */
+  --ink:var(--n-12); --ink-2:var(--n-11); --ink-3:var(--n-9);
+  /* acento — a cor do produto: foco, seleção, ação principal, link */
+  --accent:var(--a-9); --accent-hover:var(--a-10);
+  --accent-ink:#0d0d14;
+  --accent-text:var(--a-11); --accent-soft:var(--a-3); --accent-line:var(--a-7);
+  /* estado — sinalização padrão */
+  --good:var(--g-9); --good-text:var(--g-11); --good-soft:var(--g-3);
+  --warn:var(--w-9); --warn-text:var(--w-11); --warn-soft:var(--w-3);
+  --bad:var(--r-9);  --bad-text:var(--r-11);  --bad-soft:var(--r-3);
+  --live:var(--l-9); --live-text:var(--l-11); --live-soft:var(--l-3);
+  /* foco visível */
+  --focus:var(--a-9);
+  --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);
+  --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);
+  background:var(--console-bg); color:var(--ink);
+}
+
 /* ===================== o que a identidade impõe ===================== */
 
 /* Ponto de estado com anel: garante o limite visível mesmo quando o

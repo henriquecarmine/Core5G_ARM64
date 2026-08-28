@@ -135,6 +135,20 @@ CSS = f"""/* ===================================================================
   --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);
 }}
 
+/* ===================== superfície escura em tema claro =====================
+   O console é um terminal: fica escuro NOS DOIS TEMAS. Sem isto, cada regra
+   filha teria de fixar cor à mão — e foi exatamente assim que o texto do
+   console virou 1,42:1 no tema claro quando as cores fixas viraram tokens.
+   Aqui o escopo redefine as PRIMITIVAS para a escala escura, e toda regra que
+   usa `var(--ink)`, `var(--line)`, `var(--surface)` acerta sozinha. */
+.superficie-escura {{
+{primitivas("escuro", "  ")}
+{semanticas("escuro", "  ")}
+  --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);
+  --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);
+  background:var(--console-bg); color:var(--ink);
+}}
+
 /* ===================== o que a identidade impõe ===================== */
 
 /* Ponto de estado com anel: garante o limite visível mesmo quando o

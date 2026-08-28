@@ -74,6 +74,30 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     `a ponte de nomes antigos quebrou (--panel=${ident.ponte || 'vazio'})`);
   console.log(`PASS 0.b · identidade carregada · tema=${ident.tema} · superfície ${ident.surface} · tinta ${ident.ink} · acento ${ident.accent}`);
 
+  // 0.c) o CONSOLE é escuro nos dois temas — e o texto dele tem de continuar
+  // legível quando a página está no claro. Isto já quebrou uma vez: ao migrar
+  // as cores fixas para tokens, `color:#e6e6e6` virou `var(--ink)` e o texto
+  // do console caiu para 1,42:1 no tema claro. O escopo `.superficie-escura`
+  // resolve; este teste garante que continue resolvido.
+  const lum = (s) => {
+    const [r, g, b] = s.match(/\d+/g).map(Number)
+      .map((c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const razao = (a, b) => { const x = (lum(a) + 0.05) / (lum(b) + 0.05); return x > 1 ? x : 1 / x; };
+  for (const tema of ['light', 'dark']) {
+    await page.evaluate((t) => { document.documentElement.dataset.theme = t; }, tema);
+    const con = await page.evaluate(() => {
+      const o = document.querySelector('#output');
+      const cs = getComputedStyle(o);
+      return { cor: cs.color, fundo: cs.backgroundColor };
+    });
+    const c = razao(con.cor, con.fundo);
+    assert(c >= 4.5, `console ilegível no tema ${tema}: ${c.toFixed(2)}:1 (mínimo 4,5)`);
+    console.log(`PASS 0.c · console legível no tema ${tema} · ${c.toFixed(2)}:1`);
+  }
+  await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+
   // 1) repouso
   assert((await loaderOn()) === false, 'barra apagada em repouso');
   console.log('PASS 1 · repouso: top-loader OFF');

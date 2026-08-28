@@ -841,10 +841,6 @@
 
       <!-- ===== Ferramentas do Projeto 1 ===== -->
       <div class="tools-set" data-tools="p1">
-        <a class="rail-item" id="topology-btn-p1" href="/topology?proj=p1">
-          <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.6 7.4l3 8.5M16.4 7.4l-3 8.5M8 6h8"/></svg>
-          <span data-i18n="rail.topology">Topologia</span>
-        </a>
         <button class="rail-item" id="uelab-open-btn">
           <svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L5 19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1l-5-10V3"/><path d="M7.5 14h9"/></svg>
           <span>UE Lab</span>
@@ -857,15 +853,34 @@
 
       <!-- ===== Ferramentas do Projeto 2 ===== -->
       <div class="tools-set" data-tools="p2">
-        <a class="rail-item" id="topology-btn-p2" href="/topology?proj=p2">
-          <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.6 7.4l3 8.5M16.4 7.4l-3 8.5M8 6h8"/></svg>
-          <span data-i18n="rail.topology">Topologia</span>
-        </a>
       </div>
 
       <!-- ===== Estudos por cadeira: exercícios (testes) e aulas de cada disciplina.
            Sempre visíveis; cada bloco de testes trava com o projeto que não está no
            ar (data-proj-tests=p1|p2); "any" roda sem RAN (análise sobre arquivo). ===== -->
+      <!-- Apresentar: as telas que explicam a infraestrutura. Ficam FORA dos
+           conjuntos por projeto porque explicar a rede não depende de ter um
+           projeto no ar — e era isso que as escondia. -->
+      <div class="rail-group" id="apresentar-group">
+        <div class="rail-group-label" data-i18n="rail.apresentar">Apresentar</div>
+        <button class="rail-item" id="apr-mapa" data-i18n-title="apr.mapa_title" title="O mapa da rede, com os componentes do teste acesos e os dados correndo no sentido real">
+          <svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>
+          <span data-i18n="apr.mapa">Mapa da rede</span>
+        </button>
+        <a class="rail-item" id="apr-topo" href="/topology?proj=p2" data-i18n-title="apr.topo_title" title="Topologia completa: tour pelas camadas e a jornada do UE passo a passo — o tráfego dos dados na rede">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.6 7.4l3 8.5M16.4 7.4l-3 8.5M8 6h8"/></svg>
+          <span data-i18n="apr.topo">Topologia e jornada do UE</span>
+        </a>
+        <button class="rail-item" id="apr-arq" data-i18n-title="apr.arq_title" title="As camadas do O-RAN e o que cada uma decide (SMO, non-RT, near-RT, E2 nodes)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M12 9v5"/></svg>
+          <span data-i18n="apr.arq">Arquitetura O-RAN</span>
+        </button>
+        <button class="rail-item" id="apr-cont" data-i18n-title="apr.cont_title" title="A lista dos containers no ar com a função de cada um, CPU e memória">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg>
+          <span data-i18n="apr.cont">Containers e o que cada um faz</span>
+        </button>
+      </div>
+
       <div id="estudos-group">
         <div class="rail-group-label" data-i18n="rail.estudos">Estudos · por cadeira</div>
 
@@ -954,7 +969,6 @@
         <select id="log-service"></select>
         <button id="logs-btn" data-i18n="rail.see_logs">Ver logs</button>
         <button id="logs-stop-btn" class="danger" data-i18n="rail.stop_logs">Parar logs</button>
-        <button type="button" class="info-link-btn" style="margin-top:6px;color:var(--muted);border:1px solid var(--border)" onclick="openInfoModal('oranArch')" data-i18n="rail.oran_arch">ℹ Arquitetura O-RAN</button>
       </div>
 
       <!-- ===== Resultados salvos (sempre visível; Professor e Aluno) ===== -->
@@ -2698,11 +2712,19 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInfoMod
 
 // ===== UE Lab =====
 document.getElementById('uelab-open-btn').addEventListener('click', openUeLab);
-// Professor abrindo a Topologia → avisa os Alunos no banner (link abre outra página).
-['topology-btn-p1', 'topology-btn-p2'].forEach(id => {
-  const a = document.getElementById(id);
-  if (a) a.addEventListener('click', () => postNav('topology', 'Topologia · ' + (id.endsWith('p1') ? 'Projeto 1' : 'Projeto 2')));
+// ---- Apresentar: as quatro telas que explicam a infraestrutura ----
+document.getElementById('apr-mapa').addEventListener('click', () => MiniMap.toggle());
+document.getElementById('apr-arq').addEventListener('click', () => openInfoModal('oranArch'));
+// A tabela de containers (nome · função · CPU · RAM) já existe no cabeçalho:
+// o item do menu abre e leva o olho até ela, em vez de duplicar a lista.
+document.getElementById('apr-cont').addEventListener('click', () => {
+  const d = document.getElementById('tm-containers-wrap');
+  d.open = true;
+  d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 });
+// Professor abrindo a Topologia → avisa os Alunos no banner (link abre outra página).
+document.getElementById('apr-topo').addEventListener('click', () =>
+  postNav('topology', 'Topologia · ' + (_activeProj === 'p1' ? 'Projeto 1' : 'Projeto 2')));
 document.getElementById('uelab-close').addEventListener('click', closeUeLab);
 document.getElementById('uelab-overlay').addEventListener('click', e => { if(e.target===document.getElementById('uelab-overlay'))closeUeLab(); });
 document.addEventListener('keydown', e => { if(e.key==='Escape')closeUeLab(); });
@@ -3101,6 +3123,10 @@ function updateProjSelector(groups) {
   // Régua: só os serviços do projeto em foco.
   document.querySelectorAll('.svc-set').forEach(g => g.classList.toggle('on', g.dataset.svc === foco));
   _activeProj = active;
+  // A topologia do menu aponta para o projeto no ar (fora dele, o P2 é o padrão
+  // do curso). Antes eram dois links, um dentro de cada conjunto por projeto.
+  const topoLink = document.getElementById('apr-topo');
+  if (topoLink) topoLink.href = '/topology?proj=' + (active === 'p1' ? 'p1' : 'p2');
   // Lateral: mostra as ferramentas do projeto ativo (troca conforme o projeto).
   document.querySelectorAll('.tools-set').forEach(s => s.classList.toggle('active', s.dataset.tools === active));
   document.getElementById('tools-empty').classList.toggle('show', active === 'off');

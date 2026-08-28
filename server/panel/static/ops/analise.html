@@ -236,12 +236,15 @@ function pintaRadio(g) {
 }
 
 // ---- SERVIÇOS ------------------------------------------------------------
-const ESTADO = { running: 'bom', healthy: 'bom', starting: 'atencao', unhealthy: 'falha',
-                 exited: 'falha', dead: 'falha', created: 'ocioso', paused: 'ocioso' };
+// O contrato de /api/telemetry é de TRÊS estados, não dos nomes do docker:
+// container_status() em ops.py reduz state+health a up | loading | down.
+// (Aqui já esteve escrito 'running'/'exited'/'healthy' — nomes que a API nunca
+// devolve —, e a tela mostrava "0 no ar de 11" com 9 containers de pé. Só o
+// dado real pegou: o simulador local inventava a resposta e concordava com o
+// erro. Mapa fechado, e o que não estiver nele é ruído, não um estado novo.)
+const ESTADO = { up: 'bom', loading: 'atencao', down: 'falha' };
 function classe(status) {
-  const s = String(status || '').toLowerCase();
-  for (const k in ESTADO) if (s.includes(k)) return ESTADO[k];
-  return 'ocioso';
+  return ESTADO[String(status || '').toLowerCase()] || 'ocioso';
 }
 
 function pintaServicos(t) {
@@ -262,10 +265,14 @@ function pintaServicos(t) {
 }
 
 // ---- TESTES --------------------------------------------------------------
-function quando(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d) ? String(iso).slice(0, 16) : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+// `started` vem do servidor como timestamp Unix em SEGUNDOS (1787881015.819).
+// new Date() interpreta número como MILISSEGUNDOS: passar direto rendia
+// 21/01/1970 em toda linha da tabela. Aceita também ISO, se um dia mudar.
+function quando(t) {
+  if (t == null || t === '') return '—';
+  const d = typeof t === 'number' ? new Date(t * 1000) : new Date(t);
+  return isNaN(d) ? String(t).slice(0, 16)
+    : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 function pintaTestes(rs) {

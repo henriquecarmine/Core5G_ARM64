@@ -211,7 +211,7 @@ async function main(){
       $("#atividades").innerHTML=`
         <h2 class="section-h">${T("est.ativ_h")}</h2>
         <p class="sub">${A.cruzada?T("est.ativ_cruzada",{modulo:esc(A.modulo)}):T("est.ativ_sub",{modulo:esc(A.modulo),plat:platLink})}</p>
-        <p class="ativ-nota">${T("est.ativ_nota")}</p>
+        ${A.itens.some(x=>!x.nosso)?`<p class="ativ-nota">${T("est.ativ_nota")}</p>`:""}
         ${resumo()}
         <div class="ativs">
           ${A.itens.map(x=>`
@@ -220,7 +220,9 @@ async function main(){
                 ${x.pts!=null?`<span class="ativ-pts" title="${esc(x.partes||"")}">${esc(T("est.ativ_pts",{n:x.pts}))}</span>`:""}</div>
               <h4>${esc(x.t)}</h4>
               <p>${esc(x.d)}</p>
-              <a class="ativ-go" href="${naPlat(x.h)}" target="_blank" rel="noopener">${T("est.ativ_open")}</a>
+              ${x.nosso
+                ? `<a class="ativ-go nosso" href="/lab/estudo/${e.n}/exercicio/${esc(x.h.replace("#","").replace("/","-"))}">${T("est.ativ_fazer")}</a>`
+                : `<a class="ativ-go" href="${naPlat(x.h)}" target="_blank" rel="noopener">${T("est.ativ_open")}</a>`}
               ${resultado(x)}
               ${prep(x.prep)}
             </div>`).join("")}

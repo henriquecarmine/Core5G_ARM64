@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exercício · Core5G_ARM64</title>
+<script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
+<link rel="stylesheet" href="/static/tokens.css?v=%VER%">
+<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=%VER%">
+<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=%VER%">
+<style>
+  /* O exercício é TEXTO para ler com calma, não painel: coluna estreita. */
+  .exbloco { margin:22px 0; }
+  .exbloco > h2 { display:flex; align-items:baseline; gap:10px; font-size:1rem; margin:0 0 4px; }
+  .exbloco > h2 .bpts { font-size:var(--t-micro); font-weight:600; letter-spacing:var(--tr-etiqueta);
+                        text-transform:uppercase; color:var(--ink-3); }
+  .perg { border:1px solid var(--line); border-radius:var(--r-md); padding:15px 17px; margin:10px 0;
+          background:var(--surface); }
+  .perg .en { font-weight:600; line-height:1.45; margin:0 0 11px; }
+  .perg .en .n { color:var(--ink-3); font-weight:500; margin-right:7px; }
+  .alt { display:block; padding:9px 12px; border:1px solid var(--line); border-radius:var(--r-sm);
+         margin:6px 0; cursor:pointer; line-height:1.4; }
+  .alt:hover { border-color:var(--accent); }
+  .alt input { margin-right:9px; }
+  .alt.certa { border-color:var(--good); background:var(--good-soft); }
+  .alt.errada { border-color:var(--bad); background:var(--bad-soft); }
+  /* ordenar: sobe/desce em vez de arrastar — funciona no toque e no teclado */
+  .ord { list-style:none; padding:0; margin:6px 0; counter-reset:o; }
+  .ord li { display:flex; align-items:center; gap:10px; border:1px solid var(--line);
+            border-radius:var(--r-sm); padding:8px 10px; margin:6px 0; line-height:1.4; }
+  .ord li::before { counter-increment:o; content:counter(o); font-family:var(--fonte-instrumento);
+                    font-size:var(--t-micro); color:var(--ink-3); min-width:1.4em; text-align:right; }
+  .ord li .txt { flex:1; }
+  .ord li button { background:var(--n-3); border:1px solid var(--line); color:var(--ink);
+                   border-radius:var(--r-sm); width:26px; height:24px; cursor:pointer; line-height:1; }
+  .ord li button:hover:not(:disabled) { border-color:var(--accent); }
+  .ord li button:disabled { opacity:.35; cursor:default; }
+  .ord li.certa { border-color:var(--good); background:var(--good-soft); }
+  .ord li.errada { border-color:var(--bad); background:var(--bad-soft); }
+  .porque { margin-top:11px; padding:10px 12px; border-left:3px solid var(--accent);
+            background:var(--accent-soft); border-radius:0 var(--r-sm) var(--r-sm) 0;
+            font-size:var(--t-mini); line-height:1.5; }
+  .porque b { display:block; font-size:var(--t-micro); letter-spacing:var(--tr-etiqueta);
+              text-transform:uppercase; color:var(--accent-text); margin-bottom:3px; }
+  .placar { position:sticky; bottom:0; background:var(--surface-2); border:1px solid var(--line);
+            border-radius:var(--r-md); padding:13px 16px; margin:22px 0 8px; display:flex;
+            align-items:center; gap:14px; flex-wrap:wrap; box-shadow:var(--elev-1); }
+  .placar .pct { font-family:var(--fonte-instrumento); font-size:1.5rem; font-weight:700; }
+  .placar .msg { flex:1; min-width:200px; font-size:var(--t-mini); color:var(--ink-2); line-height:1.45; }
+  .exfonte { font-size:var(--t-mini); color:var(--ink-2); margin:2px 0 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ident">
+    <a id="voltar" href="/lab" class="back">←</a>
+    <div class="trilha" id="eyebrow">Exercício</div>
+    <div class="dir"><div id="langsel" class="langsel"></div><button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button></div>
+  </div>
+  <div class="tit"><h1 id="h1">…</h1></div>
+  <p class="exfonte" id="fonte"></p>
+  <div id="corpo"></div>
+  <div class="placar" id="placar" hidden></div>
+  <div class="nav" id="nav"></div>
+  <footer id="footer"></footer>
+</div>
+
+<script src="/static/lab/lab-i18n.js?v=%VER%"></script>
+<script src="/static/ops/glossario.js?v=%VER%"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+$("#themeBtn").addEventListener("click",()=>{
+  const next=document.documentElement.dataset.theme==="light"?"dark":"light";
+  document.documentElement.dataset.theme=next;
+  try{localStorage.setItem("c5g-theme",next);}catch(e){}
+});
+
+const M=location.pathname.match(/\/lab\/estudo\/(\d+)\/exercicio\/([a-z0-9-]+)/)||[];
+const N=parseInt(M[1]||"4",10), SLUG=M[2]||"";
+let EX=null, RESP={}, corrigido=false;
+
+// Embaralha só para EXIBIR: os itens são escritos na ordem certa no JSON.
+const embaralha=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+
+function pinta(){
+  let n=0;
+  $("#corpo").innerHTML=EX.blocos.map((b,bi)=>`
+    <section class="exbloco">
+      <h2>${esc(b.nome)}<span class="bpts">${b.qs.reduce((s,q)=>s+q.pts,0)} pontos</span></h2>
+      ${b.qs.map((q,qi)=>{
+        n++;
+        const id=`${bi}-${qi}`;
+        if(b.tipo==="ordem"){
+          const ordem=RESP[id]||(RESP[id]=embaralha(q.itens.map((_,i)=>i)));
+          return `<div class="perg" data-q="${id}">
+            <p class="en"><span class="n">${n}.</span>${esc(q.q)}</p>
+            <ul class="ord">${ordem.map((oi,pos)=>`
+              <li data-pos="${pos}"><span class="txt">${esc(q.itens[oi])}</span>
+                <button type="button" data-mv="-1" ${pos===0?"disabled":""} aria-label="subir">▲</button>
+                <button type="button" data-mv="1" ${pos===ordem.length-1?"disabled":""} aria-label="descer">▼</button>
+              </li>`).join("")}</ul>
+            <div class="porque" hidden></div></div>`;
+        }
+        return `<div class="perg" data-q="${id}">
+          <p class="en"><span class="n">${n}.</span>${esc(q.q)}</p>
+          ${q.alt.map((a,ai)=>`<label class="alt" data-alt="${ai}">
+            <input type="radio" name="q${id}" value="${ai}" ${RESP[id]===ai?"checked":""}>${esc(a)}</label>`).join("")}
+          <div class="porque" hidden></div></div>`;
+      }).join("")}
+    </section>`).join("");
+
+  $("#corpo").querySelectorAll('input[type=radio]').forEach(r=>r.addEventListener("change",e=>{
+    RESP[e.target.name.slice(1)]=parseInt(e.target.value,10);}));
+  $("#corpo").querySelectorAll("[data-mv]").forEach(b=>b.addEventListener("click",()=>{
+    if(corrigido)return;
+    const li=b.closest("li"), id=li.closest(".perg").dataset.q;
+    const pos=parseInt(li.dataset.pos,10), d=parseInt(b.dataset.mv,10), alvo=pos+d;
+    const o=RESP[id]; if(alvo<0||alvo>=o.length)return;
+    [o[pos],o[alvo]]=[o[alvo],o[pos]]; pinta();
+  }));
+  if(window.Glossario) try{ Glossario.marcar([...document.querySelectorAll(".exbloco")],{umaVez:true}); }catch(e){}
+}
+
+function corrige(){
+  let acertos=0, respondidas=0;
+  EX.blocos.forEach((b,bi)=>b.qs.forEach((q,qi)=>{
+    const id=`${bi}-${qi}`, cx=$(`.perg[data-q="${id}"]`);
+    if(b.tipo==="ordem"){
+      const o=RESP[id]||[]; let certas=0;
+      o.forEach((oi,pos)=>{ const li=cx.querySelectorAll(".ord li")[pos];
+        const ok=oi===pos; if(ok)certas++; li.classList.add(ok?"certa":"errada"); });
+      acertos+=Math.round(q.pts*certas/q.itens.length); respondidas++;
+    }else{
+      const r=RESP[id];
+      if(r!==undefined)respondidas++;
+      cx.querySelectorAll(".alt").forEach(l=>{
+        const ai=parseInt(l.dataset.alt,10);
+        if(ai===q.ok)l.classList.add("certa");
+        else if(ai===r)l.classList.add("errada");
+        l.querySelector("input").disabled=true;
+      });
+      if(r===q.ok)acertos+=q.pts;
+    }
+    const p=cx.querySelector(".porque");
+    p.innerHTML=`<b>por quê</b>${esc(q.porque)}`; p.hidden=false;
+  }));
+  corrigido=true;
+  const pct=Math.round(acertos*100/EX.pts);
+  $("#placar").hidden=false;
+  $("#placar").innerHTML=`<span class="pct">${pct}%</span>
+    <span class="msg"><b>${acertos} de ${EX.pts} pontos.</b> ${
+      pct>=80?"Você domina o assunto — leia os “por quê” das que errou e siga."
+      :pct>=50?"Deu para a base. Vale reler a aula antes de repetir."
+      :"Volte para a aula: o exercício é para depois dela, não no lugar dela."}</span>
+    <button class="runb" id="refazer">Refazer</button>`;
+  $("#refazer").addEventListener("click",()=>{RESP={};corrigido=false;$("#placar").hidden=true;pinta();window.scrollTo(0,0);});
+  $("#placar").scrollIntoView({block:"nearest"});
+  registra(acertos);
+  if(window.Glossario) try{ Glossario.marcar([...document.querySelectorAll(".porque")],{umaVez:true}); }catch(e){}
+}
+
+// O total vem do CATÁLOGO no servidor; aqui só se manda quantos acertou.
+async function registra(acertos){
+  try{
+    const r=await fetch("/api/estudos/resultado",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ex:EX.h,acertos})});
+    const el=document.createElement("span"); el.className="msg";
+    el.textContent=r.ok?"Resultado registrado na sua ficha.":"Não deu para registrar (entre como aluno para guardar).";
+    $("#placar").appendChild(el);
+  }catch(e){}
+}
+
+async function main(){
+  const idx=await (await fetch("/static/lab/estudos/index.json",{cache:"no-store"})).json();
+  EX=await (await fetch(`/static/lab/estudos/ex/${SLUG}.json`,{cache:"no-store"})).json();
+  const e=idx.estudos.find(x=>x.n===N);
+  document.title=`${EX.rot} · ${EX.t}`;
+  $("#h1").textContent=EX.t;
+  $("#eyebrow").textContent=`${EX.rot} · ${EX.pts} pontos`;
+  $("#fonte").textContent=EX.fonte||"";
+  $("#voltar").href=`/lab/estudo/${N}`;
+  $("#voltar").textContent=`← ${e?e.titulo:"Estudos"}`;
+  pinta();
+  $("#nav").innerHTML=`<span></span><button class="navb primary" id="corrigir">Corrigir</button><span></span>`;
+  $("#corrigir").addEventListener("click",()=>{ if(!corrigido)corrige(); });
+}
+main().catch(err=>{$("#h1").textContent="Exercício indisponível";$("#fonte").textContent=String(err);});
+</script>
+</body>
+</html>

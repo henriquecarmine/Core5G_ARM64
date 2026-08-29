@@ -26,6 +26,15 @@ const path = require('path');
 const DIR = path.resolve(__dirname, '..', 'static', 'lab');
 const PAGS = fs.readdirSync(DIR).filter((f) => /^lab-.*\.html$/.test(f)).sort();
 
+// Páginas que leem a PRÓPRIA ROTA para saber o que mostrar. Servidas soltas por
+// arquivo elas não têm o que renderizar — o teste tem de fingir a URL real,
+// senão reprova por um defeito que não existe.
+const ROTA = {
+  'lab-exercicio.html': '/lab/estudo/4/exercicio/data-aula01',
+  'lab-aula.html': '/lab/estudo/4/aula/1',
+  'lab-estudo.html': '/lab/estudo/4',
+};
+
 function findChrome() {
   const c = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable',
     '/usr/bin/chromium', '/usr/bin/chromium-browser'].filter(Boolean);
@@ -46,9 +55,10 @@ function findChrome() {
       await page.setViewport({ width: 1400, height: 1000 });
       const js = [];
       page.on('pageerror', (e) => js.push(e.message.slice(0, 120)));
-      await page.evaluateOnNewDocument((t) => {
+      await page.evaluateOnNewDocument((t, rota) => {
         try { localStorage.setItem('c5g-theme', t); localStorage.setItem('c5g-lang', 'pt'); } catch (e) {}
-      }, tema);
+        if (rota) history.replaceState({}, '', rota);
+      }, tema, ROTA[arq] || null);
       await page.goto(srv.url('/static/lab/' + arq), { waitUntil: 'networkidle2' }).catch(() => {});
       await new Promise((r) => setTimeout(r, 700));
 

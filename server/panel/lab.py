@@ -98,6 +98,13 @@ def lab_estudo_page(n: int) -> FileResponse:
     return pagina(LAB_DIR / "lab-estudo.html")
 
 
+@router.get("/lab/estudo/{n}/exercicio/{slug}")
+def lab_exercicio_page(n: int, slug: str) -> HTMLResponse:
+    """Exercício NOSSO — a pergunta acontece aqui, então a nota é calculada e
+    não declarada. O `slug` é o hash do catálogo sem `#` e com `/` virando `-`."""
+    return pagina(LAB_DIR / "lab-exercicio.html")
+
+
 @router.get("/lab/estudo/{n}/aula/{k}")
 def lab_aula_page(n: int, k: int) -> FileResponse:
     if n not in (1, 2, 4) or not (1 <= k <= 6):

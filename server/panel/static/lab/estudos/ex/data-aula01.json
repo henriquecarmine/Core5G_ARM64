@@ -1,0 +1,154 @@
+{
+  "h": "#data/aula01",
+  "rot": "Aula 01",
+  "t": "DIKW, mapas e fontes",
+  "pts": 22,
+  "fonte": "Aula 01 da cadeira 4 — Análise de Dados em Redes de Telecom (Prof. Dr. Jonas A. Kunzler)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Uma linha de log traz DRB.UEThpUl: 55969.8. Na hierarquia DIKW, isso é o quê?",
+          "alt": [
+            "Informação — já tem nome de métrica e unidade",
+            "Dado — é o registro bruto de um evento, sem contexto",
+            "Conhecimento — permite decidir sobre a célula",
+            "Sabedoria — sustenta uma política A1"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "É dado: o registro bruto de um evento numa RIC Indication. Vira informação quando ganha contexto — 'o UEThp médio caiu 90% depois do rate-limit'. Ter nome e unidade não basta; falta a comparação que dá sentido."
+        },
+        {
+          "q": "PM pela O1 e KPM pela E2 medem a mesma rede. Por que um não substitui o outro?",
+          "alt": [
+            "Porque a O1 é padronizada e a E2 é proprietária",
+            "Porque o PM mede o núcleo e o KPM mede o rádio",
+            "Porque respondem em escalas de tempo diferentes: o PM conta o histórico, o KPM alimenta a decisão de agora",
+            "Porque o KPM tem mais casas decimais"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "As duas medem rádio. O PM pela O1 são contadores de segundos a minutos — servem para dizer como a rede vem indo. O KPM pela E2 chega em escala de sessão e é o que o near-RT RIC usa para agir. Trocar um pelo outro é trocar a pergunta."
+        },
+        {
+          "q": "No mapa O-RAN da aula, o SMO é o hub de quais interfaces?",
+          "alt": [
+            "E2 e A1",
+            "O1 e O2 — e o A1 sai do Non-RT RIC, que vive nele",
+            "Apenas a O1",
+            "N2, N3 e N4"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O SMO gerencia os nós pela O1 e a nuvem pela O2. O A1 desce do Non-RT RIC, que mora dentro do SMO, até o near-RT. A E2 não passa pelo SMO: ela liga o near-RT RIC direto ao nó de rádio. N2/N3/N4 são do núcleo 5G, outro mundo."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O throughput de um UE caiu. Você tem PM pela O1, KPM pela E2 e métricas do UPF. Por onde começar, e por quê?",
+          "alt": [
+            "Pelo UPF: se o dado não passa, o problema é do plano de usuário",
+            "Pelo KPM da E2, porque ele mostra PRB, BLER e SINR daquele UE na janela em que a queda aconteceu",
+            "Pelo PM da O1, porque é a fonte oficial e padronizada",
+            "Por qualquer um: as três fontes dizem a mesma coisa com nomes diferentes"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "A queda é um evento com hora marcada, e o KPM é a única fonte na escala da sessão. O PM da O1 diria como a célula vem indo em minutos — bom para tendência, tarde demais para este UE. O UPF entra depois, se o rádio estiver saudável."
+        },
+        {
+          "q": "Um relatório afirma: 'a QoE caiu 30% nesta célula'. Os dados são KPM da E2 — throughput, PRB e atraso. O que há de errado na afirmação?",
+          "alt": [
+            "Nada: throughput baixo é QoE baixa",
+            "O período: KPM não tem série longa o bastante",
+            "A fonte não sustenta a conclusão — não há MOS nem nota de aplicação; atraso e vazão são proxy, não experiência",
+            "A unidade: QoE se mede em porcentagem, não em kbps"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "QoE é o que o usuário sente, e nada no KPM mede isso. Dá para dizer 'é risco para a experiência'; dizer 'a QoE caiu' afirma mais do que o dado sustenta — e dizer menos do que os dados permitem também é resultado."
+        },
+        {
+          "q": "Você precisa de um número por célula, por hora, para um relatório mensal de capacidade. Qual fonte escolhe?",
+          "alt": [
+            "KPM pela E2, porque é o dado mais fino",
+            "PM pela O1: contadores agregados na escala de minutos, feitos para série histórica",
+            "O log do gNB, porque tem tudo",
+            "A FM, porque registra o que deu errado"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "A regra de escolha da fonte é a escala do loop. Relatório mensal é loop lento: PM pela O1. Guardar KPM de sessão por um mês inteiro é caro e não responde melhor a pergunta. A FM é alarme — diz o que quebrou, não quanta capacidade se usou."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Por que o Open RAN amplia o volume de dados em relação a uma RAN monolítica?",
+          "alt": [
+            "Porque os equipamentos passaram a medir mais rápido",
+            "Porque cada split vira uma fronteira observável, com interface aberta e telemetria própria",
+            "Porque a O-Cloud obriga a guardar tudo",
+            "Porque o 5G tem mais usuários que o 4G"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Antes o eNB era uma caixa: um ponto de medida. Ao separar em O-RU, O-DU e O-CU com interfaces abertas, cada fronteira passa a ser observável — e o RIC acrescenta E2 e A1 por cima. Mais fronteiras, mais dados, e de fornecedores diferentes."
+        },
+        {
+          "q": "Granularidade fina traz um risco que a agregada não traz. Qual?",
+          "alt": [
+            "Ocupa mais disco",
+            "Fica desatualizada mais rápido",
+            "Reidentificação: dado por UE e por instante pode reconstruir o comportamento de uma pessoa",
+            "É mais difícil de plotar"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "Disco é custo, não risco. O risco é de privacidade: quanto mais fino o dado, mais perto de identificar alguém — por isso a taxonomia da aula cruza granularidade com risco, e por isso o lab usa dado sintético."
+        },
+        {
+          "q": "Numa RIC Indication de E2SM-KPM, o que o cabeçalho traz que o corpo não traz?",
+          "alt": [
+            "Os valores medidos",
+            "A identificação de quem mediu e quando — nó E2, célula/UE e o instante da janela",
+            "A fórmula do indicador",
+            "A política A1 associada"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O corpo carrega as medidas; o cabeçalho diz de quem e de quando elas são. Sem isso o número não se ancora em nada — e foi exatamente esse tipo de confusão que fez o carimbo de hora do arquivo do projeto ser o da ingestão, não o da medição."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha o ciclo mínimo de análise da disciplina na ordem em que ele acontece.",
+          "itens": [
+            "Observar — escolher a fonte certa para a pergunta (PM, KPM, FM, log)",
+            "Limpar — tipar, checar nulos e duplicados, carimbar a fase",
+            "Agregar — reduzir à granularidade que a pergunta pede",
+            "Indicar — calcular o KPI/KQI com fórmula e unidade declaradas",
+            "Interpretar — comparar com a linha de base e com o limite de validade",
+            "Recomendar — dizer o que fazer, e declarar o que o dado NÃO permite dizer"
+          ],
+          "pts": 10,
+          "porque": "É o fio de todas as aulas: fonte, ingestão, limpeza, agregação, indicador, análise e decisão. A ordem importa porque cada passo restringe o seguinte — agregar antes de limpar propaga o erro, e recomendar antes de interpretar é opinião, não análise."
+        }
+      ]
+    }
+  ]
+}

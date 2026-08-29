@@ -30,9 +30,11 @@ def primitivas(tema, ind):
 
 def cat(tema, ind):
     """Rampa categórica: identidade de domínio, nunca estado."""
-    cores = categoricas(tema)
-    return (f"{ind}/* categórica — 8 domínios, ordem fixa, nunca reciclada */\n"
-            + ind + " ".join(f"--cat-{i+1}:{c};" for i, c in enumerate(cores)))
+    cores, txt = categoricas(tema), categoricas(tema, texto=True)
+    return (f"{ind}/* categórica — 8 domínios, ordem fixa, nunca reciclada.\n"
+            f"{ind}   `--cat-N` preenche e contorna; `--cat-N-txt` ESCREVE sobre isso. */\n"
+            + ind + " ".join(f"--cat-{i+1}:{c};" for i, c in enumerate(cores)) + "\n"
+            + ind + " ".join(f"--cat-{i+1}-txt:{c};" for i, c in enumerate(txt)))
 
 
 def semanticas(tema, ind):

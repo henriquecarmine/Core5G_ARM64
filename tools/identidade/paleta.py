@@ -66,11 +66,15 @@ SOLIDO_L = {
 CAT_HUE = [282, 237, 192, 147, 102, 57, 12, 327]
 CAT_L   = {"claro": 0.56, "escuro": 0.68}
 CAT_C   = {"claro": 0.150, "escuro": 0.135}
+# Degrau de TEXTO da mesma rampa: escreve-se sobre a banda, não com ela. No
+# claro precisa descer (a banda é um véu sobre quase-branco); no escuro, subir.
+CAT_TXT_L = {"claro": 0.44, "escuro": 0.80}
+CAT_TXT_C = {"claro": 0.130, "escuro": 0.110}
 
 
-def categoricas(tema):
+def categoricas(tema, texto=False):
     from oklch import hexof, croma_max
-    L, C = CAT_L[tema], CAT_C[tema]
+    L, C = (CAT_TXT_L[tema], CAT_TXT_C[tema]) if texto else (CAT_L[tema], CAT_C[tema])
     return [hexof(L, croma_max(L, h, C), h) for h in CAT_HUE]
 
 

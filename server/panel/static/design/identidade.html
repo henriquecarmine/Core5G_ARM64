@@ -60,18 +60,18 @@
   .medidor{margin-top:var(--e-3)}
   .medidor .top{display:flex;justify-content:space-between;font-family:var(--fonte-instrumento);font-size:var(--t-mini)}
   .medidor .val{font-weight:700}
-  .trilho{height:8px;border-radius:var(--r-full);background:var(--surface-inset);
+  .trilho{height:8px;border-radius:var(--r-full);background:var(--well);
           border:var(--traco) solid var(--line);overflow:hidden;margin-top:5px}
   .trilho i{display:block;height:100%;background:var(--accent)}
 
   /* PRB grid — a assinatura, literal */
   .prb{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin-top:var(--e-2)}
-  .prb i{aspect-ratio:1;border-radius:2px;background:var(--surface-inset);border:var(--traco) solid var(--line)}
+  .prb i{aspect-ratio:1;border-radius:2px;background:var(--well);border:var(--traco) solid var(--line)}
   .prb i.on{background:var(--accent);border-color:var(--accent)}
   .prb i.hot{background:var(--warn);border-color:var(--warn)}
 
   .log{font-family:var(--fonte-instrumento);font-size:var(--t-mini);line-height:1.7;
-       background:var(--surface-inset);border:var(--traco) solid var(--line);border-radius:var(--r-sm);
+       background:var(--well);border:var(--traco) solid var(--line);border-radius:var(--r-sm);
        padding:var(--e-3);white-space:pre-wrap;margin-top:var(--e-2)}
   .log .h{color:var(--ink-3)} .log .ok{color:var(--good-text)} .log .at{color:var(--warn-text)}
   .log .er{color:var(--bad-text)} .log .in{color:var(--accent-text)}
@@ -125,7 +125,7 @@
       <div class="papeis">
         <div class="papel"><span class="amostra" style="background:var(--surface)"></span><code>--surface</code><em>fundo da página</em></div>
         <div class="papel"><span class="amostra" style="background:var(--surface-2)"></span><code>--surface-2</code><em>cartão</em></div>
-        <div class="papel"><span class="amostra" style="background:var(--surface-inset)"></span><code>--surface-inset</code><em>console, trilho</em></div>
+        <div class="papel"><span class="amostra" style="background:var(--well)"></span><code>--well</code><em>console, trilho</em></div>
         <div class="papel"><span class="amostra" style="background:var(--line)"></span><code>--line</code><em>divisória</em></div>
         <div class="papel"><span class="amostra" style="background:var(--line-strong)"></span><code>--line-strong</code><em>limite de controle · 3:1</em></div>
         <div class="papel"><span class="amostra" style="background:var(--ink)"></span><code>--ink</code><em>texto · 13,4:1</em></div>

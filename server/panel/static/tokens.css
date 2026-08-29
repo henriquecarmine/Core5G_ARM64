@@ -39,8 +39,10 @@
   --c-1:#f7ffff; --c-2:#e9fcfd; --c-3:#d5f8fa; --c-4:#c2f4f6; --c-5:#b0eef1; --c-6:#9ee6ea; --c-7:#83dde1; --c-8:#57cdd3; --c-9:#009298; --c-10:#028287; --c-11:#02787d; --c-12:#003538;
   /* ao vivo */
   --l-1:#fefcfd; --l-2:#fff4f9; --l-3:#feeaf2; --l-4:#ffdfec; --l-5:#fed3e6; --l-6:#fec4de; --l-7:#ffb0d5; --l-8:#ff8ec6; --l-9:#c74c8e; --l-10:#b3407f; --l-11:#a04274; --l-12:#491b33;
-  /* categórica — 8 domínios, ordem fixa, nunca reciclada */
+  /* categórica — 8 domínios, ordem fixa, nunca reciclada.
+     `--cat-N` preenche e contorna; `--cat-N-txt` ESCREVE sobre isso. */
   --cat-1:#6965c9; --cat-2:#017db2; --cat-3:#018683; --cat-4:#228b3a; --cat-5:#827604; --cat-6:#ae5b00; --cat-7:#bb475d; --cat-8:#a150a2;
+  --cat-1-txt:#494597; --cat-2-txt:#005980; --cat-3-txt:#005f5d; --cat-4-txt:#026421; --cat-5-txt:#5d5400; --cat-6-txt:#7d4001; --cat-7-txt:#8b2b3f; --cat-8-txt:#763377;
 
   /* ---------- papéis ---------- */
   /* superfícies — página, cartão, painel aninhado, poço (campo/trilho) */
@@ -107,8 +109,10 @@
     --c-1:#0b1313; --c-2:#0c1b1b; --c-3:#052628; --c-4:#003032; --c-5:#00393b; --c-6:#024447; --c-7:#005559; --c-8:#027075; --c-9:#05adb4; --c-10:#24c1c9; --c-11:#5fccd2; --c-12:#bdf6f9;
     /* ao vivo */
     --l-1:#170e12; --l-2:#21131a; --l-3:#331625; --l-4:#41172d; --l-5:#501a37; --l-6:#602042; --l-7:#782754; --l-8:#9d356e; --l-9:#db5fa1; --l-10:#ee75b3; --l-11:#f993c5; --l-12:#ffe0ed;
-    /* categórica — 8 domínios, ordem fixa, nunca reciclada */
+    /* categórica — 8 domínios, ordem fixa, nunca reciclada.
+       `--cat-N` preenche e contorna; `--cat-N-txt` ESCREVE sobre isso. */
     --cat-1:#8c8ce9; --cat-2:#2ca3e0; --cat-3:#0eaeaa; --cat-4:#59ae65; --cat-5:#a99a1c; --cat-6:#d6803a; --cat-7:#de7282; --cat-8:#c479c3;
+    --cat-1-txt:#b3b6fe; --cat-2-txt:#74c8fc; --cat-3-txt:#58d4d0; --cat-4-txt:#8dd194; --cat-5-txt:#ccc069; --cat-6-txt:#f4ab76; --cat-7-txt:#fca0ab; --cat-8-txt:#e4a5e3;
     /* superfícies — página, cartão, painel aninhado, poço (campo/trilho) */
     --bg:var(--n-1); --surface:var(--n-2); --surface-2:var(--n-3); --well:var(--n-1);
     /* o console é escuro NOS DOIS TEMAS: é um terminal, não um cartão */
@@ -149,8 +153,10 @@
   --c-1:#0b1313; --c-2:#0c1b1b; --c-3:#052628; --c-4:#003032; --c-5:#00393b; --c-6:#024447; --c-7:#005559; --c-8:#027075; --c-9:#05adb4; --c-10:#24c1c9; --c-11:#5fccd2; --c-12:#bdf6f9;
   /* ao vivo */
   --l-1:#170e12; --l-2:#21131a; --l-3:#331625; --l-4:#41172d; --l-5:#501a37; --l-6:#602042; --l-7:#782754; --l-8:#9d356e; --l-9:#db5fa1; --l-10:#ee75b3; --l-11:#f993c5; --l-12:#ffe0ed;
-  /* categórica — 8 domínios, ordem fixa, nunca reciclada */
+  /* categórica — 8 domínios, ordem fixa, nunca reciclada.
+     `--cat-N` preenche e contorna; `--cat-N-txt` ESCREVE sobre isso. */
   --cat-1:#8c8ce9; --cat-2:#2ca3e0; --cat-3:#0eaeaa; --cat-4:#59ae65; --cat-5:#a99a1c; --cat-6:#d6803a; --cat-7:#de7282; --cat-8:#c479c3;
+  --cat-1-txt:#b3b6fe; --cat-2-txt:#74c8fc; --cat-3-txt:#58d4d0; --cat-4-txt:#8dd194; --cat-5-txt:#ccc069; --cat-6-txt:#f4ab76; --cat-7-txt:#fca0ab; --cat-8-txt:#e4a5e3;
   /* superfícies — página, cartão, painel aninhado, poço (campo/trilho) */
   --bg:var(--n-1); --surface:var(--n-2); --surface-2:var(--n-3); --well:var(--n-1);
   /* o console é escuro NOS DOIS TEMAS: é um terminal, não um cartão */

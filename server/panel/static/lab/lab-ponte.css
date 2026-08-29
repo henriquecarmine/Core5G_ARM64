@@ -27,4 +27,9 @@
   /* sombra: no claro é sombra mesmo; no escuro o sistema já troca por
      superfície mais clara. */
   --shadow: var(--elev-1);
+
+  /* tinta apagada DENTRO do console escuro das páginas de ML. Ficou órfã
+     quando os blocos de cor saíram: `var(--console-dim)` sem definição faz a
+     propriedade inteira ser descartada, e o texto herda a cor do pai. */
+  --console-dim: var(--n-9);
 }

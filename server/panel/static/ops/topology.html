@@ -25,6 +25,13 @@
     --c-core:var(--cat-6);      /* core                — laranja, como era */
     --c-core-up:var(--cat-6);   /* core plano de usuário: mesmo domínio */
     --c-oransc:var(--cat-8);    /* O-RAN SC            — magenta, como era */
+    /* A MESMA identidade, no degrau de escrever. O rótulo da banda estava
+       saindo na cor de PREENCHER e media 3,0:1 sobre o véu no tema claro —
+       ilegível. Cor de sólido e cor de texto são papéis diferentes. */
+    --c-admin-txt:var(--cat-1-txt);     --c-external-txt:var(--cat-2-txt);
+    --c-core-cp-txt:var(--cat-3-txt);   --c-ran-txt:var(--cat-4-txt);
+    --c-nonrt-txt:var(--cat-5-txt);     --c-core-txt:var(--cat-6-txt);
+    --c-core-up-txt:var(--cat-6-txt);   --c-oransc-txt:var(--cat-8-txt);
     --btn-bg:var(--n-3); --btn-hover:var(--n-5);
     --grid-dot:var(--n-4); --planned:var(--line-2); --plan-fg:var(--ink-3);
     --panel-glass:color-mix(in srgb, var(--surface-2) 88%, transparent);
@@ -33,8 +40,13 @@
     --info-bg:var(--accent-soft); --info-fg:var(--accent-text);
     --packet:var(--warn);       /* o pacote que anda pelo caminho: chama atenção */
     --label-bg:var(--surface);
+    /* Opacidade das bandas. A banda é FUNDO: a cor dela identifica o domínio,
+       mas quem tem de ser legível é o que está DENTRO — o nome do grupo, os
+       cartões dos nós e os rótulos das interfaces. Por isso o preenchimento é
+       um véu, não um bloco. */
+    --band-fill:.07; --band-stroke:.45;
   }
-  :root[data-theme="light"] { --overlay:rgb(23 27 34 / .45); }
+  :root[data-theme="light"] { --overlay:rgb(23 27 34 / .45); --band-fill:.13; --band-stroke:.6; }
   :root:not([data-theme="light"]) { --overlay:rgb(9 10 14 / .72); }
   * { box-sizing:border-box; }
   body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -88,7 +100,7 @@
   /* bandas de plano (CUPS): retângulo de fundo por camada com band:true no JSON */
   .band { pointer-events:none; fill-opacity:var(--band-fill); stroke-opacity:var(--band-stroke); }
   .jnum { font-size:11px; font-weight:800; fill:#1c2129; }
-  .band-label { font-size:11px; font-weight:700; letter-spacing:.09em; opacity:.9; }
+  .band-label { font-size:11px; font-weight:700; letter-spacing:.09em; }
 
   .link { stroke-width:1.6; fill:none; }
   .link.dashed { stroke-dasharray:6 5; }
@@ -311,7 +323,7 @@ function render(){
     const bandCol=`var(--c-${k})`;
     el("rect",{x:x0,y:y0,width:x1-x0,height:y1-y0,rx:14,class:"band",fill:bandCol,
                stroke:bandCol,"stroke-dasharray":"3 7"},gB);
-    const bl=el("text",{x:x0+14,y:y0+18,class:"band-label",fill:bandCol},gB);
+    const bl=el("text",{x:x0+14,y:y0+18,class:"band-label",fill:`var(--c-${k}-txt,${bandCol})`},gB);
     bl.textContent=trf(`topo.${PROJ}.layer.${k}`, ly.label).toUpperCase();
   }
 

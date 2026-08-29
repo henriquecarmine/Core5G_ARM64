@@ -449,6 +449,19 @@
   #uelab-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--border); flex-shrink:0; }
   #uelab-header h2 { font-size:15px; margin:0; }
   #uelab-header-sub { font-size:11.5px; color:var(--muted); margin-left:12px; }
+  /* ===== explicação no clique (instrumentos do topo) ===== */
+  #topbar-telemetry [title] { cursor: help; }
+  #explica-pop { position: fixed; z-index: 900; max-width: 340px;
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line-strong); border-radius: var(--r-md);
+    box-shadow: var(--elev-2); padding: 12px 14px 11px; font-size: 12.5px; line-height: 1.55;
+    font-family: var(--fonte-texto); }
+  #explica-pop[hidden] { display: none; }
+  #explica-pop h5 { margin: 0 0 5px; font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+  #explica-pop .x { position: absolute; top: 6px; right: 8px; border: none; background: none;
+    color: var(--ink-3); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px; width: auto; }
+  #explica-pop .x:hover { color: var(--ink); }
   #uelab-close { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; width:auto; padding:0 4px; line-height:1; }
   #uelab-body { display:grid; grid-template-columns:300px 1fr; flex:1; min-height:0; overflow:hidden; }
 
@@ -3514,6 +3527,44 @@ window.addEventListener('message', ev => {
   const m = ev.data && ev.data.c5gLab;
   if (m && m.runCmd) { try { runCommand(m.runCmd); } catch (e) {} }
 });
+
+
+// ===== Explicação no clique dos instrumentos =====
+// O `title` nativo demora ~1s, some sozinho, sai no estilo do sistema
+// operacional e não existe no toque — para apontar um indicador à turma numa
+// projeção, não serve. O mesmo texto abre aqui num cartão do painel, ancorado
+// no instrumento, e fica até ser fechado. O `title` continua no elemento: é a
+// reserva e é o que o leitor de tela lê.
+(function explicaNoClique() {
+  const pop = document.createElement('div');
+  pop.id = 'explica-pop';
+  pop.hidden = true;
+  pop.innerHTML = '<button class="x" aria-label="fechar">×</button><h5></h5><div class="txt"></div>';
+  document.body.appendChild(pop);
+  const fecha = () => { pop.hidden = true; };
+  pop.querySelector('.x').addEventListener('click', fecha);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecha(); });
+  document.addEventListener('click', (e) => {
+    const alvo = e.target.closest && e.target.closest('#topbar-telemetry [title]');
+    if (!alvo) { if (!e.target.closest('#explica-pop')) fecha(); return; }
+    const txt = alvo.getAttribute('title');
+    if (!txt) return;
+    e.preventDefault(); e.stopPropagation();
+    // o rótulo do cartão é o nome do próprio instrumento, quando ele tem um
+    const rot = alvo.querySelector('.rl-k, .tm-k, .q-leg')
+      || alvo.closest('.quad')?.querySelector('.q-leg');
+    pop.querySelector('h5').textContent = (rot ? rot.textContent.trim() : '').slice(0, 40);
+    pop.querySelector('.txt').textContent = txt;
+    pop.hidden = false;
+    const r = alvo.getBoundingClientRect();
+    pop.style.visibility = 'hidden'; pop.style.left = '0px'; pop.style.top = '0px';
+    const p = pop.getBoundingClientRect();
+    let x = Math.min(Math.max(8, r.left), window.innerWidth - p.width - 8);
+    let y = r.bottom + 8;
+    if (y + p.height > window.innerHeight - 8) y = Math.max(8, r.top - p.height - 8);
+    pop.style.left = x + 'px'; pop.style.top = y + 'px'; pop.style.visibility = '';
+  }, true);
+})();
 
 // ===== Boot =====
 loadWhoami();

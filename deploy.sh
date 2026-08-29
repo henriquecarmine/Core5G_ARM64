@@ -62,7 +62,41 @@ cmd_bootstrap() {
     remote_exec "DUCKDNS_DOMAIN='${DUCKDNS_DOMAIN:-}' DUCKDNS_TOKEN='${DUCKDNS_TOKEN:-}' SWAP_SIZE_GB='${SWAP_SIZE_GB:-8}' SWAPPINESS='${SWAPPINESS:-10}' AWS_SERVER_HOST='${AWS_SERVER_HOST:-}' PANEL_USER='${PANEL_USER:-}' PANEL_PASSWORD='${PANEL_PASSWORD:-}' PANEL_GUEST_USER='${PANEL_GUEST_USER:-}' PANEL_GUEST_PASSWORD='${PANEL_GUEST_PASSWORD:-}' PANEL_EXTRA_USERS='${PANEL_EXTRA_USERS:-}' bash ~/server-bootstrap.sh"
 }
 
+# Quem está USANDO o painel agora? Conta os clientes distintos no journal do
+# serviço, ignorando o localhost. Existe porque em 29/08 eu reiniciei o painel
+# em cima de três pessoas conectadas: tentei medir antes, a expressão de busca
+# não casou nada, e eu li o resultado vazio como "não tem ninguém". Medição que
+# falha tem de gritar, não devolver zero.
+quem_esta_usando() {
+    remote_exec "sudo journalctl -u core5g-panel --since '-${1:-10} min' --no-pager 2>/dev/null \
+        | sed -n 's/.*INFO: *\([0-9.]*\):[0-9]* - \".*/\1/p' | grep -v '^127\.' | sort -u" 2>/dev/null
+}
+
+# Aborta se houver gente no painel. `FORCA=1 ./deploy.sh panel` passa por cima —
+# de propósito: derrubar a sessão de alguém tem de ser uma decisão, não um
+# efeito colateral de um comando de rotina.
+conferir_ocupacao() {
+    local ips n
+    ips="$(quem_esta_usando 10)"
+    n="$(printf '%s' "$ips" | grep -c . || true)"
+    if [ "${FORCA:-0}" = "1" ]; then
+        [ "$n" -gt 0 ] && echo "==> AVISO: $n cliente(s) no painel, e FORCA=1 — reiniciando mesmo assim."
+        return 0
+    fi
+    if [ "$n" -gt 0 ]; then
+        echo "" >&2
+        echo "ABORTADO: $n cliente(s) usaram o painel nos últimos 10 minutos:" >&2
+        printf '  · %s\n' $ips >&2
+        echo "" >&2
+        echo "Reiniciar agora derruba a sessão deles (e o Professor perde a vaga)." >&2
+        echo "Se for mesmo necessário:  FORCA=1 $0 panel" >&2
+        exit 1
+    fi
+    echo "==> Ninguém no painel nos últimos 10 minutos — pode reiniciar."
+}
+
 cmd_panel() {
+    conferir_ocupacao
     echo "==> Sincronizando $LOCAL_DIR/panel/ -> $REMOTE:~/$REMOTE_DIR/panel"
     remote_exec "mkdir -p ~/$REMOTE_DIR/panel"
     rsync -az -e "ssh ${SSH_OPTS[*]}" "$LOCAL_DIR/panel/" "$REMOTE:~/$REMOTE_DIR/panel/"

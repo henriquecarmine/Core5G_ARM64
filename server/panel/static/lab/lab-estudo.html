@@ -154,6 +154,8 @@ async function main(){
     const naPlat=h=>esc(P.url+(h||""));
     const platLink=`<a href="${naPlat("")}" target="_blank" rel="noopener">${esc(P.nome)}</a>`;
     const pct=(a,t)=>t>0?Math.round(a*100/t):0;
+    const MEDIA=typeof idx.media==="number"?idx.media:70;
+    const passou=p=>p>=MEDIA;
     let RES=null;        // null = ninguém logado · {} = logado, nada registrado
     let editando=null;   // hash do exercício com o formulário aberto
 
@@ -171,7 +173,11 @@ async function main(){
       return b.length?`<div class="ativ-prep"><span>${T("est.ativ_prep")}</span>${b.join("")}</div>`:"";
     };
 
-    const barra=p=>`<span class="barra"><i style="width:${p}%"></i></span>`;
+    // A barra carrega a linha da média: sem ela o aluno vê 64% e não sabe se é
+    // bom. O traço fica no MESMO lugar em todas as barras, então dá para
+    // comparar exercícios de tamanhos diferentes de relance.
+    const barra=p=>`<span class="barra ${passou(p)?"ok":"nao"}" style="--media:${MEDIA}%"><i style="width:${p}%"></i></span>`;
+    const selo=p=>`<span class="pct ${passou(p)?"ok":"nao"}">${p}%</span>`;
 
     const resultado=x=>{
       if(RES===null)return"";                       // sem sessão não há o que registrar
@@ -191,7 +197,7 @@ async function main(){
       if(!r)return `<div class="ativ-res vazio"><span>${T("est.ativ_naoreg")}</span>
         <button class="reg" data-edit="${esc(x.h)}">${T("est.ativ_reg")}</button></div>`;
       const p=pct(r.a,r.t);
-      return `<div class="ativ-res"><span class="pct">${p}%</span>${barra(p)}
+      return `<div class="ativ-res">${selo(p)}${barra(p)}
         <span>${r.a}/${r.t}</span>
         <button class="reg" data-edit="${esc(x.h)}">✎</button>
         <button class="reg sec" data-clear="${esc(x.h)}">${T("est.ativ_limpar")}</button></div>`;
@@ -203,7 +209,7 @@ async function main(){
       if(!feitos.length)return `<p class="ativ-resumo">${T("est.ativ_resumo_zero")}</p>`;
       const pa=feitos.reduce((s,x)=>s+RES[x.h].a,0), pt=feitos.reduce((s,x)=>s+RES[x.h].t,0);
       const p=pct(pa,pt);
-      return `<div class="ativ-resumo"><span class="pct">${p}%</span>${barra(p)}
+      return `<div class="ativ-resumo ${passou(p)?"ok":"nao"}">${selo(p)}${barra(p)}
         <span>${T("est.ativ_resumo",{feitos:feitos.length,n:A.itens.length,pa,pt})}</span></div>`;
     };
 

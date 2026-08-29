@@ -153,3 +153,16 @@ details.resumo .lead{margin-top:8px}
    distingue do que ainda sai para a plataforma de fora, que fica em contorno. */
 .ativ-go.nosso { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
 .ativ-go.nosso:hover { background:var(--accent-hover); border-color:var(--accent-hover); }
+
+/* A LINHA DA MÉDIA na barra de resultado. O aluno vê 64% e, sem referência,
+   não sabe se é bom — o traço diz onde é a passagem, no mesmo lugar em todas
+   as barras, então exercícios de 9 e de 22 pontos se comparam de relance. */
+.barra { position:relative; }
+.barra::after { content:""; position:absolute; top:-2px; bottom:-2px; left:var(--media,70%);
+                width:2px; background:var(--line-strong); border-radius:1px; }
+.barra.ok i { background:var(--good); }
+.barra.nao i { background:var(--warn); }
+.pct.ok { color:var(--good-text); }
+.pct.nao { color:var(--warn-text); }
+.ativ-resumo.ok { border-color:var(--good); }
+.ativ-resumo.nao { border-color:var(--warn); }

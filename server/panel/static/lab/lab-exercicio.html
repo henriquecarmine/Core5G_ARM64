@@ -47,6 +47,10 @@
             border-radius:var(--r-md); padding:13px 16px; margin:22px 0 8px; display:flex;
             align-items:center; gap:14px; flex-wrap:wrap; box-shadow:var(--elev-1); }
   .placar .pct { font-family:var(--fonte-instrumento); font-size:1.5rem; font-weight:700; }
+  /* passou ou não é a única leitura que o aluno faz de imediato — então ela é
+     a cor da caixa, não uma frase escondida no meio do texto. */
+  .placar.passou { border-color:var(--good); } .placar.passou .pct { color:var(--good-text); }
+  .placar.faltou { border-color:var(--warn); } .placar.faltou .pct { color:var(--warn-text); }
   .placar .msg { flex:1; min-width:200px; font-size:var(--t-mini); color:var(--ink-2); line-height:1.45; }
   .exfonte { font-size:var(--t-mini); color:var(--ink-2); margin:2px 0 18px; }
 </style>
@@ -79,7 +83,7 @@ $("#themeBtn").addEventListener("click",()=>{
 
 const M=location.pathname.match(/\/lab\/estudo\/(\d+)\/exercicio\/([a-z0-9-]+)/)||[];
 const N=parseInt(M[1]||"4",10), SLUG=M[2]||"";
-let EX=null, RESP={}, corrigido=false;
+let EX=null, RESP={}, corrigido=false, MEDIA=70;   // a média real vem do catálogo
 
 // Embaralha só para EXIBIR: os itens são escritos na ordem certa no JSON.
 const embaralha=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
@@ -147,12 +151,15 @@ function corrige(){
     p.innerHTML=`<b>por quê</b>${esc(q.porque)}`; p.hidden=false;
   }));
   corrigido=true;
-  const pct=Math.round(acertos*100/EX.pts);
+  const pct=Math.round(acertos*100/EX.pts), passou=pct>=MEDIA;
   $("#placar").hidden=false;
+  $("#placar").classList.toggle("passou",passou);
+  $("#placar").classList.toggle("faltou",!passou);
   $("#placar").innerHTML=`<span class="pct">${pct}%</span>
-    <span class="msg"><b>${acertos} de ${EX.pts} pontos.</b> ${
-      pct>=80?"Você domina o assunto — leia os “por quê” das que errou e siga."
-      :pct>=50?"Deu para a base. Vale reler a aula antes de repetir."
+    <span class="msg"><b>${acertos} de ${EX.pts} pontos${passou?" — passou":` — a média é ${MEDIA}%`}.</b> ${
+      pct>=90?"Domina o assunto. Leia os “por quê” das que errou e siga."
+      :passou?"Passou. Vale ler os “por quê” das que errou antes de seguir."
+      :pct>=MEDIA-10?`Faltou pouco: ${MEDIA-pct} ponto(s) percentual(is). Leia os “por quê” das que errou e refaça.`
       :"Volte para a aula: o exercício é para depois dela, não no lugar dela."}</span>
     <button class="runb" id="refazer">Refazer</button>`;
   $("#refazer").addEventListener("click",()=>{RESP={};corrigido=false;$("#placar").hidden=true;pinta();window.scrollTo(0,0);});
@@ -175,6 +182,7 @@ async function registra(acertos){
 
 async function main(){
   const idx=await (await fetch("/static/lab/estudos/index.json",{cache:"no-store"})).json();
+  if(typeof idx.media==="number")MEDIA=idx.media;
   EX=await (await fetch(`/static/lab/estudos/ex/${SLUG}.json`,{cache:"no-store"})).json();
   const e=idx.estudos.find(x=>x.n===N);
   document.title=`${EX.rot} · ${EX.t}`;

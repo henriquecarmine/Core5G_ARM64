@@ -23,6 +23,10 @@ const path = require('path');
 const EST = path.resolve(__dirname, '..', 'static', 'lab', 'estudos');
 const cat = JSON.parse(fs.readFileSync(path.join(EST, 'index.json'), 'utf8'));
 
+// A média para passar é DADO do catálogo, não número espalhado pelas telas.
+if (typeof cat.media !== 'number' || cat.media <= 0 || cat.media > 100)
+  console.error("✗ o catálogo precisa de `media` (a nota de passagem, em %)") || process.exit(1);
+
 const itens = {};
 for (const e of cat.estudos) {
   const A = e.atividades || {};

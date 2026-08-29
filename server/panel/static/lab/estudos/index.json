@@ -34,7 +34,7 @@
     "p2": "Projeto 2: OAI + FlexRIC + Non-RT RIC",
     "any": "roda sobre arquivo, sem precisar da RAN"
   },
-  "plataforma": {"nome": "Plataforma de Atividades — CESAR School", "url": "https://cesar-activities-cxapa2g7ia-rj.a.run.app/"},
+  "media": 70, "plataforma": {"nome": "Plataforma de Atividades — CESAR School", "url": "https://cesar-activities-cxapa2g7ia-rj.a.run.app/"},
   "estudos": [
     {
       "id": "e1", "n": 1, "icon": "🛰️", "bancada": "p1",

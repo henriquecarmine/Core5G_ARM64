@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /*
- * Paridade dos dicionários i18n do painel (static/i18n.js) e dos Estudos
- * por cadeira (static/lab/lab-i18n.js).
+ * Paridade dos dicionários i18n do painel (static/i18n.js), dos Estudos por
+ * cadeira (static/lab/lab-i18n.js) e do glossário 5G/O-RAN
+ * (static/ops/glossario.js).
  *
  * Garante que TODA chave existe nos 4 idiomas (pt/en/es/fr) — o fallback
  * mascara chave faltante na tela, então só o teste pega. Também falha se um
@@ -34,7 +35,34 @@ const ALVOS = [
         win, doc, { language: 'pt' }, { getItem: () => null, setItem: () => {} });
       return win.LABI18N.dicts;
     }) },
+  { nome: 'static/ops/glossario.js',
+    dicts: carrega(['static', 'ops', 'glossario.js'], src => {
+      const win = {};
+      new Function('window', `${src}; return window.GLOSSARIO;`)(win);
+      return win.GLOSSARIO.dicts;
+    }) },
 ];
+
+// O glossário tem uma segunda amarração, própria dele: cada TERMO precisa das
+// duas explicações (`.o` = o que é · `.p` = para que serve) e cada explicação
+// precisa de um termo. Sem esta conferência, um termo entra na lista, aparece
+// sublinhado na legenda, e o balão abre VAZIO — falha calada, do mesmo tipo da
+// variável CSS órfã.
+const glossario = (() => {
+  const src = fs.readFileSync(path.resolve(__dirname, '..', 'static', 'ops', 'glossario.js'), 'utf8');
+  const win = {};
+  new Function('window', `${src}; return window.GLOSSARIO;`)(win);
+  return win.GLOSSARIO;
+})();
+{
+  const termos = Object.keys(glossario.termos);
+  const esperadas = new Set(['ui.o', 'ui.p']);
+  for (const t of termos) { esperadas.add(t + '.o'); esperadas.add(t + '.p'); }
+  const pt = glossario.dicts.pt || {};
+  for (const k of esperadas) if (!pt[k]) errors.push(`glossário: termo sem explicação — falta '${k}'`);
+  for (const k of Object.keys(pt)) if (!esperadas.has(k)) errors.push(`glossário: explicação sem termo — '${k}' não está em TERMOS`);
+  if (!termos.length) errors.push('glossário: lista de termos vazia');
+}
 
 let totalChaves = 0;
 for (const alvo of ALVOS) {
@@ -66,3 +94,4 @@ if (errors.length) {
   process.exit(1);
 }
 console.log(`✅ i18n OK — ${totalChaves} chaves × ${LANGS.length} idiomas (pt/en/es/fr) em ${ALVOS.length} dicionários (${ALVOS.map(a => a.nome).join(', ')}), sem órfãs, placeholders consistentes`);
+console.log(`✅ glossário OK — ${Object.keys(glossario.termos).length} termos, cada um com "o que é" e "para que serve" nos 4 idiomas`);

@@ -77,3 +77,44 @@ A história é a mesma (o celular chegando no prédio). Muda só isto:
 > Dica: o mesmo diagrama tem um modo **"Fluxo de dados"** (bolinhas andando) e um
 > **"Tour"** por camadas. A **Jornada** é a versão passo a passo, guiada — comece
 > por ela.
+
+---
+
+## As siglas explicadas na própria tela
+
+Desde a **v0.81.0** você não precisa mais sair da Jornada para saber o que é uma
+sigla. Na legenda de cada passo:
+
+- o **nome por extenso** aparece **entre parênteses** logo depois do termo —
+  *AMF (Access and Mobility Management Function)*, *N4 (SMF ↔ UPF)*;
+- **passar o mouse** (ou tocar, ou chegar pelo **Tab**) abre um balão com
+  **o que é** e **para que serve** — em pt/en/es/fr;
+- **Esc** fecha o balão.
+
+São **72 termos**: funções do núcleo, interfaces N/E2/A1/O1, protocolos,
+procedimentos, o vocabulário do RIC e os bancos do lab. O nome por extenso sai
+**uma vez por passo**, no primeiro termo, para a legenda não virar um paredão de
+parênteses; o balão, esse, funciona em toda ocorrência.
+
+O título do passo é só marcado, sem o nome por extenso — ele é manchete e
+precisa caber numa linha.
+
+### Onde isso mora, e como acrescentar um termo
+
+`server/panel/static/ops/glossario.js`, em duas camadas separadas de propósito:
+
+| Camada | O que é | Traduz? |
+|---|---|---|
+| `TERMOS` | o nome oficial 3GPP/O-RAN — o que vai entre parênteses | **não** (mesma regra do `static/i18n.js`) |
+| `DICTS` | `<termo>.o` = o que é · `<termo>.p` = para que serve | **sim**, nos 4 idiomas |
+
+Para acrescentar: uma linha em `TERMOS` (use `null` se não for sigla a expandir,
+como *MySQL* ou *NG Setup*) e as duas explicações nos quatro dicionários.
+`npm run test:i18n:parity` reprova termo sem explicação, explicação sem termo e
+idioma faltando — um termo que sublinha e abre balão vazio é falha calada, e é
+essa que o teste existe para pegar.
+
+Para usar o glossário noutra tela: carregue o script e chame
+`Glossario.marcar(elemento)` — ou `Glossario.marcar([{el: titulo, expandir:
+false}, legenda])` quando título e legenda dividirem o "uma vez por passo". Ele
+só mexe em **nós de texto**: o HTML que já estiver lá passa intacto.

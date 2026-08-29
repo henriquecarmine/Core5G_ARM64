@@ -182,9 +182,11 @@
   #tour-box.open { display:block; }
   #tour-box .t { font-size:13px; font-weight:600; margin-bottom:4px; }
   #tour-box .t .chip { font-size:10px; font-weight:600; padding:2px 8px; border-radius:9px; margin-right:8px; color:#fff; }
-  #tour-box .c { font-size:12.5px; color:var(--muted); line-height:1.45; }
+  /* --muted é --ink-3, o degrau de 3:1 — apoio, não texto corrido. Aqui é
+     legenda que se lê: media 2,96:1 no tema claro. Sobe para --ink-2. */
+  #tour-box .c { font-size:12.5px; color:var(--ink-2); line-height:1.45; }
   #tour-box .nav { display:flex; gap:8px; margin-top:11px; align-items:center; }
-  #tour-box .nav .step { font-size:11px; color:var(--muted); margin-right:auto; }
+  #tour-box .nav .step { font-size:11px; color:var(--ink-2); margin-right:auto; }
   #tour-box .nav button { background:var(--btn-bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:5px 13px; font-size:12px; cursor:pointer; }
   #tour-box .nav button:hover { border-color:var(--accent); }
   #tour-box .nav button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
@@ -274,6 +276,7 @@
 </div>
 
 <script src="../i18n.js"></script>
+<script src="/static/ops/glossario.js?v=%VER%"></script>
 <script>
 // ============================================================================
 // Topologia Open RAN — lê /api/topology (inventário real + status vivo).
@@ -540,6 +543,20 @@ const TOUR_LAYERS = PROJ==="p1"
   : ["external","admin","ran","nonrt","oransc","core-cp","core-up"];
 const TOUR = TOUR_LAYERS.map(layer => ({ layer }));
 let tourIdx=0;
+// As legendas são densas de sigla. O glossário marca os termos NO TEXTO que já
+// está escrito: nome por extenso entre parênteses (uma vez por passo) e balão
+// com "o que é / para que serve" no hover, no foco e no toque. Título e legenda
+// vão juntos numa chamada só para dividirem esse "uma vez".
+// Se o módulo não carregar, a legenda continua legível — só sem os apoios.
+function explicaSiglas(){
+  try{ if(window.Glossario) Glossario.marcar([
+    // no título só a marca: ele é manchete, e o nome por extenso o quebraria em
+    // duas linhas. Quem quiser o significado passa o mouse — ou lê a legenda.
+    { el: document.getElementById("tour-title"), expandir: false },
+    document.getElementById("tour-caption"),
+  ]); }
+  catch(e){ console.warn("glossário:", e); }
+}
 function showTour(i){
   tourIdx=(i+TOUR.length)%TOUR.length;
   const s=TOUR[tourIdx]; tourLayer=s.layer;
@@ -548,6 +565,7 @@ function showTour(i){
   document.getElementById("tour-title").innerHTML=`<span class="chip" style="background:${col}">${I18N.t("topo.tour_layer",{n:tourIdx+1})}</span>${ttl}`;
   document.getElementById("tour-caption").textContent=cap;
   document.getElementById("tour-step").textContent=`${tourIdx+1} / ${TOUR.length}`;
+  explicaSiglas();
   render();
 }
 function startTour(){ document.getElementById("tour-box").classList.add("open"); showTour(0); }
@@ -610,6 +628,7 @@ function showJourney(i){
   document.getElementById("tour-title").innerHTML=numChip+badge+ttl;
   document.getElementById("tour-caption").textContent=cap;
   document.getElementById("tour-step").textContent=`${journeyIdx+1} / ${JOURNEY.length}`;
+  explicaSiglas();
   render();
 }
 function startJourney(){ if(tourLayer) endTour(); document.getElementById("tour-box").classList.add("open"); showJourney(0); }

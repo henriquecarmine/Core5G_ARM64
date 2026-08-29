@@ -113,6 +113,55 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       await page.click('#journey-btn');
       const jtotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
       assert(jtotal === 17, `p2: jornada esperava 17 etapas (16 + a1real v0.56), veio ${jtotal}`);
+      // Glossário: a legenda de CADA etapa tem de sair marcada, e todo termo
+      // marcado precisa ter balão com conteúdo. Um termo sublinhado cujo balão
+      // abre vazio é falha calada — o teste percorre as 17 etapas conferindo.
+      const glos = { etapasSemTermo: [], vazios: [], marcados: 0, expandidos: 0 };
+      for (let i = 0; i < jtotal; i++) {
+        const d = await page.evaluate((n) => {
+          showJourney(n);
+          const cap = document.getElementById('tour-caption');
+          const termos = [...cap.querySelectorAll('.glos-termo')].map(e => e.getAttribute('data-termo'));
+          return {
+            termos,
+            expandidos: cap.querySelectorAll('.glos-exp').length,
+            // o texto visível não pode ter perdido nada na marcação
+            vazios: termos.filter(t => { const g = window.Glossario.explica(t); return !g.o || !g.p; }),
+            nested: /\([^()]*\([^()]*\)/.test(cap.textContent),
+          };
+        }, i);
+        if (!d.termos.length) glos.etapasSemTermo.push(i + 1);
+        glos.marcados += d.termos.length;
+        glos.expandidos += d.expandidos;
+        glos.vazios.push(...d.vazios);
+        assert(!d.nested, `p2: etapa ${i + 1} ficou com parêntese dentro de parêntese`);
+      }
+      assert(glos.vazios.length === 0, `p2: termo marcado sem explicação: ${[...new Set(glos.vazios)].join(', ')}`);
+      assert(glos.etapasSemTermo.length === 0, `p2: etapas sem nenhuma sigla marcada: ${glos.etapasSemTermo.join(', ')}`);
+      assert(glos.expandidos >= 60, `p2: poucos nomes por extenso na jornada (${glos.expandidos})`);
+      console.log(`PASS p2 · glossário nas 17 etapas (${glos.marcados} termos marcados, ${glos.expandidos} nomes por extenso)`);
+
+      // e o balão abre de fato, no hover, com "o que é" e "para que serve"
+      await page.evaluate(() => showJourney(3));
+      await page.hover('#tour-caption .glos-termo');
+      await new Promise(r => setTimeout(r, 150));
+      const balao = await page.evaluate(() => {
+        const t = document.getElementById('glos-tip');
+        const alvo = document.querySelector('#tour-caption .glos-termo');
+        return { aberto: !!t && !t.hidden, texto: t ? t.innerText : '',
+                 descrito: alvo.getAttribute('aria-describedby'), foco: alvo.tabIndex };
+      });
+      assert(balao.aberto, 'p2: o balão do glossário não abriu no hover');
+      assert(balao.texto.length > 60, `p2: balão do glossário quase vazio: "${balao.texto}"`);
+      assert(balao.descrito === 'glos-tip', 'p2: falta aria-describedby no termo com balão aberto');
+      assert(balao.foco === 0, 'p2: termo do glossário não alcançável por teclado');
+      // Escape fecha
+      await page.keyboard.press('Escape');
+      const fechou = await page.evaluate(() => document.getElementById('glos-tip').hidden);
+      assert(fechou, 'p2: Escape não fecha o balão do glossário');
+      console.log('PASS p2 · balão do glossário abre no hover, é focável e fecha no Esc');
+
+      await page.evaluate(() => showJourney(0));
       for (let i = 0; i < jtotal - 1; i++) await page.click('#tour-next');
       assert(errors.length === 0, `p2: pageerror na jornada: ${errors.join(' | ')}`);
       await page.click('#tour-exit');

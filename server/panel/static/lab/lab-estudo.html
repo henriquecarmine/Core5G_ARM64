@@ -5,21 +5,20 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Estudo · Core5G_ARM64</title>
-<link rel="stylesheet" href="/static/tokens.css?v=0.77.0">
-<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=0.77.0">
-<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.77.0">
+<link rel="stylesheet" href="/static/tokens.css?v=0.80.0">
+<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=0.80.0">
+<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=0.80.0">
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <div>
-      <a href="/" class="back" data-i18n="nav.back">← Painel</a> <span class="sep">·</span> <a href="/lab" class="back" data-i18n="est.back_lab">Lab de IA</a>
-      <div class="eyebrow" id="eyebrow" data-i18n="est.word">Estudo</div>
-      <h1 id="h1">…</h1>
-      <p class="lead" id="lead"></p>
-    </div>
-    <div class="topright"><div id="langsel" class="langsel"></div><button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button></div>
+  <div class="ident">
+    <a href="/lab" class="back" data-i18n="est.back_lab">← Lab de IA</a>
+    <div class="trilha" id="eyebrow" data-i18n="est.word">Estudo</div>
+    <div class="dir"><div id="langsel" class="langsel"></div><button class="themebtn" id="themeBtn" title="Tema" aria-label="Alternar tema">◐</button></div>
   </div>
+  <div class="tit"><h1 id="h1">…</h1></div>
+  <details class="resumo" id="resumo"><summary data-i18n="est.sobre">sobre esta cadeira</summary>
+    <p class="lead" id="lead"></p></details>
 
   <div class="meta" id="meta"></div>
 
@@ -40,32 +39,34 @@
   <footer id="footer"></footer>
 </div>
 
-<script src="/static/lab/lab-i18n.js?v=0.77.0"></script>
+<script src="/static/lab/lab-i18n.js?v=0.80.0"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s);
 const T=(k,p)=>window.LABI18N?LABI18N.t(k,p):k;
 const LANG=(window.LABI18N&&LABI18N.lang)||"pt";
 async function jl(name){if(LANG!=="pt"){try{const r=await fetch(`/static/lab/estudos/${name}.${LANG}.json`,{cache:"no-store"});if(r.ok)return r.json();}catch(x){}}return (await fetch(`/static/lab/estudos/${name}.json`,{cache:"no-store"})).json();}
 if(window.LABI18N)LABI18N.onChange(()=>location.reload());
-const EMBED=new URLSearchParams(location.search).has("embed");
+const DO_PAINEL = (() => {   // fui aberta PELO painel? é ele quem executa
+  try { return !!(window.opener && !window.opener.closed); } catch (e) { return false; }
+})();
 const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const GH="https://github.com/henriquecarmine/Core5G_ARM64/tree/main/";
 const N=parseInt((location.pathname.match(/\/lab\/estudo\/(\d)/)||[])[1]||"4",10);
-const withEmbed=u=>u+(EMBED?(u.includes("?")?"&":"?")+"embed=1":"");
 
-if(EMBED){document.documentElement.classList.add("embed");
-  try{const th=window.parent.document.documentElement.getAttribute("data-theme");if(th)document.documentElement.setAttribute("data-theme",th);}catch(e){}}
 $("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
-document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('a[href^="/lab"]');
-  if(a&&EMBED){const u=a.getAttribute("href");if(u&&!u.includes("embed=1")){e.preventDefault();location.href=withEmbed(u);}}},true);
 
 function runBtn(cmd,label,any){
-  if(EMBED) return `<button class="runb" data-cmd="${esc(cmd)}" title="${esc(cmd)}">▶ ${esc(label)}</button>`;
+  if(DO_PAINEL) return `<button class="runb" data-cmd="${esc(cmd)}" title="${esc(cmd)}">▶ ${esc(label)}</button>`;
   return `<a class="runb ghost" href="/" title="${esc(T("est.run_hint"))}">▶ ${esc(label)} <small>${esc(T("est.in_panel"))}</small></a>`;
 }
 function wireRun(root){
   root.querySelectorAll("button.runb").forEach(b=>b.addEventListener("click",()=>{
-    try{window.parent.postMessage({c5gLab:{runCmd:b.dataset.cmd}},location.origin);}catch(e){}
+    try{
+      // manda o painel executar e traz a janela dele para a frente: é lá que o
+      // resultado aparece, e a aula não deve fingir que roda o teste.
+      window.opener.postMessage({c5gLab:{runCmd:b.dataset.cmd}},location.origin);
+      window.opener.focus();
+    }catch(e){}
   }));
 }
 
@@ -73,7 +74,6 @@ async function main(){
   const idx=await jl("index");
   const e=idx.estudos.find(x=>x.n===N)||idx.estudos[3];
   document.title=`${T("est.word")} ${e.n} · ${e.titulo}`;
-  try{if(EMBED)window.parent.postMessage({c5gLab:{title:`${T("est.word")} ${e.n} · ${e.titulo}`}},location.origin);}catch(x){}
   $("#eyebrow").textContent=`${T("est.word")} ${e.n} · ${e.prof}`;
   $("#h1").textContent=`${e.icon} ${e.titulo}`;
   $("#lead").textContent=e.resumo;

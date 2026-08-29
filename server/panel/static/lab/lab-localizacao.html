@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/static/tokens.css?v=0.77.0">
-<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=0.77.0">
+<link rel="stylesheet" href="/static/tokens.css?v=0.80.0">
+<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=0.80.0">
 <title>Lab RIC-IA · Localização (andar do UE)</title>
 <style>
   :root{
@@ -150,8 +150,6 @@
   @media print{ body>.wrap,body>.backdrop{display:none!important} #printarea{display:block!important} }
 
   /* integração: embed no painel + compreensão + sistema real + variáveis */
-  html.embed .topright,html.embed .themebtn,html.embed a[href="/"],html.embed a[href="/lab"]{display:none!important}
-  html.embed .wrap{padding:14px 18px 20px}
   .realbox{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--good);border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--surface-2);padding:12px 15px;font-size:.9rem;color:var(--ink-2)}
   .realbox b{color:var(--ink)}
   .realbtn{display:inline-block;margin-top:9px;border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;font-size:.88rem;cursor:pointer}
@@ -888,18 +886,14 @@ $("#repPdf")?.addEventListener("click",()=>{$("#printarea").innerHTML='<div styl
 
 /* ===== integração: embed no painel + compreensão + sistema real ===== */
 const LESSON="localizacao", NEXT="/lab/manutencao";
-const EMBED=new URLSearchParams(location.search).has("embed");
-if(EMBED){document.documentElement.classList.add("embed");
-  try{const t=window.parent.document.documentElement.getAttribute("data-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}
-  try{window.parent.postMessage({c5gLab:{title:document.title.replace("Lab RIC-IA · ","")}},location.origin);}catch(e){}
-  document.querySelectorAll('a[href^="/lab"]').forEach(a=>{const u=a.getAttribute("href");if(u&&!u.includes("embed=1"))a.setAttribute("href",u+(u.includes("?")?"&":"?")+"embed=1");});
-  const rb=document.getElementById("realRun"); if(rb) rb.hidden=false;
-}
+const DO_PAINEL = (() => {   // fui aberta PELO painel? é ele quem executa
+  try { return !!(window.opener && !window.opener.closed); } catch (e) { return false; }
+})();
 const TT=(k,d)=>{const v=window.LABI18N?LABI18N.t(k):k;return v===k?d:v;};
-document.getElementById("realRun")?.addEventListener("click",()=>{try{window.parent.postMessage({c5gLab:{runCmd:"p2-kpm-real"}},location.origin);}catch(e){}});
+document.getElementById("realRun")?.addEventListener("click",()=>{try{window.opener.postMessage({c5gLab:{runCmd:"p2-kpm-real"}},location.origin);}catch(e){}});
 document.getElementById("compOk")?.addEventListener("click",()=>{
   try{const K="c5g-lab-progress",p=JSON.parse(localStorage.getItem(K)||"{}");p[LESSON]=true;localStorage.setItem(K,JSON.stringify(p));}catch(e){}
-  location.href=NEXT+(EMBED?"?embed=1":"");
+  location.href=NEXT;
 });
 document.getElementById("compNo")?.addEventListener("click",()=>{document.getElementById("compAsk").classList.toggle("open");});
 document.getElementById("compSend")?.addEventListener("click",async()=>{

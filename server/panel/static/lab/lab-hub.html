@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/static/tokens.css?v=0.77.0">
-<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=0.77.0">
+<link rel="stylesheet" href="/static/tokens.css?v=0.80.0">
+<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=0.80.0">
 <title>Lab de IA para RIC — Jornada</title>
 <style>
   :root{
@@ -87,8 +87,6 @@
   .howto li b{color:var(--ink)}
   .howto li::before{content:attr(data-i);position:absolute;left:0;top:0}
   footer{color:var(--ink-3);font-size:.8rem;line-height:1.6;margin-top:30px;padding:0 4px}
-  html.embed .topright,html.embed a[data-i18n="nav.back"]{display:none!important}
-  html.embed .wrap{padding:14px 18px 20px}
 
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -232,13 +230,9 @@ if(window.LABI18N)LABI18N.onChange(()=>{render();paintFooter();});
 paintFooter(); render();
 
 /* ===== embed no painel + dúvidas (professor) ===== */
-const EMBED=new URLSearchParams(location.search).has("embed");
-if(EMBED){document.documentElement.classList.add("embed");
-  try{const th=window.parent.document.documentElement.getAttribute("data-theme");if(th)document.documentElement.setAttribute("data-theme",th);}catch(e){}
-  try{window.parent.postMessage({c5gLab:{title:"Lab de IA — Jornada"}},location.origin);}catch(e){}
-}
-document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('a[href^="/lab"]');
-  if(a&&EMBED){const u=a.getAttribute("href");if(u&&!u.includes("embed=1")){e.preventDefault();location.href=u+(u.includes("?")?"&":"?")+"embed=1";}}},true);
+const DO_PAINEL = (() => {   // fui aberta PELO painel? é ele quem executa
+  try { return !!(window.opener && !window.opener.closed); } catch (e) { return false; }
+})();
 (async()=>{try{const r=await fetch("/api/lab/questions",{cache:"no-store"});if(!r.ok)return;const d=await r.json();
   const qc=document.getElementById("qcard"),ql=document.getElementById("qlist");qc.hidden=false;
   const escq=s=>(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));

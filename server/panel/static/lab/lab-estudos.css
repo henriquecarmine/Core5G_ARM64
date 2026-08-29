@@ -117,6 +117,34 @@ html.embed .wrap{padding:14px 18px 20px}
 
 .ativ-nota{font-size:.8rem;color:var(--ink-2);border-left:3px solid var(--warn);padding-left:10px;margin:0 0 12px}
 
+
+/* ===== cabeçalho da aula/cadeira: uma linha de identidade + o título =====
+   O anterior empilhava migalha, sobrancelha de 5 informações, título e um
+   resumo de 8 linhas: 507px antes do conteúdo, metade de um projetor. A
+   identidade e os controles agora dividem UMA linha (a direita estava vazia),
+   o título ocupa a largura inteira e o resumo vive atrás de "sobre esta aula".
+   Uma linha, sempre: sem `flex-wrap`, a trilha encolhe com reticências em vez
+   de empurrar as bandeiras para baixo. */
+.ident{display:flex;align-items:center;gap:10px;
+       padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.ident .back{margin:0;white-space:nowrap}
+.ident .trilha{flex:1;min-width:0;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;
+               text-transform:uppercase;color:var(--ink-3);font-weight:700;
+               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ident .dir{display:flex;align-items:center;gap:8px;flex:none}
+.ident .themebtn{width:32px;height:32px;font-size:.95rem;box-shadow:none}
+h1{font-size:var(--fs-display);font-weight:780;letter-spacing:-.02em;line-height:1.12;margin:0}
+.tit{margin-bottom:10px}
+.tit h1{display:inline}
+.tit .previa-tag{vertical-align:middle}
+details.resumo{margin-bottom:16px}
+details.resumo>summary{cursor:pointer;font-size:.82rem;font-weight:650;color:var(--accent);
+                       list-style:none;display:inline-flex;align-items:center;gap:6px}
+details.resumo>summary::-webkit-details-marker{display:none}
+details.resumo>summary::before{content:"▸";transition:transform .15s}
+details.resumo[open]>summary::before{transform:rotate(90deg)}
+details.resumo .lead{margin-top:8px}
+
 .langsel{display:flex;gap:4px;margin-right:6px}
 .langbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 7px;cursor:pointer;font-size:1rem;line-height:1;opacity:.55}
 .langbtn.on,.langbtn:hover{opacity:1;border-color:var(--accent)}

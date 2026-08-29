@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/static/tokens.css?v=0.77.0">
-<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=0.77.0">
+<link rel="stylesheet" href="/static/tokens.css?v=0.80.0">
+<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=0.80.0">
 <title>Lab RIC-IA · Projeto final</title>
 <style>
   :root{
@@ -43,8 +43,6 @@
   .cta a.primary{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:11px 18px;font-weight:700;text-decoration:none;font-size:.95rem}
   .cta a.back{color:var(--ink-2);text-decoration:none;font-size:.9rem;font-weight:600}
   footer{color:var(--ink-3);font-size:.8rem;margin-top:22px;padding:0 4px}
-  html.embed a[href="/"],html.embed a[href="/lab"]{display:none!important}
-  html.embed .wrap{padding:14px 18px 20px}
   .comp{margin:6px 0 20px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);padding:16px 20px}
   .comp .q{font-weight:700;margin-bottom:10px}
   .comp .row{display:flex;gap:10px;flex-wrap:wrap}
@@ -120,7 +118,9 @@ const CASOS=[
   {em:"📍", nome:"Localization", tarefa:"classificar o andar (4/5/6) do UE", aula:"/lab/localizacao", cmd:"p2-ml-localizacao", campeao:"XGBoost 84,4% · F1 0,843"},
   {em:"🛠️", nome:"Predictive Maintenance", tarefa:"detectar a RRU perdida — 2 × 1 RRU", aula:"/lab/manutencao", cmd:"p2-ml-pm", campeao:"XGBoost 92,6% · F1 0,925"},
 ];
-const EMBED=new URLSearchParams(location.search).has("embed");
+const DO_PAINEL = (() => {   // fui aberta PELO painel? é ele quem executa
+  try { return !!(window.opener && !window.opener.closed); } catch (e) { return false; }
+})();
 function render(){
   $("#casos").innerHTML=CASOS.map(c=>`
     <div class="famcol">
@@ -130,10 +130,10 @@ function render(){
       <div class="tlist">
         <a class="tlink" href="${c.aula}"><span class="em">📖</span> <b>Abrir a aula</b> <span>previsão ao vivo + relatório</span></a>
       </div>
-      ${EMBED?`<button class="runb" data-cmd="${c.cmd}">▶ Rodar no console (${c.cmd})</button>`:""}
+      ${DO_PAINEL?`<button class="runb" data-cmd="${c.cmd}">▶ Rodar no console (${c.cmd})</button>`:""}
     </div>`).join("");
   $("#casos").querySelectorAll(".runb").forEach(b=>b.addEventListener("click",()=>{
-    try{window.parent.postMessage({c5gLab:{runCmd:b.dataset.cmd}},location.origin);}catch(e){}
+    try{window.opener.postMessage({c5gLab:{runCmd:b.dataset.cmd}},location.origin);}catch(e){}
   }));
 }
 render();
@@ -141,16 +141,10 @@ $("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.ge
 
 /* ===== embed + compreensão ===== */
 const LESSON="projeto", NEXT="/lab";
-if(EMBED){document.documentElement.classList.add("embed");
-  try{const th=window.parent.document.documentElement.getAttribute("data-theme");if(th)document.documentElement.setAttribute("data-theme",th);}catch(e){}
-  try{window.parent.postMessage({c5gLab:{title:"Projeto final"}},location.origin);}catch(e){}
-}
-document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('a[href^="/lab"]');
-  if(a&&EMBED){const u=a.getAttribute("href");if(u&&!u.includes("embed=1")){e.preventDefault();location.href=u+(u.includes("?")?"&":"?")+"embed=1";}}},true);
 const TT=(k,d)=>{const v=window.LABI18N?LABI18N.t(k):k;return v===k?d:v;};
 document.getElementById("compOk")?.addEventListener("click",()=>{
   try{const K="c5g-lab-progress",pp=JSON.parse(localStorage.getItem(K)||"{}");pp[LESSON]=true;localStorage.setItem(K,JSON.stringify(pp));}catch(e){}
-  location.href=NEXT+(EMBED?"?embed=1":"");
+  location.href=NEXT;
 });
 document.getElementById("compNo")?.addEventListener("click",()=>{document.getElementById("compAsk").classList.toggle("open");});
 document.getElementById("compSend")?.addEventListener("click",async()=>{

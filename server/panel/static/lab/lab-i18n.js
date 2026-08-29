@@ -9,6 +9,8 @@
       // ---- Estudos por cadeira (lab-estudo.html / lab-aula.html) ----
       "est.back_lab": "Lab de IA",
       "est.word": "Estudo",
+      "aula.sobre": "sobre esta aula",
+      "est.sobre": "sobre esta cadeira",
       "aula.word": "Aula",
       "est.aulas": "Aulas",
       "est.ex_console": "Exercícios no console",
@@ -177,6 +179,8 @@
       // ---- Estudos por cadeira (lab-estudo.html / lab-aula.html) ----
       "est.back_lab": "AI Lab",
       "est.word": "Course",
+      "aula.sobre": "about this lesson",
+      "est.sobre": "about this course",
       "aula.word": "Lesson",
       "est.aulas": "Lessons",
       "est.ex_console": "Exercises in the console",
@@ -332,6 +336,8 @@
       // ---- Estudos por cadeira (lab-estudo.html / lab-aula.html) ----
       "est.back_lab": "Lab de IA",
       "est.word": "Estudio",
+      "aula.sobre": "sobre esta clase",
+      "est.sobre": "sobre esta asignatura",
       "aula.word": "Clase",
       "est.aulas": "Clases",
       "est.ex_console": "Ejercicios en la consola",
@@ -487,6 +493,8 @@
       // ---- Estudos por cadeira (lab-estudo.html / lab-aula.html) ----
       "est.back_lab": "Lab IA",
       "est.word": "Cours",
+      "aula.sobre": "à propos de cette leçon",
+      "est.sobre": "à propos de cette matière",
       "aula.word": "Leçon",
       "est.aulas": "Leçons",
       "est.ex_console": "Exercices dans la console",

@@ -986,20 +986,6 @@
     <div id="flow-strip-console"></div>
     <div id="mini-map-console" style="display:none"></div>
     <div id="output" class="superficie-escura" data-i18n="console.ready">Pronto. Clique em um comando à esquerda ou abra o UE Lab.</div>
-    <style>
-      #lab-view{display:flex;flex-direction:column;flex:1;min-height:480px}
-      #lab-view[hidden]{display:none}
-      #lab-viewbar{display:flex;align-items:center;gap:10px;padding:6px 10px;border:1px solid var(--line,var(--line));border-bottom:none;border-radius:10px 10px 0 0;font-size:.85rem;font-weight:600}
-      #lab-viewbar .sp{flex:1}
-      #lab-viewbar button{border:1px solid var(--line,var(--line));background:transparent;color:inherit;border-radius:7px;padding:3px 10px;cursor:pointer;font-size:.85rem}
-      #lab-frame{flex:1;width:100%;min-height:440px;border:1px solid var(--line,var(--line));border-radius:0 0 10px 10px;background:var(--surface)}
-    </style>
-    <div id="lab-view" hidden>
-      <div id="lab-viewbar"><span id="lab-viewtitle">🎓 Lab de IA</span><span class="sp"></span>
-        <button id="lab-fullpage" title="abrir em página cheia">⧉</button>
-        <button id="lab-close" title="fechar">✕</button></div>
-      <iframe id="lab-frame" title="Lab de IA"></iframe>
-    </div>
   </div>
 </main>
 
@@ -3494,48 +3480,35 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.b
 // Saiu do fullscreen pelo navegador (F11/Esc nativo) ⇒ sai do modo projeção também.
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) document.body.classList.remove('kiosk'); });
 
-// ===== Lab de IA embutido (um produto só): abre no frame do console =====
-const labView = document.getElementById('lab-view');
-const labFrame = document.getElementById('lab-frame');
-function openLab(url) {
-  if (!labView) return;
-  labFrame.src = url + (url.includes('?') ? '&' : '?') + 'embed=1';
-  labView.hidden = false;
-  document.getElementById('output').style.display = 'none';
-  try { postNav('lab', '🎓 Lab de IA'); } catch (e) {}
+// ===== Aulas e Lab de IA: JANELA PRÓPRIA =====
+// Servidor é servidor, aula é aula. A aula abria dentro do console, herdando o
+// cabeçalho do painel e disputando a tela com o resultado do teste — duas
+// coisas diferentes no mesmo lugar. Agora abre numa janela só dela, com nome
+// fixo: clicar de novo reaproveita a mesma janela em vez de espalhar abas.
+const JANELA_AULA = 'core5g-aula';
+function abrirAula(url) {
+  const w = window.open(url, JANELA_AULA);
+  if (w) w.focus();
+  else alert(I18N.t('aula.popup_bloqueado'));
+  try { postNav('lab', '🎓 ' + I18N.t('rail.estudos')); } catch (e) {}
 }
-function closeLab() {
-  labView.hidden = true;
-  labFrame.src = 'about:blank';
-  document.getElementById('output').style.display = '';
-}
-document.getElementById('lab-open-btn')?.addEventListener('click', e => { e.preventDefault(); openLab('/lab'); });
-// Estudos (rail): as aulas abrem embutidas no console, como o Lab de IA; o
-// estado aberto/fechado de cada cadeira fica no navegador.
+document.getElementById('lab-open-btn')?.addEventListener('click', e => { e.preventDefault(); abrirAula('/lab'); });
+// Estudos (rail): o estado aberto/fechado de cada cadeira fica no navegador.
 document.querySelectorAll('details.estudo').forEach(d => {
   const k = 'c5g.estudo.' + d.dataset.estudo;
   try { const v = localStorage.getItem(k); if (v !== null) d.open = v === '1'; } catch (e) {}
   d.addEventListener('toggle', () => { try { localStorage.setItem(k, d.open ? '1' : '0'); } catch (e) {} });
 });
 document.querySelectorAll('details.estudo a.est-link').forEach(a => {
-  a.addEventListener('click', e => { e.preventDefault(); openLab(a.getAttribute('href')); });
+  a.addEventListener('click', e => { e.preventDefault(); abrirAula(a.getAttribute('href')); });
 });
-document.getElementById('lab-close')?.addEventListener('click', closeLab);
-document.getElementById('lab-fullpage')?.addEventListener('click', () => {
-  const u = (labFrame.src || '/lab').replace(/([?&])embed=1&?/, '$1').replace(/[?&]$/, '');
-  window.open(u, '_blank');
-});
-// Mensagens vindas das aulas: rodar teste real no console / atualizar o título.
+// A aula, na janela dela, pede para o painel rodar um teste. É o único canal
+// entre as duas telas — e continua sendo o painel quem executa.
 window.addEventListener('message', ev => {
   if (ev.origin !== location.origin) return;
   const m = ev.data && ev.data.c5gLab;
-  if (!m) return;
-  if (m.runCmd) { closeLab(); try { runCommand(m.runCmd); } catch (e) {} }
-  if (m.title) { const t = document.getElementById('lab-viewtitle'); if (t) t.textContent = '🎓 ' + m.title; }
+  if (m && m.runCmd) { try { runCommand(m.runCmd); } catch (e) {} }
 });
-// Tema do painel muda → reflete no lab aberto (recarrega o iframe).
-new MutationObserver(() => { if (!labView?.hidden && labFrame.src && labFrame.src !== 'about:blank') labFrame.src = labFrame.src; })
-  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // ===== Boot =====
 loadWhoami();

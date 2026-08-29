@@ -18,6 +18,28 @@ SWAP_SIZE_GB="${SWAP_SIZE_GB:-8}"
 SWAPPINESS="${SWAPPINESS:-10}"
 
 echo "=========================================="
+echo "0/5 - Fuso horário (America/Sao_Paulo)"
+echo "=========================================="
+# A AMI vem em UTC. Com o servidor em UTC e a turma em Brasília, todo log pedia
+# uma conta de cabeça de 3 horas — e foi assim que eu li "18:28" e não percebi
+# que era o minuto em que a aula começava. Idempotente: só mexe se estiver fora.
+FUSO_ALVO="America/Sao_Paulo"
+FUSO_ATUAL="$(timedatectl show -p Timezone --value 2>/dev/null || echo '?')"
+if [ "$FUSO_ATUAL" != "$FUSO_ALVO" ]; then
+    sudo timedatectl set-timezone "$FUSO_ALVO"
+    echo "Fuso: $FUSO_ATUAL -> $FUSO_ALVO"
+    # o serviço do painel guarda o fuso de quando subiu; se já existe, reinicia
+    # para os arquivos de resultado passarem a ser nomeados na hora certa.
+    if systemctl is-active --quiet core5g-panel 2>/dev/null; then
+        sudo systemctl restart core5g-panel
+        echo "Painel reiniciado para adotar o fuso novo."
+    fi
+else
+    echo "Fuso já em $FUSO_ALVO."
+fi
+
+echo ""
+echo "=========================================="
 echo "1/5 - Docker Engine + Compose plugin"
 echo "=========================================="
 if command -v docker &> /dev/null; then

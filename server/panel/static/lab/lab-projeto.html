@@ -111,7 +111,7 @@
   <footer>Projeto final do Lab de IA para RIC · dados reais do SUTD (Ngo et al. 2024) · Core5G ARM64.</footer>
 </div>
 
-<script src="/static/lab/lab-i18n.js"></script>
+<script src="/static/lab/lab-i18n.js?v=%VER%"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s);
 const CASOS=[
@@ -163,4 +163,23 @@ document.getElementById("compSend")?.addEventListener("click",async()=>{
 });
 </script>
 
-<script src="/static/lab/lab-stepper.js"></script>
+<script src="/static/lab/lab-stepper.js?v=%VER%"></script>
+<script src="/static/ops/glossario.js?v=%VER%"></script>
+<script>
+// As siglas do lab se explicam na própria tela: nome por extenso entre
+// parênteses (uma vez por página — isto é texto de aula, não legenda de passo)
+// e balão no hover, no foco e no toque. O console de instrumentos e os blocos
+// de código ficam de fora: ali a sigla é leitura de máquina, não vocabulário.
+(function () {
+  function marcar() {
+    try {
+      if (!window.Glossario) return;
+      var alvos = [].slice.call(document.querySelectorAll('section.card, .card'));
+      if (alvos.length) Glossario.marcar(alvos, { umaVez: true, pular: '.readout, .mcode, .scale, .ctrl' });
+    } catch (e) { console.warn('glossário:', e); }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', marcar);
+  else marcar();
+})();
+</script>
+

@@ -9,8 +9,9 @@
     "test:i18n": "node i18n-parity.js && node i18n-smoke.js",
     "test:i18n:parity": "node i18n-parity.js",
     "test:vars": "node variaveis.js",
-    "test:tudo": "npm run test:paginas && npm run test:vars && npm run test:i18n && npm test && npm run test:topo",
-    "test:paginas": "node paginas.js"
+    "test:tudo": "npm run test:paginas && npm run test:vars && npm run test:i18n && npm test && npm run test:topo && npm run test:labs",
+    "test:paginas": "node paginas.js",
+    "test:labs": "node labs.js"
   },
   "dependencies": {
     "puppeteer-core": "^23.0.0"

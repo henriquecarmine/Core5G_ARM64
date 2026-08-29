@@ -152,7 +152,7 @@
   <footer id="footer"></footer>
 </div>
 
-<script src="/static/lab/lab-i18n.js"></script>
+<script src="/static/lab/lab-i18n.js?v=%VER%"></script>
 <script>
 const T=(k,p)=>window.LABI18N?LABI18N.t(k,p):k;
 const GK={"Fundamentos":"Fundamentos","Aprendizado supervisionado":"sup","Aprendizado não supervisionado":"nsup","Projeto final":"Projeto final"};
@@ -249,3 +249,22 @@ const DO_PAINEL = (() => {   // fui aberta PELO painel? é ele quem executa
   }).join(""):`<div style="color:var(--ink-3)">${window.LABI18N?LABI18N.t("hub.q.none"):"Nenhuma dúvida ainda."}</div>`;
 }catch(e){}})();
 </script>
+<script src="/static/ops/glossario.js?v=%VER%"></script>
+<script>
+// As siglas do lab se explicam na própria tela: nome por extenso entre
+// parênteses (uma vez por página — isto é texto de aula, não legenda de passo)
+// e balão no hover, no foco e no toque. O console de instrumentos e os blocos
+// de código ficam de fora: ali a sigla é leitura de máquina, não vocabulário.
+(function () {
+  function marcar() {
+    try {
+      if (!window.Glossario) return;
+      var alvos = [].slice.call(document.querySelectorAll('section.card, .card'));
+      if (alvos.length) Glossario.marcar(alvos, { umaVez: true, pular: '.readout, .mcode, .scale, .ctrl' });
+    } catch (e) { console.warn('glossário:', e); }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', marcar);
+  else marcar();
+})();
+</script>
+

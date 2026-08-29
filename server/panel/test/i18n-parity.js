@@ -62,6 +62,14 @@ const glossario = (() => {
   for (const k of esperadas) if (!pt[k]) errors.push(`glossário: termo sem explicação — falta '${k}'`);
   for (const k of Object.keys(pt)) if (!esperadas.has(k)) errors.push(`glossário: explicação sem termo — '${k}' não está em TERMOS`);
   if (!termos.length) errors.push('glossário: lista de termos vazia');
+  // apelido (grafia alternativa) tem de apontar para um verbete que existe —
+  // senão o termo sai sublinhado na tela e o balão abre vazio
+  for (const [a, canon] of Object.entries(glossario.alias || {})) {
+    if (!Object.prototype.hasOwnProperty.call(glossario.termos, canon))
+      errors.push(`glossário: apelido '${a}' aponta para '${canon}', que não existe em TERMOS`);
+    if (Object.prototype.hasOwnProperty.call(glossario.termos, a))
+      errors.push(`glossário: '${a}' é apelido E verbete ao mesmo tempo — escolha um`);
+  }
 }
 
 let totalChaves = 0;
@@ -94,4 +102,4 @@ if (errors.length) {
   process.exit(1);
 }
 console.log(`✅ i18n OK — ${totalChaves} chaves × ${LANGS.length} idiomas (pt/en/es/fr) em ${ALVOS.length} dicionários (${ALVOS.map(a => a.nome).join(', ')}), sem órfãs, placeholders consistentes`);
-console.log(`✅ glossário OK — ${Object.keys(glossario.termos).length} termos, cada um com "o que é" e "para que serve" nos 4 idiomas`);
+console.log(`✅ glossário OK — ${Object.keys(glossario.termos).length} termos (+${Object.keys(glossario.alias || {}).length} grafias alternativas), cada um com "o que é" e "para que serve" nos 4 idiomas`);

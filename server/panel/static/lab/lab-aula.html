@@ -40,6 +40,7 @@
 
 <script src="/static/ops/mini-map.js?v=%VER%"></script>
 <script src="/static/lab/lab-i18n.js?v=%VER%"></script>
+<script src="/static/ops/glossario.js?v=%VER%"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s);
 const T=(k,p)=>window.LABI18N?LABI18N.t(k,p):k;
@@ -114,7 +115,19 @@ async function main(){
     ?`${esc(T("aula.src"))} <a href="${GH}${esc(e.pdfs)}/${esc(a.slide)}" target="_blank" rel="noopener">${esc(a.slide)}</a> (${esc(a.fontes)})${esc(T("aula.src_tail",{prof:e.prof}))}`
     :esc(T("aula.src_previa",{f:a.fontes,prof:e.prof}));
 }
-main().catch(err=>{$("#h1").textContent=T("aula.err");$("#lead").textContent=String(err);});
+// As siglas das aulas se explicam na própria tela: nome por extenso entre
+// parênteses (uma vez por página — isto é texto, não legenda de passo) e balão
+// no hover, no foco e no toque. O título entra sem expandir: é manchete.
+// Se o módulo não carregar, o texto continua legível, só sem os apoios.
+function explicaSiglas(){
+  try{
+    if(!window.Glossario) return;
+    const el=id=>document.getElementById(id);
+    Glossario.marcar([{el:el("h1"),expandir:false}].concat(
+      ["lead", "obj", "conceitos", "formulas", "onde-txt", "quiz"].map(el).filter(Boolean)), { umaVez: true });
+  }catch(e){ console.warn("glossário:", e); }
+}
+main().then(explicaSiglas).catch(err=>{$("#h1").textContent=T("aula.err");$("#lead").textContent=String(err);});
 </script>
 </body>
 </html>

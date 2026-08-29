@@ -279,7 +279,7 @@
     <p class="sub">Todos recebem os mesmos KPIs (coletados via E2/KPM). O que muda é o que cada um <b>faz</b> com eles — clique para abrir.</p>
     <div data-model-deepdive="linear,ridge,tree,rf,gb,knn,svr,mlp"></div>
   </section>
-  <script src="/static/lab/lab-models.js"></script>
+  <script src="/static/lab/lab-models.js?v=%VER%"></script>
 
 <section class="card">
     <h2>📄 Relatório</h2>
@@ -348,7 +348,7 @@ model.predict(X_nova)                  <span class="cm"># <span class="ret">reto
 
 <div id="printarea"></div>
 
-<script src="/static/lab/lab-i18n.js"></script>
+<script src="/static/lab/lab-i18n.js?v=%VER%"></script>
 <script>
 const DSC = {
   "family": "Regressão",
@@ -1485,4 +1485,23 @@ document.getElementById("compSend")?.addEventListener("click",async()=>{
 });
 </script>
 
-<script src="/static/lab/lab-stepper.js"></script>
+<script src="/static/lab/lab-stepper.js?v=%VER%"></script>
+<script src="/static/ops/glossario.js?v=%VER%"></script>
+<script>
+// As siglas do lab se explicam na própria tela: nome por extenso entre
+// parênteses (uma vez por página — isto é texto de aula, não legenda de passo)
+// e balão no hover, no foco e no toque. O console de instrumentos e os blocos
+// de código ficam de fora: ali a sigla é leitura de máquina, não vocabulário.
+(function () {
+  function marcar() {
+    try {
+      if (!window.Glossario) return;
+      var alvos = [].slice.call(document.querySelectorAll('section.card, .card'));
+      if (alvos.length) Glossario.marcar(alvos, { umaVez: true, pular: '.readout, .mcode, .scale, .ctrl' });
+    } catch (e) { console.warn('glossário:', e); }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', marcar);
+  else marcar();
+})();
+</script>
+

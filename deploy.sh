@@ -10,7 +10,7 @@
 #   ./deploy.sh down [core|ran|all]
 #   ./deploy.sh status             - docker compose ps + healthcheck no servidor
 #   ./deploy.sh panel               - envia server/panel/ + roda bootstrap (sobe/atualiza Caddy+painel HTTPS)
-#   ./deploy.sh ssh                - sessão interativa no servidor
+#   ./deploy.sh ssh [comando]      - roda o comando (ou abre sessão interativa)
 
 set -euo pipefail
 
@@ -116,7 +116,10 @@ cmd_status() {
 }
 
 cmd_ssh() {
-    exec ssh "${SSH_OPTS[@]}" "$REMOTE"
+    # Com argumentos, RODA o comando; sem eles, abre a sessão interativa.
+    # Antes os argumentos eram descartados em silêncio: `./deploy.sh ssh "docker ps"`
+    # abria um shell que esperava entrada para sempre, e parecia servidor travado.
+    exec ssh "${SSH_OPTS[@]}" "$REMOTE" "$@"
 }
 
 case "${1:-}" in
@@ -127,7 +130,7 @@ case "${1:-}" in
     down)      cmd_down "${2:-all}" ;;
     status)    cmd_status ;;
     panel)     cmd_panel ;;
-    ssh)       cmd_ssh ;;
+    ssh)       shift; cmd_ssh "$@" ;;
     *)
         echo "Uso: $0 {bootstrap|sync|sync-oai|up [core|ran|all]|down [core|ran|all]|status|panel|ssh}" >&2
         exit 1

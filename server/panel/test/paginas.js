@@ -65,6 +65,13 @@ for (const arq of paginas) {
   const fixos = [...texto.matchAll(/\?v=([0-9][0-9.]*)/g)].map((m) => m[1]);
   if (fixos.length) erros.push(`${rel}: ?v= com número escrito à mão (${[...new Set(fixos)].join(', ')}) — use ?v=%VER%`);
 
+  //    ...e TODO asset de /static precisa carregar o cache-buster. Faltando ele,
+  //    o arquivo é servido pelo StaticFiles com cache normal e fica velho no
+  //    navegador depois do deploy — a mesma quebra da 0.80.4, agora sem número
+  //    errado para denunciar, só ausência. Eram 28 referências assim no lab.
+  const semV = [...texto.matchAll(/(?:src|href)="(\/static\/[^"]+\.(?:js|css))"/g)].map((m) => m[1]);
+  if (semV.length) erros.push(`${rel}: ${semV.length} asset(s) de /static sem ?v=%VER% (${semV.slice(0, 3).join(', ')})`);
+
   // 5) botão de tema ⇒ tema lembrado. Ler ANTES de pintar (script no <head>)
   //    e gravar no clique, na mesma chave do painel: `c5g-theme`.
   const temBotao = /id="theme-?[bB]tn"|id="theme-btn"/.test(texto);

@@ -110,6 +110,74 @@
     'MySQL': null,
     'MongoDB': null,
     'iperf3': null,
+
+    // ---- gerência e arquitetura O-RAN (o vocabulário das aulas) ----
+    'SMO': 'Service Management and Orchestration',
+    'O2': 'SMO ↔ O-Cloud',
+    'PM': 'Performance Management',
+    'FM': 'Fault Management',
+    'VES': 'VNF Event Streaming',
+    'RNIB': 'Radio Network Information Base',
+    'O-Cloud': 'O-RAN Cloud',
+    'NG-RAN': 'Next Generation RAN',
+    'CU': 'Central Unit',
+    'O-CU': 'O-RAN Central Unit',
+    'O-DU': 'O-RAN Distributed Unit',
+    'O-RU': 'O-RAN Radio Unit',
+    // pilha de rádio, de cima para baixo
+    'RRC': 'Radio Resource Control',
+    'RLC': 'Radio Link Control',
+    'MAC': 'Medium Access Control',
+    'PHY': 'Physical layer',
+    'DRB': 'Data Radio Bearer',
+    // o que se mede
+    'KPI': 'Key Performance Indicator',
+    'KQI': 'Key Quality Indicator',
+    'QoE': 'Quality of Experience',
+    'SLA': 'Service Level Agreement',
+    'UL': 'Uplink',
+    'DL': 'Downlink',
+    'E2SM': 'E2 Service Model',
+    'UEThpUl': 'UE Throughput Uplink',
+    'PrbTotUl': 'PRB Total Uplink',
+    'p95': '95th percentile',
+    // dados
+    'ETL': 'Extract, Transform, Load',
+    'ELT': 'Extract, Load, Transform',
+    'EDA': 'Exploratory Data Analysis',
+    'DIKW': 'Data, Information, Knowledge, Wisdom',
+    'OLTP': 'Online Transaction Processing',
+    'OLAP': 'Online Analytical Processing',
+    'TSDB': 'Time Series Database',
+    'InfluxDB': null,
+    'SQLite': null,
+    'JSONL': 'JSON Lines',
+    'ZMQ': 'ZeroMQ',
+    // aprendizado de máquina
+    'ML': 'Machine Learning',
+    'PCA': 'Principal Component Analysis',
+    'DNN': 'Deep Neural Network',
+    'MAD': 'Median Absolute Deviation',
+    'IQR': 'Interquartile Range',
+    'k-means': null,
+    'Isolation Forest': null,
+    // de onde vêm o software e os dados
+    'OAI': 'OpenAirInterface',
+    'Open5GS': null,
+    'SUTD': 'Singapore University of Technology and Design',
+  };
+
+  // Variantes de grafia que apontam para o MESMO verbete. O casador é sensível
+  // a maiúscula de propósito (senão "SD" casaria em qualquer "sd"), então a
+  // forma capitalizada precisa ser declarada: os textos das aulas escrevem
+  // "Near-RT" no começo da frase e "near-RT" no meio.
+  var ALIAS = {
+    'Near-RT': 'near-RT',
+    'NEAR-RT': 'near-RT',
+    'NON-RT': 'Non-RT',
+    'non-RT': 'Non-RT',
+    'XApp': 'xApp',
+    'RApp': 'rApp',
   };
 
   // --- 2. As explicações, nos 4 idiomas ------------------------------------
@@ -268,6 +336,103 @@
     'MongoDB.p': 'Guarda IMSI, chaves e perfil — o que o núcleo consulta no registro.',
     'iperf3.o': 'O gerador de tráfego que mede a vazão de ponta a ponta.',
     'iperf3.p': 'É a prova numérica de que a rede entregou banda de verdade.',
+
+    'SMO.o': 'A camada que opera a rede O-RAN inteira: configura, mede, atualiza e conserta.',
+    'SMO.p': 'É de onde a operação enxerga tudo — e onde o Non-RT RIC mora.',
+    'O2.o': 'A interface entre o SMO e a nuvem onde as funções O-RAN rodam.',
+    'O2.p': 'Cria, move e destrói as máquinas: é a infraestrutura, não o rádio.',
+    'PM.o': 'A gestão de desempenho: contadores e medidas coletados de forma periódica.',
+    'PM.p': 'É a matéria-prima dos KPIs — sem PM não há o que analisar.',
+    'FM.o': 'A gestão de falhas: alarmes, quando algo quebra ou sai do esperado.',
+    'FM.p': 'Diz o que está errado AGORA; o PM diz como as coisas vêm indo.',
+    'VES.o': 'O formato padrão de evento que os nós mandam para a coleta.',
+    'VES.p': 'Faz alarme e medida chegarem no mesmo envelope, de qualquer fornecedor.',
+    'RNIB.o': 'A base com o retrato atual da rede de rádio dentro do near-RT RIC.',
+    'RNIB.p': 'É onde o xApp consulta quem são as células e os UEs antes de decidir.',
+    'O-Cloud.o': 'A nuvem onde as funções O-RAN rodam — servidores, não caixas fechadas.',
+    'O-Cloud.p': 'Permite subir O-CU, O-DU e RIC como software, gerenciados pelo SMO.',
+    'NG-RAN.o': 'O nome oficial da rede de acesso do 5G: o conjunto dos gNBs.',
+    'NG-RAN.p': 'É o que se liga ao núcleo 5G pelas interfaces N2 e N3.',
+    'CU.o': 'A unidade central do gNB: as camadas altas, que podem ficar longe da antena.',
+    'CU.p': 'Concentra várias DUs e trata sinalização e sessão.',
+    'O-CU.o': 'A unidade central na versão aberta do O-RAN.',
+    'O-CU.p': 'Mesma função da CU, com interfaces públicas — dá para trocar de fornecedor.',
+    'O-DU.o': 'A unidade distribuída aberta: camadas baixas, perto da antena.',
+    'O-DU.p': 'Faz o escalonamento por milissegundo; é ela que fala com a O-RU.',
+    'O-RU.o': 'A unidade de rádio aberta: a ponta que transmite e recebe.',
+    'O-RU.p': 'Liga-se à O-DU pelo fronthaul aberto (split 7.2) — o coração do O-RAN.',
+    'RRC.o': 'A camada que negocia a conexão de rádio entre o celular e a rede.',
+    'RRC.p': 'Estabelece, reconfigura e libera a ligação — é o "protocolo de conversa" do rádio.',
+    'RLC.o': 'A camada que segmenta os dados e cuida da retransmissão.',
+    'RLC.p': 'Garante que o pedaço perdido no ar volte a ser enviado.',
+    'MAC.o': 'A camada que decide, a cada milissegundo, quem transmite e quanto.',
+    'MAC.p': 'É o escalonador: onde a decisão do RIC vira PRB para um UE.',
+    'PHY.o': 'A camada física: modulação, codificação, o sinal no ar.',
+    'PHY.p': 'É onde nascem SINR, CQI e MCS — os números que o KPM depois reporta.',
+    'DRB.o': 'O canal lógico que carrega os DADOS do usuário no rádio.',
+    'DRB.p': 'Separa o tráfego da sinalização e leva a QoS até o ar.',
+    'KPI.o': 'Um número que resume o desempenho da rede: vazão, PRB, latência.',
+    'KPI.p': 'É o que se coloca no painel para decidir — a medida virada em indicador.',
+    'KQI.o': 'Um indicador do que o USUÁRIO sente, não do que o equipamento faz.',
+    'KQI.p': 'A rede pode ir bem no KPI e mal no KQI — é aí que mora o QoE.',
+    'QoE.o': 'A qualidade percebida por quem usa: o vídeo travou ou não travou.',
+    'QoE.p': 'É o objetivo final; KPI e KQI são as pistas para chegar nele.',
+    'SLA.o': 'O contrato de nível de serviço: o que foi prometido, com números.',
+    'SLA.p': 'É contra ele que se compara o KPI para dizer se houve violação.',
+    'UL.o': 'Sentido de subida: do celular para a rede.',
+    'UL.p': 'É o sentido do envio — foto que sobe, voz que sai, medida que o UE reporta.',
+    'DL.o': 'Sentido de descida: da rede para o celular.',
+    'DL.p': 'É o sentido do consumo — vídeo, download, a maior parte do tráfego.',
+    'E2SM.o': 'O modelo de serviço da E2: o contrato do que se pode medir e mandar.',
+    'E2SM.p': 'Sem ele o RIC e o gNB não teriam vocabulário comum — KPM e RC são dois E2SM.',
+    'UEThpUl.o': 'O contador E2SM-KPM da vazão de subida de um UE.',
+    'UEThpUl.p': 'É a coluna crua de onde sai o indicador de vazão do usuário, em kbps.',
+    'PrbTotUl.o': 'O contador E2SM-KPM dos blocos de recurso usados na subida.',
+    'PrbTotUl.p': 'Diz quanto do rádio foi ocupado — é a ocupação em % dos PRB.',
+    'p95.o': 'O valor abaixo do qual estão 95% das medições.',
+    'p95.p': 'Mostra o quase-pior caso sem se deixar levar por um pico isolado.',
+    'ETL.o': 'Extrair, transformar e só então carregar no destino.',
+    'ETL.p': 'É o caminho do dado cru até a tabela confiável que se analisa.',
+    'ELT.o': 'Carregar primeiro, transformar depois, já dentro do banco.',
+    'ELT.p': 'Faz sentido quando o banco é mais forte que a máquina que transforma.',
+    'EDA.o': 'A exploração inicial dos dados: olhar antes de modelar.',
+    'EDA.p': 'É onde se descobre o buraco, o pico e a unidade errada — antes de errar bonito.',
+    'DIKW.o': 'A escada dado → informação → conhecimento → sabedoria.',
+    'DIKW.p': 'Lembra que número solto não é decisão: falta contexto em cada degrau.',
+    'OLTP.o': 'O banco do dia a dia: muitas escritas pequenas, uma linha por vez.',
+    'OLTP.p': 'É o que registra os fatos; não é onde se faz análise pesada.',
+    'OLAP.o': 'O banco de análise: poucas consultas, mas varrendo muita linha.',
+    'OLAP.p': 'É onde a pergunta agregada — média por fase, total por célula — fica barata.',
+    'TSDB.o': 'Banco feito para série temporal: cada medida com o seu instante.',
+    'TSDB.p': 'Guarda telemetria com carimbo de tempo e responde por janela de tempo.',
+    'InfluxDB.o': 'O banco de série temporal usado nos labs de O-RAN.',
+    'InfluxDB.p': 'É onde a KPM-xApp costuma guardar as medidas para o painel ler depois.',
+    'SQLite.o': 'Um banco relacional inteiro dentro de um arquivo só.',
+    'SQLite.p': 'Deixa exercitar SQL de verdade sem instalar servidor nenhum.',
+    'JSONL.o': 'Um JSON por linha, num arquivo de texto.',
+    'JSONL.p': 'É o formato natural de log e de fluxo: dá para ler linha a linha sem carregar tudo.',
+    'ZMQ.o': 'Uma biblioteca de mensagens entre processos, sem servidor no meio.',
+    'ZMQ.p': 'É por ela que o rádio simulado troca amostras entre gNB e UE no lab.',
+    'ML.o': 'Ensinar o computador a decidir a partir de exemplos, em vez de regras escritas.',
+    'ML.p': 'É o que permite ao RIC prever e otimizar sem alguém programar cada caso.',
+    'PCA.o': 'Uma forma de resumir muitas colunas em poucas, guardando o que varia.',
+    'PCA.p': 'Serve para enxergar em duas dimensões um conjunto que tinha dez.',
+    'DNN.o': 'Uma rede neural com várias camadas.',
+    'DNN.p': 'Aprende relações que a regressão simples não pega — ao custo de explicar menos.',
+    'MAD.o': 'O desvio absoluto mediano: o espalhamento medido pela mediana.',
+    'MAD.p': 'É a régua robusta — um pico isolado não a estraga, como estragaria o desvio padrão.',
+    'IQR.o': 'A faixa entre o primeiro e o terceiro quartis: os 50% do meio.',
+    'IQR.p': 'É como se define outlier sem supor que os dados são uma curva normal.',
+    'k-means.o': 'Um algoritmo que separa os dados em k grupos por proximidade.',
+    'k-means.p': 'Acha perfis sem ninguém dizer as categorias — é o exemplo de não supervisionado.',
+    'Isolation Forest.o': 'Um algoritmo que isola o ponto estranho em poucos cortes.',
+    'Isolation Forest.p': 'Detecta anomalia sem precisar de exemplos rotulados de anomalia.',
+    'OAI.o': 'A implementação aberta de RAN e núcleo 5G que o Projeto 2 usa.',
+    'OAI.p': 'É de onde vêm o gNB, o nrUE e o rádio simulado do nosso laboratório.',
+    'Open5GS.o': 'A implementação aberta do núcleo 5G que o Projeto 1 usa.',
+    'Open5GS.p': 'Fornece AMF, SMF, UPF e o resto do núcleo em contêineres.',
+    'SUTD.o': 'A universidade de Singapura cujo campus tem a rede 5G privada dos artigos.',
+    'SUTD.p': 'É o testbed real onde os xApps do estudo foram validados, fora do simulador.',
   },
 
   // ---------------------------------------------------------------- en
@@ -423,6 +588,103 @@
     'MongoDB.p': 'It holds IMSI, keys and profile — what the core looks up during registration.',
     'iperf3.o': 'The traffic generator that measures end-to-end throughput.',
     'iperf3.p': 'It is the numeric proof that the network really delivered bandwidth.',
+
+    'SMO.o': 'The layer that operates the whole O-RAN network: configures, measures, upgrades, repairs.',
+    'SMO.p': 'It is where operations sees everything — and where the Non-RT RIC lives.',
+    'O2.o': 'The interface between the SMO and the cloud the O-RAN functions run on.',
+    'O2.p': 'It creates, moves and destroys the machines: infrastructure, not radio.',
+    'PM.o': 'Performance management: counters and measurements collected on a schedule.',
+    'PM.p': 'It is the raw material of KPIs — no PM, nothing to analyse.',
+    'FM.o': 'Fault management: alarms, for when something breaks or drifts.',
+    'FM.p': 'It says what is wrong NOW; PM says how things have been going.',
+    'VES.o': 'The standard event format nodes use to report to the collector.',
+    'VES.p': 'It puts alarms and measurements in the same envelope, whoever the vendor is.',
+    'RNIB.o': 'The base holding the current picture of the radio network inside the near-RT RIC.',
+    'RNIB.p': 'It is where an xApp looks up the cells and UEs before deciding.',
+    'O-Cloud.o': 'The cloud the O-RAN functions run on — servers, not sealed boxes.',
+    'O-Cloud.p': 'It lets O-CU, O-DU and RIC come up as software, managed by the SMO.',
+    'NG-RAN.o': 'The official name of the 5G access network: the set of gNBs.',
+    'NG-RAN.p': 'It is what attaches to the 5G core over the N2 and N3 interfaces.',
+    'CU.o': 'The gNB central unit: the upper layers, which may sit far from the antenna.',
+    'CU.p': 'It aggregates several DUs and handles signalling and sessions.',
+    'O-CU.o': 'The central unit in the open O-RAN flavour.',
+    'O-CU.p': 'Same job as the CU, with public interfaces — vendors become swappable.',
+    'O-DU.o': 'The open distributed unit: lower layers, close to the antenna.',
+    'O-DU.p': 'It schedules every millisecond; it is what talks to the O-RU.',
+    'O-RU.o': 'The open radio unit: the tip that transmits and receives.',
+    'O-RU.p': 'It attaches to the O-DU over the open fronthaul (7.2 split) — the heart of O-RAN.',
+    'RRC.o': 'The layer that negotiates the radio connection between phone and network.',
+    'RRC.p': 'It sets up, reconfigures and releases the link — the radio\u2019s conversation protocol.',
+    'RLC.o': 'The layer that segments data and handles retransmission.',
+    'RLC.p': 'It makes sure the piece lost over the air gets sent again.',
+    'MAC.o': 'The layer that decides, every millisecond, who transmits and how much.',
+    'MAC.p': 'It is the scheduler: where a RIC decision becomes PRBs for a UE.',
+    'PHY.o': 'The physical layer: modulation, coding, the signal in the air.',
+    'PHY.p': 'It is where SINR, CQI and MCS are born — the numbers KPM later reports.',
+    'DRB.o': 'The logical channel that carries the user DATA over the radio.',
+    'DRB.p': 'It keeps traffic apart from signalling and carries QoS out to the air.',
+    'KPI.o': 'A number summarising network performance: throughput, PRB, latency.',
+    'KPI.p': 'It is what goes on the dashboard to decide — a measurement turned indicator.',
+    'KQI.o': 'An indicator of what the USER feels, not of what the equipment does.',
+    'KQI.p': 'A network can look fine on KPIs and bad on KQIs — that gap is QoE.',
+    'QoE.o': 'The quality as perceived by whoever is using it: did the video stall or not.',
+    'QoE.p': 'It is the end goal; KPI and KQI are the clues that lead there.',
+    'SLA.o': 'The service level agreement: what was promised, with numbers.',
+    'SLA.p': 'It is what a KPI is compared against to call a violation.',
+    'UL.o': 'The upward direction: from the phone to the network.',
+    'UL.p': 'The sending direction — a photo going up, a voice going out, a UE report.',
+    'DL.o': 'The downward direction: from the network to the phone.',
+    'DL.p': 'The consuming direction — video, downloads, most of the traffic.',
+    'E2SM.o': 'The E2 service model: the contract of what can be measured and commanded.',
+    'E2SM.p': 'Without it RIC and gNB share no vocabulary — KPM and RC are two E2SMs.',
+    'UEThpUl.o': 'The E2SM-KPM counter for a UE\u2019s uplink throughput.',
+    'UEThpUl.p': 'It is the raw column the user-throughput indicator comes from, in kbps.',
+    'PrbTotUl.o': 'The E2SM-KPM counter for resource blocks used in the uplink.',
+    'PrbTotUl.p': 'It says how much of the radio was occupied — PRB occupancy in %.',
+    'p95.o': 'The value below which 95% of the measurements fall.',
+    'p95.p': 'It shows the near-worst case without being dragged by a single spike.',
+    'ETL.o': 'Extract, transform, and only then load into the destination.',
+    'ETL.p': 'It is the path from raw data to the trustworthy table you analyse.',
+    'ELT.o': 'Load first, transform afterwards, already inside the database.',
+    'ELT.p': 'It pays off when the database is stronger than the machine doing the transform.',
+    'EDA.o': 'The first exploration of the data: look before you model.',
+    'EDA.p': 'It is where you find the gap, the spike and the wrong unit — before failing elegantly.',
+    'DIKW.o': 'The ladder data → information → knowledge → wisdom.',
+    'DIKW.p': 'A reminder that a loose number is not a decision: each step adds context.',
+    'OLTP.o': 'The everyday database: many small writes, one row at a time.',
+    'OLTP.p': 'It records the facts; it is not where heavy analysis belongs.',
+    'OLAP.o': 'The analytical database: few queries, each sweeping many rows.',
+    'OLAP.p': 'It is where an aggregate question — mean per phase, total per cell — gets cheap.',
+    'TSDB.o': 'A database built for time series: every measurement with its instant.',
+    'TSDB.p': 'It stores timestamped telemetry and answers by time window.',
+    'InfluxDB.o': 'The time-series database used in the O-RAN labs.',
+    'InfluxDB.p': 'It is where the KPM xApp usually parks measurements for the dashboard to read.',
+    'SQLite.o': 'A whole relational database inside a single file.',
+    'SQLite.p': 'It lets you practise real SQL without installing any server.',
+    'JSONL.o': 'One JSON object per line, in a text file.',
+    'JSONL.p': 'The natural shape for logs and streams: readable line by line, without loading it all.',
+    'ZMQ.o': 'A messaging library between processes, with no broker in the middle.',
+    'ZMQ.p': 'It is how the simulated radio exchanges samples between gNB and UE in the lab.',
+    'ML.o': 'Teaching a computer to decide from examples instead of written rules.',
+    'ML.p': 'It is what lets the RIC predict and optimise without someone coding every case.',
+    'PCA.o': 'A way to summarise many columns into a few, keeping what varies.',
+    'PCA.p': 'It lets you see in two dimensions a set that had ten.',
+    'DNN.o': 'A neural network with several layers.',
+    'DNN.p': 'It learns relations plain regression misses — at the cost of explaining less.',
+    'MAD.o': 'Median absolute deviation: spread measured around the median.',
+    'MAD.p': 'The robust ruler — one isolated spike does not wreck it, as it would the standard deviation.',
+    'IQR.o': 'The range between the first and third quartiles: the middle 50%.',
+    'IQR.p': 'It is how an outlier is defined without assuming the data is a normal curve.',
+    'k-means.o': 'An algorithm that splits data into k groups by proximity.',
+    'k-means.p': 'It finds profiles with nobody naming the categories — the unsupervised example.',
+    'Isolation Forest.o': 'An algorithm that isolates the odd point in a few cuts.',
+    'Isolation Forest.p': 'It detects anomalies without needing labelled examples of anomalies.',
+    'OAI.o': 'The open implementation of 5G RAN and core that Project 2 uses.',
+    'OAI.p': 'It is where our lab\u2019s gNB, nrUE and simulated radio come from.',
+    'Open5GS.o': 'The open 5G core implementation that Project 1 uses.',
+    'Open5GS.p': 'It provides AMF, SMF, UPF and the rest of the core in containers.',
+    'SUTD.o': 'The Singapore university whose campus hosts the private 5G network in the papers.',
+    'SUTD.p': 'It is the real testbed where the study\u2019s xApps were validated, outside the simulator.',
   },
 
   // ---------------------------------------------------------------- es
@@ -578,6 +840,103 @@
     'MongoDB.p': 'Guarda IMSI, claves y perfil — lo que el núcleo consulta en el registro.',
     'iperf3.o': 'El generador de tráfico que mide el caudal de extremo a extremo.',
     'iperf3.p': 'Es la prueba numérica de que la red entregó ancho de banda de verdad.',
+
+    'SMO.o': 'La capa que opera toda la red O-RAN: configura, mide, actualiza y repara.',
+    'SMO.p': 'Es desde donde la operación lo ve todo — y donde vive el Non-RT RIC.',
+    'O2.o': 'La interfaz entre el SMO y la nube donde corren las funciones O-RAN.',
+    'O2.p': 'Crea, mueve y destruye las máquinas: es infraestructura, no radio.',
+    'PM.o': 'La gestión de rendimiento: contadores y medidas recogidos de forma periódica.',
+    'PM.p': 'Es la materia prima de los KPI — sin PM no hay nada que analizar.',
+    'FM.o': 'La gestión de fallos: alarmas, cuando algo se rompe o se desvía.',
+    'FM.p': 'Dice qué está mal AHORA; el PM dice cómo han ido las cosas.',
+    'VES.o': 'El formato estándar de evento con el que los nodos reportan al colector.',
+    'VES.p': 'Pone alarma y medida en el mismo sobre, sea cual sea el fabricante.',
+    'RNIB.o': 'La base con la foto actual de la red de radio dentro del near-RT RIC.',
+    'RNIB.p': 'Es donde el xApp consulta las celdas y los UE antes de decidir.',
+    'O-Cloud.o': 'La nube donde corren las funciones O-RAN — servidores, no cajas cerradas.',
+    'O-Cloud.p': 'Permite levantar O-CU, O-DU y RIC como software, gestionados por el SMO.',
+    'NG-RAN.o': 'El nombre oficial de la red de acceso 5G: el conjunto de los gNB.',
+    'NG-RAN.p': 'Es lo que se conecta al núcleo 5G por las interfaces N2 y N3.',
+    'CU.o': 'La unidad central del gNB: las capas altas, que pueden estar lejos de la antena.',
+    'CU.p': 'Agrupa varias DU y se ocupa de la señalización y de la sesión.',
+    'O-CU.o': 'La unidad central en la versión abierta de O-RAN.',
+    'O-CU.p': 'La misma función que la CU, con interfaces públicas — se puede cambiar de fabricante.',
+    'O-DU.o': 'La unidad distribuida abierta: capas bajas, cerca de la antena.',
+    'O-DU.p': 'Planifica cada milisegundo; es la que habla con la O-RU.',
+    'O-RU.o': 'La unidad de radio abierta: la punta que transmite y recibe.',
+    'O-RU.p': 'Se conecta a la O-DU por el fronthaul abierto (split 7.2) — el corazón de O-RAN.',
+    'RRC.o': 'La capa que negocia la conexión de radio entre el móvil y la red.',
+    'RRC.p': 'Establece, reconfigura y libera el enlace — el protocolo de conversación de la radio.',
+    'RLC.o': 'La capa que segmenta los datos y se ocupa de la retransmisión.',
+    'RLC.p': 'Garantiza que el trozo perdido en el aire se vuelva a enviar.',
+    'MAC.o': 'La capa que decide, cada milisegundo, quién transmite y cuánto.',
+    'MAC.p': 'Es el planificador: donde la decisión del RIC se convierte en PRB para un UE.',
+    'PHY.o': 'La capa física: modulación, codificación, la señal en el aire.',
+    'PHY.p': 'Es donde nacen SINR, CQI y MCS — los números que luego reporta el KPM.',
+    'DRB.o': 'El canal lógico que lleva los DATOS del usuario por la radio.',
+    'DRB.p': 'Separa el tráfico de la señalización y lleva la QoS hasta el aire.',
+    'KPI.o': 'Un número que resume el rendimiento de la red: caudal, PRB, latencia.',
+    'KPI.p': 'Es lo que se pone en el panel para decidir — la medida vuelta indicador.',
+    'KQI.o': 'Un indicador de lo que SIENTE el usuario, no de lo que hace el equipo.',
+    'KQI.p': 'La red puede ir bien en KPI y mal en KQI — en esa brecha vive el QoE.',
+    'QoE.o': 'La calidad percibida por quien usa: el vídeo se cortó o no se cortó.',
+    'QoE.p': 'Es el objetivo final; KPI y KQI son las pistas para llegar a él.',
+    'SLA.o': 'El acuerdo de nivel de servicio: lo que se prometió, con números.',
+    'SLA.p': 'Es contra lo que se compara el KPI para declarar una violación.',
+    'UL.o': 'Sentido de subida: del móvil hacia la red.',
+    'UL.p': 'Es el sentido del envío — la foto que sube, la voz que sale, la medida que reporta el UE.',
+    'DL.o': 'Sentido de bajada: de la red hacia el móvil.',
+    'DL.p': 'Es el sentido del consumo — vídeo, descargas, la mayor parte del tráfico.',
+    'E2SM.o': 'El modelo de servicio de E2: el contrato de lo que se puede medir y mandar.',
+    'E2SM.p': 'Sin él, RIC y gNB no comparten vocabulario — KPM y RC son dos E2SM.',
+    'UEThpUl.o': 'El contador E2SM-KPM del caudal de subida de un UE.',
+    'UEThpUl.p': 'Es la columna cruda de la que sale el indicador de caudal del usuario, en kbps.',
+    'PrbTotUl.o': 'El contador E2SM-KPM de los bloques de recurso usados en la subida.',
+    'PrbTotUl.p': 'Dice cuánta radio se ocupó — la ocupación en % de los PRB.',
+    'p95.o': 'El valor por debajo del cual está el 95% de las medidas.',
+    'p95.p': 'Muestra el casi-peor caso sin dejarse arrastrar por un pico aislado.',
+    'ETL.o': 'Extraer, transformar y solo entonces cargar en el destino.',
+    'ETL.p': 'Es el camino del dato crudo hasta la tabla fiable que se analiza.',
+    'ELT.o': 'Cargar primero, transformar después, ya dentro de la base.',
+    'ELT.p': 'Tiene sentido cuando la base es más potente que la máquina que transforma.',
+    'EDA.o': 'La exploración inicial de los datos: mirar antes de modelar.',
+    'EDA.p': 'Es donde se descubre el hueco, el pico y la unidad equivocada — antes de fallar con elegancia.',
+    'DIKW.o': 'La escalera dato → información → conocimiento → sabiduría.',
+    'DIKW.p': 'Recuerda que un número suelto no es una decisión: falta contexto en cada peldaño.',
+    'OLTP.o': 'La base del día a día: muchas escrituras pequeñas, una fila cada vez.',
+    'OLTP.p': 'Registra los hechos; no es donde va el análisis pesado.',
+    'OLAP.o': 'La base de análisis: pocas consultas, cada una barriendo muchas filas.',
+    'OLAP.p': 'Es donde la pregunta agregada — media por fase, total por celda — sale barata.',
+    'TSDB.o': 'Base hecha para series temporales: cada medida con su instante.',
+    'TSDB.p': 'Guarda telemetría con marca de tiempo y responde por ventana de tiempo.',
+    'InfluxDB.o': 'La base de series temporales usada en los laboratorios O-RAN.',
+    'InfluxDB.p': 'Es donde el xApp de KPM suele dejar las medidas para que el panel las lea.',
+    'SQLite.o': 'Una base relacional entera dentro de un solo archivo.',
+    'SQLite.p': 'Permite practicar SQL de verdad sin instalar ningún servidor.',
+    'JSONL.o': 'Un objeto JSON por línea, en un archivo de texto.',
+    'JSONL.p': 'Es la forma natural del log y del flujo: se lee línea a línea, sin cargarlo todo.',
+    'ZMQ.o': 'Una biblioteca de mensajes entre procesos, sin servidor en medio.',
+    'ZMQ.p': 'Por ella la radio simulada intercambia muestras entre gNB y UE en el laboratorio.',
+    'ML.o': 'Enseñar al ordenador a decidir a partir de ejemplos, en vez de reglas escritas.',
+    'ML.p': 'Es lo que permite al RIC predecir y optimizar sin que alguien programe cada caso.',
+    'PCA.o': 'Una forma de resumir muchas columnas en pocas, guardando lo que varía.',
+    'PCA.p': 'Sirve para ver en dos dimensiones un conjunto que tenía diez.',
+    'DNN.o': 'Una red neuronal con varias capas.',
+    'DNN.p': 'Aprende relaciones que la regresión simple no capta — a cambio de explicar menos.',
+    'MAD.o': 'La desviación absoluta mediana: la dispersión medida en torno a la mediana.',
+    'MAD.p': 'Es la regla robusta — un pico aislado no la estropea, como sí haría con la desviación típica.',
+    'IQR.o': 'El rango entre el primer y el tercer cuartil: el 50% central.',
+    'IQR.p': 'Es como se define un atípico sin suponer que los datos son una curva normal.',
+    'k-means.o': 'Un algoritmo que separa los datos en k grupos por cercanía.',
+    'k-means.p': 'Encuentra perfiles sin que nadie nombre las categorías — el ejemplo no supervisado.',
+    'Isolation Forest.o': 'Un algoritmo que aísla el punto raro en pocos cortes.',
+    'Isolation Forest.p': 'Detecta anomalías sin necesitar ejemplos etiquetados de anomalía.',
+    'OAI.o': 'La implementación abierta de RAN y núcleo 5G que usa el Proyecto 2.',
+    'OAI.p': 'De ahí vienen el gNB, el nrUE y la radio simulada de nuestro laboratorio.',
+    'Open5GS.o': 'La implementación abierta del núcleo 5G que usa el Proyecto 1.',
+    'Open5GS.p': 'Aporta AMF, SMF, UPF y el resto del núcleo en contenedores.',
+    'SUTD.o': 'La universidad de Singapur en cuyo campus está la red 5G privada de los artículos.',
+    'SUTD.p': 'Es el testbed real donde se validaron los xApps del estudio, fuera del simulador.',
   },
 
   // ---------------------------------------------------------------- fr
@@ -733,6 +1092,103 @@
     'MongoDB.p': 'Elle garde IMSI, clés et profil — ce que le cœur consulte à l’enregistrement.',
     'iperf3.o': 'Le générateur de trafic qui mesure le débit de bout en bout.',
     'iperf3.p': 'C’est la preuve chiffrée que le réseau a bien livré du débit.',
+
+    'SMO.o': 'La couche qui exploite tout le réseau O-RAN : configure, mesure, met à jour, répare.',
+    'SMO.p': 'C’est de là que l’exploitation voit tout — et où vit le Non-RT RIC.',
+    'O2.o': 'L’interface entre le SMO et le nuage où tournent les fonctions O-RAN.',
+    'O2.p': 'Elle crée, déplace et détruit les machines : de l’infrastructure, pas de la radio.',
+    'PM.o': 'La gestion des performances : compteurs et mesures relevés périodiquement.',
+    'PM.p': 'C’est la matière première des KPI — sans PM, rien à analyser.',
+    'FM.o': 'La gestion des pannes : les alarmes, quand quelque chose casse ou dérive.',
+    'FM.p': 'Elle dit ce qui va mal MAINTENANT ; le PM dit comment les choses évoluent.',
+    'VES.o': 'Le format d’événement standard que les nœuds envoient au collecteur.',
+    'VES.p': 'Il met alarme et mesure dans la même enveloppe, quel que soit le fournisseur.',
+    'RNIB.o': 'La base contenant la photo actuelle du réseau radio, dans le near-RT RIC.',
+    'RNIB.p': 'C’est là que le xApp consulte les cellules et les UE avant de décider.',
+    'O-Cloud.o': 'Le nuage où tournent les fonctions O-RAN — des serveurs, pas des boîtes fermées.',
+    'O-Cloud.p': 'Il permet de lancer O-CU, O-DU et RIC en logiciel, pilotés par le SMO.',
+    'NG-RAN.o': 'Le nom officiel du réseau d’accès 5G : l’ensemble des gNB.',
+    'NG-RAN.p': 'C’est ce qui se raccorde au cœur 5G par les interfaces N2 et N3.',
+    'CU.o': 'L’unité centrale du gNB : les couches hautes, qui peuvent être loin de l’antenne.',
+    'CU.p': 'Elle regroupe plusieurs DU et traite la signalisation et la session.',
+    'O-CU.o': 'L’unité centrale dans la version ouverte de l’O-RAN.',
+    'O-CU.p': 'Même rôle que la CU, avec des interfaces publiques — le fournisseur devient interchangeable.',
+    'O-DU.o': 'L’unité distribuée ouverte : couches basses, près de l’antenne.',
+    'O-DU.p': 'Elle ordonnance chaque milliseconde ; c’est elle qui parle à l’O-RU.',
+    'O-RU.o': 'L’unité radio ouverte : la pointe qui émet et reçoit.',
+    'O-RU.p': 'Elle se raccorde à l’O-DU par le fronthaul ouvert (split 7.2) — le cœur de l’O-RAN.',
+    'RRC.o': 'La couche qui négocie la connexion radio entre le téléphone et le réseau.',
+    'RRC.p': 'Elle établit, reconfigure et libère le lien — le protocole de conversation de la radio.',
+    'RLC.o': 'La couche qui segmente les données et gère la retransmission.',
+    'RLC.p': 'Elle garantit que le morceau perdu dans l’air soit renvoyé.',
+    'MAC.o': 'La couche qui décide, chaque milliseconde, qui émet et combien.',
+    'MAC.p': 'C’est l’ordonnanceur : là où la décision du RIC devient des PRB pour un UE.',
+    'PHY.o': 'La couche physique : modulation, codage, le signal dans l’air.',
+    'PHY.p': 'C’est là que naissent SINR, CQI et MCS — les chiffres que le KPM remonte ensuite.',
+    'DRB.o': 'Le canal logique qui porte les DONNÉES de l’usager sur la radio.',
+    'DRB.p': 'Il sépare le trafic de la signalisation et porte la QoS jusqu’à l’air.',
+    'KPI.o': 'Un chiffre qui résume la performance du réseau : débit, PRB, latence.',
+    'KPI.p': 'C’est ce qu’on met au tableau de bord pour décider — la mesure devenue indicateur.',
+    'KQI.o': 'Un indicateur de ce que RESSENT l’usager, pas de ce que fait l’équipement.',
+    'KQI.p': 'Un réseau peut être bon en KPI et mauvais en KQI — cet écart, c’est la QoE.',
+    'QoE.o': 'La qualité perçue par celui qui utilise : la vidéo a saccadé ou non.',
+    'QoE.p': 'C’est le but final ; KPI et KQI sont les indices qui y mènent.',
+    'SLA.o': 'L’accord de niveau de service : ce qui a été promis, chiffré.',
+    'SLA.p': 'C’est à lui qu’on compare le KPI pour déclarer une violation.',
+    'UL.o': 'Le sens montant : du téléphone vers le réseau.',
+    'UL.p': 'C’est le sens de l’envoi — la photo qui monte, la voix qui part, la mesure remontée par l’UE.',
+    'DL.o': 'Le sens descendant : du réseau vers le téléphone.',
+    'DL.p': 'C’est le sens de la consommation — vidéo, téléchargements, l’essentiel du trafic.',
+    'E2SM.o': 'Le modèle de service de l’E2 : le contrat de ce qui se mesure et de ce qui se commande.',
+    'E2SM.p': 'Sans lui, RIC et gNB n’ont pas de vocabulaire commun — KPM et RC sont deux E2SM.',
+    'UEThpUl.o': 'Le compteur E2SM-KPM du débit montant d’un UE.',
+    'UEThpUl.p': 'C’est la colonne brute d’où sort l’indicateur de débit de l’usager, en kbps.',
+    'PrbTotUl.o': 'Le compteur E2SM-KPM des blocs de ressources utilisés en montant.',
+    'PrbTotUl.p': 'Il dit quelle part de la radio a été occupée — l’occupation en % des PRB.',
+    'p95.o': 'La valeur en dessous de laquelle se trouvent 95 % des mesures.',
+    'p95.p': 'Elle montre le presque-pire cas sans se laisser entraîner par un pic isolé.',
+    'ETL.o': 'Extraire, transformer, et seulement ensuite charger dans la destination.',
+    'ETL.p': 'C’est le chemin de la donnée brute vers la table fiable que l’on analyse.',
+    'ELT.o': 'Charger d’abord, transformer ensuite, déjà dans la base.',
+    'ELT.p': 'Cela vaut le coup quand la base est plus puissante que la machine qui transforme.',
+    'EDA.o': 'La première exploration des données : regarder avant de modéliser.',
+    'EDA.p': 'C’est là qu’on trouve le trou, le pic et la mauvaise unité — avant d’échouer élégamment.',
+    'DIKW.o': 'L’échelle donnée → information → connaissance → sagesse.',
+    'DIKW.p': 'Elle rappelle qu’un chiffre isolé n’est pas une décision : il manque du contexte à chaque marche.',
+    'OLTP.o': 'La base du quotidien : beaucoup de petites écritures, une ligne à la fois.',
+    'OLTP.p': 'Elle enregistre les faits ; ce n’est pas là que va l’analyse lourde.',
+    'OLAP.o': 'La base d’analyse : peu de requêtes, chacune balayant beaucoup de lignes.',
+    'OLAP.p': 'C’est là que la question agrégée — moyenne par phase, total par cellule — devient bon marché.',
+    'TSDB.o': 'Base faite pour les séries temporelles : chaque mesure avec son instant.',
+    'TSDB.p': 'Elle stocke la télémétrie horodatée et répond par fenêtre de temps.',
+    'InfluxDB.o': 'La base de séries temporelles utilisée dans les labos O-RAN.',
+    'InfluxDB.p': 'C’est là que le xApp KPM dépose en général les mesures que le tableau de bord relira.',
+    'SQLite.o': 'Une base relationnelle entière dans un seul fichier.',
+    'SQLite.p': 'Elle permet de pratiquer du vrai SQL sans installer le moindre serveur.',
+    'JSONL.o': 'Un objet JSON par ligne, dans un fichier texte.',
+    'JSONL.p': 'La forme naturelle du journal et du flux : lisible ligne à ligne, sans tout charger.',
+    'ZMQ.o': 'Une bibliothèque de messages entre processus, sans serveur au milieu.',
+    'ZMQ.p': 'C’est par elle que la radio simulée échange des échantillons entre gNB et UE au labo.',
+    'ML.o': 'Apprendre à l’ordinateur à décider à partir d’exemples, plutôt que de règles écrites.',
+    'ML.p': 'C’est ce qui permet au RIC de prévoir et d’optimiser sans coder chaque cas.',
+    'PCA.o': 'Une façon de résumer beaucoup de colonnes en quelques-unes, en gardant ce qui varie.',
+    'PCA.p': 'Elle permet de voir en deux dimensions un ensemble qui en avait dix.',
+    'DNN.o': 'Un réseau de neurones à plusieurs couches.',
+    'DNN.p': 'Il apprend des relations que la régression simple rate — au prix d’expliquer moins.',
+    'MAD.o': 'L’écart absolu médian : la dispersion mesurée autour de la médiane.',
+    'MAD.p': 'La règle robuste — un pic isolé ne l’abîme pas, contrairement à l’écart-type.',
+    'IQR.o': 'L’étendue entre le premier et le troisième quartile : les 50 % du milieu.',
+    'IQR.p': 'C’est ainsi qu’on définit une valeur aberrante sans supposer une courbe normale.',
+    'k-means.o': 'Un algorithme qui sépare les données en k groupes par proximité.',
+    'k-means.p': 'Il trouve des profils sans que personne nomme les catégories — l’exemple non supervisé.',
+    'Isolation Forest.o': 'Un algorithme qui isole le point étrange en peu de coupes.',
+    'Isolation Forest.p': 'Il détecte des anomalies sans exemples étiquetés d’anomalie.',
+    'OAI.o': 'L’implémentation ouverte du RAN et du cœur 5G qu’utilise le Projet 2.',
+    'OAI.p': 'C’est de là que viennent le gNB, le nrUE et la radio simulée de notre laboratoire.',
+    'Open5GS.o': 'L’implémentation ouverte du cœur 5G qu’utilise le Projet 1.',
+    'Open5GS.p': 'Elle fournit AMF, SMF, UPF et le reste du cœur en conteneurs.',
+    'SUTD.o': 'L’université de Singapour dont le campus abrite le réseau 5G privé des articles.',
+    'SUTD.p': 'C’est le banc d’essai réel où les xApps de l’étude ont été validés, hors simulateur.',
   },
 };
 
@@ -741,8 +1197,18 @@
   // fronteira de palavra, então \bUPF\b casa dentro de "UPF-A"). O `s?` final
   // aceita o plural que os textos usam: "os KPMs", "os xApps", "as slices".
   var ESC = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
-  var CHAVES = Object.keys(TERMOS).sort(function (a, b) { return b.length - a.length; });
+  var CHAVES = Object.keys(TERMOS).concat(Object.keys(ALIAS))
+    .sort(function (a, b) { return b.length - a.length; });
   var RE = new RegExp('\\b(?:' + CHAVES.map(ESC).join('|') + ')s?\\b', 'g');
+  // grafia encontrada no texto → verbete
+  function canonico(bruto) {
+    if (Object.prototype.hasOwnProperty.call(TERMOS, bruto)) return bruto;
+    if (Object.prototype.hasOwnProperty.call(ALIAS, bruto)) return ALIAS[bruto];
+    var sem = bruto.replace(/s$/, '');                       // plural
+    if (Object.prototype.hasOwnProperty.call(TERMOS, sem)) return sem;
+    if (Object.prototype.hasOwnProperty.call(ALIAS, sem)) return ALIAS[sem];
+    return null;
+  }
 
   var LANGS = ['pt', 'en', 'es', 'fr'];
   function idioma() {
@@ -765,8 +1231,22 @@
   // curto (o balão continua lá).
   // A lista importa: título e legenda do mesmo passo compartilham o "uma vez
   // só", senão o nome por extenso sairia duas vezes na mesma tela.
-  function marcar(raizes) {
+  //
+  // Opção `{umaVez:true}`: marca só a PRIMEIRA ocorrência de cada termo.
+  // Numa legenda curta, lida isolada, marcar toda ocorrência ajuda. Num TEXTO
+  // de aula, não: uma página tinha 338 sublinhados e virou um campo pontilhado.
+  // Numa aula o termo se apresenta uma vez — depois já é vocabulário.
+  // O que NUNCA se marca: o que já foi marcado, os chips, e CÓDIGO — dentro de
+  // um `<code>` a sigla é literal, não vocabulário; sublinhar ali sugere que o
+  // texto do programa mudou. `opcoes.pular` acrescenta seletores da página
+  // (ex.: o console de instrumentos do lab).
+  var NUNCA = '.glos-termo, .glos-exp, .chip, code, pre, kbd, samp';
+
+  function marcar(raizes, opcoes) {
     var lista = Array.isArray(raizes) ? raizes : [raizes];
+    var umaVez = !!(opcoes && opcoes.umaVez);
+    var pular = NUNCA + (opcoes && opcoes.pular ? ', ' + opcoes.pular : '');
+    var vistos = {};
     var expandidos = {};
     for (var r = 0; r < lista.length; r++) {
       var item = lista[r];
@@ -777,13 +1257,12 @@
       var doc = raiz.ownerDocument, nos = [];
       var w = doc.createTreeWalker(raiz, NodeFilter.SHOW_TEXT, {
         acceptNode: function (n) {
-          // o que já foi marcado (e o conteúdo dos chips) não se mexe de novo
-          return n.parentElement && n.parentElement.closest('.glos-termo, .glos-exp, .chip')
+          return n.parentElement && n.parentElement.closest(pular)
             ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
         },
       });
       while (w.nextNode()) nos.push(w.currentNode);
-      for (var i = 0; i < nos.length; i++) troca(nos[i], expandir ? expandidos : null);
+      for (var i = 0; i < nos.length; i++) troca(nos[i], expandir ? expandidos : null, umaVez ? vistos : null);
     }
   }
 
@@ -800,7 +1279,8 @@
   }
 
   // `expandidos` nulo = só marcar (sem o nome por extenso).
-  function troca(no, expandidos) {
+  // `vistos` não nulo = marcar só a primeira ocorrência de cada termo.
+  function troca(no, expandidos, vistos) {
     var txt = no.nodeValue;
     RE.lastIndex = 0;
     if (!RE.test(txt)) return;
@@ -808,7 +1288,10 @@
     var doc = no.ownerDocument, frag = doc.createDocumentFragment(), fim = 0, m;
     while ((m = RE.exec(txt)) !== null) {
       var bruto = m[0];
-      var termo = Object.prototype.hasOwnProperty.call(TERMOS, bruto) ? bruto : bruto.replace(/s$/, '');
+      var termo = canonico(bruto);
+      if (!termo) continue;   // não deveria acontecer: o teste garante que todo alias tem verbete
+      if (vistos && vistos[termo]) continue;   // já se apresentou nesta página
+      if (vistos) vistos[termo] = true;
       frag.appendChild(doc.createTextNode(txt.slice(fim, m.index)));
       var span = doc.createElement('span');
       span.className = 'glos-termo';
@@ -952,6 +1435,7 @@
 
   window.GLOSSARIO = {
     termos: TERMOS,
+    alias: ALIAS,
     dicts: DICTS,
     langs: LANGS,
     marcar: marcar,

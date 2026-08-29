@@ -41,6 +41,7 @@
 </div>
 
 <script src="/static/lab/lab-i18n.js?v=%VER%"></script>
+<script src="/static/ops/glossario.js?v=%VER%"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s);
 const T=(k,p)=>window.LABI18N?LABI18N.t(k,p):k;
@@ -257,7 +258,19 @@ async function main(){
   wireRun(document);
   $("#footer").innerHTML=esc(T("est.footer",{prof:e.prof}));
 }
-main().catch(err=>{$("#h1").textContent=T("est.err");$("#lead").textContent=String(err);});
+// As siglas das aulas se explicam na própria tela: nome por extenso entre
+// parênteses (uma vez por página — isto é texto, não legenda de passo) e balão
+// no hover, no foco e no toque. O título entra sem expandir: é manchete.
+// Se o módulo não carregar, o texto continua legível, só sem os apoios.
+function explicaSiglas(){
+  try{
+    if(!window.Glossario) return;
+    const el=id=>document.getElementById(id);
+    Glossario.marcar([{el:el("h1"),expandir:false}].concat(
+      ["lead", "meta", "aulas", "temas", "atividades", "proximas", "dados"].map(el).filter(Boolean)), { umaVez: true });
+  }catch(e){ console.warn("glossário:", e); }
+}
+main().then(explicaSiglas).catch(err=>{$("#h1").textContent=T("est.err");$("#lead").textContent=String(err);});
 </script>
 </body>
 </html>

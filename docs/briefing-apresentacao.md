@@ -170,7 +170,12 @@ ganho medido — que é a mesma humildade do resto do trabalho.
 
 ## Antes de entrar
 
-1. Ligar o Projeto 2 no ⏻ (leva 1 a 2 min) — **hoje ele já está ligado**.
+1. Ligar o Projeto 2 no ⏻ (leva 1 a 2 min) — **está DESLIGADO** (alguém rodou o
+   *off* às 11:10 de 29/08; foi desligamento limpo, não queda). Ensaiado às 11:32:
+   sobe em ~2 min, 13 contêineres, gNB/UE/RIC vivos, E2 em SCTP ESTAB, rádio com
+   SNR 50,5 dB e MCS 28. **E deixe desligado até 10 min antes**: a instância é
+   `t4g.xlarge`, *burstable* — o lab a ~77% de CPU queima crédito, e o baseline é
+   40%. Rodar a noite toda entrega uma máquina lenta bem na hora da demo.
 2. **Ctrl+Shift+R** — obrigatório, houve deploy na madrugada (v0.84.0).
 3. Conferir na régua: **três bolinhas verdes** (Core, E2 lab, Non-RT) e o
    quadrante **RÁDIO·E2 com números**. Sem número no rádio, o gNB não subiu.

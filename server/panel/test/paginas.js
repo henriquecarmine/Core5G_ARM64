@@ -52,7 +52,15 @@ for (const arq of paginas) {
   //    visita, e a aba fica com o ícone genérico do navegador.
   if (!/rel="icon"/.test(texto)) erros.push(`${rel}: sem <link rel="icon">`);
 
-  // 3) quem pinta, carrega a identidade
+  // 3) o cache-buster é UM só, resolvido ao servir (`?v=%VER%`).
+  //    Havia nove números escritos à mão espalhados, e eles se separaram: o
+  //    painel pedia o tokens.css da 0.75.0 quando o projeto já ia na 0.80.3.
+  //    Como /static é cacheado pelo navegador, a tela do professor não mudava
+  //    depois do deploy — e não havia como perceber olhando.
+  const fixos = [...texto.matchAll(/\?v=([0-9][0-9.]*)/g)].map((m) => m[1]);
+  if (fixos.length) erros.push(`${rel}: ?v= com número escrito à mão (${[...new Set(fixos)].join(', ')}) — use ?v=%VER%`);
+
+  // 4) quem pinta, carrega a identidade
   const pinta = /<style[\s>]/.test(texto);
   const temIdentidade = /href="\/static\/tokens\.css/.test(texto);
   if (pinta && !temIdentidade) erros.push(`${rel}: tem <style> mas não carrega /static/tokens.css`);

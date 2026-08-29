@@ -23,6 +23,8 @@ import subprocess
 import threading
 import time
 from pathlib import Path
+
+from fastapi.responses import HTMLResponse
 from typing import Iterator
 
 from fastapi import HTTPException, Request
@@ -329,6 +331,27 @@ def stream_command(cmd: list[str], cwd: Path, env: dict | None = None, lang: str
 # segura versões velhas do painel depois de cada deploy (o professor via bugs
 # já corrigidos). no-cache = revalida a cada load (304 quando não mudou).
 NO_CACHE = {"Cache-Control": "no-cache, must-revalidate"}
+
+
+# ---- página HTML com o cache-buster resolvido -----------------------------
+# `?v=%VER%` nas páginas vira `?v=<VERSION>` aqui. Antes cada página carregava
+# um número escrito à mão, e eles se separaram: o painel pedia o tokens.css da
+# 0.75.0 quando o projeto já estava na 0.80.3, e o navegador — que cacheia
+# /static normalmente — continuava servindo a folha antiga. A tela "não mudava"
+# depois do deploy, e não havia como saber olhando.
+_PAG_CACHE: dict = {}
+
+
+def pagina(caminho) -> HTMLResponse:
+    """Serve um HTML trocando %VER% pela versão. Relê só quando o arquivo muda."""
+    chave = str(caminho)
+    mtime = caminho.stat().st_mtime
+    guardado = _PAG_CACHE.get(chave)
+    if not guardado or guardado[0] != mtime:
+        html = caminho.read_text(encoding="utf-8").replace("%VER%", VERSION)
+        _PAG_CACHE[chave] = (mtime, html)
+        guardado = _PAG_CACHE[chave]
+    return HTMLResponse(guardado[1], headers=NO_CACHE)
 
 # ---- i18n do servidor (F5): idioma vem do cookie que o painel grava ----
 LANGS = ("pt", "en", "es", "fr")

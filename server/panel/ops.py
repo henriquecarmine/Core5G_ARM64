@@ -19,9 +19,10 @@ from pathlib import Path
 from typing import Iterator
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
 
 from core import (
+    pagina,
     GUEST_USER,
     NO_CACHE,
     RESULTS_DIR,
@@ -376,21 +377,21 @@ threading.Thread(target=_telemetry_loop, daemon=True, name="telemetry-collector"
 
 
 @router.get("/")
-def index() -> FileResponse:
-    return FileResponse(OPS_DIR / "index.html", headers=NO_CACHE)
+def index() -> HTMLResponse:
+    return pagina(OPS_DIR / "index.html")
 
 
 @router.get("/topology")
-def topology_page() -> FileResponse:
-    return FileResponse(OPS_DIR / "topology.html", headers=NO_CACHE)
+def topology_page() -> HTMLResponse:
+    return pagina(OPS_DIR / "topology.html")
 
 
 @router.get("/analise")
-def analise_page() -> FileResponse:
+def analise_page() -> HTMLResponse:
     """Analisador do laboratório: telemetria, rádio, serviços, testes e a
     leitura do que tudo isso quer dizer. Lê os mesmos endpoints do painel —
     não coleta nada por conta própria."""
-    return FileResponse(OPS_DIR / "analise.html", headers=NO_CACHE)
+    return pagina(OPS_DIR / "analise.html")
 
 
 @router.get("/api/results")

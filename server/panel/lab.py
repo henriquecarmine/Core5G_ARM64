@@ -17,9 +17,10 @@ import threading
 import time
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from core import (
+    pagina,
     ADMIN_USERS,
     NO_CACHE,
     RESULTS_DIR,
@@ -36,55 +37,55 @@ LAB_DIR = STATIC_DIR / "lab"
 # Lab de RIC com IA — cards didáticos (mini-labs por técnica de ML). Servidos
 # como páginas autenticadas (fora de PUBLIC_PATHS), no mesmo molde da topologia.
 @router.get("/lab")
-def lab_hub_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-hub.html", headers=NO_CACHE)
+def lab_hub_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-hub.html")
 
 
 @router.get("/lab/fundamentos")
-def lab_fundamentos_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-fundamentos.html", headers=NO_CACHE)
+def lab_fundamentos_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-fundamentos.html")
 
 
 @router.get("/lab/regressao")
-def lab_regressao_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-regressao.html", headers=NO_CACHE)
+def lab_regressao_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-regressao.html")
 
 
 @router.get("/lab/classificacao")
-def lab_classificacao_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-classificacao.html", headers=NO_CACHE)
+def lab_classificacao_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-classificacao.html")
 
 
 # Casos do artigo (Ngo et al. 2024) sobre os dados reais do SUTD — classificadores.
 @router.get("/lab/localizacao")
-def lab_localizacao_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-localizacao.html", headers=NO_CACHE)
+def lab_localizacao_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-localizacao.html")
 
 
 @router.get("/lab/manutencao")
-def lab_manutencao_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-manutencao.html", headers=NO_CACHE)
+def lab_manutencao_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-manutencao.html")
 
 
 @router.get("/lab/clustering")
-def lab_clustering_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-clustering.html", headers=NO_CACHE)
+def lab_clustering_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-clustering.html")
 
 
 @router.get("/lab/anomalia")
-def lab_anomalia_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-anomalia.html", headers=NO_CACHE)
+def lab_anomalia_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-anomalia.html")
 
 
 @router.get("/lab/pca")
-def lab_pca_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-pca.html", headers=NO_CACHE)
+def lab_pca_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-pca.html")
 
 
 # Projeto final: página de fechamento — escolher o caso, rodar o teste, gerar o relatório.
 @router.get("/lab/projeto")
-def lab_projeto_page() -> FileResponse:
-    return FileResponse(LAB_DIR / "lab-projeto.html", headers=NO_CACHE)
+def lab_projeto_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-projeto.html")
 
 
 # Fase C — Estudos por cadeira. Conteúdo plugável: static/lab/estudos/index.json
@@ -94,14 +95,14 @@ def lab_projeto_page() -> FileResponse:
 def lab_estudo_page(n: int) -> FileResponse:
     if n not in (1, 2, 3, 4):
         raise HTTPException(404, "estudo inexistente")
-    return FileResponse(LAB_DIR / "lab-estudo.html", headers=NO_CACHE)
+    return pagina(LAB_DIR / "lab-estudo.html")
 
 
 @router.get("/lab/estudo/{n}/aula/{k}")
 def lab_aula_page(n: int, k: int) -> FileResponse:
     if n not in (1, 2, 4) or not (1 <= k <= 6):
         raise HTTPException(404, "aula inexistente")
-    return FileResponse(LAB_DIR / "lab-aula.html", headers=NO_CACHE)
+    return pagina(LAB_DIR / "lab-aula.html")
 
 
 # Dúvidas do Lab de IA: aluno/professor envia "não entendi" com a pergunta;

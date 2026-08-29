@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Core5G_ARM64 — Painel</title>
 <script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
-<link rel="stylesheet" href="/static/tokens.css?v=0.75.0">
+<link rel="stylesheet" href="/static/tokens.css?v=%VER%">
 <style>
   /* ===== PONTE PARA A IDENTIDADE (docs/identidade-visual.md) =====
      Os nomes daqui são os antigos, para os ~250 usos da folha continuarem
@@ -1146,9 +1146,9 @@
 </div>
 
 <script src="../i18n.js"></script>
-<script src="/static/ops/flow-strip.js?v=0.65.0"></script>
-<script src="/static/ops/energy.js?v=0.61.3"></script>
-<script src="/static/ops/mini-map.js?v=0.71.1"></script>
+<script src="/static/ops/flow-strip.js?v=%VER%"></script>
+<script src="/static/ops/energy.js?v=%VER%"></script>
+<script src="/static/ops/mini-map.js?v=%VER%"></script>
 <script>
 // Robustez file:// (smoke do CI): sem os módulos /static/, viram no-ops —
 // a página (i18n, topbar, console) segue funcional.
@@ -1175,7 +1175,7 @@ document.getElementById('credits-link').onclick = (e) => {
   const m = document.createElement('div'); m.className = 'en-mod';
   m.style.maxWidth = '420px'; m.style.textAlign = 'center';
   m.innerHTML = '<span class="x" style="position:absolute;top:10px;right:14px;cursor:pointer;color:var(--ink-3)">✕</span>'
-    + '<div style="background:var(--surface);border-radius:12px;padding:16px 22px;display:inline-block;margin:6px 0 4px"><img src="/static/ops/cesar-marca.svg?v=1" alt="CESAR School" style="height:84px;display:block"></div>'
+    + '<div style="background:var(--surface);border-radius:12px;padding:16px 22px;display:inline-block;margin:6px 0 4px"><img src="/static/ops/cesar-marca.svg?v=%VER%" alt="CESAR School" style="height:84px;display:block"></div>'
     + '<div style="font-size:10px;letter-spacing:.25em;color:var(--ink-3);text-transform:uppercase;margin-bottom:16px">Centro de Estudos e Sistemas Avançados do Recife</div>'
     + '<div style="border-top:1px solid var(--line);padding-top:14px;font-size:13px;line-height:2">'
     + '<div style="font-size:10px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase">Coordenação</div>'

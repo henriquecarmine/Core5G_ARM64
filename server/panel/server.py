@@ -103,8 +103,9 @@ def i18n_js() -> FileResponse:
 def login(request: Request):
     if current_user(request) is not None:
         return RedirectResponse("/")
-    html = (STATIC_DIR / "login.html").read_text()
-    html = html.replace("__VERSION__", VERSION)
+    html = (STATIC_DIR / "login.html").read_text(encoding="utf-8")
+    # %VER% é o cache-buster de /static; __VERSION__ é o número exibido na tela
+    html = html.replace("%VER%", VERSION).replace("__VERSION__", VERSION)
     html = html.replace("__GUEST_ENABLED__", "true" if GUEST_ENABLED else "false")
     return HTMLResponse(html, headers=NO_CACHE)
 

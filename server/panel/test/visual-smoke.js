@@ -160,6 +160,40 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   }
   console.log('PASS 7 · 7 ciclos → sempre volta ao repouso');
 
+  // 8) A FAIXA DE RÁDIO MOSTRA NÚMERO, não só acende.
+  // Isto quebrou por 13 versões: a 0.67.0 removeu o elemento `rl-sub` e a linha
+  // que escrevia nele ficou. Como ela roda DEPOIS de acender a faixa e ANTES de
+  // preencher os valores, e o catch era mudo, a tela acendia bonita com quatro
+  // traços e ninguém via. Verde não basta: o teste tem de LER o número.
+  await page.setRequestInterception(true);
+  const onReq = (req) => {
+    const u = req.url();
+    const j = (o) => req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(o) });
+    if (u.includes('/api/topology/gnb-stats')) return j({ up: true, age: 0.4, nrb: 51, snr: 23.5, mcs: 17, prb: 9, bler: 1.5 });
+    if (u.includes('/api/telemetry')) return j({ host: { cpu_pct: 5, mem_pct: 20, cpu_count: 4, load1: 0.5 }, containers: [],
+      groups: { 'p1-core': 'off', 'p1-ran': 'off', 'p2-core': 'on', 'p2-e2lab': 'on', 'p2-nonrt': 'on' } });
+    if (u.includes('/api/')) return j({});
+    return req.continue();
+  };
+  page.on('request', onReq);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await new Promise((r) => setTimeout(r, 3000));
+  const radio = await page.evaluate(() => {
+    const v = (id) => (document.getElementById(id) || {}).textContent;
+    return { acesa: document.getElementById('ran-live')?.classList.contains('on'),
+             snr: v('rl-snr'), mcs: v('rl-mcs'), prb: v('rl-prb'), tot: v('rl-prb-tot'), bler: v('rl-bler') };
+  });
+  page.off('request', onReq);
+  await page.setRequestInterception(false);
+  assert(radio.acesa, 'a faixa de rádio devia acender com o P2 no ar');
+  const numero = (s) => s != null && s !== '—' && !isNaN(parseFloat(s));
+  for (const [k, val] of Object.entries({ SNR: radio.snr, MCS: radio.mcs, PRB: radio.prb, 'PRB total': radio.tot, BLER: radio.bler })) {
+    assert(numero(val), `${k} devia mostrar número e mostra "${val}"`);
+  }
+  assert(radio.snr === '23.5' && radio.tot === '51',
+    `os valores deviam vir da API (SNR 23.5, total 51) e vieram "${radio.snr}"/"${radio.tot}"`);
+  console.log(`PASS 8 · faixa de rádio com número real · SNR ${radio.snr} · MCS ${radio.mcs} · PRB ${radio.prb}/${radio.tot} · BLER ${radio.bler}`);
+
   // Screenshot de inspeção: projeto ativo + loaders em botões visíveis.
   await page.evaluate(() => {
     document.querySelectorAll('.tools-set').forEach(s => s.classList.toggle('active', s.dataset.tools === 'p1'));
@@ -180,7 +214,7 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   await new Promise(r => setTimeout(r, 200));
   await page.screenshot({ path: path.join(SHOTS, 'loaders.png'), clip: { x: 0, y: 0, width: 1400, height: 560 } });
   console.log('\nScreenshot: ' + path.join(SHOTS, 'loaders.png'));
-  console.log('✅ TODOS OS TESTES PASSARAM (0–7).');
+  console.log('✅ TODOS OS TESTES PASSARAM (0–8).');
   await browser.close();
   await srv.fechar();
 })().catch(e => { console.error('\n❌ ' + e.message); process.exit(1); });

@@ -3376,7 +3376,6 @@ async function pollRan() {
     // enquanto o UE não anexa (no P2, o anexo NAS depende do UE conectado).
     if (!d.up || d.snr == null) { acende(false); ranReset(); return; }
     acende(true);
-    document.getElementById('rl-sub').textContent = 'métricas PHY/MAC reais do UE simulado · atualiza a cada 1,5s';
     const set = (id, v, fix) => { const e = document.getElementById(id); if (e) e.textContent = (v == null ? '—' : (fix != null ? Number(v).toFixed(fix) : v)); };
     set('rl-snr', d.snr, 1); set('rl-mcs', d.mcs, 0); set('rl-prb', d.prb, 0); set('rl-bler', d.bler, 1);
     // total de PRBs: o que o gNB reportou no boot (N_RB_DL), não um número fixo
@@ -3394,7 +3393,13 @@ async function pollRan() {
     renderSpark('spark-mcs', RAN.mcs);
     renderSpark('spark-prb', RAN.prb);
     renderSpark('spark-bler', RAN.bler);
-  } catch {}
+  } catch (e) {
+    // Este `catch` já foi mudo, e escondeu por 13 versões uma linha que escrevia
+    // num elemento removido na 0.67.0: a faixa acendia (isso acontece ANTES do
+    // erro) e os quatro números ficavam em "—" para sempre. Falha silenciosa em
+    // laço de telemetria é falha invisível.
+    console.error('[ran-live] leitura do rádio falhou:', e);
+  }
 }
 // pendura as explicações nos instrumentos (uma vez, na carga da página)
 Object.entries(RAN_INFO).forEach(([k, txt]) => {

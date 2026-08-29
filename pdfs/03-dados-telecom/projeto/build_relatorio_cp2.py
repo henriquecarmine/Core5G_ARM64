@@ -346,6 +346,13 @@ def montar_zip():
         f.write(LEIAME)
     desk = os.path.join(os.path.expanduser("~"), "Área de trabalho")
     dest = desk if os.path.isdir(desk) else OUT
+    # O relatório vai SOLTO para a Área de trabalho também, não só dentro do
+    # zip: o passo 5 do roteiro manda deixá-lo aberto numa aba — é o plano B se
+    # a rede cair na hora da apresentação. Ninguém vai descompactar ali.
+    pdf_rel = os.path.join(OUT, "RELATORIO_CP2.pdf")
+    if os.path.isdir(desk) and os.path.exists(pdf_rel):
+        shutil.copy(pdf_rel, desk)
+        print("PDF na Área de trabalho:", os.path.join(desk, "RELATORIO_CP2.pdf"))
     zip_path = os.path.join(dest, "grupo-6-checkpoint-2.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
         for root, _, files in os.walk(stage):

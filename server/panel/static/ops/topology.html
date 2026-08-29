@@ -117,6 +117,8 @@
             background:var(--panel-glass); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
             border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.35);
             font-size:11.5px; overflow:hidden; transition:max-width .2s; }
+  #legend .lg-dica { margin-top:9px; padding-top:9px; border-top:1px solid var(--border);
+                     font-size:11px; line-height:1.4; color:var(--ink-2); }
   #legend .lg-head { display:flex; align-items:center; gap:7px; padding:8px 11px; cursor:pointer; user-select:none; color:var(--muted); }
   #legend .lg-head svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:1.8; flex-shrink:0; }
   #legend .lg-head .lg-t { font-weight:600; color:var(--text); }
@@ -191,6 +193,11 @@
   #tour-box .nav button:hover { border-color:var(--accent); }
   #tour-box .nav button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
   .node.tour-dim, .link.tour-dim, .link-label.tour-dim, .link-label-bg.tour-dim { opacity:.12 !important; }
+  /* O rótulo da linha é texto de SVG dentro de uma pílula de 18px: sublinhado
+     pontilhado ali fica sujo. A pista de que ele explica algo é o cursor e a
+     cor que acende — o mesmo acento do resto do glossário. */
+  text.link-label.glos-termo { cursor:help; text-decoration:none; }
+  text.link-label.glos-termo:hover, text.link-label.glos-termo:focus-visible { fill:var(--accent-text); font-weight:600; }
 </style>
 </head>
 <body class="mode-tecnico">
@@ -376,6 +383,11 @@ function render(){
     const mx=(ca.x+cb.x)/2, my=(ca.y+cb.y)/2, tw=lk.iface.length*6.6+14;
     el("rect",{x:mx-tw/2,y:my-9,width:tw,height:18,rx:9,class:"link-label-bg"+(tourDim?" tour-dim":"")},gT);
     const t=el("text",{x:mx,y:my+3.5,"text-anchor":"middle",class:"link-label"+(tourDim?" tour-dim":"")},gT); t.textContent=lk.iface;
+    // O rótulo da linha é a sigla mais nua da tela: "N4" e pronto. Aqui ele
+    // ganha o mesmo balão do glossário. Não dá para envolver texto de SVG num
+    // <span>, então a marca vai no próprio <text> — o casador de eventos usa
+    // closest(), que funciona em SVG.
+    marcaSigla(t, lk.iface);
   });
 
   // Jornada: badge numerado (1, 2, 2.1…) da etapa ativa — no meio do 1º link,
@@ -455,6 +467,9 @@ function renderLegend(){
   for(const k in TOPO.layers) body+=`<div class="lyk"><span class="sw" style="background:var(--c-${k})"></span>${trf(`topo.${PROJ}.layer.${k}`, TOPO.layers[k].label)}</div>`;
   body+=`<div class="lg-sec">${I18N.t('topo.interfaces')}</div>`;
   TOPO.interfaces_legend.forEach(i=>{ body+=`<div class="ifk"><span class="k">${i.iface}</span><span class="v">${trf('topo.'+PROJ+'.if.'+sanit(i.iface), i.desc)}</span></div>`; });
+  // A dica de descoberta: sem ela ninguém adivinha que os rótulos do desenho
+  // respondem ao mouse. Uma funcionalidade que ninguém encontra não existe.
+  body+=`<div class="lg-dica">${I18N.t('topo.glos_hint')}</div>`;
   f.innerHTML=
     '<div class="lg-head" id="lg-toggle">'+
       '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>'+
@@ -548,6 +563,19 @@ let tourIdx=0;
 // com "o que é / para que serve" no hover, no foco e no toque. Título e legenda
 // vão juntos numa chamada só para dividirem esse "uma vez".
 // Se o módulo não carregar, a legenda continua legível — só sem os apoios.
+// Marca um <text> do SVG como termo do glossário, se o rótulo tiver um.
+function marcaSigla(no, texto){
+  try{
+    if(!window.Glossario) return;
+    const termo=Glossario.primeiroTermo(texto);
+    if(!termo) return;
+    Glossario.ativar();   // o diagrama etiqueta sozinho, então liga os eventos
+    no.classList.add("glos-termo");
+    no.setAttribute("data-termo", termo);
+    no.setAttribute("tabindex", "0");
+  }catch(e){ /* rótulo sem balão continua sendo rótulo */ }
+}
+
 function explicaSiglas(){
   try{ if(window.Glossario) Glossario.marcar([
     // no título só a marca: ele é manchete, e o nome por extenso o quebraria em

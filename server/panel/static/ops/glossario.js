@@ -165,6 +165,17 @@
     'OAI': 'OpenAirInterface',
     'Open5GS': null,
     'SUTD': 'Singapore University of Technology and Design',
+
+    // ---- serviços SBI: o nome que cada função oferece no barramento ----
+    // Aparecem escritos nas linhas do diagrama da topologia.
+    'Namf': 'AMF service',
+    'Nsmf': 'SMF service',
+    'Nausf': 'AUSF service',
+    'Nudm': 'UDM service',
+    'Nudr': 'UDR service',
+    'Npcf': 'PCF service',
+    'Nbsf': 'BSF service',
+    'Nnssf': 'NSSF service',
   };
 
   // Variantes de grafia que apontam para o MESMO verbete. O casador é sensível
@@ -433,6 +444,23 @@
     'Open5GS.p': 'Fornece AMF, SMF, UPF e o resto do núcleo em contêineres.',
     'SUTD.o': 'A universidade de Singapura cujo campus tem a rede 5G privada dos artigos.',
     'SUTD.p': 'É o testbed real onde os xApps do estudo foram validados, fora do simulador.',
+
+    'Namf.o': 'O nome do serviço que o AMF oferece no barramento SBI.',
+    'Namf.p': 'É por ele que as outras funções pedem ao AMF o registro, a autenticação e a mobilidade do UE.',
+    'Nsmf.o': 'O nome do serviço que o SMF oferece no barramento SBI.',
+    'Nsmf.p': 'É por ele que as outras funções pedem ao SMF a criação e a gestão da sessão de dados.',
+    'Nausf.o': 'O nome do serviço que o AUSF oferece no barramento SBI.',
+    'Nausf.p': 'É por ele que as outras funções pedem ao AUSF a autenticação do assinante.',
+    'Nudm.o': 'O nome do serviço que o UDM oferece no barramento SBI.',
+    'Nudm.p': 'É por ele que as outras funções pedem ao UDM os dados e os vetores de autenticação do assinante.',
+    'Nudr.o': 'O nome do serviço que o UDR oferece no barramento SBI.',
+    'Nudr.p': 'É por ele que as outras funções pedem ao UDR a leitura e a escrita no repositório de assinantes.',
+    'Npcf.o': 'O nome do serviço que o PCF oferece no barramento SBI.',
+    'Npcf.p': 'É por ele que as outras funções pedem ao PCF as regras de política e de QoS da sessão.',
+    'Nbsf.o': 'O nome do serviço que o BSF oferece no barramento SBI.',
+    'Nbsf.p': 'É por ele que as outras funções pedem ao BSF o vínculo entre a sessão e o PCF que cuida dela.',
+    'Nnssf.o': 'O nome do serviço que o NSSF oferece no barramento SBI.',
+    'Nnssf.p': 'É por ele que as outras funções pedem ao NSSF a escolha da fatia de rede.',
   },
 
   // ---------------------------------------------------------------- en
@@ -685,6 +713,23 @@
     'Open5GS.p': 'It provides AMF, SMF, UPF and the rest of the core in containers.',
     'SUTD.o': 'The Singapore university whose campus hosts the private 5G network in the papers.',
     'SUTD.p': 'It is the real testbed where the study\u2019s xApps were validated, outside the simulator.',
+
+    'Namf.o': 'The name of the service the AMF offers on the SBI bus.',
+    'Namf.p': 'It is how other functions ask the AMF for UE registration, authentication and mobility.',
+    'Nsmf.o': 'The name of the service the SMF offers on the SBI bus.',
+    'Nsmf.p': 'It is how other functions ask the SMF for creating and managing the data session.',
+    'Nausf.o': 'The name of the service the AUSF offers on the SBI bus.',
+    'Nausf.p': 'It is how other functions ask the AUSF for subscriber authentication.',
+    'Nudm.o': 'The name of the service the UDM offers on the SBI bus.',
+    'Nudm.p': 'It is how other functions ask the UDM for the subscriber data and authentication vectors.',
+    'Nudr.o': 'The name of the service the UDR offers on the SBI bus.',
+    'Nudr.p': 'It is how other functions ask the UDR for reads and writes on the subscriber repository.',
+    'Npcf.o': 'The name of the service the PCF offers on the SBI bus.',
+    'Npcf.p': 'It is how other functions ask the PCF for the policy and QoS rules of the session.',
+    'Nbsf.o': 'The name of the service the BSF offers on the SBI bus.',
+    'Nbsf.p': 'It is how other functions ask the BSF for the binding between a session and the PCF looking after it.',
+    'Nnssf.o': 'The name of the service the NSSF offers on the SBI bus.',
+    'Nnssf.p': 'It is how other functions ask the NSSF for picking the network slice.',
   },
 
   // ---------------------------------------------------------------- es
@@ -937,6 +982,23 @@
     'Open5GS.p': 'Aporta AMF, SMF, UPF y el resto del núcleo en contenedores.',
     'SUTD.o': 'La universidad de Singapur en cuyo campus está la red 5G privada de los artículos.',
     'SUTD.p': 'Es el testbed real donde se validaron los xApps del estudio, fuera del simulador.',
+
+    'Namf.o': 'El nombre del servicio que el AMF ofrece en el bus SBI.',
+    'Namf.p': 'Por él las demás funciones piden al AMF el registro, la autenticación y la movilidad del UE.',
+    'Nsmf.o': 'El nombre del servicio que el SMF ofrece en el bus SBI.',
+    'Nsmf.p': 'Por él las demás funciones piden al SMF la creación y la gestión de la sesión de datos.',
+    'Nausf.o': 'El nombre del servicio que el AUSF ofrece en el bus SBI.',
+    'Nausf.p': 'Por él las demás funciones piden al AUSF la autenticación del abonado.',
+    'Nudm.o': 'El nombre del servicio que el UDM ofrece en el bus SBI.',
+    'Nudm.p': 'Por él las demás funciones piden al UDM los datos y los vectores de autenticación del abonado.',
+    'Nudr.o': 'El nombre del servicio que el UDR ofrece en el bus SBI.',
+    'Nudr.p': 'Por él las demás funciones piden al UDR la lectura y la escritura en el repositorio de abonados.',
+    'Npcf.o': 'El nombre del servicio que el PCF ofrece en el bus SBI.',
+    'Npcf.p': 'Por él las demás funciones piden al PCF las reglas de política y de QoS de la sesión.',
+    'Nbsf.o': 'El nombre del servicio que el BSF ofrece en el bus SBI.',
+    'Nbsf.p': 'Por él las demás funciones piden al BSF el vínculo entre la sesión y el PCF que se ocupa de ella.',
+    'Nnssf.o': 'El nombre del servicio que el NSSF ofrece en el bus SBI.',
+    'Nnssf.p': 'Por él las demás funciones piden al NSSF la elección de la porción de red.',
   },
 
   // ---------------------------------------------------------------- fr
@@ -1189,6 +1251,23 @@
     'Open5GS.p': 'Elle fournit AMF, SMF, UPF et le reste du cœur en conteneurs.',
     'SUTD.o': 'L’université de Singapour dont le campus abrite le réseau 5G privé des articles.',
     'SUTD.p': 'C’est le banc d’essai réel où les xApps de l’étude ont été validés, hors simulateur.',
+
+    'Namf.o': 'Le nom du service que le AMF expose sur le bus SBI.',
+    'Namf.p': 'C’est par lui que les autres fonctions demandent au AMF l’enregistrement, l’authentification et la mobilité de l’UE.',
+    'Nsmf.o': 'Le nom du service que le SMF expose sur le bus SBI.',
+    'Nsmf.p': 'C’est par lui que les autres fonctions demandent au SMF la création et la gestion de la session de données.',
+    'Nausf.o': 'Le nom du service que le AUSF expose sur le bus SBI.',
+    'Nausf.p': 'C’est par lui que les autres fonctions demandent au AUSF l’authentification de l’abonné.',
+    'Nudm.o': 'Le nom du service que le UDM expose sur le bus SBI.',
+    'Nudm.p': 'C’est par lui que les autres fonctions demandent au UDM les données et les vecteurs d’authentification de l’abonné.',
+    'Nudr.o': 'Le nom du service que le UDR expose sur le bus SBI.',
+    'Nudr.p': 'C’est par lui que les autres fonctions demandent au UDR la lecture et l’écriture dans le référentiel d’abonnés.',
+    'Npcf.o': 'Le nom du service que le PCF expose sur le bus SBI.',
+    'Npcf.p': 'C’est par lui que les autres fonctions demandent au PCF les règles de politique et de QoS de la session.',
+    'Nbsf.o': 'Le nom du service que le BSF expose sur le bus SBI.',
+    'Nbsf.p': 'C’est par lui que les autres fonctions demandent au BSF le lien entre la session et le PCF qui s’en occupe.',
+    'Nnssf.o': 'Le nom du service que le NSSF expose sur le bus SBI.',
+    'Nnssf.p': 'C’est par lui que les autres fonctions demandent au NSSF le choix de la tranche de réseau.',
   },
 };
 
@@ -1433,12 +1512,30 @@
     window.addEventListener('resize', esconde);
   }
 
+  // Para superfícies onde não dá para envolver o texto num <span> — o SVG do
+  // diagrama, por exemplo. Devolve o verbete do PRIMEIRO termo reconhecido no
+  // texto, ou null. "N11/Nsmf" devolve "N11": o rótulo composto se explica pelo
+  // que vem primeiro, que é a interface.
+  function primeiroTermo(txt) {
+    if (!txt) return null;
+    RE.lastIndex = 0;
+    var m = RE.exec(String(txt));
+    return m ? canonico(m[0]) : null;
+  }
+
+  // Liga o estilo e os eventos sem marcar nada. Serve para quem etiqueta os
+  // próprios elementos — o SVG do diagrama põe `class="glos-termo"` no <text>
+  // à mão, porque texto de SVG não se envolve num <span>.
+  function ativar() { estilo(); liga(); }
+
   window.GLOSSARIO = {
     termos: TERMOS,
     alias: ALIAS,
     dicts: DICTS,
     langs: LANGS,
     marcar: marcar,
+    primeiroTermo: primeiroTermo,
+    ativar: ativar,
     esconde: esconde,
     // usado pelos testes: o que o balão diria daquele termo, sem tocar no DOM
     explica: function (t) { return { exp: TERMOS[t], o: tr(t + '.o'), p: tr(t + '.p') }; },

@@ -91,10 +91,27 @@ sigla. Na legenda de cada passo:
   **o que é** e **para que serve** — em pt/en/es/fr;
 - **Esc** fecha o balão.
 
-São **72 termos**: funções do núcleo, interfaces N/E2/A1/O1, protocolos,
-procedimentos, o vocabulário do RIC e os bancos do lab. O nome por extenso sai
-**uma vez por passo**, no primeiro termo, para a legenda não virar um paredão de
-parênteses; o balão, esse, funciona em toda ocorrência.
+São **128 termos** (v0.84.0): funções do núcleo, interfaces N/E2/A1/O1/O2,
+protocolos, procedimentos, a pilha de rádio (RRC/RLC/MAC/PHY), o que se mede
+(KPI, KQI, QoE, SLA, os contadores KPM), o vocabulário do RIC, o mundo de dados
+(ETL, DIKW, OLAP, TSDB, PCA, k-means…) e os bancos do lab.
+
+**Onde o glossário funciona**
+
+| Tela | O que marca | Nome por extenso |
+|---|---|---|
+| Jornada do UE e Tour | título e legenda de cada passo | uma vez **por passo** |
+| Desenho da topologia | os rótulos das interfaces (N4, E2, Nausf…) | só o balão — o rótulo é pequeno demais |
+| Aulas e Estudos | resumo, conceitos, fórmulas, quiz | uma vez **por página** |
+| 10 labs de ML | os cartões de texto | uma vez **por página** |
+
+A diferença entre "por passo" e "por página" foi tirada de olhar a tela: numa
+legenda curta, lida isolada, marcar toda ocorrência ajuda; numa aula, não —
+a primeira página saiu com **338 sublinhados** e virou um campo pontilhado.
+Numa aula o termo se apresenta uma vez, e depois já é vocabulário.
+
+Dentro de `<code>` e `<pre>` **nunca** se marca: ali a sigla é literal, e
+sublinhar sugeriria que o texto do programa mudou.
 
 O título do passo é só marcado, sem o nome por extenso — ele é manchete e
 precisa caber numa linha.

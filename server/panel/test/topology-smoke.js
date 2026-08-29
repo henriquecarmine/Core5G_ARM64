@@ -141,6 +141,33 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       assert(glos.expandidos >= 60, `p2: poucos nomes por extenso na jornada (${glos.expandidos})`);
       console.log(`PASS p2 · glossário nas 17 etapas (${glos.marcados} termos marcados, ${glos.expandidos} nomes por extenso)`);
 
+      // Os rótulos do DESENHO também explicam. Aqui a marca não é um <span>
+      // (não existe em SVG): é o próprio <text> que ganha a classe. Se alguém
+      // mexer no render e perder a etiqueta, o rótulo volta a ser sigla nua.
+      const svg = await page.evaluate(async () => {
+        const ls = [...document.querySelectorAll('.link-label')];
+        const marcados = ls.filter(e => e.classList.contains('glos-termo'));
+        const semMarca = [...new Set(ls.filter(e => !e.classList.contains('glos-termo')).map(e => e.textContent))];
+        const el = marcados[0];
+        let balao = null;
+        if (el) {
+          el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+          await new Promise(r => setTimeout(r, 60));
+          const t = document.getElementById('glos-tip');
+          balao = t && !t.hidden ? t.innerText : null;
+        }
+        const dica = document.querySelector('.lg-dica');
+        return { total: ls.length, marcados: marcados.length, semMarca,
+                 focaveis: marcados.filter(e => e.getAttribute('tabindex') === '0').length,
+                 balao, dica: dica ? dica.textContent.trim() : null };
+      });
+      assert(svg.marcados >= 18, `p2: só ${svg.marcados} rótulos do desenho com glossário`);
+      assert(svg.focaveis === svg.marcados, 'p2: rótulo do desenho marcado mas não alcançável por teclado');
+      assert(svg.balao && svg.balao.length > 40, 'p2: o balão não abre no rótulo do desenho');
+      assert(svg.dica, 'p2: falta a dica na legenda — ninguém descobre o balão sozinho');
+      console.log(`PASS p2 · glossário no desenho (${svg.marcados}/${svg.total} rótulos; sem sigla: ${svg.semMarca.join(', ')})`);
+      await page.keyboard.press('Escape');
+
       // e o balão abre de fato, no hover, com "o que é" e "para que serve"
       await page.evaluate(() => showJourney(3));
       await page.hover('#tour-caption .glos-termo');

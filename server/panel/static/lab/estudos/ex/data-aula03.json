@@ -1,0 +1,154 @@
+{
+  "h": "#data/aula03",
+  "rot": "Aula 03",
+  "t": "EDA, ETL e BI",
+  "pts": 22,
+  "fonte": "Aula 03 da cadeira 4 — EDA, ETL e visualização de dados de rede",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Para que serve a EDA, antes de modelar?",
+          "alt": [
+            "Para provar a hipótese que você já tem",
+            "Para conhecer o dado: buracos, picos, unidades e distribuições — antes que um deles estrague a conclusão",
+            "Para escolher a biblioteca de gráficos",
+            "Para reduzir o tamanho do arquivo"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "EDA é olhar antes de decidir. É nela que se descobre a unidade errada, a coluna com 11 zeros e o pico isolado. Quem pula a EDA modela em cima de um defeito e só descobre na defesa — foi a EDA que pegou o atraso escrito em milissegundos quando era microssegundos."
+        },
+        {
+          "q": "MCAR, MAR e MNAR classificam o quê?",
+          "alt": [
+            "Três tipos de gráfico",
+            "O mecanismo pelo qual um dado ficou ausente",
+            "Três níveis de qualidade de rede",
+            "Três formatos de arquivo"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "É a pergunta \"por que este dado falta?\". MCAR: falta por acaso. MAR: a falta depende de algo que você observou. MNAR: a falta depende justamente do que você queria medir — e aí a ausência é informação, não ruído."
+        },
+        {
+          "q": "Encontrou um outlier. Qual é a regra da aula?",
+          "alt": [
+            "Apagar: outlier estraga a média",
+            "Manter sempre: todo dado é dado",
+            "Documentar antes de apagar — e dizer o que se fez e por quê",
+            "Substituir pela média da coluna"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "Apagar sem registrar é fabricar um resultado limpo. O pico de 172.317 kbps na recuperação do UE-TP é um outlier de verdade — e a decisão foi mantê-lo e usar a MEDIANA, dizendo isso no relatório. A decisão pode ser qualquer uma; o que não pode é ser invisível."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Um KPM deixa de ser reportado exatamente nos segundos em que o jammer está ativo. Que tipo de ausência é essa, e o que fazer?",
+          "alt": [
+            "MCAR — pode preencher com a média sem prejuízo",
+            "MNAR: a falta depende do próprio fenômeno medido. Não se preenche; a ausência vira variável e entra na análise",
+            "MAR — basta condicionar à hora do dia",
+            "Erro de coleta: descartar o experimento"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "O dado some porque a rede está degradada — a ausência É o sinal. Preencher com a média apagaria exatamente o efeito que se quer medir. O certo é tratar \"faltou\" como categoria e contar quantas janelas ficaram sem relatório."
+        },
+        {
+          "q": "Na fase de recuperação o DRB.UEThpUl tem máximo perto de 1,7×10⁵ e mediana perto de 3,7. Qual é a conduta?",
+          "alt": [
+            "Usar a média: ela incorpora o pico",
+            "Descartar a fase: os dados estão corrompidos",
+            "Usar a mediana e declarar o pico — a média descreveria o pico, não a fase",
+            "Normalizar tudo entre 0 e 1"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "A média sobe para ~8.619 por causa de um único ponto; a mediana fica em 3,7 e descreve o que acontecia na maior parte do tempo. Escolher a mediana é correto — e dizer que existe o pico é o que separa análise de maquiagem."
+        },
+        {
+          "q": "Um gráfico de série KPM chega sem janela, sem agregação e sem unidade declaradas. Por que é reprovado?",
+          "alt": [
+            "Porque falta legenda de cores",
+            "Porque não é reproduzível nem interpretável: não dá para saber o que cada ponto representa nem comparar com outro gráfico",
+            "Porque série temporal precisa de escala logarítmica",
+            "Porque não tem título"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Sem janela não se sabe se um ponto é um segundo ou uma hora; sem agregação, se é média, mediana ou soma; sem unidade, se 159 é grave ou irrelevante — a diferença entre 159 µs e 159 ms conta histórias opostas. Um gráfico assim não sustenta decisão."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Por que usar MAD em vez de desvio padrão para medir espalhamento numa série com picos?",
+          "alt": [
+            "Porque é mais rápido de calcular",
+            "Porque a MAD se apoia na mediana e um ponto extremo quase não a move; o desvio padrão eleva o desvio ao quadrado e é dominado pelo pico",
+            "Porque a MAD já vem em porcentagem",
+            "Porque o desvio padrão só vale para distribuição normal"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "É robustez. O quadrado do desvio padrão dá peso enorme ao ponto distante — um pico entorta a régua inteira. A MAD mede em torno da mediana e resiste. É por isso que o `robust-baseline-mad` do laboratório usa MAD, e não desvio padrão."
+        },
+        {
+          "q": "O IQR define outlier sem supor o quê?",
+          "alt": [
+            "Sem supor que a amostra é grande",
+            "Sem supor que os dados seguem uma curva normal",
+            "Sem supor que há valores negativos",
+            "Sem supor que a série é temporal"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "A cerca do boxplot sai dos quartis — dos 50% do meio — e não de média e desvio. Por isso vale para distribuição torta, que é a regra em telecom: vazão e atraso raramente são normais."
+        },
+        {
+          "q": "Correlação de 0,92 entre vazão e PRB. O que isso permite afirmar?",
+          "alt": [
+            "Que o PRB causa a vazão",
+            "Que as duas andam juntas na amostra — nada sobre causa, e é preciso checar se a correlação não vem de misturar fases diferentes",
+            "Que uma pode substituir a outra no relatório",
+            "Que a rede está saudável"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Correlação não é causa, e correlação global pode ser artefato de mistura: no UE-TP, vazão × atraso dá 0,48 no conjunto e cai para perto de zero dentro de cada fase. O número global comparava rede parada com rede sob carga — dois mundos, não uma relação."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha as etapas do ETL na ordem em que se executam.",
+          "itens": [
+            "Extrair — ler a fonte como ela é, sem julgar",
+            "Tipar — transformar texto em número, data e categoria",
+            "Conferir qualidade — nulos, duplicados, faixas impossíveis, unidade",
+            "Enriquecer — carimbar fase, janela e chave",
+            "Agregar — reduzir à granularidade que a pergunta pede",
+            "Carregar — gravar no destino, de forma reproduzível"
+          ],
+          "pts": 10,
+          "porque": "A ordem não é decorativa. Tipar antes de conferir permite que a conferência trabalhe sobre número, não sobre texto. Agregar antes de conferir esconde o defeito dentro da média — e a partir daí ninguém mais o encontra."
+        }
+      ]
+    }
+  ]
+}

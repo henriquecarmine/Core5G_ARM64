@@ -261,6 +261,19 @@ milissegundos e o PRB em contagem de blocos. O correto é microssegundos e porce
 não mudaram, o rótulo estava errado — e um atraso de 159 microssegundos conta uma história bem
 diferente de 159 milissegundos.</div>
 
+<div class="q">10. Qual seria a política A1 se a regra tivesse disparado?</div>
+<div class="a">Ela já está escrita no nosso código, em <b>temas_projeto.py</b> — só nunca foi emitida
+porque a regra não disparou. Seria uma política de <b>tipo 1</b> em dry-run
+(<span class="mono">actuation.mode = "emulate"</span>): escopo
+<span class="mono">{{ueId: "ue-any", qosId: "qos-lab"}}</span> e objetivo
+<span class="mono">{{priorityLevel: 10}}</span> — ou seja, <b>elevar a prioridade de escalonamento</b>
+daquele usuário. Não é reserva de PRB: o schema do tipo 1 só tem escopo e priorityLevel, e cota de
+PRB seria E2SM-RC action 6, que o lab não suporta. O 10 é o valor do próprio decision.json do
+professor, não calibrado por nós. Ela desceria do rApp no Non-RT pelo A1 até o gNB — e vale dizer
+que na Fase 1 o FlexRIC não termina A1, quem termina é o a1mediator da Fase 2. Verificaríamos pelo
+effect_report, comparando as três métricas antes e depois. Com um único UE, priorizar não tem contra
+quem competir: vale como mecanismo demonstrado, não como ganho medido.</div>
+
 <h2>Três regras para não escorregar</h2>
 <ol class="check">
 <li><b>Nunca diga "a QoE caiu".</b> Não temos MOS. Diga "é risco para a experiência".</li>
@@ -284,7 +297,11 @@ if __name__ == "__main__":
         subprocess.run([chrome, "--headless", "--disable-gpu", "--no-sandbox",
                         "--no-pdf-header-footer", "--print-to-pdf=" + pdf,
                         "file://" + hp], check=True, capture_output=True, timeout=180)
-    desk = os.path.join(os.path.expanduser("~"), "Área de trabalho")
+    # macOS mostra "Área de trabalho" mas o diretório real é ~/Desktop; no Linux
+    # pt-BR é o contrário. Tenta os dois e usa o que existir (estação nova, 29/08).
+    desk = next((d for d in (os.path.join(os.path.expanduser("~"), n)
+                             for n in ("Área de trabalho", "Desktop")) if os.path.isdir(d)),
+                os.path.join(os.path.expanduser("~"), "Desktop"))
     if os.path.isdir(desk) and os.path.exists(pdf):
         shutil.copy(pdf, desk)
         print("PDF na Área de trabalho:", os.path.join(desk, "ROTEIRO_APRESENTACAO.pdf"))

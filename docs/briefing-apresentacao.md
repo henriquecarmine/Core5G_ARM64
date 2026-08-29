@@ -117,15 +117,54 @@ conclusão ou recomendação mudou — só a explicação de por que o limite ex
 
 ---
 
-## A pergunta que ainda não tem resposta
-
-A defesa individual do **bloco 5** tem quatro perguntas. Três já estão
-respondidas no roteiro. A quarta **não está escrita em lugar nenhum**:
+## A quarta pergunta do bloco 5 — RESPONDIDA
 
 > **Qual seria a política A1 se a regra tivesse disparado?**
 
-É a única lacuna conhecida. Fechar isso é a primeira coisa a fazer com a cabeça
-descansada.
+**A resposta curta:** ela já está escrita no nosso código e nunca foi emitida
+porque a regra não disparou. Está em `scripts/temas/temas_projeto.py`, na função
+`a1_dryrun`, chamada no ramo `if fr > 0` do tema 1:
+
+```json
+{
+  "policy_id": "ue-tp-prioridade-candidata",
+  "policytype_id": "1",
+  "ric_id": "ric-oran",
+  "service_id": "analise-dados-rapp",
+  "actuation": { "mode": "emulate" },
+  "policy_data": {
+    "scope":         { "ueId": "ue-any", "qosId": "qos-lab" },
+    "qosObjectives": { "priorityLevel": 10 }
+  },
+  "lab_context": { "motivo": "vazão baixa com rádio cheio: usuário mal servido" }
+}
+```
+
+**O que ela pede, em uma frase:** eleve a prioridade de escalonamento daquele UE
+naquele QoS. Não é reserva de PRB — o schema do **tipo 1** (`OSC_Type1_1.0.0`,
+`testdata/policy_type.json`) só tem `scope {ueId, qosId}` e
+`qosObjectives {priorityLevel}`. É a única alavanca que o tipo dá.
+
+**Por que `priorityLevel: 10`:** é o valor do próprio artefato do professor
+(`decision.json` → `policy_data.qosObjectives.priorityLevel = 10`). Não foi
+calibrado por nós — e é honesto dizer isso.
+
+**Por onde ela desceria:** rApp no Non-RT (PMS, `:8081`) →
+`PUT /a1-p/policytypes/1/policies/{id}` → **A1** → near-RT → gNB. Detalhe que
+vale ponto: na Fase 1 o FlexRIC **não termina A1**; quem termina é o
+`ric_a1mediator` da Fase 2 — exatamente os dois contêineres que a topologia
+rotula "em curso".
+
+**Em dry-run:** `actuation.mode = "emulate"`, o mesmo campo do `decision.json`.
+Nada é aplicado na RAN; o efeito seria emulado com `tc tbf` no `oaitun` e medido
+no `effect_report.json` (Δ médio before→after nas três features).
+
+**O que ela NÃO pode pedir:** cota de PRB ou escalonamento de slice. Isso seria
+E2SM-RC action 6, que o próprio slide do professor lista em "não afirmar".
+
+**E o fecho honesto:** com **um único UE**, priorizar "ue-any" não tem contra
+quem competir. A política faz sentido como mecanismo demonstrado, não como
+ganho medido — que é a mesma humildade do resto do trabalho.
 
 ---
 

@@ -344,7 +344,11 @@ def montar_zip():
         f.write("# so para cp2_indicadores.py (build_lake.py e stdlib)\npandas\nmatplotlib\n")
     with open(os.path.join(stage, "README.md"), "w", encoding="utf-8") as f:
         f.write(LEIAME)
-    desk = os.path.join(os.path.expanduser("~"), "Área de trabalho")
+    # macOS mostra "Área de trabalho" mas o diretório real é ~/Desktop; no Linux
+    # pt-BR é o contrário. Tenta os dois e usa o que existir (estação nova, 29/08).
+    desk = next((d for d in (os.path.join(os.path.expanduser("~"), n)
+                             for n in ("Área de trabalho", "Desktop")) if os.path.isdir(d)),
+                os.path.join(os.path.expanduser("~"), "Desktop"))
     dest = desk if os.path.isdir(desk) else OUT
     # O relatório vai SOLTO para a Área de trabalho também, não só dentro do
     # zip: o passo 5 do roteiro manda deixá-lo aberto numa aba — é o plano B se

@@ -131,8 +131,9 @@ pedaço a fundo. Abaixo está uma sugestão de divisão.</div>
  "O dado cru, do jeito que caiu, é a zona bronze — uma linha por medição, sem limpeza. A gente "
  "tipa cada campo, carimba a fase e ordena: isso vira a zona silver, um banco SQLite. E resume "
  "numa tabela de três linhas, uma por fase: é a zona gold. Isso é o padrão medallion da aula 02 e "
- "o ETL da aula 03, do começo ao fim. Tudo isso está num script só com a biblioteca padrão do "
- "Python, e qualquer pessoa reproduz com dois comandos: monta o lake e roda a análise. O pacote "
+ "o ETL da aula 03, do começo ao fim. O ETL é um script só, com a biblioteca padrão do Python — "
+ "sem dependência nenhuma; a análise usa pandas e matplotlib, declarados num requirements. "
+ "Qualquer pessoa reproduz com três comandos: instala, monta o lake, roda a análise. O pacote "
  "que entregamos leva os dados brutos junto, então não depende do nosso computador.",
  "volte ao painel e clique em <b>T1 · Vazão do usuário</b>. O pré-voo já mostra bronze, silver e "
  "gold e as primeiras linhas do arquivo de verdade. Deixe essa tela aberta enquanto fala.")}
@@ -218,9 +219,11 @@ para 8.619 enquanto a mediana é 3,7. A mediana descreve o que estava acontecend
 tempo; a média descreveria o pico.</div>
 
 <div class="q">2. Por que o limiar é 100 microssegundos?</div>
-<div class="a">Testamos de 20 a 280 e medimos a separação entre repouso e carga. Em 100 a separação é
-máxima: 25% contra 100%. E declaramos o limite: acima de 186 o indicador se inverte, porque o p95 do
-repouso ultrapassa o da carga. Está no relatório, com o gráfico.</div>
+<div class="a">Testamos de 20 a 280 e medimos a separação entre repouso e carga. Ela é máxima num
+patamar de 95 a 133 µs — 75 pontos, 25% contra 100% —, então 100 está no meio da faixa, não na beirada.
+E declaramos o limite: acima de 186 µs o indicador deixa de separar, e 186 é justamente o p95 do próprio
+repouso — passado o quase-pior caso da rede parada, as duas fases medem quase o mesmo (5% contra 7%);
+de 198 em diante chega a inverter. Está no relatório, com o gráfico.</div>
 
 <div class="q">3. Vocês acharam correlação de 0,48 entre vazão e atraso. Isso não é relevante?</div>
 <div class="a">Esse 0,48 é global, misturando as três fases. Dentro de cada fase a correlação cai

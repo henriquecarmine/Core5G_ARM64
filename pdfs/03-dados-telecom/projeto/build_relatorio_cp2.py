@@ -233,10 +233,11 @@ repouso para {n(res.loc[carga,'acima_L'],0)}% sob carga.</figcaption></figure>
 <p>A Aula 04 é explícita: sem limiar justificado não existe KQI formal. Em vez de escolher um
 número redondo, testamos L de 20 a 280&nbsp;µs e medimos a separação entre repouso e carga.</p>
 <figure><img src="{b64img(os.path.join(FIG,'cp2_sensibilidade_L.png'))}">
-<figcaption>A separação é máxima perto de 100&nbsp;µs (75 pontos). Ela resiste de cerca de
-40 a 150&nbsp;µs e desaparece acima de 186&nbsp;µs, quando o p95 do repouso
-({n(res.loc[base,'delay_p95'])}&nbsp;µs) ultrapassa o da carga
-({n(res.loc[carga,'delay_p95'])}&nbsp;µs).</figcaption></figure>
+<figcaption>A separação é máxima num patamar de 95 a 133&nbsp;µs (75 pontos), então
+L = {L:.0f}&nbsp;µs está no meio da faixa. Ela resiste até cerca de 157&nbsp;µs, chega a zero
+em 179&nbsp;µs e desaparece acima de 186&nbsp;µs — que é justamente o p95 do próprio repouso
+({n(res.loc[base,'delay_p95'])}&nbsp;µs). Passado o quase-pior caso da rede parada, as duas
+fases medem quase o mesmo; de 198&nbsp;µs em diante o indicador chega a inverter.</figcaption></figure>
 <p>Esse é o <b>limite de validade</b> do indicador, e preferimos declará-lo. Um leitor que escolha
 L = 200&nbsp;µs vai encontrar o resultado invertido — não porque a rede mudou, mas porque o
 limiar saiu da faixa onde ele separa alguma coisa.</p>

@@ -2,6 +2,7 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/tokens.css?v=%VER%">
 <link rel="stylesheet" href="/static/lab/lab-ponte.css?v=%VER%">
+<script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
 <title>Lab RIC-IA · Projeto final</title>
 <style>
   :root{
@@ -47,7 +48,7 @@
   .comp .q{font-weight:700;margin-bottom:10px}
   .comp .row{display:flex;gap:10px;flex-wrap:wrap}
   .compok{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 10%,transparent);color:var(--good);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
-  .compno{border:1px solid #b07414;background:transparent;color:#b07414;border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .compno{border:1px solid var(--warn-text);background:transparent;color:var(--warn-text);border-radius:var(--r-sm);padding:9px 16px;font-weight:700;cursor:pointer;font-size:.92rem}
   .compask{display:none;margin-top:10px} .compask.open{display:block}
   .compask textarea{width:100%;min-height:70px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:var(--r-sm);padding:9px 11px;font-family:inherit;font-size:.9rem}
   .compsend{margin-top:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:8px 14px;font-weight:700;cursor:pointer}
@@ -137,7 +138,13 @@ function render(){
   }));
 }
 render();
-$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+$("#themeBtn").addEventListener("click",()=>{
+  // o tema é do ALUNO, não da página: mesma chave do painel, para a
+  // escolha atravessar a navegação inteira (aula → lab → painel).
+  const next=document.documentElement.dataset.theme==="light"?"dark":"light";
+  document.documentElement.dataset.theme=next;
+  try{localStorage.setItem("c5g-theme",next);}catch(e){}
+});
 
 /* ===== embed + compreensão ===== */
 const LESSON="projeto", NEXT="/lab";

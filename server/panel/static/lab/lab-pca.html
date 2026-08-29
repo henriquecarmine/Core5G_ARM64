@@ -2,6 +2,7 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/tokens.css?v=%VER%">
 <link rel="stylesheet" href="/static/lab/lab-ponte.css?v=%VER%">
+<script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
 <title>Lab RIC-IA · PCA (redução de dimensão)</title>
 <style>
   :root{
@@ -74,9 +75,9 @@
   footer{color:var(--ink-3);font-size:.8rem;line-height:1.6;margin-top:8px;padding:0 4px 10px} footer b{color:var(--ink-2)}
 
   /* MODAL fórmula + Python */
-  .backdrop{position:fixed;inset:0;background:rgba(6,12,20,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .backdrop{position:fixed;inset:0;background:var(--scrim);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
   .backdrop.open{display:flex}
-  .modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);max-width:660px;width:100%;max-height:86vh;overflow:auto;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+  .modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);max-width:660px;width:100%;max-height:86vh;overflow:auto;padding:24px;box-shadow:var(--elev-2)}
   .modal h3{font-size:1.15rem;font-weight:750;display:flex;justify-content:space-between;align-items:center}
   .modal .x{border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--ink-3);line-height:1}
   .modal .x:hover{color:var(--ink)}
@@ -86,9 +87,9 @@
   .steps li b{color:var(--ink)} .steps li code{font-family:var(--mono);background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:.85em}
   .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--mono);font-weight:700;font-size:.72rem;display:grid;place-items:center}
   pre{background:var(--inset);color:var(--console-ink);border-radius:var(--r-sm);padding:15px;overflow-x:auto;margin:0;font-family:var(--mono);font-size:.82rem;line-height:1.6}
-  pre .cap{color:#7fd8a0} pre .ret{color:#7fc0ff} pre .kw{color:#e0a53f} pre .cm{color:var(--console-dim)}
+  pre .cap{color:var(--good-text)} pre .ret{color:var(--accent-2-text)} pre .kw{color:var(--warn-text)} pre .cm{color:var(--console-dim)}
   .caplegend{display:flex;gap:16px;font-size:.78rem;margin-top:10px;color:var(--ink-2)}
-  .caplegend b{font-family:var(--mono)} .cap-c{color:#2f9e63} .ret-c{color:#2b74e8}
+  .caplegend b{font-family:var(--mono)} .cap-c{color:var(--good-text)} .ret-c{color:var(--accent-2-text)}
   /* relatório */
   .repbtn{border:1px solid var(--good);background:color-mix(in srgb,var(--good) 9%,transparent);color:var(--good);border-radius:var(--r-sm);padding:11px 18px;font-size:.95rem;font-weight:700;cursor:pointer}
   .repbtn:hover{background:color-mix(in srgb,var(--good) 17%,transparent)}
@@ -243,7 +244,7 @@
     <div class="mlabel" data-i18n="math.vars">As variáveis, uma a uma</div>
     <table class="mvars"><tr><td>z</td><td><b>o KPI padronizado</b> — z = (x − μ)/σ: tira a unidade e põe tudo na mesma escala.</td></tr><tr><td>W (loadings)</td><td><b>os pesos da direção</b> — quanto cada KPI entra em cada componente (a “receita” da mistura).</td></tr><tr><td>PC1, PC2</td><td><b>as novas réguas</b> — direções que capturam o máximo da variação; projetamos as células nelas.</td></tr><tr><td>λ (variância)</td><td><b>quanto cada PC resume</b> — aqui a PC1 sozinha guarda ~97% da informação.</td></tr><tr><td>tipo</td><td><b>álgebra linear — uma rotação dos eixos (autovetores da matriz de covariância)</b></td></tr><tr><td>serve p/</td><td><b>comprimir muitos KPIs em 1–2 números e <i>visualizar</i> a estrutura escondida</b></td></tr></table>
     <div class="mlabel">O código Python (scikit-learn)</div>
-    <pre><span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+    <pre class="superficie-escura"><span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
 <span class="kw">from</span> sklearn.decomposition <span class="kw">import</span> PCA
 
 Z = StandardScaler().fit_transform(X)   <span class="cm"># <span class="cap">captura</span>: μ e σ de cada KPI → padroniza</span>
@@ -638,9 +639,9 @@ function renderScatter(){
   const ax=`<line x1="${mL}" y1="${H-mB}" x2="${W-mR}" y2="${H-mB}" stroke="var(--line)"/><line x1="${mL}" y1="${mT}" x2="${mL}" y2="${H-mB}" stroke="var(--line)"/>
     <text x="${(W+mL)/2}" y="${H-4}" font-size="10" fill="var(--ink-2)" text-anchor="middle">PC1 · ${(D.explained[0]*100).toFixed(0)}% da variação</text>
     <text x="12" y="${(H-mB+mT)/2}" font-size="10" fill="var(--ink-2)" text-anchor="middle" transform="rotate(-90 12 ${(H-mB+mT)/2})">PC2 · ${(D.explained[1]*100).toFixed(1)}%</text>`;
-  const pts=D.points.map(p=>`<circle cx="${sx(p.pc1).toFixed(1)}" cy="${sy(p.pc2).toFixed(1)}" r="5" fill="var(--accent)" fill-opacity="0.72" stroke="#fff" stroke-width="0.6"/>`).join("");
+  const pts=D.points.map(p=>`<circle cx="${sx(p.pc1).toFixed(1)}" cy="${sy(p.pc2).toFixed(1)}" r="5" fill="var(--accent)" fill-opacity="0.72" stroke="var(--surface)" stroke-width="0.6"/>`).join("");
   const tx=sx(tp[0]).toFixed(1),ty=sy(tp[1]).toFixed(1);
-  const star=`<circle cx="${tx}" cy="${ty}" r="9" fill="var(--bad)" stroke="#fff" stroke-width="2"/><circle cx="${tx}" cy="${ty}" r="13" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="3 2"/>`;
+  const star=`<circle cx="${tx}" cy="${ty}" r="9" fill="var(--bad)" stroke="var(--surface)" stroke-width="2"/><circle cx="${tx}" cy="${ty}" r="13" fill="none" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="3 2"/>`;
   $("#scatter").innerHTML=ax+pts+star;
 }
 function renderAssign(){const tp=project(single);
@@ -655,7 +656,13 @@ function closeM(){$("#backdrop").classList.remove("open");}
 $("#closeMath").addEventListener("click",closeM);
 $("#backdrop").addEventListener("click",e=>{if(e.target===$("#backdrop"))closeM();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeM();});
-$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+$("#themeBtn").addEventListener("click",()=>{
+  // o tema é do ALUNO, não da página: mesma chave do painel, para a
+  // escolha atravessar a navegação inteira (aula → lab → painel).
+  const next=document.documentElement.dataset.theme==="light"?"dark":"light";
+  document.documentElement.dataset.theme=next;
+  try{localStorage.setItem("c5g-theme",next);}catch(e){}
+});
 
 initTop(); renderScatter(); renderAssign(); renderTakeaway();
 
@@ -699,6 +706,11 @@ print("loadings PC1:", dict(zip([${D.features.map(f=>'"'+f.key+'"').join(", ")}]
 Y = pca.transform(Z)[:, :2]
 print("primeiras projecoes (PC1, PC2):", Y[:3].round(2))
 `;}};
+// ---- Cores DO RELATÓRIO EXPORTADO — literais de propósito ----
+// Daqui para baixo o HTML não é a tela: é o documento que o aluno baixa e
+// abre no Word. Lá não existe `var(--ink)` para resolver, nem tema escuro
+// — papel é branco. Por isso estas cores NÃO saem do sistema de tokens, e
+// não são sobra de migração: trocá-las por tokens quebraria o arquivo.
 const INKC="#16202b",SUBC="#5a6b7c",LINEC="#dfe5ec",ACC="#1f6fe5",TRACKC="#edf1f6";
 function esc(s){return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
 function rbar(p,win){const w=Math.max(3,Math.round(Math.min(1,Math.max(0,p))*110));

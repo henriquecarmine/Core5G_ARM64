@@ -78,6 +78,37 @@ def categoricas(tema, texto=False):
     return [hexof(L, croma_max(L, h, C), h) for h in CAT_HUE]
 
 
+# Rampa de SÉRIE DE GRÁFICO — quatro faixas, ordem fixa, nunca reciclada.
+#
+# Por que não reaproveitar a categórica: lá a cor acompanha SEMPRE um rótulo (o
+# nome da banda escrito dentro dela), e oito matizes a 45° na MESMA lightness
+# bastam. Num gráfico de dispersão a cor é o ÚNICO código do grupo — e é
+# justamente a lightness igual que o daltonismo colapsa. Medido: qualquer 4 dos
+# 8 degraus categóricos REPROVA a separação sob protanopia/deuteranopia
+# (ΔE 3,9–7,2; o alvo é ≥8) e vários reprovam até para visão normal.
+#
+# Por isso cada faixa aqui tem lightness PRÓPRIA: é ela que sobrevive à
+# simulação. E nenhum dos quatro matizes é matiz de estado (bom 150°,
+# atenção 80°, falha 27°, ao vivo 350°) — uma série nunca pode ser lida como
+# "esta célula está boa".
+#
+# Conferido com o validador da skill dataviz (todos os pares, não só vizinhos):
+#   claro  — CVD ΔE 15,1 · visão normal 15,3 · contraste 3,3–5,8:1
+#   escuro — CVD ΔE 14,3 · visão normal 15,6 · contraste 3,4–6,0:1
+# O croma é o TETO do sRGB naquele (L, matiz) — 0,108 no azul, no teal e no
+# oliva não é escolha, é o limite do gamute.
+SERIE_HUE = [282, 237, 192, 102]
+SERIE_L = {"claro":  [0.63, 0.50, 0.63, 0.52],
+           "escuro": [0.67, 0.53, 0.66, 0.54]}
+SERIE_C = {"claro": 0.190, "escuro": 0.190}
+
+
+def series(tema):
+    from oklch import hexof, croma_max
+    return [hexof(L, croma_max(L, h, SERIE_C[tema]), h)
+            for L, h in zip(SERIE_L[tema], SERIE_HUE)]
+
+
 NOMES = {"n": "neutro", "a": "acento", "g": "bom", "w": "atenção", "r": "falha", "c": "contraponto", "l": "ao vivo"}
 FUNDO = {"claro": 0, "escuro": 0}      # o fundo é sempre o degrau 1 do neutro
 

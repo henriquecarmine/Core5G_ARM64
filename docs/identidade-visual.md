@@ -1,4 +1,4 @@
-# Identidade visual — Core5G_ARM64 (v0.74.1)
+# Identidade visual — Core5G_ARM64 (v0.82.0)
 
 > **Duas vozes, um sistema.** O laboratório é um *instrumento*; a aula é um
 > *texto*. Não devem parecer a mesma coisa nem viver na mesma tela — mas saem da
@@ -76,6 +76,43 @@ O acento é **azul-violeta**, não o azul-padrão de dashboard. Isso é delibera
 o azul era usado ao mesmo tempo como "clique aqui" e como "informativo", e essa
 colisão é metade da bagunça antiga. Agora ação e informação são a mesma família
 (o acento), e o azul de estado deixou de existir.
+
+### A rampa de série de gráfico
+
+A categórica **não serve** para um gráfico de dispersão, e isso foi medido, não
+suposto. Na topologia a cor sempre vem acompanhada do **nome da banda escrito
+dentro dela** — a cor é reforço, não código. Num gráfico onde cada ponto é
+colorido pelo grupo, a cor **é** o código, e aí a conta é outra: a separação
+tem de valer para **todos os pares**, inclusive sob protanopia e deuteranopia.
+
+Passando as 70 combinações de 4 dos 8 degraus categóricos pelo validador:
+**nenhuma passa**. A melhor (`cat-1·3·5·7`) fica em ΔE 6,9 — abaixo do alvo de
+8 — e várias reprovam até para visão normal. A causa é estrutural: os oito
+degraus têm a **mesma lightness**, e é exatamente a lightness que sobrevive à
+simulação de daltonismo. Oito matizes a 45° com o mesmo brilho viram, para um
+dicromata, oito tons do mesmo cinza.
+
+Por isso existe `--serie-1` a `--serie-4`, com **lightness própria por faixa**:
+
+| | matiz | claro | escuro |
+|---|---|---|---|
+| `--serie-1` | 282° violeta | `#7b74f7` · 3,63:1 | `#8782fe` · 5,63:1 |
+| `--serie-2` | 237° azul    | `#046b99` · 5,78:1 | `#0074a6` · 3,43:1 |
+| `--serie-3` | 192° teal    | `#019d9a` · 3,28:1 | `#0aa7a4` · 5,99:1 |
+| `--serie-4` | 102° oliva   | `#766a03` · 5,38:1 | `#7c7004` · 3,53:1 |
+
+Medido (todos os pares, não só vizinhos): **CVD ΔE 15,1 no claro e 14,3 no
+escuro** (alvo ≥8), **visão normal 15,3 e 15,6** (piso 15), **contraste ≥3:1**
+contra o cartão em ambos os temas, sem exceção condicional.
+
+Nenhum dos quatro matizes é matiz de estado — bom 150°, atenção 80°, falha 27°,
+ao vivo 350° ficam de fora de propósito: uma série nunca pode ser lida como
+"esta célula está boa". São **quatro e só quatro**, porque o maior *k* do lab é
+4: cor de série não se recicla; um quinto grupo viraria "outros", nunca um
+matiz gerado.
+
+O croma de 0,108 nas faixas 2, 3 e 4 não é escolha — é o **teto do sRGB**
+naquele par (lightness, matiz).
 
 ## Duas camadas de token
 
@@ -181,9 +218,14 @@ com código de saída != 0, então serve de porta em CI.
 | `login.html` | 24 → **1** |
 | `ops/topology.html` | 66 → **26** (o resto vive no JS de desenho) |
 
+As 12 páginas do lab foram fechadas na **v0.82.0**: dos 174 literais que havia,
+sobraram **77**, todos no **relatório exportado** — o HTML que o aluno baixa e
+abre no Word, onde não existe `var(--ink)` para resolver nem tema escuro, e por
+isso as cores lá **têm de ser literais**. Estão marcadas com um comentário
+dizendo isso, para ninguém "consertar" depois.
+
 **Falta**: os arquivos JS que desenham (`flow-strip.js`, `energy.js`,
-`mini-map.js`, `i18n.js`) e as cores de gráfico das páginas de ML. E a separação
-entre o painel de operação e as telas de aula.
+`mini-map.js`, `i18n.js`).
 
 ## O que os testes garantem
 
@@ -196,8 +238,13 @@ entre o painel de operação e as telas de aula.
 - `test/visual-smoke.js` 0.b — a folha de identidade carregou de verdade.
 - `test/visual-smoke.js` 0.c — o console é legível **nos dois temas**, texto e
   cores de log, com piso de 4,5:1.
-- `tools/identidade/medir.py` — contraste de todo par prometido; sai com código
+- `tools/identidade/medir.py` — contraste de todo par prometido, **inclusive as
+  4 faixas da rampa de série** contra o cartão nos dois temas; sai com código
   != 0 quando reprova.
+- `node test/paginas.js` — quem tem **botão de tema** lê e grava `c5g-theme`.
+  As 12 páginas do lab tinham o botão e nenhuma gravava: o professor punha o
+  tema claro para o projetor, entrava numa aula e voltava tudo escuro. Como o
+  botão funcionava, não parecia defeito — parecia teimosia da tela.
 
 ## Fontes consultadas
 

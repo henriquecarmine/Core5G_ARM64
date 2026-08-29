@@ -2,6 +2,7 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/tokens.css?v=%VER%">
 <link rel="stylesheet" href="/static/lab/lab-ponte.css?v=%VER%">
+<script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
 <title>Lab de IA para RIC — Jornada</title>
 <style>
   :root{
@@ -70,7 +71,7 @@
   .step.done{border-color:color-mix(in srgb,var(--good) 45%,var(--line))}
   .step.soon{opacity:.62}
   .stepnum{flex:none;width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-weight:700;color:var(--ink-2);font-size:.95rem}
-  .step.done .stepnum{background:var(--good);border-color:var(--good);color:#fff}
+  .step.done .stepnum{background:var(--good);border-color:var(--good);color:var(--accent-ink)}
   .stepbody{flex:1;min-width:0}
   .stepbody h4{font-size:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .stepbody p{color:var(--ink-2);font-size:.85rem;margin-top:2px}
@@ -224,7 +225,13 @@ function renderProgress(){
   else{btn.textContent=T("hub.review")+" ▸";btn.href=LIVE[0].href;}
 }
 $("#resetBtn").addEventListener("click",()=>{save({});render();});
-$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+$("#themeBtn").addEventListener("click",()=>{
+  // o tema é do ALUNO, não da página: mesma chave do painel, para a
+  // escolha atravessar a navegação inteira (aula → lab → painel).
+  const next=document.documentElement.dataset.theme==="light"?"dark":"light";
+  document.documentElement.dataset.theme=next;
+  try{localStorage.setItem("c5g-theme",next);}catch(e){}
+});
 function paintFooter(){$("#footer").innerHTML=T("hub.footer");}
 if(window.LABI18N)LABI18N.onChange(()=>{render();paintFooter();});
 paintFooter(); render();

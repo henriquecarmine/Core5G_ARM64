@@ -13,7 +13,7 @@ Uso:  python3 tools/identidade/gerar_tokens.py
 import os, sys
 AQUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, AQUI)
-from paleta import todas, categoricas, NOMES         # noqa: E402
+from paleta import todas, categoricas, series, NOMES  # noqa: E402
 
 RAIZ = os.path.abspath(os.path.join(AQUI, "..", ".."))
 DESTINO = os.path.join(RAIZ, "server", "panel", "static", "tokens.css")
@@ -37,6 +37,14 @@ def cat(tema, ind):
             + ind + " ".join(f"--cat-{i+1}-txt:{c};" for i, c in enumerate(txt)))
 
 
+def serie(tema, ind):
+    """Rampa de série de gráfico: onde a COR é o único código do grupo."""
+    return (f"{ind}/* série de gráfico — 4 faixas, ordem fixa, nunca reciclada.\n"
+            f"{ind}   Lightness PRÓPRIA por faixa: é ela que sobrevive à simulação de\n"
+            f"{ind}   daltonismo, que colapsa matiz. Nenhuma delas é matiz de estado. */\n"
+            + ind + " ".join(f"--serie-{i+1}:{c};" for i, c in enumerate(series(tema))))
+
+
 def semanticas(tema, ind):
     # traço forte: 9 no claro, 8 no escuro. O degrau 8 do claro mede 1,94:1 e
     # não serve de limite de componente (o mínimo é 3:1). Em vez de torcer a
@@ -54,6 +62,9 @@ def semanticas(tema, ind):
 {ind}--bg:var({pagina}); --surface:var({cartao}); --surface-2:var({aninhado}); --well:var({poco});
 {ind}/* o console é escuro NOS DOIS TEMAS: é um terminal, não um cartão */
 {ind}--console-bg:#0d0e11; --console-ink:#d7dbe0; --console-line:#1c1f26;
+{ind}/* véu atrás de um modal: escuro nos dois temas, porque o papel dele é
+{ind}   APAGAR a página, e apagar é escurecer — clarear não apaga nada. */
+{ind}--scrim:rgb(6 12 20 / .62);
 {ind}/* traços */
 {ind}--line:var(--n-6); --line-2:var(--n-7); --line-strong:var(--n-{forte});
 {ind}/* tinta */
@@ -102,6 +113,7 @@ CSS = f"""/* ===================================================================
   /* ---------- primitivas · TEMA CLARO ---------- */
 {primitivas("claro", "  ")}
 {cat("claro", "  ")}
+{serie("claro", "  ")}
 
   /* ---------- papéis ---------- */
 {semanticas("claro", "  ")}
@@ -136,6 +148,7 @@ CSS = f"""/* ===================================================================
   :root:not([data-theme="light"]) {{
 {primitivas("escuro", "    ")}
 {cat("escuro", "    ")}
+{serie("escuro", "    ")}
 {semanticas("escuro", "    ")}
     --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);
     --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);
@@ -144,6 +157,7 @@ CSS = f"""/* ===================================================================
 :root[data-theme="dark"] {{
 {primitivas("escuro", "  ")}
 {cat("escuro", "  ")}
+{serie("escuro", "  ")}
 {semanticas("escuro", "  ")}
   --elev-1:0 1px 2px rgb(0 0 0 / .40), 0 4px 12px rgb(0 0 0 / .32);
   --elev-2:0 2px 4px rgb(0 0 0 / .45), 0 12px 32px rgb(0 0 0 / .40);

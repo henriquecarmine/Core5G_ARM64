@@ -13,6 +13,11 @@
  * 2) Toda página com cor própria carrega a folha de identidade — senão volta
  *    a existir paleta paralela.
  *
+ * 3) Quem tem botão de tema LEMBRA o tema. As 12 páginas do lab tinham o
+ *    botão, mas nenhuma gravava a escolha: o professor punha o tema claro no
+ *    painel para o projetor, clicava numa aula e voltava tudo escuro. Como o
+ *    botão funcionava, ninguém via defeito nenhum — só um incômodo repetido.
+ *
  * Uso: node paginas.js   (ou via npm run test:paginas)
  */
 const fs = require('fs');
@@ -60,6 +65,16 @@ for (const arq of paginas) {
   const fixos = [...texto.matchAll(/\?v=([0-9][0-9.]*)/g)].map((m) => m[1]);
   if (fixos.length) erros.push(`${rel}: ?v= com número escrito à mão (${[...new Set(fixos)].join(', ')}) — use ?v=%VER%`);
 
+  // 5) botão de tema ⇒ tema lembrado. Ler ANTES de pintar (script no <head>)
+  //    e gravar no clique, na mesma chave do painel: `c5g-theme`.
+  const temBotao = /id="theme-?[bB]tn"|id="theme-btn"/.test(texto);
+  if (temBotao) {
+    if (!/localStorage\.getItem\("c5g-theme"\)|localStorage\.getItem\('c5g-theme'\)/.test(texto))
+      erros.push(`${rel}: tem botão de tema mas não LÊ c5g-theme (o tema não atravessa a navegação)`);
+    if (!/localStorage\.setItem\(["']c5g-theme["']/.test(texto))
+      erros.push(`${rel}: tem botão de tema mas não GRAVA c5g-theme (a escolha morre ao sair da página)`);
+  }
+
   // 4) quem pinta, carrega a identidade
   const pinta = /<style[\s>]/.test(texto);
   const temIdentidade = /href="\/static\/tokens\.css/.test(texto);
@@ -71,4 +86,4 @@ if (erros.length) {
   erros.forEach((e) => console.error('  -', e));
   process.exit(1);
 }
-console.log(`✅ ${paginas.length} páginas OK — <meta charset> no primeiro kilobyte, ícone da aba e identidade carregada em todas que pintam`);
+console.log(`✅ ${paginas.length} páginas OK — <meta charset> no primeiro kilobyte, ícone da aba, identidade carregada em todas que pintam e tema lembrado em todas que têm o botão`);

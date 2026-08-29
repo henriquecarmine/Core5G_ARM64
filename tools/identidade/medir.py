@@ -62,8 +62,27 @@ if falhas:
     for f in falhas:
         print("  -", f)
     sys.exit(1)
-# o console é escuro nos dois temas — mede contra o próprio fundo dele
+# Rampa de SÉRIE de gráfico: aqui a cor é o único código do grupo, então além
+# do contraste contra a superfície ela precisa de SEPARAÇÃO ENTRE AS FAIXAS —
+# essa parte é medida pelo validador da skill dataviz (simula protanopia e
+# deuteranopia), não aqui. O que se confere aqui é o mínimo de 3:1 de uma marca
+# gráfica contra o cartão em que ela é desenhada.
+from paleta import series as _series
 from oklch import contraste as _c
+
+print("\n== série de gráfico (marca sobre o cartão) ==")
+for tema in ("claro", "escuro"):
+    # o cartão é o degrau 1 do neutro no claro e o 2 no escuro (a elevação
+    # sobe para o branco num tema e para o cinza no outro)
+    fundo = E[tema]["n"][0] if tema == "claro" else E[tema]["n"][1]
+    for i, cor in enumerate(_series(tema), 1):
+        v = _c(cor, fundo)
+        ok = v >= 3.0
+        if not ok:
+            falhas.append(f"{tema}: --serie-{i} = {v:.2f}:1 (alvo 3.0)")
+        print(f"  {'OK   ' if ok else 'FALHA'} {v:6.2f}:1  alvo 3.0  --serie-{i} ({cor}) sobre o cartão {fundo} · {tema}")
+
+# o console é escuro nos dois temas — mede contra o próprio fundo dele
 v = _c("#d7dbe0", "#0d0e11")
 print(f"\n  {'OK   ' if v >= 4.5 else 'FALHA'} {v:6.2f}:1  alvo 4.5  tinta do console sobre o console")
 if v < 4.5:

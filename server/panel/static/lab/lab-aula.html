@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="/static/tokens.css?v=%VER%">
 <link rel="stylesheet" href="/static/lab/lab-ponte.css?v=%VER%">
 <link rel="stylesheet" href="/static/lab/lab-estudos.css?v=%VER%">
+<script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
 </head>
 <body>
 <div class="wrap">
@@ -53,7 +54,13 @@ const GH="https://github.com/henriquecarmine/Core5G_ARM64/blob/main/";
 const M=location.pathname.match(/\/lab\/estudo\/(\d)\/aula\/(\d+)/)||[];
 const N=parseInt(M[1]||"4",10), K=parseInt(M[2]||"1",10);
 
-$("#themeBtn").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",c==="dark"?"light":"dark");});
+$("#themeBtn").addEventListener("click",()=>{
+  // o tema é do ALUNO, não da página: mesma chave do painel, para a
+  // escolha atravessar a navegação inteira (aula → lab → painel).
+  const next=document.documentElement.dataset.theme==="light"?"dark":"light";
+  document.documentElement.dataset.theme=next;
+  try{localStorage.setItem("c5g-theme",next);}catch(e){}
+});
 
 function runBtn(cmd,label){
   if(DO_PAINEL) return `<button class="runb" data-cmd="${esc(cmd)}" title="${esc(cmd)}">▶ ${esc(label)}</button>`;

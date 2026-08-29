@@ -22,18 +22,31 @@ emit()  { echo "STEP|$1|$2|$3"; }
 
 down_p1() {
     phase "Desligando Projeto 1 (UERANSIM + Open5GS)…"
-    ( cd "$P1_DIR" && ./scripts/down_ran.sh ) 2>&1 || true
-    ( cd "$P1_DIR" && ./scripts/down_core.sh ) 2>&1 || true
-    emit ok "Projeto 1 desligado" "UERANSIM e Open5GS parados."
+    local rc=0
+    ( cd "$P1_DIR" && ./scripts/down_ran.sh ) 2>&1 || rc=1
+    ( cd "$P1_DIR" && ./scripts/down_core.sh ) 2>&1 || rc=1
+    if [ "$rc" -eq 0 ]; then
+        emit ok "Projeto 1 desligado" "UERANSIM e Open5GS parados."
+    else
+        emit fail "Projeto 1 não parou por inteiro" "Algo do UERANSIM/Open5GS continua no ar — veja o log ao lado."
+    fi
+    return "$rc"
 }
 
 down_p2() {
     phase "Desligando Projeto 2 (gNB/RIC + OAI Core + Non-RT RIC)…"
-    ( cd "$P2_DIR" && ./scripts/down_e2_lab.sh ) 2>&1 || true
+    local rc=0
+    ( cd "$P2_DIR" && ./scripts/down_e2_lab.sh ) 2>&1 || rc=1
     # Core OAI é o v2 (oai-cn5g-v2); down_core.sh v1 não para os containers v2.
-    ( cd "$P2_DIR/oai-cn5g-v2" && ./down_core_v2.sh ) 2>&1 || true
-    [ -x "$NONRT_DIR/down_nonrt.sh" ] && ( cd "$NONRT_DIR" && ./down_nonrt.sh ) 2>&1 || true
-    emit ok "Projeto 2 desligado" "gNB, near-RT RIC, Non-RT RIC e OAI Core parados."
+    ( cd "$P2_DIR/oai-cn5g-v2" && ./down_core_v2.sh ) 2>&1 || rc=1
+    # Non-RT RIC é melhor esforço (pode nem estar instalado): não conta para o rc.
+    [ -x "$NONRT_DIR/down_nonrt.sh" ] && { ( cd "$NONRT_DIR" && ./down_nonrt.sh ) 2>&1 || true; }
+    if [ "$rc" -eq 0 ]; then
+        emit ok "Projeto 2 desligado" "gNB, near-RT RIC, Non-RT RIC e OAI Core parados."
+    else
+        emit fail "Projeto 2 não parou por inteiro" "gNB/RIC ou o OAI Core continuam no ar — veja o log ao lado."
+    fi
+    return "$rc"
 }
 
 case "$TARGET" in
@@ -75,9 +88,17 @@ case "$TARGET" in
         echo "DONE|ok"
         ;;
     off)
-        down_p1
-        down_p2
-        echo "DONE|ok"
+        # O painel (e o roteiro da apresentação) confiam neste DONE| para saber
+        # se a máquina ficou de fato ociosa. Anunciar "ok" sem olhar era a falha
+        # calada clássica: ninguém vê, e o lab segue queimando crédito.
+        rc=0
+        down_p1 || rc=1
+        down_p2 || rc=1
+        if [ "$rc" -eq 0 ]; then
+            echo "DONE|ok"
+        else
+            echo "DONE|fail"
+        fi
         ;;
     *)
         emit fail "Alvo inválido" "Use p1, p2 ou off."

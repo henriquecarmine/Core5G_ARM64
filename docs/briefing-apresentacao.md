@@ -168,15 +168,33 @@ ganho medido — que é a mesma humildade do resto do trabalho.
 
 ---
 
-## Antes de entrar
+## ⚠ A INSTÂNCIA INTEIRA ESTÁ DESLIGADA
 
-1. Ligar o Projeto 2 no ⏻ (leva 1 a 2 min) — **está DESLIGADO** (alguém rodou o
-   *off* às 11:10 de 29/08; foi desligamento limpo, não queda). Ensaiado às 11:32:
-   sobe em ~2 min, 13 contêineres, gNB/UE/RIC vivos, E2 em SCTP ESTAB, rádio com
-   SNR 50,5 dB e MCS 28. **E deixe desligado até 10 min antes**: a instância é
-   `t4g.xlarge`, *burstable* — o lab a ~77% de CPU queima crédito, e o baseline é
-   40%. Rodar a noite toda entrega uma máquina lenta bem na hora da demo.
-2. **Ctrl+Shift+R** — obrigatório, houve deploy na madrugada (v0.84.0).
+Não é só o laboratório: a **máquina EC2 foi parada** no fim do dia 29/08. E o
+IAM `core5g-ops` **não tem** `ec2:StartInstances` — dá `UnauthorizedOperation`.
+Então o primeiro passo é humano, **pelo console da AWS**. Sem isso, o domínio
+não responde e nada mais nesta lista funciona.
+
+## A ordem de partida, na sequência certa
+
+1. **Ligar a instância no console da AWS.** ~1 min até o painel responder.
+2. **Deployar ANTES de qualquer pessoa entrar** — há três coisas na fila e o
+   deploy reinicia o serviço:
+   ```bash
+   ./deploy.sh panel      # v0.85.5: trava de ocupação, fuso, 5 exercícios nossos
+   ```
+   Fazer isto com o painel vazio é o ponto inteiro: em 29/08 o deploy caiu às
+   15:28, dois minutos antes da aula do professor, e ele levou oito tentativas
+   de login em treze minutos. A partir da v0.85.4 o próprio `deploy.sh` recusa
+   se houver gente conectada (`FORCA=1` passa por cima).
+3. **Ligar o Projeto 2 no ⏻** — leva 1 a 2 min: 13 contêineres, gNB/UE/RIC
+   vivos, E2 em SCTP ESTAB, rádio com SNR ~50 dB e MCS 28.
+   **Só 10 minutos antes**: a instância é `t4g.xlarge`, *burstable* — o lab a
+   ~77% de CPU queima crédito e o baseline é 40%. Deixar rodando entrega uma
+   máquina lenta bem na hora da demo.
+4. **Ctrl+Shift+R** — obrigatório, o `?v=` muda a cada versão.
+5. Conferir a régua: **três bolinhas verdes** e o quadrante **RÁDIO · E2 com
+   números**. Sem número no rádio, o gNB não subiu.
 3. Conferir na régua: **três bolinhas verdes** (Core, E2 lab, Non-RT) e o
    quadrante **RÁDIO·E2 com números**. Sem número no rádio, o gNB não subiu.
 4. Rodar o T1 uma vez para aquecer e clicar em **limpar**.

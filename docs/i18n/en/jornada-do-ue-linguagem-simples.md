@@ -1,4 +1,4 @@
-<!-- sync: 196ae2dd -->
+<!-- sync: ea52a1c1 -->
 > 🌐 **English** translation of the canonical Portuguese doc [`docs/jornada-do-ue-linguagem-simples.md`](../../jornada-do-ue-linguagem-simples.md). All languages: [INDEX](INDEX.md).
 
 # The UE's Journey in plain language
@@ -80,3 +80,63 @@ The story is the same (the phone arriving at the building). Only this changes:
 > Tip: the same diagram has a **"Data flow"** mode (little dots moving) and a
 > **"Tour"** through the layers. The **Journey** is the step-by-step, guided version — start
 > with it.
+
+---
+
+## The acronyms explain themselves, right on the screen
+
+Since **v0.81.0** you no longer have to leave the Journey to find out what an
+acronym means. In every step's caption:
+
+- the **full name** appears **in parentheses** right after the term —
+  *AMF (Access and Mobility Management Function)*, *N4 (SMF ↔ UPF)*;
+- **hovering** (or tapping, or arriving by **Tab**) opens a card with
+  **what it is** and **what it is for** — in pt/en/es/fr;
+- **Esc** closes the card.
+
+There are **128 terms** (v0.84.0): core functions, the N/E2/A1/O1/O2 interfaces,
+protocols, procedures, the radio stack (RRC/RLC/MAC/PHY), what gets measured
+(KPI, KQI, QoE, SLA, the KPM counters), the RIC vocabulary, the data world
+(ETL, DIKW, OLAP, TSDB, PCA, k-means…) and the lab's databases.
+
+**Where the glossary works**
+
+| Screen | What it marks | Full name |
+|---|---|---|
+| UE Journey and Tour | title and caption of each step | once **per step** |
+| Topology diagram | the interface labels (N4, E2, Nausf…) | card only — the label is too small |
+| Lectures and Studies | summary, concepts, formulas, quiz | once **per page** |
+| The 10 ML labs | the text cards | once **per page** |
+
+The difference between "per step" and "per page" came from looking at the
+screen: in a short caption, read on its own, marking every occurrence helps;
+in a lecture it does not — the first page came out with **338 underlines** and
+turned into a field of dots. In a lecture a term introduces itself once, and
+after that it is vocabulary.
+
+Inside `<code>` and `<pre>` it **never** marks: there the acronym is literal,
+and underlining it would suggest the program's text had changed.
+
+The step title is only marked, without the full name — it is a headline and has
+to fit on one line.
+
+### Where this lives, and how to add a term
+
+`server/panel/static/ops/glossario.js`, in two layers kept apart on purpose:
+
+| Layer | What it is | Translated? |
+|---|---|---|
+| `TERMOS` | the official 3GPP/O-RAN name — what goes in the parentheses | **no** (same rule as `static/i18n.js`) |
+| `DICTS` | `<term>.o` = what it is · `<term>.p` = what it is for | **yes**, in all 4 languages |
+
+To add one: a line in `TERMOS` (use `null` when there is no acronym to expand,
+as with *MySQL* or *NG Setup*) and the two explanations in the four
+dictionaries. `npm run test:i18n:parity` fails on a term with no explanation, an
+explanation with no term, and a missing language — a term that underlines and
+opens an empty card is a silent failure, and that is the one the test exists to
+catch.
+
+To use the glossary on another screen: load the script and call
+`Glossario.marcar(element)` — or `Glossario.marcar([{el: title, expandir:
+false}, caption])` when a title and a caption share the "once per step". It only
+touches **text nodes**: whatever HTML is already there passes through intact.

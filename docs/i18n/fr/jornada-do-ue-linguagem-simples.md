@@ -1,4 +1,4 @@
-<!-- sync: 196ae2dd -->
+<!-- sync: ea52a1c1 -->
 > 🌐 Traduction en **français** du document canonique en portugais [`docs/jornada-do-ue-linguagem-simples.md`](../../jornada-do-ue-linguagem-simples.md). Toutes les langues : [INDEX](INDEX.md).
 
 # Le parcours de l'UE en langage simple
@@ -80,3 +80,65 @@ L'histoire est la même (le téléphone qui arrive dans l'immeuble). Seul ceci c
 > Astuce : le même diagramme a un mode **« Flux de données »** (des petites boules qui circulent) et un
 > **« Tour »** par couches. Le **Parcours** est la version pas à pas, guidée — commencez
 > par elle.
+
+---
+
+## Les sigles s'expliquent sur l'écran lui-même
+
+Depuis la **v0.81.0**, plus besoin de quitter le Parcours pour savoir ce qu'est
+un sigle. Dans la légende de chaque étape :
+
+- le **nom complet** apparaît **entre parenthèses** juste après le terme —
+  *AMF (Access and Mobility Management Function)*, *N4 (SMF ↔ UPF)* ;
+- **survoler** (ou toucher, ou arriver par **Tab**) ouvre une bulle avec
+  **ce que c'est** et **à quoi ça sert** — en pt/en/es/fr ;
+- **Échap** ferme la bulle.
+
+Ce sont **128 termes** (v0.84.0) : les fonctions du cœur, les interfaces
+N/E2/A1/O1/O2, les protocoles, les procédures, la pile radio (RRC/RLC/MAC/PHY),
+ce qui se mesure (KPI, KQI, QoE, SLA, les compteurs KPM), le vocabulaire du RIC,
+le monde des données (ETL, DIKW, OLAP, TSDB, PCA, k-means…) et les bases du
+laboratoire.
+
+**Où le glossaire fonctionne**
+
+| Écran | Ce qu'il marque | Nom complet |
+|---|---|---|
+| Parcours de l'UE et Tour | titre et légende de chaque étape | une fois **par étape** |
+| Schéma de la topologie | les étiquettes d'interface (N4, E2, Nausf…) | la bulle seulement — l'étiquette est trop petite |
+| Cours et Études | résumé, concepts, formules, quiz | une fois **par page** |
+| Les 10 labos de ML | les cartes de texte | une fois **par page** |
+
+La différence entre « par étape » et « par page » est venue de regarder l'écran :
+dans une légende courte, lue isolément, marquer chaque occurrence aide ; dans un
+cours, non — la première page est sortie avec **338 soulignements** et est
+devenue un champ de pointillés. Dans un cours, le terme se présente une fois, et
+ensuite c'est déjà du vocabulaire.
+
+À l'intérieur de `<code>` et `<pre>`, on ne marque **jamais** : là, le sigle est
+littéral, et le souligner laisserait croire que le texte du programme a changé.
+
+Le titre de l'étape est seulement marqué, sans le nom complet — c'est un titre,
+et il doit tenir sur une ligne.
+
+### Où cela vit, et comment ajouter un terme
+
+`server/panel/static/ops/glossario.js`, en deux couches séparées à dessein :
+
+| Couche | Ce que c'est | Traduit ? |
+|---|---|---|
+| `TERMOS` | le nom officiel 3GPP/O-RAN — ce qui va entre parenthèses | **non** (même règle que `static/i18n.js`) |
+| `DICTS` | `<terme>.o` = ce que c'est · `<terme>.p` = à quoi ça sert | **oui**, dans les 4 langues |
+
+Pour en ajouter un : une ligne dans `TERMOS` (mettez `null` quand il n'y a pas de
+sigle à développer, comme *MySQL* ou *NG Setup*) et les deux explications dans
+les quatre dictionnaires. `npm run test:i18n:parity` refuse un terme sans
+explication, une explication sans terme et une langue manquante — un terme qui
+se souligne et ouvre une bulle vide est une panne silencieuse, et c'est
+justement celle que le test existe pour attraper.
+
+Pour utiliser le glossaire sur un autre écran : chargez le script et appelez
+`Glossario.marcar(élément)` — ou `Glossario.marcar([{el: titre, expandir:
+false}, légende])` quand un titre et une légende partagent le « une fois par
+étape ». Il ne touche qu'aux **nœuds de texte** : le HTML déjà présent passe
+intact.

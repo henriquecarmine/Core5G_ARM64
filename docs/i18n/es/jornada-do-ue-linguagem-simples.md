@@ -1,4 +1,4 @@
-<!-- sync: 196ae2dd -->
+<!-- sync: ea52a1c1 -->
 > 🌐 Traducción al **español** del documento canónico en portugués [`docs/jornada-do-ue-linguagem-simples.md`](../../jornada-do-ue-linguagem-simples.md). Todos los idiomas: [INDEX](INDEX.md).
 
 # El Viaje del UE en lenguaje simple
@@ -80,3 +80,64 @@ La historia es la misma (el celular llegando al edificio). Cambia solo esto:
 > Consejo: el mismo diagrama tiene un modo **"Flujo de datos"** (bolitas caminando) y un
 > **"Tour"** por capas. El **Viaje** es la versión paso a paso, guiada — empieza
 > por ella.
+
+---
+
+## Las siglas se explican en la propia pantalla
+
+Desde la **v0.81.0** ya no hace falta salir del Viaje para saber qué es una
+sigla. En el pie de cada paso:
+
+- el **nombre completo** aparece **entre paréntesis** justo después del término —
+  *AMF (Access and Mobility Management Function)*, *N4 (SMF ↔ UPF)*;
+- **pasar el ratón** (o tocar, o llegar con **Tab**) abre un globo con
+  **qué es** y **para qué sirve** — en pt/en/es/fr;
+- **Esc** cierra el globo.
+
+Son **128 términos** (v0.84.0): funciones del núcleo, las interfaces
+N/E2/A1/O1/O2, protocolos, procedimientos, la pila de radio (RRC/RLC/MAC/PHY),
+lo que se mide (KPI, KQI, QoE, SLA, los contadores KPM), el vocabulario del RIC,
+el mundo de los datos (ETL, DIKW, OLAP, TSDB, PCA, k-means…) y las bases del
+laboratorio.
+
+**Dónde funciona el glosario**
+
+| Pantalla | Qué marca | Nombre completo |
+|---|---|---|
+| Viaje del UE y Tour | título y pie de cada paso | una vez **por paso** |
+| Dibujo de la topología | las etiquetas de interfaz (N4, E2, Nausf…) | solo el globo — la etiqueta es demasiado pequeña |
+| Clases y Estudios | resumen, conceptos, fórmulas, cuestionario | una vez **por página** |
+| Los 10 laboratorios de ML | las tarjetas de texto | una vez **por página** |
+
+La diferencia entre "por paso" y "por página" salió de mirar la pantalla: en un
+pie corto, leído de forma aislada, marcar cada aparición ayuda; en una clase no
+— la primera página salió con **338 subrayados** y se volvió un campo de puntos.
+En una clase el término se presenta una vez, y a partir de ahí ya es
+vocabulario.
+
+Dentro de `<code>` y `<pre>` **nunca** se marca: ahí la sigla es literal, y
+subrayarla sugeriría que el texto del programa ha cambiado.
+
+El título del paso solo se marca, sin el nombre completo — es un titular y tiene
+que caber en una línea.
+
+### Dónde vive esto, y cómo añadir un término
+
+`server/panel/static/ops/glossario.js`, en dos capas separadas a propósito:
+
+| Capa | Qué es | ¿Se traduce? |
+|---|---|---|
+| `TERMOS` | el nombre oficial 3GPP/O-RAN — lo que va entre paréntesis | **no** (la misma regla de `static/i18n.js`) |
+| `DICTS` | `<término>.o` = qué es · `<término>.p` = para qué sirve | **sí**, en los 4 idiomas |
+
+Para añadir uno: una línea en `TERMOS` (usa `null` cuando no haya sigla que
+expandir, como *MySQL* o *NG Setup*) y las dos explicaciones en los cuatro
+diccionarios. `npm run test:i18n:parity` reprueba un término sin explicación,
+una explicación sin término y un idioma que falte — un término que subraya y
+abre un globo vacío es un fallo callado, y es justo el que la prueba existe para
+atrapar.
+
+Para usar el glosario en otra pantalla: carga el script y llama a
+`Glossario.marcar(elemento)` — o `Glossario.marcar([{el: titulo, expandir:
+false}, pie])` cuando el título y el pie compartan el "una vez por paso". Solo
+toca **nodos de texto**: el HTML que ya esté ahí pasa intacto.

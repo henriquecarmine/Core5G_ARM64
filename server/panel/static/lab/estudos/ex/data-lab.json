@@ -1,0 +1,155 @@
+{
+  "h": "#data/lab",
+  "rot": "Lab OAI · UE-TP / KPM→A1",
+  "t": "Projeto prático M09",
+  "pts": 22,
+  "fonte": "Laboratório do módulo 09 — pipeline KPM → SQLite/JSONL → IA → política A1, no ambiente oai-cn-gnb-nonrt-nearrt",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "No pipeline do lab, quem produz o dado e quem o escreve em arquivo?",
+          "alt": [
+            "O SMO produz e o Non-RT RIC escreve",
+            "O gNB mede e reporta pela E2; um xApp assinante recebe a indicação e escreve a linha",
+            "O UPF produz e o núcleo escreve",
+            "O próprio painel mede diretamente do rádio"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O gNB é quem mede — é onde o rádio acontece. Ele empacota num relatório E2SM-KPM e envia pela E2 ao near-RT RIC. O xApp assina o serviço e, a cada indicação, escreve uma linha. Ninguém digita nada: o arquivo é subproduto da rede funcionando."
+        },
+        {
+          "q": "Por que a política A1 do lab roda em dry-run?",
+          "alt": [
+            "Porque o A1 ainda não foi padronizado",
+            "Porque é ambiente de ensino: a decisão é exercitada de ponta a ponta sem que nada seja aplicado na rede",
+            "Porque o FlexRIC não aceita políticas",
+            "Porque falta permissão no SMO"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O valor pedagógico está no CAMINHO — medir, decidir, emitir a política com escopo e objetivo. Aplicar de verdade mudaria o comportamento do rádio no meio de uma aula. Por isso o modo de atuação fica em emulação: o artefato é real, o efeito não."
+        },
+        {
+          "q": "O que a camada silver acrescenta ao arquivo bronze?",
+          "alt": [
+            "Compressão",
+            "Tipagem, conferência de qualidade e o carimbo da fase — o dado deixa de ser texto e passa a ser confiável",
+            "Um índice para busca rápida",
+            "A tradução dos nomes das colunas para português"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Bronze é o que caiu, linha a linha, sem julgamento. Silver é onde cada campo vira número, data ou categoria, onde se conferem nulos e duplicados e onde a fase é carimbada. É a primeira camada em que dá para confiar numa conta."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O detector do laboratório marca as três métricas como anômalas e decide 'apply'. Sua análise conclui que não há usuário mal servido. Há contradição?",
+          "alt": [
+            "Sim: um dos dois está errado",
+            "Não — são perguntas diferentes. O detector pergunta 'isto é diferente do repouso?'; a análise pergunta 'o usuário está mal servido?'",
+            "Sim: a análise deve seguir o artefato do laboratório",
+            "Não, porque o detector não olha vazão"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Anômalo não é ruim. Mudar de regime — sair do repouso e entrar sob carga — é anomalia por construção, e é exatamente o que o experimento provoca. Qualidade é outra pergunta. Quem confunde as duas recomenda política onde só houve capacidade sendo usada."
+        },
+        {
+          "q": "O modelo do detector tem MAD igual a zero nas três métricas e um piso de 1,0. O que isso implica?",
+          "alt": [
+            "Que o modelo está quebrado",
+            "Que o repouso é constante demais: sem dispersão, o piso vira o divisor e qualquer variação estoura o limiar",
+            "Que as métricas estão na unidade errada",
+            "Que faltam amostras de treino"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "MAD zero significa que, no repouso, a métrica praticamente não varia. Como não dá para dividir por zero, entra o piso — e aí qualquer desvio acima do limiar dispara. O detector fica sensível por construção: ele acusa mudança de regime, não degradação."
+        },
+        {
+          "q": "Você precisa comparar exercícios que valem 9 e 22 pontos, ou fases com números de amostra diferentes. Qual é a leitura correta?",
+          "alt": [
+            "O valor absoluto, porque é o que foi medido",
+            "O percentual — e, no caso das fases, declarar quantas amostras sustentam cada número",
+            "A soma dos dois",
+            "A diferença entre o maior e o menor"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Absoluto só se compara dentro da mesma escala. O percentual normaliza — e o n ao lado impede a armadilha oposta: 100% de duas amostras não vale o mesmo que 100% de sessenta. Comparar sem declarar o n é comparar confiança diferente com a mesma cara."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "A política A1 emitida no lab é do tipo 1, com escopo de UE e um objetivo de prioridade. O que ela NÃO consegue pedir?",
+          "alt": [
+            "Prioridade para um UE",
+            "Cota de PRB — isso seria controle de RAN pela E2, não política pela A1",
+            "Escopo por identificador de UE",
+            "Um objetivo de QoS"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "A1 desce INTENÇÃO: 'trate este usuário com esta prioridade'. Quem aloca bloco de recurso é o escalonador, e mexer nele é E2SM-RC pela E2. Confundir os dois é pedir pela interface errada — e o near-RT RIC responderia que não sabe do que se trata."
+        },
+        {
+          "q": "Por que o índice da amostra, e não o carimbo de hora, ordena a série do lab?",
+          "alt": [
+            "Porque o índice é menor e ocupa menos espaço",
+            "Porque o carimbo disponível é o da ingestão, não o da medição — ordenar por ele embaralharia a série",
+            "Porque o carimbo está em UTC",
+            "Porque a série não é temporal"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Há três tempos possíveis num registro: quando o evento ocorreu, quando foi coletado e quando foi carregado. O arquivo traz o último. Usá-lo como ordem cronológica é assumir que carregamento preserva a sequência — e não preserva."
+        },
+        {
+          "q": "Um resultado do lab vale para uma rede real?",
+          "alt": [
+            "Sim: o protocolo é o mesmo",
+            "Não como número. É rádio simulado, canal ideal, um usuário e uma execução — o que se leva é o método, não a medida",
+            "Sim, se multiplicado pelo número de usuários",
+            "Só se o RIC estiver em modo real"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Falta desvanecimento, interferência e disputa entre usuários — tudo o que torna uma rede real difícil. O laboratório ensina o caminho: escolher a fonte, limpar, indicar, interpretar e declarar o limite. Esse caminho viaja; o número, não."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha o pipeline do laboratório na ordem, da rede até a política.",
+          "itens": [
+            "O gNB mede e envia a indicação E2SM-KPM pela E2",
+            "O xApp assinante recebe e grava a linha no arquivo (bronze)",
+            "O ETL tipa, confere qualidade e carimba a fase (silver)",
+            "A agregação reduz à granularidade da pergunta (gold)",
+            "Os indicadores são calculados, com fórmula e unidade declaradas",
+            "A regra do tema é avaliada contra os limiares",
+            "A política A1 é emitida em dry-run, com escopo e objetivo"
+          ],
+          "pts": 10,
+          "porque": "É o laço completo do O-RAN em miniatura: observar, tratar, decidir, agir. Cada etapa só é honesta se a anterior foi feita — emitir política sobre um gold construído em cima de dado não conferido é automatizar um erro, e rápido."
+        }
+      ]
+    }
+  ]
+}

@@ -19,7 +19,7 @@
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "EDA é olhar antes de decidir. É nela que se descobre a unidade errada, a coluna com 11 zeros e o pico isolado. Quem pula a EDA modela em cima de um defeito e só descobre na defesa — foi a EDA que pegou o atraso escrito em milissegundos quando era microssegundos."
+          "porque": "EDA é olhar antes de decidir. É nela que se descobre a unidade errada, a coluna cheia de zeros e o pico isolado. Quem pula a EDA modela em cima de um defeito e só descobre quando alguém pergunta — e trocar microssegundos por milissegundos, por exemplo, conta uma história mil vezes pior do que a real."
         },
         {
           "q": "MCAR, MAR e MNAR classificam o quê?",
@@ -43,7 +43,7 @@
           ],
           "ok": 2,
           "pts": 1,
-          "porque": "Apagar sem registrar é fabricar um resultado limpo. O pico de 172.317 kbps na recuperação do UE-TP é um outlier de verdade — e a decisão foi mantê-lo e usar a MEDIANA, dizendo isso no relatório. A decisão pode ser qualquer uma; o que não pode é ser invisível."
+          "porque": "Apagar sem registrar é fabricar um resultado limpo. No dado de UE-TP do laboratório há um pico isolado de 172.317 kbps na recuperação: outlier de verdade. Mantê-lo e usar a MEDIANA é uma conduta defensável; apagá-lo também pode ser, se estiver escrito. A decisão pode ser qualquer uma — o que não pode é ser invisível."
         }
       ]
     },
@@ -127,7 +127,7 @@
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "Correlação não é causa, e correlação global pode ser artefato de mistura: no UE-TP, vazão × atraso dá 0,48 no conjunto e cai para perto de zero dentro de cada fase. O número global comparava rede parada com rede sob carga — dois mundos, não uma relação."
+          "porque": "Correlação não é causa, e correlação global pode ser artefato de mistura: no dado de UE-TP, vazão × atraso dá 0,48 no conjunto e cai para perto de zero dentro de cada fase. O número global compara rede parada com rede sob carga — dois mundos, não uma relação entre duas medidas."
         }
       ]
     },

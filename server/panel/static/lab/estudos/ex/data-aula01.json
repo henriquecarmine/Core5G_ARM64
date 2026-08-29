@@ -127,7 +127,7 @@
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "O corpo carrega as medidas; o cabeçalho diz de quem e de quando elas são. Sem isso o número não se ancora em nada — e foi exatamente esse tipo de confusão que fez o carimbo de hora do arquivo do projeto ser o da ingestão, não o da medição."
+          "porque": "O corpo carrega as medidas; o cabeçalho diz de quem e de quando elas são. Sem isso o número não se ancora em nada. É uma confusão comum: tomar o carimbo de hora DO ARQUIVO — que costuma ser o da ingestão — pela hora da medição, e com isso ordenar a série errado."
         }
       ]
     },

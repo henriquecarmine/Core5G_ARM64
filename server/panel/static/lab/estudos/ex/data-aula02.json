@@ -43,7 +43,7 @@
           ],
           "ok": 0,
           "pts": 1,
-          "porque": "É o padrão medallion. No projeto do Grupo 6 isso é literal: bronze é o `kpm.jsonl` do jeito que o xApp escreveu, silver é o SQLite com tipo e fase carimbados, gold é a tabela de três linhas — uma por fase. Cada camada é reproduzível a partir da anterior."
+          "porque": "É o padrão medallion. No projeto integrador isso é literal: bronze é o `kpm.jsonl` do jeito que o xApp escreveu, silver é o SQLite com tipo e fase carimbados, gold é a tabela agregada, uma linha por fase. Cada camada é reproduzível a partir da anterior — quem só tem o gold não consegue refazer a conta."
         }
       ]
     },

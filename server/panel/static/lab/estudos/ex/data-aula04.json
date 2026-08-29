@@ -1,0 +1,154 @@
+{
+  "h": "#data/aula04",
+  "rot": "Aula 04",
+  "t": "KPIs e QoE",
+  "pts": 22,
+  "fonte": "Aula 04 da cadeira 4 — KPIs, KQIs, QoS e QoE: da medida à experiência",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Quais são os quatro elementos obrigatórios na anatomia de um KPI?",
+          "alt": [
+            "Nome, cor, eixo e legenda",
+            "Fórmula, unidade, granularidade e fonte",
+            "Mínimo, máximo, média e desvio",
+            "Alvo, limiar, alarme e política"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Sem os quatro, o número não se defende. A fórmula diz como se calcula, a unidade dá sentido à grandeza, a granularidade diz de que recorte ele fala (por UE? por célula? por fase?) e a fonte diz de qual coluna de qual camada ele saiu. Faltando um, dois analistas chegam a números diferentes com o mesmo nome."
+        },
+        {
+          "q": "Qual é a diferença entre QoS e QoE?",
+          "alt": [
+            "QoS é medida no núcleo e QoE no rádio",
+            "QoS é o que a rede PROMETE e configura (5QI, GBR, bearers); QoE é o que o usuário PERCEBE",
+            "São sinônimos em contextos diferentes",
+            "QoS é do 4G e QoE é do 5G"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "QoS é contrato dentro da rede: prioridade, banda garantida, tratamento do bearer. QoE é a experiência de quem usa — o vídeo travou ou não travou. Dá para ter QoS impecável e QoE ruim, e é justamente essa distância que a aula existe para nomear."
+        },
+        {
+          "q": "SLI, SLO e SLA: o que é cada um?",
+          "alt": [
+            "Três nomes para a mesma promessa, em níveis de formalidade",
+            "SLI é o indicador medido, SLO é a meta interna sobre ele, SLA é o compromisso contratual com consequência",
+            "SLI é do cliente, SLO do fornecedor, SLA do regulador",
+            "SLI mede latência, SLO mede vazão e SLA mede disponibilidade"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "É uma escada. O SLI é o número (p95 do atraso). O SLO é a meta que a equipe persegue sobre esse número. O SLA é o que está no contrato e tem multa. Confundir SLO com SLA é prometer para fora o que era meta interna."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O `DRB.RlcSduDelayDl` marcou 158 na fase de carga. Isso é um problema de QoE?",
+          "alt": [
+            "Sim: 158 ms é muito para vídeo",
+            "Não dá para dizer. A unidade é microssegundo, e mesmo em µs o atraso é proxy — sem MOS ou nota de aplicação não se afirma nada sobre experiência",
+            "Sim, porque passou do limiar de 100",
+            "Não: atraso não afeta experiência"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Duas armadilhas numa pergunta só. A primeira é a unidade: 158 µs e 158 ms contam histórias separadas por um fator de mil. A segunda é o salto de proxy para experiência — atraso indica risco, não satisfação. Dizer 'é risco para a experiência' é honesto; dizer 'a QoE caiu' afirma mais do que o dado sustenta."
+        },
+        {
+          "q": "Um SLA promete 'vazão média de 50 Mbps'. Por que isso protege pouco o cliente?",
+          "alt": [
+            "Porque 50 Mbps é pouco",
+            "Porque a média esconde o pior caso: dá para cumprir a média com longos períodos ruins compensados por picos",
+            "Porque falta dizer se é subida ou descida",
+            "Porque média não é um indicador válido"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Média é a agregação mais fácil de cumprir e a menos sentida pelo usuário. Um SLA que morde escreve-se em PERCENTIL — 'p95 do atraso abaixo de X' ou 'vazão acima de Y em 95% das janelas' —, porque é o quase-pior caso que o cliente reclama."
+        },
+        {
+          "q": "O mesmo dado, agregado de três formas, dá 3,7 · 8.619 · 82.190. Como isso é possível, e o que escolher?",
+          "alt": [
+            "Erro de cálculo: só um pode estar certo",
+            "São mediana, média e p95 da mesma série: a agregação muda o significado, e escolhe-se pela pergunta — típico, total ou quase-pior caso",
+            "São três fases diferentes",
+            "São três unidades diferentes"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Nenhum está errado; eles respondem a perguntas diferentes. A mediana descreve o típico, a média é puxada pelo pico, o p95 mostra o quase-pior caso. Por isso a granularidade e a agregação entram na anatomia do KPI: sem elas, o mesmo nome cobre três números."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Um KPI de rádio muito usado é a taxa de sucesso de acesso (RRC Setup Success Rate). O que ela mede?",
+          "alt": [
+            "Quantos UEs estão conectados agora",
+            "A fração das tentativas de estabelecer conexão de rádio que terminaram bem",
+            "A vazão média no momento do acesso",
+            "O tempo até o primeiro pacote"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "É uma razão entre tentativas e sucessos na camada RRC. Importa porque uma rede pode ter ótima vazão para quem está dentro e ser péssima para quem tenta entrar — e o usuário que não conecta não aparece em nenhum indicador de vazão."
+        },
+        {
+          "q": "Por que um indicador precisa de limiar E persistência antes de virar decisão?",
+          "alt": [
+            "Para caber no gráfico",
+            "Porque um único ponto acima do limiar pode ser ruído; exigir que a condição se mantenha evita agir sobre oscilação",
+            "Porque a norma exige dois parâmetros",
+            "Para reduzir o volume de dados"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Limiar sem persistência gera política oscilante: entra, sai, entra de novo — e cada troca custa. É o mesmo motivo pelo qual um alarme sério pede N ocorrências em M janelas. Decidir sobre um ponto é decidir sobre ruído."
+        },
+        {
+          "q": "Onde ficam os indicadores de fronthaul, midhaul e backhaul na cadeia?",
+          "alt": [
+            "São KQIs de aplicação",
+            "São indicadores de TRANSPORTE — atraso, jitter e perda nos trechos entre O-RU, O-DU, O-CU e o núcleo",
+            "São medidos só pelo SMO",
+            "São a mesma coisa que os KPIs de rádio"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O split do O-RAN criou trechos de transporte com requisitos duros — o fronthaul é o mais exigente, com sincronismo na casa do microssegundo. Um problema ali aparece como degradação de rádio sem que o rádio tenha nada: por isso o transporte tem indicadores próprios."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem a cadeia que vai da medida à decisão.",
+          "itens": [
+            "Contador: o nó mede e reporta (por exemplo DRB.UEThpUl)",
+            "KPI: a medida vira indicador com fórmula, unidade, granularidade e fonte",
+            "KQI: o indicador é relido do ponto de vista do serviço",
+            "QoE: a experiência que se quer proteger, estimada por proxy ou por nota",
+            "SLO/SLA: a meta ou o compromisso escrito sobre o indicador",
+            "Decisão: limiar e persistência atendidos, a política desce (no lab, em dry-run)"
+          ],
+          "pts": 10,
+          "porque": "É o fio da aula inteira. Cada degrau acrescenta contexto e perde neutralidade: o contador é fato, o KPI é escolha de fórmula, o KQI é escolha de ponto de vista, a QoE é inferência. Quem pula degraus acaba afirmando sobre experiência com dado de contador — o erro mais comum da disciplina."
+        }
+      ]
+    }
+  ]
+}

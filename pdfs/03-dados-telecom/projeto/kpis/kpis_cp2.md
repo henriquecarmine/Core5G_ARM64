@@ -84,7 +84,7 @@ recuperação **0,0 / 394,0**.
 | **Alvo / limiar** | cláusula didática: ≤ 50% do tempo (o dobro do repouso) |
 | **Interpretação** | que fração da janela ficou em regime degradado |
 | **Papel** | **KQI** — qualidade do serviço; vira **cláusula de QoS** quando L é tratado como contrato |
-| **Limite de validade** | L separa **regimes**, não mede satisfação; a conclusão se sustenta para L entre ~40 e ~150 µs e desaparece acima de 186 µs |
+| **Limite de validade** | L separa **regimes**, não mede satisfação; a separação é máxima entre 95 e 133 µs, resiste até ~157 µs e desaparece acima de 186 µs — o p95 do próprio repouso |
 
 Medido: repouso **25%** · carga **100%** · recuperação **30%**.
 
@@ -101,9 +101,12 @@ Testamos L de 20 a 280 µs e medimos a separação entre repouso e carga:
 | 150 | 20% | 83% | 63 pontos |
 | 200 | 5% | 2% | −3 pontos |
 
-L = 100 µs é o ponto de maior separação. Acima de 186 µs a separação **inverte**,
-porque o p95 do repouso (185,7 µs) ultrapassa o da carga (191,2 µs) — e é esse o
-limite de validade do indicador, declarado em vez de escondido.
+A separação é máxima num **patamar de 95 a 133 µs** (75 pontos), então L = 100 µs
+está no meio da faixa, não na beirada. Ela resiste até cerca de 157 µs, chega a
+**zero em 179 µs** e desaparece acima de **186 µs** — que é justamente o **p95 do
+próprio repouso** (185,7 µs). Passado o quase-pior caso da rede parada, as duas
+fases medem quase o mesmo; de 198 µs em diante o indicador chega a **inverter**.
+Esse é o limite de validade, declarado em vez de escondido.
 
 ## O que este KQI **não** é
 

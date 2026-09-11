@@ -9,6 +9,7 @@ ordem cronológica:
 | 01 | [`01-ric/`](01-ric/) | RAN Intelligent Controller | **Jonas A. Kunzler** | concluída |
 | 02 | [`02-ric-ai/`](02-ric-ai/) | Aplicações de IA e ML em RIC | **Julio Cesar Cardoso Tesolin** | encerrada — material completo (A01–A06); **projeto final não implementado** |
 | 03 | [`03-dados-telecom/`](03-dados-telecom/) | Análise de Dados em Redes de Telecom | **Jonas A. Kunzler** | em andamento (ago/2026) |
+| 04 | [`04-gestao-orquestracao/`](04-gestao-orquestracao/) | Gestão, Orquestração e Automação em Redes OpenRAN | **Lucas Borges de Oliveira** | em andamento (set/2026) — trabalho de SMO: apresentação 12/09, relatório 15/09 |
 
 ## `00-interfaces-oran/` — Interfaces e Protocolos ORAN (Kunzler)
 

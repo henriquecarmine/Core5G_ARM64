@@ -1,4 +1,4 @@
-<!-- sync: 95a1e8b1 -->
+<!-- sync: bd704275 -->
 > 🌐 **English** translation of the canonical Portuguese doc [`core5g-arm64-bible.md`](../../../core5g-arm64-bible.md). All languages: [INDEX](INDEX.md) · sync checked by `docs/i18n/check-parity.py`.
 
 # Core5G ARM64 — Project Bible
@@ -240,7 +240,7 @@ into:
 | E2 | Near-RT RIC ↔ O-gNB | E2AP over SCTP; E2SM-KPM/RC |
 | A1 | Non-RT RIC ↔ Near-RT RIC | REST/JSON; ML/QoS policies |
 | O1 | SMO ↔ all managed nodes | NETCONF/YANG |
-| F1-C/U | O-CU ↔ O-DU | NG-AP + GTP-U (3GPP TS 38.473) |
+| F1-C/U | O-CU ↔ O-DU | F1AP on F1-C (3GPP TS 38.473) + GTP-U on F1-U |
 | Open FH | O-DU ↔ O-RU | eCPRI over Ethernet (Split 7.2x) |
 | N2 | O-CU-CP ↔ AMF | NGAP over SCTP |
 | N3 | O-CU-UP ↔ UPF | GTP-U over UDP |

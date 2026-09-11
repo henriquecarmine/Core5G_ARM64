@@ -1,4 +1,4 @@
-<!-- sync: 95a1e8b1 -->
+<!-- sync: bd704275 -->
 > 🌐 Traducción al **español** del documento canónico en portugués [`core5g-arm64-bible.md`](../../../core5g-arm64-bible.md). Todos los idiomas: [INDEX](INDEX.md) · sincronización verificada por `docs/i18n/check-parity.py`.
 
 # Core5G ARM64 — Biblia del Proyecto
@@ -236,7 +236,7 @@ interfaces abiertas. La división funcional adoptada por la O-RAN Alliance es el
 | E2 | Near-RT RIC ↔ O-gNB | E2AP sobre SCTP; E2SM-KPM/RC |
 | A1 | Non-RT RIC ↔ Near-RT RIC | REST/JSON; políticas de ML/QoS |
 | O1 | SMO ↔ todos los nodos gestionados | NETCONF/YANG |
-| F1-C/U | O-CU ↔ O-DU | NG-AP + GTP-U (3GPP TS 38.473) |
+| F1-C/U | O-CU ↔ O-DU | F1AP en F1-C (3GPP TS 38.473) + GTP-U en F1-U |
 | Open FH | O-DU ↔ O-RU | eCPRI sobre Ethernet (Split 7.2x) |
 | N2 | O-CU-CP ↔ AMF | NGAP sobre SCTP |
 | N3 | O-CU-UP ↔ UPF | GTP-U sobre UDP |

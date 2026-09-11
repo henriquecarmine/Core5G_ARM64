@@ -45,3 +45,8 @@ external/plataforma-cesar/
 
 # Artefatos do p2-closed-loop (regenerados a cada execucao)
 server/oai-cn-gnb-e2/logs/closed_loop_offline/
+
+# SMO O-RAN SC: fontes clonadas pelo build_arm64.sh (pinadas no script) e logs
+server/smo/src/
+server/smo/run/
+server/smo/*.log

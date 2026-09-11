@@ -1,0 +1,4 @@
+# As trocas de base só usam os Dockerfile.* deste diretório; as fontes clonadas
+# (centenas de MB) não entram no contexto de build.
+src/
+*.log

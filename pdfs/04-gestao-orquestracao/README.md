@@ -27,6 +27,13 @@ Anunciada no Classroom em 10/09/2026.
 - Os grupos e a ferramenta escolhida são registrados nos comentários do aviso,
   no Classroom.
 
+## Laboratório
+
+O SMO do O-RAN SC (OAM) roda no servidor ARM64: [`server/smo/`](../../server/smo/README.md)
+(`build_arm64.sh`, `up_smo.sh`, `test_smo.sh`). O `test_smo.sh` gera as evidências
+de cada item do objeto de estudo que o lab cobre: O1/NETCONF, VES, Keycloak,
+topologia e Kafka.
+
 ## Material que já existe no repositório
 
 - [`../01-ric/aula05-design_smo.pdf`](../01-ric/aula05-design_smo.pdf) — a aula

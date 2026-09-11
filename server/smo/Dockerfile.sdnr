@@ -1,0 +1,53 @@
+# SDN-R (OpenDaylight + netconf/callhome + devicemanager) do O-RAN SC OAM —
+# ARM64 por TROCA DE BASE.
+#
+# A imagem oficial é amd64 puro: alpine-minirootfs x86_64 + Temurin 21. Tudo o
+# que o controlador faz é Java (Karaf/OpenDaylight em /opt/opendaylight e os
+# scripts ONAP em /opt/onap); o único binário dependente de arquitetura é a
+# própria JVM. Então: pega os diretórios da imagem oficial (só COPY, nada é
+# executado da amd64) e assenta sobre a mesma família de base em aarch64.
+#
+# Reproduz, na ordem, o histórico da oficial 13.0.1 (skopeo inspect --config):
+# pacotes, sudoers do wheel, usuário odl, env, portas, entrypoint.
+ARG SDNR_TAG=13.0.1
+FROM --platform=linux/amd64 nexus3.o-ran-sc.org:10001/o-ran-sc/oam-oam-controller/sdnr-image:${SDNR_TAG} AS oficial
+
+FROM eclipse-temurin:21-jdk-alpine
+ARG SDNR_TAG=13.0.1
+
+USER root
+RUN apk update && apk --no-cache add gcompat sudo iputils openssl bash unzip rsync nss python3 \
+ && sed -e 's/# %wheel ALL=(ALL) NOPASSWD: ALL/%wheel ALL=(ALL) NOPASSWD: ALL/g' -i /etc/sudoers \
+ && addgroup -S odl && adduser -S odl -G odl && addgroup odl wheel
+
+# /opt/opendaylight já traz o link current -> /opt/opendaylight, as features SDN-R,
+# o etc/ com featuresBoot ajustado e o custom.properties do TLS.
+COPY --from=oficial --chown=odl:odl /opt/opendaylight /opt/opendaylight
+COPY --from=oficial --chown=odl:odl /opt/onap /opt/onap
+# truststoreONAPall.jks e o cacerts com o truststore ONAP já importado (keytool
+# rodou na oficial; o formato do keystore não depende de arquitetura).
+COPY --from=oficial /etc/ssl/certs/java/ /etc/ssl/certs/java/
+COPY --from=oficial --chown=odl:odl /opt/java/openjdk/lib/security/cacerts /opt/java/openjdk/lib/security/cacerts
+
+ENV ODL_HOME=/opt/opendaylight \
+    IMAGEPATH="eclipse-temurin:21-jdk-alpine//o-ran-sc/oam-oam-controller/sdnr-image (core5g arm64)" \
+    IMAGENAMES="ONAP SDNC//SDNR Patches" \
+    A1_ADAPTER_NORTHBOUND=false \
+    CCSDKFEATUREVERSION=${SDNR_TAG} \
+    CCSDKFEATURE_SDNR_GROUPID=org.o-ran-sc.oam-oam-controller.features.sdnr.wt \
+    FEATURES_SDNR=system/org/o-ran-sc/oam-oam-controller/features/sdnr/wt \
+    SDNR_FEATURES_BOOT_INITIAL=odl-restconf-all,odl-netconf-topology,odl-netconf-callhome-ssh,odl-mdsal-all,odl-mdsal-apidocs,odl-daexim-all,odl-restconf-nb-rfc8040 \
+    JAVA_OPTS="-Xms512m -Xmx3g" \
+    JAVA_SECURITY_DIR=/etc/ssl/certs/java \
+    SDNC_STORE_DIR=/opt/onap/sdnc/data/stores \
+    SDNC_SECUREPORT=8443 \
+    SDNC_KEYPASS=changeit2 \
+    SDNC_KEYSTORE=org.onap.sdnc.p12
+# ODL_ADMIN_PASSWORD fica de fora de propósito: a oficial embute um padrão, e o
+# compose do SMO já passa o valor (ADMIN_PASSWORD do .env).
+
+USER odl
+WORKDIR /opt/opendaylight
+EXPOSE 1090 1099 8181
+ENTRYPOINT ["/opt/onap/sdnc/bin/startODL.sh"]
+CMD ["/bin/bash"]

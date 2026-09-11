@@ -1,0 +1,10 @@
+# Ajustes do smo/oam (upstream o-ran-sc/oam) para o Graviton, aplicados com
+#   docker compose -f run/solution/smo/oam/docker-compose.yaml -f compose/oam.override.yaml
+#
+# Upstream, o controlador acha o Keycloak (identity.<domínio>) pelo DNS da rede
+# do operador. Aqui não há esse DNS: o nome aponta para o IP fixo do gateway na
+# rede dcn (ver common.override.yaml), onde o Traefik roteia pelo Host.
+services:
+  controller:
+    extra_hosts:
+      - "identity.${HTTP_DOMAIN}:${SMO_GATEWAY_IP}"

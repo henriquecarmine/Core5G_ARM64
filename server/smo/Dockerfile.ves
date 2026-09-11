@@ -1,0 +1,32 @@
+# VES Collector (ONAP DCAE, usado pelo O-RAN SC OAM) — ARM64 por TROCA DE BASE.
+#
+# A oficial 1.12.5 é a "Reference ONAP JAVA 11 image based on alpine" em amd64,
+# com glibc enxertada no alpine. O coletor é um jar Java com scripts sh em
+# /opt/app/VESCollector; a JVM é a única parte dependente de arquitetura. Aqui a
+# base é Temurin 11 JRE sobre Ubuntu 22.04 (glibc nativa: dispensa o enxerto).
+#
+# O SMO ainda aplica, em cima desta, a camada "-configured" do repositório oam
+# (solution/smo/oam/ves-collector/Dockerfile, com BASEIMAGE=esta imagem).
+ARG VES_TAG=1.12.5
+FROM --platform=linux/amd64 nexus3.onap.org:10001/onap/org.onap.dcaegen2.collectors.ves.vescollector:${VES_TAG} AS oficial
+
+FROM eclipse-temurin:11-jre-jammy
+LABEL Description="ONAP VES collector ${VES_TAG} on Temurin 11 (arm64 rebase, core5g)"
+
+ENV JAVA_OPTS="-Xms256m -Xmx1g" \
+    JAVA_SEC_OPTS= \
+    HOSTALIASES=/etc/host.aliases
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends procps less vim-tiny curl bash openssl ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && groupadd vescollector \
+ && useradd --system --no-create-home -g vescollector vescollector
+
+COPY --from=oficial --chown=vescollector:vescollector /opt/app/VESCollector /opt/app/VESCollector
+WORKDIR /opt/app/VESCollector
+RUN mkdir -p logs && chown -R vescollector:vescollector logs etc && chmod +x bin/*.sh
+
+USER vescollector
+EXPOSE 8080 8443
+ENTRYPOINT ["/bin/sh", "-c", "bin/docker-entry.sh"]

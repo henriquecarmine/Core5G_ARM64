@@ -1,0 +1,42 @@
+# ODLUX (interface web do SDN-R) do O-RAN SC OAM — ARM64 por TROCA DE BASE.
+#
+# A oficial é o nginx da Bitnami (1.25.5, debian-12) em amd64 + a aplicação
+# web estática (html -> /app, com o odlux), os server_blocks e quatro scripts em
+# sbin/ (run.sh, opm.py, configure.py, core.py — conferido com docker export da
+# oficial; o configure.py gera o http_site.conf, sem ele o nginx não sobe).
+# Nenhum desses é binário: copia-se só eles para o mesmo nginx em aarch64. O
+# binário nginx da oficial NÃO é copiado.
+ARG SDNR_TAG=13.0.1
+FROM --platform=linux/amd64 nexus3.o-ran-sc.org:10001/o-ran-sc/oam-oam-controller/sdnr-web-image:${SDNR_TAG} AS oficial
+
+FROM bitnamilegacy/nginx:1.25.5
+LABEL maintainer="CCSDK Team (onap-ccsdk@lists.onap.org); arm64: core5g"
+
+USER root
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3-minimal python3-urllib3 unzip openssl \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=oficial /opt/bitnami/nginx/html /opt/bitnami/nginx/html
+COPY --from=oficial /opt/bitnami/nginx/conf/server_blocks/ /opt/bitnami/nginx/conf/server_blocks/
+COPY --from=oficial /opt/bitnami/nginx/sbin/run.sh /opt/bitnami/nginx/sbin/opm.py \
+                    /opt/bitnami/nginx/sbin/configure.py /opt/bitnami/nginx/sbin/core.py \
+                    /opt/bitnami/nginx/sbin/
+
+ENV WEBPROTOCOL=HTTP WEBPORT=8080 SDNRPROTOCOL=HTTP SDNRHOST=172.18.0.3 SDNRPORT=8181 \
+    ONETONSETUP=false TRPCEURL= TOPOURL= TILEURL= SITEDOCURL= \
+    DNS_RESOLVER="1.1.1.1 ipv6=off" DNS_INTERNAL_RESOLVER=127.0.0.11 \
+    SSL_CERT_DIR=/app/cert SSL_CERTIFICATE=cert.pem SSL_CERTIFICATE_KEY=cert.key
+
+RUN chmod +x /opt/bitnami/nginx/sbin/run.sh /opt/bitnami/nginx/sbin/opm.py \
+ && chmod -R g+w /opt/bitnami/nginx/html/odlux \
+ && mkdir -p /app/init.d \
+ && chmod 666 /opt/bitnami/nginx/conf/server_blocks/*.rules \
+ && chown -R 1001:1001 /app \
+ && ln -s /opt/bitnami/nginx/sbin/opm.py /usr/local/bin/opm
+
+USER 1001
+WORKDIR /app
+EXPOSE 8080 8443
+ENTRYPOINT ["/opt/bitnami/scripts/nginx/entrypoint.sh"]
+CMD ["/opt/bitnami/nginx/sbin/run.sh"]

@@ -1,0 +1,41 @@
+# Ajustes do smo/common (upstream o-ran-sc/oam) para o Graviton, aplicados com
+#   docker compose -f run/solution/smo/common/docker-compose.yaml -f compose/common.override.yaml
+#
+# 1. O gateway não publica 80/443/4334/4335 no host (são do Caddy do painel):
+#    publica só o HTTPS em 127.0.0.1, para túnel SSH.
+# 2. A rede dcn ganha uma sub-rede IPv4 e o gateway um IP fixo nela; é por esse
+#    IP que os simuladores e o controlador alcançam o Traefik (HTTPS e NETCONF
+#    call home), no lugar do IP do host.
+# 3. Sem o DNS do upstream, o kafka-ui (redes dmz e smo) não acha
+#    identity.<domínio> para o OAuth: o gateway ganha IP fixo também na dmz e o
+#    nome aponta para ele.
+services:
+  gateway:
+    ports: !override
+      - "127.0.0.1:${SMO_HTTPS_PORT}:443"
+    networks: !override
+      dmz:
+        ipv4_address: ${SMO_GATEWAY_DMZ_IP}
+      dcn:
+        ipv4_address: ${SMO_GATEWAY_IP}
+  kafka-ui:
+    extra_hosts:
+      - "identity.${HTTP_DOMAIN}:${SMO_GATEWAY_DMZ_IP}"
+
+networks:
+  dmz:
+    name: dmz
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      config:
+        - subnet: ${SMO_DMZ_IPV4_SUBNET}
+  dcn:
+    name: dcn
+    driver: bridge
+    enable_ipv6: true
+    ipam: !override
+      driver: default
+      config:
+        - subnet: ${NETWORK_SUBNET_DCN_IPv6}
+        - subnet: ${SMO_DCN_IPV4_SUBNET}

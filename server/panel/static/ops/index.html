@@ -529,6 +529,18 @@
   #info-modal-close { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; width:auto; padding:0 4px; line-height:1; }
   #info-modal-body { padding:14px 18px; overflow-y:auto; }
   #info-modal-body .formula-box, #info-modal-body .oran-arch { margin-top:0; }
+  /* Características do servidor: o rótulo "servidor" da telemetria abre o modal */
+  .q-lb-btn { cursor:pointer; }
+  .q-lb-btn:hover, .q-lb-btn:focus-visible { color:var(--accent-text); }
+  #info-modal.srv { max-width:780px; }
+  .srv-fonte { font-size:11px; color:var(--muted); margin:0 0 10px; }
+  .srv-sec { margin:0 0 14px; }
+  .srv-h { font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-text);
+           border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:6px; }
+  .srv-dl { display:grid; grid-template-columns:minmax(140px,32%) 1fr; gap:3px 12px; margin:0; }
+  .srv-dl dt { color:var(--muted); font-size:12px; }
+  .srv-dl dd { margin:0; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12px; color:var(--text); word-break:break-word; }
+  .srv-dl dd .ok { color:var(--good-text); } .srv-dl dd .nok { color:var(--bad-text); }
 
   /* Condições do canal — grid 2 colunas */
   .condition-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
@@ -693,7 +705,7 @@
        para o olho ir direto ao que quer (servidor · serviços · rádio). -->
   <div id="topbar-telemetry">
     <div class="quad" id="quad-host">
-      <span class="q-lb" data-i18n="q.host">servidor</span>
+      <span class="q-lb q-lb-btn" id="host-info-btn" role="button" tabindex="0" data-i18n="q.host" data-i18n-title="srv.open_title" title="Características do servidor: instância, processador, memória, discos, sistema, rede e Docker">servidor</span>
       <div id="telemetry">
         <span id="tm-cpu">CPU —</span>
         <span id="tm-ram">RAM —</span>
@@ -2839,6 +2851,7 @@ const INFO_CONTENT = {
 function openInfoModal(key) {
   const entry = INFO_CONTENT[key];
   if (!entry) return;
+  document.getElementById('info-modal').classList.remove('srv');
   document.getElementById('info-modal-title').textContent = trf(`info.${key}.title`, entry.title);
   document.getElementById('info-modal-body').innerHTML = trf(`info.${key}.html`, entry.html);
   document.getElementById('info-modal-overlay').classList.add('open');
@@ -2847,6 +2860,52 @@ function closeInfoModal() { document.getElementById('info-modal-overlay').classL
 document.getElementById('info-modal-close').addEventListener('click', closeInfoModal);
 document.getElementById('info-modal-overlay').addEventListener('click', e => { if (e.target === document.getElementById('info-modal-overlay')) closeInfoModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInfoModal(); });
+
+// ---- Características do servidor: clique no rótulo "servidor" da telemetria ----
+// Tudo vem de /api/server-info, lido do próprio host na hora (cache de 15 s no
+// servidor). Rótulos nos 4 idiomas; valores técnicos como o servidor informa.
+function srvBytes(b) {
+  const u = ['B', 'KB', 'MB', 'GB', 'TB']; let v = b, i = 0;
+  while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+  return new Intl.NumberFormat(document.documentElement.lang || 'pt-BR', { maximumFractionDigits: v < 100 ? 1 : 0 }).format(v) + ' ' + u[i];
+}
+function srvDuracao(s) {
+  const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+  return (d ? d + ' d ' : '') + (d || h ? h + ' h ' : '') + m + ' min';
+}
+function srvValor(it) {
+  if (it.ok !== undefined) return it.ok ? '<span class="ok">✓</span>' : '<span class="nok">✗</span>';
+  if (it.total !== undefined) {
+    const pct = it.total ? Math.round(100 * it.usado / it.total) : 0;
+    return `${srvBytes(it.total)} · ${srvBytes(it.usado)} ${I18N.t('srv.w_usados')} (${pct}%) · ${srvBytes(it.livre)} ${I18N.t('srv.w_livres')}`;
+  }
+  if (it.s !== undefined) return srvDuracao(it.s);
+  if (it.b !== undefined) return srvBytes(it.b) + (it.v ? ' · ' + escHtml(it.v) : '');
+  return escHtml(String(it.v ?? '—'));
+}
+async function openServerInfo() {
+  const modal = document.getElementById('info-modal'), body = document.getElementById('info-modal-body');
+  modal.classList.add('srv');
+  document.getElementById('info-modal-title').textContent = I18N.t('srv.title');
+  body.innerHTML = '<div class="srv-fonte">' + I18N.t('srv.loading') + '</div>';
+  document.getElementById('info-modal-overlay').classList.add('open');
+  try {
+    const r = await fetch('/api/server-info', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    body.innerHTML = '<div class="srv-fonte">' + I18N.t('srv.fonte', { hora: d.gerado_em, dominio: escHtml(d.dominio || '') }) + '</div>'
+      + d.secoes.map(sec => '<div class="srv-sec" data-sec="' + sec.id + '"><div class="srv-h">' + I18N.t('srv.sec_' + sec.id) + '</div><dl class="srv-dl">'
+        + sec.itens.map(it => '<dt>' + (it.r ? escHtml(it.r) : I18N.t('srv.k_' + it.k)) + '</dt><dd>' + srvValor(it) + '</dd>').join('')
+        + '</dl></div>').join('');
+  } catch (e) {
+    body.innerHTML = '<div class="srv-fonte">' + I18N.t('srv.erro') + ' (' + escHtml(String(e.message || e)) + ')</div>';
+  }
+}
+{
+  const hb = document.getElementById('host-info-btn');
+  hb.addEventListener('click', openServerInfo);
+  hb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServerInfo(); } });
+}
 
 // ===== UE Lab =====
 document.getElementById('uelab-open-btn').addEventListener('click', openUeLab);
@@ -3692,7 +3751,8 @@ window.addEventListener('message', ev => {
   pop.querySelector('.x').addEventListener('click', fecha);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecha(); });
   document.addEventListener('click', (e) => {
-    const alvo = e.target.closest && e.target.closest('#topbar-telemetry [title]');
+    // quem é botão de verdade (o rótulo "servidor") faz a própria ação, não explica
+    const alvo = e.target.closest && e.target.closest('#topbar-telemetry [title]:not([role="button"])');
     if (!alvo) { if (!e.target.closest('#explica-pop')) fecha(); return; }
     const txt = alvo.getAttribute('title');
     if (!txt) return;

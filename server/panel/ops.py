@@ -857,6 +857,246 @@ def telemetry() -> JSONResponse:
     return JSONResponse(data)
 
 
+# ---------------------------------------------------------------------------
+# Características do servidor — o modal do rótulo "servidor" da telemetria.
+# Tudo lido do próprio host na hora: metadados da instância (IMDSv2), lscpu,
+# /proc, lsblk/df, ip, timedatectl, Docker e systemd. Cache curto: N alunos
+# abrindo o modal custam uma coleta a cada SRV_INFO_TTL segundos.
+# ---------------------------------------------------------------------------
+SRV_INFO_TTL = 15.0
+_SRV_INFO: dict = {"data": None, "ts": 0.0}
+_srv_info_lock = threading.Lock()
+# família AWS pelo núcleo ARM que o lscpu informa
+GRAVITON = {"Neoverse-N1": "AWS Graviton2", "Neoverse-V1": "AWS Graviton3", "Neoverse-V2": "AWS Graviton4"}
+
+
+def _saida(cmd: list[str], timeout: float = 5.0) -> str:
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout).stdout
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return ""
+
+
+def _imds() -> dict:
+    """Metadados da instância EC2 pelo IMDSv2. Fora da AWS devolve {}."""
+    import urllib.request
+    base = "http://169.254.169.254/latest"
+    try:
+        req = urllib.request.Request(base + "/api/token", method="PUT",
+                                     headers={"X-aws-ec2-metadata-token-ttl-seconds": "60"})
+        token = urllib.request.urlopen(req, timeout=1).read().decode()
+    except OSError:
+        return {}
+    out = {}
+    for chave in ("instance-type", "instance-id", "instance-life-cycle", "ami-id", "placement/region",
+                  "placement/availability-zone", "local-hostname", "public-hostname", "local-ipv4", "public-ipv4"):
+        try:
+            r = urllib.request.Request(f"{base}/meta-data/{chave}", headers={"X-aws-ec2-metadata-token": token})
+            out[chave] = urllib.request.urlopen(r, timeout=1).read().decode()
+        except OSError:
+            pass
+    return out
+
+
+def _lscpu() -> dict:
+    """lscpu -J achatado em {campo: valor} (as versões novas aninham os caches)."""
+    campos: dict = {}
+
+    def anda(itens):
+        for it in itens:
+            campos[it.get("field", "").rstrip(":")] = it.get("data")
+            anda(it.get("children", []))
+    try:
+        anda(json.loads(_saida(["lscpu", "-J"]) or "{}").get("lscpu", []))
+    except json.JSONDecodeError:
+        pass
+    return campos
+
+
+# `docker system df` mede o tamanho de cada imagem, volume e cache: com o lab
+# carregado passa de 5 s. Roda numa thread à parte e vale por DOCKER_DF_TTL; o
+# modal usa o último resultado (e só a contagem do docker info na 1ª vez).
+DOCKER_DF_TTL = 300.0
+_DOCKER_DF: dict = {"itens": [], "ts": 0.0, "rodando": False}
+
+
+def _docker_df_coleta() -> None:
+    rotulo = {"Images": "imagens", "Local Volumes": "volumes", "Build Cache": "cache_build"}
+    itens = []
+    for linha in _saida(["docker", "system", "df", "--format", "{{json .}}"], timeout=90).splitlines():
+        try:
+            d = json.loads(linha)
+        except json.JSONDecodeError:
+            continue
+        if d.get("Type") in rotulo:
+            itens.append({"k": rotulo[d["Type"]], "v": f"{d.get('TotalCount', '?')} · {d.get('Size', '?')}"})
+    _DOCKER_DF.update(itens=itens or _DOCKER_DF["itens"], ts=time.time(), rodando=False)
+
+
+def _docker_df() -> list[dict]:
+    if not _DOCKER_DF["rodando"] and time.time() - _DOCKER_DF["ts"] > DOCKER_DF_TTL:
+        _DOCKER_DF["rodando"] = True
+        threading.Thread(target=_docker_df_coleta, daemon=True, name="docker-df").start()
+    return _DOCKER_DF["itens"]
+
+
+def collect_server_info() -> dict:
+    import platform
+    import socket
+
+    item = lambda k, **kw: {"k": k, **kw}  # noqa: E731
+    secoes = []
+
+    md = _imds()
+    if md:
+        secoes.append({"id": "instancia", "itens": [
+            item("provedor", v="Amazon EC2"),
+            item("tipo", v=md.get("instance-type", "?")),
+            item("ciclo", v=md.get("instance-life-cycle", "?")),
+            item("regiao", v=md.get("placement/region", "?")),
+            item("zona", v=md.get("placement/availability-zone", "?")),
+            item("id", v=md.get("instance-id", "?")),
+            item("ami", v=md.get("ami-id", "?")),
+            item("dns_privado", v=md.get("local-hostname", "?")),
+            item("ip_privado", v=md.get("local-ipv4", "?")),
+            item("dns_publico", v=md.get("public-hostname", "—")),
+            item("ip_publico", v=md.get("public-ipv4", "—")),
+        ]})
+
+    cpu = _lscpu()
+    modelo = cpu.get("Model name", read_cpu_model())
+    topo = " × ".join(str(cpu.get(c, "?")) for c in ("Socket(s)", "Core(s) per socket", "Thread(s) per core"))
+    itens_cpu = [
+        item("arquitetura", v=cpu.get("Architecture", platform.machine())),
+        item("fabricante", v=cpu.get("Vendor ID", "?")),
+        item("modelo", v=modelo + (f" · {GRAVITON[modelo]}" if modelo in GRAVITON else "")),
+        item("vcpu", v=str(os.cpu_count())),
+        item("topologia", v=topo),
+        item("numa", v=str(cpu.get("NUMA node(s)", "?"))),
+    ]
+    for campo, k in (("L1d cache", "cache_l1d"), ("L1i cache", "cache_l1i"), ("L2 cache", "cache_l2"), ("L3 cache", "cache_l3")):
+        if cpu.get(campo):
+            itens_cpu.append(item(k, v=cpu[campo]))
+    if cpu.get("BogoMIPS"):
+        itens_cpu.append(item("bogomips", v=cpu["BogoMIPS"]))
+    if cpu.get("Flags"):
+        itens_cpu.append(item("extensoes", v=cpu["Flags"]))
+    secoes.append({"id": "processador", "itens": itens_cpu})
+
+    mem = {}
+    with open("/proc/meminfo") as f:
+        for linha in f:
+            chave, _, valor = linha.partition(":")
+            mem[chave] = int(valor.strip().split()[0]) * 1024
+    try:
+        swaps = [l.split()[0] for l in open("/proc/swaps").read().splitlines()[1:] if l.strip()]
+        swappiness = open("/proc/sys/vm/swappiness").read().strip()
+    except OSError:
+        swaps, swappiness = [], "?"
+    secoes.append({"id": "memoria", "itens": [
+        item("ram_total", b=mem.get("MemTotal", 0)),
+        item("ram_usada", b=mem.get("MemTotal", 0) - mem.get("MemAvailable", 0)),
+        item("ram_disponivel", b=mem.get("MemAvailable", 0)),
+        item("ram_cache", b=mem.get("Buffers", 0) + mem.get("Cached", 0)),
+        item("swap_total", b=mem.get("SwapTotal", 0)),
+        item("swap_usada", b=mem.get("SwapTotal", 0) - mem.get("SwapFree", 0)),
+        item("swap_dispositivo", v=", ".join(swaps) or "—"),
+        item("swappiness", v=swappiness),
+    ]})
+
+    itens_disco = []
+    try:
+        for d in json.loads(_saida(["lsblk", "-J", "-b", "-d", "-o", "NAME,SIZE,TYPE,MODEL"]) or "{}").get("blockdevices", []):
+            if d.get("type") == "disk":
+                itens_disco.append({"r": d["name"], "b": int(d["size"]), "v": (d.get("model") or "").strip()})
+    except (json.JSONDecodeError, ValueError, KeyError):
+        pass
+    for linha in _saida(["df", "-B1", "--output=target,fstype,size,used,avail",
+                         "-x", "tmpfs", "-x", "devtmpfs", "-x", "overlay", "-x", "squashfs", "-x", "efivarfs"]).splitlines()[1:]:
+        partes = linha.split()
+        if len(partes) == 5:
+            alvo, fs, tam, usado, livre = partes
+            itens_disco.append({"r": f"{alvo} · {fs}", "total": int(tam), "usado": int(usado), "livre": int(livre)})
+    secoes.append({"id": "armazenamento", "itens": itens_disco})
+
+    os_nome = "?"
+    try:
+        for linha in open("/etc/os-release"):
+            if linha.startswith("PRETTY_NAME="):
+                os_nome = linha.split("=", 1)[1].strip().strip('"')
+    except OSError:
+        pass
+    carga = open("/proc/loadavg").read().split()
+    uptime_s = float(open("/proc/uptime").read().split()[0])
+    boot = time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() - uptime_s))
+    tempo = dict(l.split("=", 1) for l in _saida(["timedatectl", "show", "-p", "Timezone", "-p", "NTPSynchronized"]).splitlines() if "=" in l)
+    itens_sis = [
+        item("so", v=os_nome),
+        item("kernel", v=platform.release()),
+        item("hostname", v=socket.gethostname()),
+        item("fuso", v=tempo.get("Timezone", time.strftime("%Z"))),
+        item("ntp", ok=tempo.get("NTPSynchronized") == "yes"),
+        item("ligado_desde", v=boot),
+        item("tempo_ligado", s=int(uptime_s)),
+        item("carga", v=" · ".join(carga[:3])),
+        item("processos", v=carga[3]),
+    ]
+    try:
+        some = open("/proc/pressure/cpu").read().splitlines()[0]
+        psi = dict(p.split("=") for p in some.split()[1:4])
+        itens_sis.append(item("pressao_cpu", v=" · ".join(f"{float(psi[j]):.1f}%" for j in ("avg10", "avg60", "avg300"))))
+    except (OSError, IndexError, KeyError, ValueError):
+        pass
+    secoes.append({"id": "sistema", "itens": itens_sis})
+
+    itens_rede = []
+    try:
+        for i in json.loads(_saida(["ip", "-j", "addr"]) or "[]"):
+            nome = i.get("ifname", "")
+            if nome == "lo" or nome.startswith(("veth", "br-", "docker")):
+                continue
+            ips = [f"{a['local']}/{a['prefixlen']}" for a in i.get("addr_info", []) if a.get("scope") != "link"]
+            itens_rede.append({"r": nome, "v": (" · ".join(ips) or "—") + f"  [{i.get('operstate', '?')} · MTU {i.get('mtu', '?')}]"})
+    except json.JSONDecodeError:
+        pass
+    secoes.append({"id": "rede", "itens": itens_rede})
+
+    itens_docker = []
+    try:
+        info = json.loads(_saida(["docker", "info", "--format", "{{json .}}"]) or "{}")
+        itens_docker += [
+            item("docker_versao", v=info.get("ServerVersion", "?")),
+            item("driver", v=f"{info.get('Driver', '?')} · cgroup v{info.get('CgroupVersion', '?')}"),
+            item("conteineres", v=f"{info.get('ContainersRunning', '?')} / {info.get('Containers', '?')}"),
+        ]
+    except json.JSONDecodeError:
+        info = {}
+    tamanhos = _docker_df()
+    itens_docker += tamanhos or [item("imagens", v=str(info.get("Images", "?")))]
+    secoes.append({"id": "docker", "itens": itens_docker})
+
+    versao = (Path(__file__).with_name("VERSION").read_text().strip() if Path(__file__).with_name("VERSION").exists() else "?")
+    secoes.append({"id": "painel", "itens": [
+        item("painel_versao", v=f"v{versao}"),
+        item("python", v=platform.python_version()),
+    ] + [{"r": unidade, "ok": service_active(unidade)} for unidade in ("core5g-panel", "caddy", "docker")]})
+
+    return {"secoes": secoes, "gerado_em": time.strftime("%H:%M:%S")}
+
+
+@router.get("/api/server-info")
+def server_info(request: Request) -> JSONResponse:
+    """Características do servidor para o modal da telemetria (cache de SRV_INFO_TTL s)."""
+    agora = time.time()
+    with _srv_info_lock:
+        data = _SRV_INFO["data"] if agora - _SRV_INFO["ts"] < SRV_INFO_TTL else None
+    if data is None:
+        data = collect_server_info()
+        with _srv_info_lock:
+            _SRV_INFO["data"], _SRV_INFO["ts"] = data, agora
+    return JSONResponse({**data, "dominio": request.url.hostname})
+
+
 @router.get("/api/logs/{service}")
 def logs(service: str, request: Request) -> StreamingResponse:
     """Snapshot (finito) das últimas linhas — encerra para o painel exibir a

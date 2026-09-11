@@ -194,6 +194,51 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     `os valores deviam vir da API (SNR 23.5, total 51) e vieram "${radio.snr}"/"${radio.tot}"`);
   console.log(`PASS 8 · faixa de rádio com número real · SNR ${radio.snr} · MCS ${radio.mcs} · PRB ${radio.prb}/${radio.tot} · BLER ${radio.bler}`);
 
+  // 9) O rótulo "servidor" da telemetria abre as características do servidor.
+  // Clique e teclado; cada seção sai com rótulo traduzido (nada de chave crua)
+  // e os tipos de valor (bytes, partição, duração, ok) formatados.
+  await page.setRequestInterception(true);
+  const INFO = { gerado_em: '20:30:00', dominio: 'core5g-arm64.duckdns.org', secoes: [
+    { id: 'instancia', itens: [{ k: 'provedor', v: 'Amazon EC2' }, { k: 'tipo', v: 't4g.xlarge' }, { k: 'zona', v: 'us-east-2a' }] },
+    { id: 'processador', itens: [{ k: 'modelo', v: 'Neoverse-N1 · AWS Graviton2' }, { k: 'vcpu', v: '4' }, { k: 'topologia', v: '1 × 4 × 1' }] },
+    { id: 'memoria', itens: [{ k: 'ram_total', b: 16525352960 }, { k: 'swappiness', v: '10' }] },
+    { id: 'armazenamento', itens: [{ r: 'nvme0n1', b: 85899345920, v: 'Amazon Elastic Block Store' }, { r: '/ · ext4', total: 82086711296, usado: 42500116480, livre: 39569817600 }] },
+    { id: 'sistema', itens: [{ k: 'so', v: 'Ubuntu 24.04.4 LTS' }, { k: 'ntp', ok: true }, { k: 'tempo_ligado', s: 29000 }] },
+    { id: 'rede', itens: [{ r: 'ens5', v: '172.31.11.156/20  [UP · MTU 9001]' }] },
+    { id: 'docker', itens: [{ k: 'docker_versao', v: '29.6.0' }, { k: 'conteineres', v: '28 / 30' }] },
+    { id: 'painel', itens: [{ k: 'painel_versao', v: 'v0.94.0' }, { r: 'core5g-panel', ok: true }] },
+  ] };
+  const onInfo = (req) => req.url().includes('/api/server-info')
+    ? req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(INFO) }) : req.continue();
+  page.on('request', onInfo);
+  await page.click('#host-info-btn');
+  await new Promise((r) => setTimeout(r, 400));
+  const srvInfo = await page.evaluate(() => ({
+    aberto: document.getElementById('info-modal-overlay').classList.contains('open'),
+    largo: document.getElementById('info-modal').classList.contains('srv'),
+    titulo: document.getElementById('info-modal-title').textContent,
+    secoes: [...document.querySelectorAll('#info-modal-body .srv-h')].map(h => h.textContent),
+    rotulos: [...document.querySelectorAll('#info-modal-body dt')].map(d => d.textContent),
+    texto: document.getElementById('info-modal-body').innerText,
+  }));
+  assert(srvInfo.aberto && srvInfo.largo, 'o rótulo "servidor" devia abrir o modal das características');
+  assert(srvInfo.secoes.length === 8, `esperava 8 seções, vieram ${srvInfo.secoes.length}: ${srvInfo.secoes.join(', ')}`);
+  const crus = srvInfo.rotulos.concat(srvInfo.secoes).filter(t => /^srv\./.test(t));
+  assert(!crus.length, `rótulos sem tradução: ${crus.join(', ')}`);
+  for (const esperado of ['t4g.xlarge', 'Neoverse-N1', 'usados', '8 h 3 min', '✓', 'ens5']) {
+    assert(srvInfo.texto.includes(esperado), `o modal devia mostrar "${esperado}"`);
+  }
+  await page.keyboard.press('Escape');
+  await page.focus('#host-info-btn');
+  await page.keyboard.press('Enter');
+  await new Promise((r) => setTimeout(r, 300));
+  const pelaTecla = await page.evaluate(() => document.getElementById('info-modal-overlay').classList.contains('open'));
+  assert(pelaTecla, 'Enter no rótulo "servidor" devia abrir o modal');
+  await page.keyboard.press('Escape');
+  page.off('request', onInfo);
+  await page.setRequestInterception(false);
+  console.log(`PASS 9 · rótulo "servidor" abre as características (${srvInfo.secoes.length} seções, ${srvInfo.rotulos.length} itens, clique e Enter)`);
+
   // Screenshot de inspeção: projeto ativo + loaders em botões visíveis.
   await page.evaluate(() => {
     document.querySelectorAll('.tools-set').forEach(s => s.classList.toggle('active', s.dataset.tools === 'p1'));

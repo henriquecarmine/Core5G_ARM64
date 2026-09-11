@@ -1,5 +1,5 @@
 {
-  "_comment": "Catálogo de los Estudios (asignaturas) del panel: cada clase detallada vive en <id>.json (extraída de las diapositivas). Los ejercicios son comandos de la consola (/api/run). El Estudio 3 apunta a las páginas del Lab de IA ya existentes. Os exercícios do professor (`atividades`) ficam na Plataforma de Atividades da CESAR School: guardamos só o hash de cada um; o domínio vive em `plataforma.url`.",
+  "_comment": "Catálogo de los Estudios (asignaturas) del panel: cada clase detallada vive en <id>.json (extraída de las diapositivas) y cada ejercicio en ex/<hash>.json, hecho y corregido en el propio panel. `comandos` son las pruebas de la consola (/api/run). El Estudio 3 apunta a las páginas del Lab de IA y reutiliza, por referencia cruzada, los ejercicios de IA/ML del Estudio 1. El `h` de cada ejercicio (#modulo/id) es solo la clave estable del resultado del alumno.",
   "comandos": {
     "status": "Estado / Healthcheck",
     "test-system-status": "Estado detallado de todos los NFs",
@@ -34,7 +34,6 @@
     "p2": "Proyecto 2: OAI + FlexRIC + Non-RT RIC",
     "any": "corre sobre archivo, sin necesidad de la RAN"
   },
-  "plataforma": {"nome": "Plataforma de Atividades — CESAR School", "url": "https://cesar-activities-cxapa2g7ia-rj.a.run.app/"},
   "estudos": [
     {
       "id": "e1", "n": 1, "icon": "🛰️", "bancada": "p1",
@@ -49,8 +48,8 @@
       "atividades": {
         "modulo": "Módulo 05", "hash": "#oran",
         "itens": [
-          {"rot": "Aula 01", "t": "Introdução Open RAN", "d": "Quiz e mapeamento de papéis RU/DU/CU.", "h": "#oran/aula01", "pts": 9, "partes": "Bloco 1, Bloco 2 e Bloco 3 · 3 pontos cada", "prep": {"aula": 1}},
-          {"rot": "Aula 02", "t": "Aventura O-RAN", "d": "Circuito completo: ecossistema, split e comparação.", "h": "#oran/aula02", "prep": {"aula": 1}},
+          {"rot": "Aula 01", "t": "Introdução Open RAN", "d": "Quiz e mapeamento de papéis RU/DU/CU.", "h": "#oran/aula01", "pts": 15, "partes": "Bloco 1 3 · Bloco 2 3 · Bloco 3 3 · Organizar funções nas unidades 6", "prep": {"aula": 1}},
+          {"rot": "Aula 02", "t": "Aventura O-RAN", "d": "Circuito completo: ecossistema, split e comparação.", "h": "#oran/aula02", "prep": {"aula": 1}, "pts": 22, "partes": "Conceitos do ecossistema 3 · Mapeamento da arquitetura 6 · Fronthaul e PHY fatiado 3 · Comparação de arquiteturas 10"},
           {"rot": "Interface A1", "t": "Políticas Non-RT ↔ Near-RT", "d": "Intents, compatibilidade e ciclo política → ação.", "h": "#oran/aulaa1", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Fluxo e governança 3 · Ordenar o ciclo 10", "prep": {"cmd": "p2-test-a1"}},
           {"rot": "Interface E2", "t": "Controle near-real-time", "d": "E2AP, nós E2 e serviços REPORT/CONTROL.", "h": "#oran/aulae2", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Ordenar o ciclo E2 10", "prep": {"cmd": "p2-test-e2-sm"}},
           {"rot": "Interface O1", "t": "OAM / FCAPS", "d": "Gestão, PM/FM e telemetria O1.", "h": "#oran/aulao1", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Governança e modelo 3 · Ordenar mudança assistida 10"},
@@ -59,8 +58,8 @@
           {"rot": "Aula 04 · Intervalo 2", "t": "eCPRI e sincronismo", "d": "Taxa IQ, eCPRI e requisitos de sync.", "h": "#oran/aula04i2", "pts": 9, "partes": "Quiz 3 · Situações 6"},
           {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
           {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
-          {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenho 28×28 e predição (endpoint GCP opcional).", "h": "#oran/aula05digit", "prep": {"href": "/lab/classificacao", "rot": "Classificação"}},
-          {"rot": "Lab Open5GS", "t": "Core e E2E", "d": "N2/N3, registro UE e troubleshooting.", "h": "#oran/lab-open5gs", "prep": {"cmd": "test-ue-connection"}}
+          {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenhe um algarismo e acompanhe a inferência no navegador: recorte, centro de massa, 784 valores e softmax.", "h": "#oran/aula05digit", "prep": {"href": "/lab/digitos", "rot": "Lab de dígitos"}, "pts": 9, "partes": "Quiz 3 · Situações 6"},
+          {"rot": "Lab Open5GS", "t": "Core e E2E", "d": "N2/N3, registro UE e troubleshooting.", "h": "#oran/lab-open5gs", "prep": {"cmd": "test-ue-connection"}, "pts": 22, "partes": "Core 3 · Ordenar o roteiro 6 · N2/N3 e E2E 3 · Troubleshooting 10"}
         ]
       }
     },
@@ -103,7 +102,8 @@
         {"icon": "🎨", "titulo": "Clustering", "one": "Agrupar celdas parecidas, sin etiqueta.", "href": "/lab/clustering"},
         {"icon": "🚨", "titulo": "Anomalía", "one": "Encontrar la celda fuera del patrón.", "href": "/lab/anomalia"},
         {"icon": "🧭", "titulo": "PCA", "one": "Resumir muchos KPIs en pocos.", "href": "/lab/pca"},
-        {"icon": "📄", "titulo": "Proyecto final", "one": "Aplicar una técnica a un caso de uso y entregar el informe.", "href": "/lab/projeto"}
+        {"icon": "📄", "titulo": "Proyecto final", "one": "Aplicar una técnica a un caso de uso y entregar el informe.", "href": "/lab/projeto"},
+        {"icon": "✍️", "titulo": "Inferencia de dígitos", "one": "Dibuja un dígito y mira cómo el host de inferencia prepara el dato y el modelo responde.", "href": "/lab/digitos"}
       ],
       "exercicios": ["p2-ml-uetp", "p2-ml-localizacao", "p2-ml-pm"],
       "atividades": {
@@ -111,7 +111,7 @@
         "itens": [
           {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
           {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
-          {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenho 28×28 e predição (endpoint GCP opcional).", "h": "#oran/aula05digit", "prep": {"href": "/lab/classificacao", "rot": "Classificação"}}
+          {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenhe um algarismo e acompanhe a inferência no navegador: recorte, centro de massa, 784 valores e softmax.", "h": "#oran/aula05digit", "prep": {"href": "/lab/digitos", "rot": "Lab de dígitos"}, "pts": 9, "partes": "Quiz 3 · Situações 6"}
         ]
       }
     },
@@ -194,13 +194,14 @@
       "atividades": {
         "modulo": "Módulo 09", "hash": "#data",
         "itens": [
-          {"rot": "Aula 01", "t": "DIKW, mapas e fontes", "d": "DIKW · mapas Open5GS/O-RAN · SMO/O1/E2 · PM/FM/KPM · lab UE-TP (Tripathi + Wong 1–3).", "h": "#data/aula01", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 1}},
-          {"rot": "Aula 02", "t": "Lakes e O-Cloud", "d": "Lake vs warehouse, lote/streaming e localidade edge/regional (Wong Cap. 4).", "h": "#data/aula02", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 2}},
-          {"rot": "Aula 03", "t": "EDA, ETL e BI", "d": "Loops non/near-RT, data pipeline ML e laboratório SUTD (Wong Cap. 5).", "h": "#data/aula03", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 3, "cmd": "p2-kpm-analytics"}},
-          {"rot": "Aula 04", "t": "KPIs e QoE", "d": "Medida → KPI → KQI → QoE, E2SM e slice SLA.", "h": "#data/aula04", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 4, "cmd": "p2-kpi-qoe"}},
-          {"rot": "Aula 05", "t": "Capacidade e otimização", "d": "Painel BI, SEHAL, matriz sintoma → alavanca e o closed loop A1: decision ≠ policy ≠ action.", "h": "#data/aula05", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 5, "cmd": "p2-tema-t2"}},
-          {"rot": "Aula 06", "t": "Consolidação", "d": "Pipeline completo, dry-run × closed loop, rúbrica e defesa individual.", "h": "#data/aula06", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 6, "cmd": "p2-tema-all"}},
-          {"rot": "Lab OAI · UE-TP / KPM→A1", "t": "Projeto prático M09", "d": "Pipeline KPM→SQLite/JSONL→IA→policy A1 (oai-cn-gnb-nonrt-nearrt).", "h": "#data/lab", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-ml-uetp"}}
+          {"rot": "Aula 01", "t": "DIKW, mapas e fontes", "d": "DIKW · mapas Open5GS/O-RAN · SMO/O1/E2 · PM/FM/KPM · lab UE-TP (Tripathi + Wong 1–3).", "h": "#data/aula01", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 1}},
+          {"rot": "Aula 02", "t": "Lakes e O-Cloud", "d": "Lake vs warehouse, lote/streaming e localidade edge/regional (Wong Cap. 4).", "h": "#data/aula02", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 2}},
+          {"rot": "Aula 03", "t": "EDA, ETL e BI", "d": "Loops non/near-RT, data pipeline ML e laboratório SUTD (Wong Cap. 5).", "h": "#data/aula03", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 3, "cmd": "p2-kpm-analytics"}},
+          {"rot": "Aula 04", "t": "KPIs e QoE", "d": "Medida → KPI → KQI → QoE, E2SM e slice SLA.", "h": "#data/aula04", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 4, "cmd": "p2-kpi-qoe"}},
+          {"rot": "Aula 05", "t": "Capacidade e otimização", "d": "Painel BI, SEHAL, matriz sintoma → alavanca e o closed loop A1: decision ≠ policy ≠ action.", "h": "#data/aula05", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 5, "cmd": "p2-tema-t2"}},
+          {"rot": "Aula 06", "t": "Consolidação", "d": "Pipeline completo, dry-run × closed loop, rúbrica e defesa individual.", "h": "#data/aula06", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 6, "cmd": "p2-tema-all"}},
+          {"rot": "Lab OAI · UE-TP / KPM→A1", "t": "Projeto prático M09", "d": "Pipeline KPM→SQLite/JSONL→IA→policy A1 (oai-cn-gnb-nonrt-nearrt).", "h": "#data/lab", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-ml-uetp"}},
+          {"rot": "Dashboard KPI / NOC", "t": "Monitoramento RAN (BI)", "d": "Painel de NOC sobre as 100 amostras KPM do lab: cartões, semáforo, alertas e três cenários (carga, interferência, backhaul).", "h": "#data/kpi-dashboard", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"aula": 5, "href": "/lab/dashboard-kpi", "rot": "Dashboard KPI / NOC"}}
         ]
       }
     }

@@ -1,0 +1,154 @@
+{
+  "h": "#ric/aula06",
+  "rot": "Aula 06",
+  "t": "Testes e seminários",
+  "pts": 22,
+  "fonte": "Aula 06 da cadeira 2 (RIC) — Validação do lab E2 e encerramento: critérios dos seminários do Projeto 2, o que foi validado, padrões de problema e checklist de depuração E2 (slides aula06-testes_seminarios.pdf), com a segurança da pilha (slide 74 da aula 05) e o troubleshooting do lab (docs/TUTORIAL_LAB_E2.md)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Segundo o slide 29, o que o Projeto 2 validou de fato?",
+          "alt": [
+            "O tráfego 5G SA de ponta a ponta, com RF real e um UE comercial",
+            "A política A1 chegando ao gNB pelo A1 Mediator do O-RAN SC, na Fase 2",
+            "A acurácia dos rApps de ML, como no benchmark de campo do campus SUTD",
+            "E2 SETUP, subscription e INDICATION de KPM e RC no slice 222/123"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O slide 29 separa o validado do não validado: arquitetura near-RT (core, gNB OAI, FlexRIC e xApp), E2SM-KPM e E2SM-RC com SETUP, subscription e INDICATION, e o ciclo deploy, subscribe e operate. Ficam de fora O-RAN SC, A1 real, SMO/O1 e RAN comercial. Métricas de negócio, como os cerca de 90% de acurácia de andar, são do NGO em campo (slides 27 e 28): a nossa validação é técnica, e saber nomear essa diferença faz parte das limitações."
+        },
+        {
+          "q": "Qual é a evidência mínima aceitável de que o lab funcionou (slide 30)?",
+          "alt": [
+            "O log do E2 SETUP, o log com INDICATIONs e um README com os comandos exatos",
+            "Um print do docker ps com todos os contêineres do core aparecendo em estado healthy",
+            "O log com 'Successfully subscribed', que já prova que as métricas chegaram",
+            "O diagrama da arquitetura com as portas 36421 e 36422 bem identificadas"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O slide 30 fecha os padrões que funcionaram com essa tríade: prova de associação, prova de dado chegando e o caminho para outra pessoa repetir. Contêiner healthy não garante nem o core de ponta a ponta (aula 05), muito menos a E2. Subscription aceita também não basta: 'subscription OK, sem KPM' é um dos padrões de problema do slide 31. O diagrama ajuda a explicar, mas não prova que algo rodou."
+        },
+        {
+          "q": "Onde fica a evidência de que o gNB se associou ao nearRT-RIC?",
+          "alt": [
+            "No log do xApp, com o E42 SETUP RESPONSE que chega antes da subscription",
+            "No log da AMF, com o NG Setup Response que aceitou o gNB no core",
+            "No log do gNB, com E2 SETUP-REQUEST tx seguido de E2 SETUP RESPONSE rx",
+            "No log do UE, com o RRCSetupComplete que fecha o attach à célula"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "A associação E2 é o E2 SETUP entre o agente E2 do gNB e o RIC, e quem registra o par pedido e resposta é o próprio gNB, em logs/gnb_oai.log (TUTORIAL_LAB_E2.md; item 2 do checklist do slide 32). O E42 SETUP é a conversa do xApp com o RIC (slide 28 da aula 04), não do gNB. O NG Setup é o NGAP do gNB com a AMF: prova o core, não o RIC. E o RRCSetupComplete é do attach do UE, que acontece mesmo sem E2."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O xApp mostra 'Connected E2 nodes = 0', e o histórico do terminal mostra que o grupo subiu o gNB antes do FlexRIC. O que fazer?",
+          "alt": [
+            "Rodar o teste com KPM_TRAFFIC=1, porque sem tráfego no UE o nó não aparece",
+            "Com o RIC já no ar, reiniciar o gNB para refazer o E2 SETUP, e só então o xApp",
+            "Rodar sync_flexric_lib.sh, porque falta a libkpm_sm.so no diretório de bibliotecas do RIC",
+            "Trocar o filtro do xApp para SST=1, que é o padrão upstream do FlexRIC"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "É a primeira linha da tabela do slide 31: E2 node = 0 aponta para ordem de subida, RIC parado ou porta 36421. Com o gNB subido antes do RIC, a associação não se completou; o conserto é, com o RIC já de pé, reiniciar o gNB para ele refazer o E2 SETUP, e só então subir o xApp, na ordem do up_e2_lab.sh (core, FlexRIC, gNB, xApp). Tráfego e filtro de slice explicam outro sintoma (subscription aceita, sem KPM), e a falta da libkpm_sm.so derruba o RIC na hora da KPM, não esconde o nó."
+        },
+        {
+          "q": "Na seção de segurança do relatório, o grupo escreve que não há risco porque o RIC escuta em 127.0.0.1. Um avaliador pergunta o que mudaria num Near-RT de produção, com xApps de terceiros. O que responder?",
+          "alt": [
+            "O SCTP da E2 já autentica o nó e cifra as mensagens, então o risco segue igual",
+            "Trocar a porta 36421 por uma não padrão e bloquear o ping ao host do RIC",
+            "Publicar o Control Panel da 8181 por IP público, protegido por senha forte",
+            "Autenticar e cifrar E2 e A1 (TLS), aplicar RBAC e isolar os xApps em sandbox"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "O slide 74 da aula 05 lista as superfícies: E2 e A1 pedem autenticação, TLS e RBAC; um xApp malicioso pede sandbox e whitelisting de E2SM; o Control Panel da 8181 não deve ficar em rede pública, com ou sem senha; e a cadeia de suprimento pede imagens versionadas. O SCTP dá entrega confiável, não autenticação nem cifra, e esconder a porta não é controle de acesso. É o que o critério P5 cobra: limitações e segurança, incluindo a superfície E2 no near-RT."
+        },
+        {
+          "q": "Durante o seminário, o gNB cai no meio da demo ao vivo. O que preserva a nota do grupo?",
+          "alt": [
+            "Mostrar o vídeo ou os logs gravados e explicar a causa provável da queda",
+            "Seguir com os slides da arquitetura e deixar a demo para a sessão de perguntas",
+            "Mostrar o log do UERANSIM, que percorre o mesmo caminho E2 até o nearRT-RIC",
+            "Rodar de novo a subscription no xApp, que já mostra a cadeia E2 funcionando"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "O critério P1 aceita a demonstração por logs ou vídeo (slide 9), então o registro gravado de E2 SETUP e INDICATION cumpre o que a demo ao vivo cumpriria. Explicar a causa provável da queda como limitação do ambiente alimenta o P5. Adiar a demo deixa o P1 sem evidência; o UERANSIM não tem agente E2 (slide 35 da aula 05); e subscription aceita não prova dado chegando (slide 31), fora que, com o gNB fora do ar, nem há nó onde subscrever."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Quais são os cinco critérios da avaliação dos seminários do Projeto 2 (slide 9)?",
+          "alt": [
+            "Demo, A1 real, integração com o SMO, reprodutibilidade e limitações do ambiente",
+            "Demo com evidências, cadeia E2/KPM, extensão, reprodutibilidade e limitações",
+            "Leitura de Polese, leitura do NGO, política A1, cadeia E2 e interface O1",
+            "Acurácia do modelo, R² da regressão, economia de energia, cadeia E2 e README"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "P1 é a demo com evidências (logs ou vídeo de core, gNB, FlexRIC e xApp), P2 é a cadeia E2 (associação, subscription e INDICATION KPM ou RC), P3 é a extensão no mesmo lab, P4 é a reprodutibilidade (README, scripts e plano de testes) e P5 são limitações e segurança. A1 real e SMO não entram: o slide 8 os deixa fora do escopo da nota. Acurácia, R² e economia de energia são as métricas do NGO em campo, não do nosso lab."
+        },
+        {
+          "q": "O que o E2SM-RC entregou no lab, e o que ainda precisa aparecer como limitação?",
+          "alt": [
+            "INDICATIONs periódicas de throughput e PRB a cada segundo; falta só o slicing",
+            "Controle de slicing e traffic control no gNB OAI; falta integrar com a A1",
+            "Eventos RRC aperiódicos, como o RRCSetupComplete; o CONTROL ficou só como PoC",
+            "Aplicação de políticas A1 no gNB pelo Near-RT; falta medir o efeito delas na KPM"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "No lab o E2SM-RC v1.03 entrega eventos disparados pelo RRC, e por isso o test_e2_rc_attach.sh assina antes do attach para capturar o RRCSetupComplete (slide 41 da aula 04). O CONTROL existe no xapp_kpm_rc, mas como PoC não validado de ponta a ponta (TUTORIAL_LAB_E2.md). Throughput e PRB periódicos são KPM, e SLICE e TC não são suportados pelo agente E2 do gNB OAI monolítico."
+        },
+        {
+          "q": "'Funciona na minha máquina' aparece no slide 31 como padrão de problema. O que evita esse problema?",
+          "alt": [
+            "Um README com pré-requisitos, comandos na ordem de subida e o troubleshooting",
+            "Um vídeo mais longo da demo, mostrando cada comando rodando no terminal do grupo",
+            "Declarar na seção de limitações que o lab usa RFSIM, e não RF real",
+            "Mostrar mais INDICATIONs seguidas no log do xApp, para provar estabilidade"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O slide 31 liga esse sintoma ao README incompleto, que pesa no critério P4: README, scripts e plano de testes. O que resolve é outra pessoa conseguir repetir: pré-requisitos (Docker, memória, IP forwarding), os comandos na ordem de subida e o troubleshooting do que já falhou, como no TUTORIAL_LAB_E2.md do lab. Vídeo e mais INDICATIONs provam que funcionou para o grupo, não que funciona para quem clonar, e declarar o RFSIM é limitação (P5), não reprodutibilidade."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem a investigação de um xApp KPM que não mostra métricas, seguindo o checklist de depuração E2.",
+          "itens": [
+            "Confirmar o sintoma e em que trecho ele aparece: associação, subscription ou métrica",
+            "Core e UE com internet: ping -I oaitun_ue1 8.8.8.8",
+            "Associação E2: E2 SETUP concluído entre gNB e nearRT-RIC",
+            "Subscription aceita, com o ID, no log do xApp",
+            "Tráfego gerado no UE (KPM_TRAFFIC=1 ou iperf3) e INDICATIONs com valores",
+            "Registrar causa e correção no README e no plano de testes"
+          ],
+          "pts": 10,
+          "porque": "Os passos do meio são o checklist do slide 32, na ordem em que um depende do outro: saúde do plano de dados antes do RIC (princípio da aula 05), associação antes de subscription, e subscription antes de esperar métrica. Começar pelo fim é a armadilha: gerar tráfego não adianta se o gNB nem se associou. O último passo transforma a correção em reprodutibilidade (P4), para o 'funciona na minha máquina' não voltar."
+        }
+      ]
+    }
+  ]
+}

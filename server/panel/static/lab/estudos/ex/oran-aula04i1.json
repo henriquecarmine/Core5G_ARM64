@@ -1,0 +1,93 @@
+{
+  "h": "#oran/aula04i1",
+  "rot": "Aula 04 · Intervalo 1",
+  "t": "Open Fronthaul",
+  "pts": 9,
+  "fonte": "Open Fronthaul do WG4 da O-RAN Alliance (planos C, U, S e M e split 7.2x), com a retomada das interfaces O-RAN da aula 01 da cadeira 2 (slides 43 e 47) e a seção 2.b do core5g-arm64-bible.md. Esta aula não tem slides no painel.",
+  "blocos": [
+    {
+      "nome": "Quiz",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Qual interface o Open Fronthaul, especificado pelo WG4 da O-RAN Alliance, abre?",
+          "alt": [
+            "O-CU ↔ O-DU, a interface F1 do 3GPP",
+            "Near-RT RIC ↔ O-DU, a interface E2",
+            "O-DU ↔ O-RU, no split 7.2x",
+            "O-CU ↔ 5GC, as interfaces N2 e N3"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "No resumo dos Working Groups (slide 43 da aula 01 da cadeira 2), o WG4 é o Open Fronthaul, RU ↔ DU. A F1 é interface do 3GPP entre CU e DU, que a O-RAN apenas perfila em outro grupo; a E2 é do WG3; e N2/N3 ligam a RAN ao núcleo. Abrir justamente o fronthaul é o que permite colocar a O-RU de um fornecedor com a O-DU de outro."
+        },
+        {
+          "q": "No split 7.2x, qual conjunto de funções fica na O-RU?",
+          "alt": [
+            "FFT/IFFT, inserção e remoção do prefixo cíclico e o RF",
+            "Codificação de canal, modulação e o RF",
+            "Escalonamento do MAC, FFT/IFFT e o RF",
+            "Só RF e conversão AD/DA, como a RRH de um CPRI clássico"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O 7.2x divide a PHY em duas: a PHY alta (codificação, embaralhamento, modulação, mapeamento de camadas) fica na O-DU, e a PHY baixa (FFT/IFFT, prefixo cíclico, beamforming e, só nas O-RUs de categoria B, também o precoding) fica na O-RU com o RF. Pôr codificação e modulação na O-RU é a confusão mais comum, e deixaria a O-RU bem mais pesada. A RRH que só faz RF e conversão é o modelo do split 8, com CPRI."
+        },
+        {
+          "q": "Qual plano do Open Fronthaul carrega o maior volume de bits?",
+          "alt": [
+            "C-plane, porque descreve os recursos de cada slot antes dos dados",
+            "S-plane, porque as mensagens de sincronismo não param",
+            "M-plane, porque transporta configuração e arquivos de desempenho",
+            "U-plane, porque leva as amostras IQ no domínio da frequência"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O U-plane carrega as amostras IQ de cada símbolo, e é ele que dimensiona o enlace. O C-plane é tentador porque manda mensagens a cada slot, mas elas só descrevem seções de recursos e beamforming, e são pequenas perto dos dados. O S-plane leva algumas dezenas de pacotes PTP por segundo e o M-plane é gerência NETCONF/YANG, esporádica."
+        }
+      ]
+    },
+    {
+      "nome": "Situações",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Depois que o fronthaul passou a dividir switches com tráfego corporativo, a O-DU começa a receber pacotes de U-plane atrasados demais para o slot, a vazão cai e as retransmissões HARQ aumentam. O que fazer?",
+          "alt": [
+            "Subir a potência da O-RU para compensar os pacotes que a O-DU descarta",
+            "Priorizar U e C-plane com QoS estrita, isolar filas e rever o orçamento de atraso e jitter",
+            "Mover o M-plane para outro enlace, já que a gerência NETCONF é quem mais ocupa a banda do fronthaul",
+            "Trocar PTP por NTP, que tolera melhor atraso variável em rede congestionada"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "No 7.2x o fronthaul faz parte do tempo real da PHY: um pacote que chega depois da hora do seu símbolo é inútil, e o atraso do enlace consome o mesmo orçamento de tempo que a O-DU tem para processar e responder o HARQ. Por isso o transporte precisa ser determinístico, com prioridade e filas isoladas para U e C-plane. Potência de RF não recupera dado atrasado, o M-plane é tráfego pequeno, e NTP não tem precisão para sincronizar rádio."
+        },
+        {
+          "q": "A operação precisa receber os alarmes da O-RU, conferir o inventário de hardware e mudar parâmetros de forma padronizada, sem depender da ferramenta do fabricante. Que caminho a arquitetura O-RAN prevê para isso?",
+          "alt": [
+            "O M-plane, com NETCONF/YANG, via O-DU ou direto do SMO",
+            "O C-plane, que já troca mensagens com a O-RU a cada slot",
+            "A E2, com uma xApp assinando os alarmes e o inventário da O-RU pelo KPM",
+            "O S-plane, que já mantém uma sessão permanente com cada O-RU"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "Gestão (FCAPS) da O-RU é o papel do M-plane do Open Fronthaul, com NETCONF/YANG. No modelo hierárquico a O-DU gerencia a O-RU e responde por ela ao SMO; no híbrido o SMO também fala direto com a O-RU. A E2 é tentadora, mas a O-RU não é nó E2: os nós E2 são O-CU e O-DU, e KPM mede desempenho, não carrega alarme nem inventário. C-plane e S-plane são tempo real e sincronismo, não gerência."
+        },
+        {
+          "q": "Um fornecedor propõe subir o ponto de split, passando mais funções da PHY da O-DU para a O-RU, para reduzir a taxa no fronthaul. O que essa troca implica?",
+          "alt": [
+            "Menos taxa no fronthaul e O-RU mais barata, porque ela passa a receber dados já processados",
+            "Menos taxa no fronthaul, e o sincronismo PTP/SyncE deixa de ser necessário",
+            "Menos taxa no fronthaul, mas O-RU mais complexa e menos processamento centralizado",
+            "Nenhuma mudança: a taxa do fronthaul depende só da largura do canal, não do split"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "Quanto mais funções ficam na O-RU, menos dado bruto cruza o fronthaul, e o preço é uma O-RU mais pesada e menos processamento centralizado para coordenar células. A primeira alternativa engana porque a O-RU de fato recebe dados mais processados, mas é justamente por isso que ela precisa executar mais etapas da PHY, e fica mais complexa e mais cara, não mais barata. Uma O-RU simples, que só converte amostras, é o outro extremo: o split 8, com a maior taxa. O sincronismo continua obrigatório em qualquer split, porque a O-RU transmite no ar com a temporização da rede. E a taxa depende, sim, do split: é por isso que existe o 7.2x."
+        }
+      ]
+    }
+  ]
+}

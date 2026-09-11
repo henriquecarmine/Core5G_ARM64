@@ -1,0 +1,93 @@
+{
+  "h": "#oran/aula04i2",
+  "rot": "Aula 04 · Intervalo 2",
+  "t": "eCPRI e sincronismo",
+  "pts": 9,
+  "fonte": "Open Fronthaul do WG4 da O-RAN Alliance (U-plane sobre eCPRI e S-plane com PTP e SyncE), com a retomada das interfaces O-RAN da aula 01 da cadeira 2 (slides 43 e 68). Esta aula não tem slides no painel.",
+  "blocos": [
+    {
+      "nome": "Quiz",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Para amostras IQ no domínio do tempo, sem compressão, como cresce a taxa bruta do enlace?",
+          "alt": [
+            "Só com a largura do canal; bits por amostra e número de antenas não mudam a taxa",
+            "Com taxa de amostragem × bits por amostra (I e Q) × fluxos de antena",
+            "Com o número de UEs atendidos, porque cada UE gera o seu próprio fluxo IQ",
+            "Com a carga da célula: uma célula vazia quase não manda amostras"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "No domínio do tempo (o modelo do split 8 e do CPRI) o rádio amostra a banda inteira sem parar: cada amostra complexa tem bits de I e de Q, e cada antena é um fluxo. Por isso a taxa é constante, com ou sem usuário, e a alternativa da célula vazia é a confusão mais comum. A largura do canal entra só por meio da taxa de amostragem. O split 7.2x reduz esse volume ao levar amostras no domínio da frequência, com compressão."
+        },
+        {
+          "q": "O que distingue o eCPRI do CPRI clássico?",
+          "alt": [
+            "Leva as mensagens em pacotes, sobre Ethernet ou UDP/IP, e pode passar por switches",
+            "Continua sendo um enlace serial ponto a ponto, só que com taxa de linha maior",
+            "Substitui o M-plane: é o protocolo que configura a O-RU e coleta os alarmes",
+            "Traz sincronismo embutido e dispensa PTP e SyncE, porque cada pacote carrega o horário"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O eCPRI troca o enlace serial dedicado por pacotes, sobre Ethernet ou UDP/IP, e é o transporte que o Open Fronthaul usa para U-plane e C-plane. A alternativa do horário embutido engana porque o cabeçalho de aplicação da O-RAN numera quadro, subquadro, slot e símbolo; isso diz a que símbolo o dado pertence, mas não acerta o relógio de ninguém, e o relógio vem do S-plane. Configuração e alarmes são do M-plane, com NETCONF/YANG."
+        },
+        {
+          "q": "Qual é a divisão de papéis entre PTP e SyncE no S-plane?",
+          "alt": [
+            "SyncE distribui hora e fase pela camada física; o PTP só ajusta a frequência dos osciladores",
+            "Os dois fazem a mesma coisa; SyncE é só o nome do PTP em redes Ethernet",
+            "PTP entrega hora e fase por pacotes; SyncE entrega frequência pela camada física",
+            "PTP sincroniza a O-DU com o núcleo; SyncE sincroniza o UE com a O-RU"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O SyncE tira frequência do relógio de linha da própria Ethernet, mas não sabe que horas são nem onde começa o quadro. O PTP (IEEE 1588) troca mensagens com carimbo de tempo e entrega hora e fase, que é o que o TDD precisa. Juntos, o SyncE estabiliza a frequência e ajuda o PTP a manter a fase. A inversão da primeira alternativa é o erro típico, e o UE se sincroniza pelo sinal de rádio da célula, não por SyncE."
+        }
+      ]
+    },
+    {
+      "nome": "Situações",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Um fluxo IQ no domínio do tempo, a 30,72 milhões de amostras por segundo e com 16 bits para I e 16 para Q, vai rodar num enlace de 1 GbE. O que se conclui?",
+          "alt": [
+            "Cabe com folga: a taxa do enlace é a própria taxa de amostragem, cerca de 31 Mbit/s por fluxo",
+            "Cabe: 30,72 × 16 ≈ 491 Mbit/s, porque I e Q dividem os mesmos 16 bits de cada amostra",
+            "Cabe: com eCPRI em pacotes, a taxa cai para a dos dados que os usuários da célula realmente trafegam",
+            "Fica sem margem: 30,72 × 32 ≈ 983 Mbit/s por antena, quase 1 Gbit/s antes dos cabeçalhos"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "Cada amostra complexa leva 16 + 16 = 32 bits, então 30,72 × 32 = 983,04 Mbit/s por fluxo de antena, praticamente a taxa nominal do enlace antes de somar qualquer cabeçalho; com duas antenas seriam cerca de 1,97 Gbit/s. Esquecer o Q (491 Mbit/s) é o erro mais tentador. Empacotar em eCPRI não muda quantas amostras existem, e é por isso que o 7.2x leva o domínio da frequência com compressão."
+        },
+        {
+          "q": "O cálculo taxa de amostragem × bits ficou pouco abaixo de 1 Gbit/s e a equipe usou um enlace de 1 GbE. Em operação o enlace satura e perde pacotes. O que faltou no dimensionamento?",
+          "alt": [
+            "Nada: 1 GbE entrega 1000 Mbit/s úteis, então o defeito deve estar no switch ou no cabo óptico",
+            "Cabeçalhos e intervalo entre quadros (Ethernet, VLAN, eCPRI) e margem para os outros planos",
+            "O C-plane, que ocupa a maior parte do enlace e deveria ter sido somado antes do U-plane",
+            "O erro de fase do PTP, que obriga a O-DU a retransmitir as amostras atrasadas"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Os 1000 Mbit/s são taxa de linha: cada quadro gasta bytes com preâmbulo, cabeçalho Ethernet, tag de VLAN, FCS, cabeçalhos eCPRI e O-RAN e o intervalo entre quadros, e o mesmo enlace ainda leva C-plane, S-plane e M-plane. Sem margem, a conta que fechava no papel satura. O C-plane existe mas é pequeno, e o fronthaul não retransmite amostras: pacote atrasado é simplesmente perdido."
+        },
+        {
+          "q": "Duas células TDD vizinhas, com a mesma configuração de slots, mostram interferência forte no início dos slots de uplink e o SINR cai. O GNSS de um dos sites perdeu a visada há dias. Qual é a ação correta?",
+          "alt": [
+            "Restabelecer a referência de fase: PTP com relógios boundary ou transparent e SyncE",
+            "Aumentar a potência do site afetado para vencer a interferência no uplink",
+            "Separar as duas células em VLANs diferentes para isolar o tráfego e a temporização entre elas",
+            "Trocar PTP por NTP, que funciona melhor entre sites distantes e em redes compartilhadas"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "Sem GNSS o site entrou em holdover e o oscilador foi derivando: ele começa a transmitir downlink quando o vizinho já está recebendo uplink. É problema de fase, e se resolve com uma referência de tempo confiável até a O-RU, com PTP apoiado por relógios boundary ou transparent em cada salto e SyncE para a frequência. Mais potência piora a interferência, VLAN separa tráfego mas não transporta hora, e NTP não tem precisão para rádio."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "h": "#oran/aula05digit",
+  "rot": "Lab inferência de dígitos",
+  "t": "Canvas → modelo",
+  "pts": 9,
+  "fonte": "Lab de inferência de dígitos do painel (/lab/digitos) e o script de treino server/panel/static/lab/modelos/treinar_digitos.py; aula 04 da cadeira 3 (MLRAN_A04, slides 85, 94 e 120); aula 06 da cadeira 3 (MLRAN_A06, slides 271, 273, 281, 286, 287, 291 e 297); retomada das interfaces O-RAN da aula 01 da cadeira 2 (slide 58)",
+  "blocos": [
+    {
+      "nome": "Quiz",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Depois do pré-processamento do lab, o que exatamente entra no MLP de dígitos?",
+          "alt": [
+            "Uma matriz de 280×280 valores entre 0 e 255, a captura do canvas sem redução",
+            "Uma matriz de 20×20 valores entre 0 e 255, o recorte já reescalado e pronto",
+            "Um vetor de 784 valores entre 0 e 1, as 28 linhas do quadro enfileiradas",
+            "Um vetor de 10 valores entre 0 e 1, um por algarismo, que a rede só confirma"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O último passo do pipeline divide por 255 e enfileira as 28 linhas do quadro 28×28: forma [1, 784], valores de 0 a 1, um atributo por neurônio da camada de entrada (slide 85 da aula 04 da cadeira 3). O 20×20 é só uma etapa intermediária, colada no quadro 28×28 antes de virar vetor, e ainda está em 0 a 255 porque a normalização vem por último. Os 10 valores entre 0 e 1 são a saída do softmax, não a entrada; e o 280×280 é a captura bruta, que o modelo nunca vê."
+        },
+        {
+          "q": "Por que o lab centraliza o desenho pelo centro de massa antes de chamar o modelo?",
+          "alt": [
+            "O MNIST foi montado assim, e o MLP liga cada pixel a pesos próprios: traço deslocado acende outras entradas",
+            "Centralizar reduz o vetor de 784 para 400 valores, e a inferência fica bem mais rápida no navegador do aluno",
+            "Sem centralizar, as dez probabilidades do softmax deixam de somar 100 % e a saída do modelo fica inválida",
+            "A divisão por 255 só produz valores entre 0 e 1 quando o traço está no meio do quadro, longe da borda"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O MNIST traz cada algarismo reduzido para caber em 20×20 e com o centro de massa no meio do quadro 28×28, e o modelo aprendeu só com dígitos nessa posição. Um MLP conecta todas as entradas aos neurônios e não explora relações locais (slide 120 da aula 04 da cadeira 3), então não sabe que um traço deslocado é o mesmo traço. O softmax soma 100 % com ou sem centro, a divisão por 255 não depende da posição, e o vetor continua com 784 valores: centralizar muda onde o traço cai, não o tamanho da entrada."
+        },
+        {
+          "q": "Um aluno desenha um rabisco que não é algarismo nenhum, e o lab mostra 8 com 91 % de confiança. Como ler esse resultado?",
+          "alt": [
+            "91 % dos pixels do rabisco coincidem com os pixels de um 8 médio do MNIST",
+            "O modelo acertou: se o desenho não fosse um 8, a confiança teria ficado abaixo de 50 %",
+            "O pré-processamento falhou, pois a confiança só passa de 90 % com o dígito centralizado",
+            "O softmax reparte 100 % entre as dez classes e não tem saída para “nenhum algarismo”"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "A camada de saída usa softmax, que transforma os dez valores em probabilidades que somam 1 (slide 94 da aula 04 da cadeira 3). Como toda entrada tem de ser repartida entre as dez classes que o modelo conhece, um desenho fora desse domínio também sai com um vencedor, às vezes com número alto. A confiança é a opinião do modelo sobre essas classes, não uma contagem de pixels coincidentes nem uma garantia de acerto; ler 91 % como prova de que é um 8 é justamente a armadilha."
+        }
+      ]
+    },
+    {
+      "nome": "Situações",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Uma equipe treinou um classificador que decide, a cada 100 ms, se um UE deve trocar de célula, com medidas que chegam pela E2. Onde deve rodar a inferência, e onde pode ficar o treino?",
+          "alt": [
+            "Inferência e treino no Non-RT RIC, que guarda o histórico e envia cada decisão pela A1",
+            "Inferência num xApp no near-RT RIC; treino offline centralizado e modelo implantado nela",
+            "Inferência num rApp no Non-RT RIC; treino dentro da xApp, direto com os dados vivos da E2",
+            "Inferência num serviço de nuvem externo; treino no próprio gNB, que é quem enxerga o canal"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "100 ms está dentro do laço do near-RT RIC, de 10 ms a 1 s, onde o xApp lê a E2 e age (slide 271 da aula 06 da cadeira 3); o cenário 1.2 (slide 291) é exatamente esse, com treino centralizado e inferência no near-RT RIC. A tentação é pôr tudo no Non-RT RIC porque lá está o histórico, mas ele opera acima de 1 s (slide 273) e a A1 leva políticas, não uma decisão por UE a cada 100 ms. Treinar dentro da xApp com a rede viva contraria o slide 281, que exige treino offline e deixa o online só para ajuste fino."
+        },
+        {
+          "q": "O lab original enviava os 784 valores por HTTP para um endpoint na nuvem, e a URL gravada no build estava vazia. Suponha a URL corrigida e esse modelo usado por um xApp que decide a cada 50 ms. Que problema continua?",
+          "alt": [
+            "Nenhum relevante: a E2 já transporta HTTP, então o xApp alcança a nuvem sem custo adicional",
+            "O vetor de 784 valores não cabe numa requisição HTTP e precisaria ser dividido em várias partes",
+            "A nuvem só executa modelos publicados pelo Non-RT RIC, então o treino precisaria ser refeito",
+            "Cada decisão somaria a ida e volta pela rede ao laço de 50 ms, e pararia se o serviço caísse"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "Com o modelo remoto, cada predição paga o tempo de rede e depende de o serviço estar no ar; a URL vazia do original é a versão extrema disso, em que nenhuma predição acontece. Por isso disponibilidade do dado, custo de mover o dado e sensibilidade à latência decidem onde fica a inferência (slide 297 da aula 06 da cadeira 3), e a latência de inferência tem de respeitar o requisito de tempo (slide 286). A E2 não é HTTP: o E2AP usa SCTP como transporte (slide 58 da aula 01 da cadeira 2). E 784 números cabem folgadamente num corpo JSON, que era o contrato do original."
+        },
+        {
+          "q": "Um colega troca, só na página, o recorte e a centralização pela redução direta 280 → 28 do original, sem regerar os pesos. A acurácia publicada no JSON continua 97,6 %. O que acontece com os desenhos dos alunos?",
+          "alt": [
+            "Pioram, sobretudo os pequenos ou fora do centro, e a acurácia publicada não denuncia a queda",
+            "Nada muda: a acurácia no teste do MNIST garante o mesmo desempenho com qualquer entrada 28×28",
+            "Melhoram, porque a redução direta preserva a posição do traço, que é informação útil ao MLP",
+            "A página passa a dar erro, porque a redução direta não gera um vetor com os 784 valores"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "Os 97,6 % foram medidos com o teste do MNIST passando pelo pipeline com recorte e centro, e valem para dados nesse formato. Trocar o pré-processamento só na inferência faz o modelo receber em produção um dado diferente do que viu no treino, e ele responde errado sem erro nenhum na tela, já que a redução direta também gera 784 valores. É por isso que o fluxo de ML prevê monitoramento em operação para detectar desvios (slide 287 da aula 06 da cadeira 3): o número de validação não se atualiza sozinho. A posição absoluta do traço não ajuda, porque no treino todo dígito estava centralizado."
+        }
+      ]
+    }
+  ]
+}

@@ -10,40 +10,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "Para que serve a EDA, antes de modelar?",
+          "q": "Para que serve a EDA, antes de cravar KPIs ou modelos?",
           "alt": [
-            "Para provar a hipótese que você já tem",
-            "Para conhecer o dado: buracos, picos, unidades e distribuições — antes que um deles estrague a conclusão",
-            "Para escolher a biblioteca de gráficos",
-            "Para reduzir o tamanho do arquivo"
+            "Confirmar a hipótese do grupo com um teste estatístico de causalidade",
+            "Montar o painel final do NOC com os gráficos já validados",
+            "Executar o ETL: validar, tipar e carregar o dado curado em derived/",
+            "Entender estrutura e anomalias do dado e formular hipóteses testáveis"
           ],
-          "ok": 1,
+          "ok": 3,
           "pts": 1,
-          "porque": "EDA é olhar antes de decidir. É nela que se descobre a unidade errada, a coluna cheia de zeros e o pico isolado. Quem pula a EDA modela em cima de um defeito e só descobre quando alguém pergunta — e trocar microssegundos por milissegundos, por exemplo, conta uma história mil vezes pior do que a real."
+          "porque": "EDA é a exploração inicial para compreender estrutura, identificar padrões, detectar anomalias e formular hipóteses testáveis, com estatística e visualização. Não é painel final nem prova de causalidade: é evidência documentada, como 'o PRB no stress é sistematicamente maior que no baseline'. É nela que aparecem os zeros em Delay e o pico isolado do recovery antes que estraguem um KPI. Validar, tipar e carregar é o ETL, outra etapa com outro produto."
         },
         {
           "q": "MCAR, MAR e MNAR classificam o quê?",
           "alt": [
-            "Três tipos de gráfico",
-            "O mecanismo pelo qual um dado ficou ausente",
-            "Três níveis de qualidade de rede",
-            "Três formatos de arquivo"
+            "O mecanismo que explica por que o valor está ausente",
+            "Três estratégias de imputação: média, interpolação e remoção",
+            "O grau de suspeita de um outlier antes de removê-lo",
+            "Três dimensões de qualidade: completude, consistência e validade"
           ],
-          "ok": 1,
+          "ok": 0,
           "pts": 1,
-          "porque": "É a pergunta \"por que este dado falta?\". MCAR: falta por acaso. MAR: a falta depende de algo que você observou. MNAR: a falta depende justamente do que você queria medir — e aí a ausência é informação, não ruído."
+          "porque": "Pelo slide 35, MCAR é a falta independente do valor, MAR depende de outra variável e MNAR depende do próprio valor. É a pergunta 'por que este dado falta?', que vem antes de qualquer imputação: média e interpolação são respostas possíveis, não a classificação. Completude é a dimensão de qualidade que detecta a falta; o mecanismo diz como tratá-la."
         },
         {
           "q": "Encontrou um outlier. Qual é a regra da aula?",
           "alt": [
-            "Apagar: outlier estraga a média",
-            "Manter sempre: todo dado é dado",
-            "Documentar antes de apagar — e dizer o que se fez e por quê",
-            "Substituir pela média da coluna"
+            "Apagar pela cerca do boxplot, que já é o critério objetivo de remoção",
+            "Manter o ponto e usar a mediana, sem precisar citar o pico no README",
+            "Documentar antes de apagar: flag, winsorizar ou excluir justificando",
+            "Substituir o ponto pela mediana da fase, para não distorcer a média"
           ],
           "ok": 2,
           "pts": 1,
-          "porque": "Apagar sem registrar é fabricar um resultado limpo. No dado de UE-TP do laboratório há um pico isolado de 172.317 kbps na recuperação: outlier de verdade. Mantê-lo e usar a MEDIANA é uma conduta defensável; apagá-lo também pode ser, se estiver escrito. A decisão pode ser qualquer uma — o que não pode é ser invisível."
+          "porque": "Slide 43: não apague sem documentar; as opções são flag, winsorizar na feature ou excluir com justificativa no README. A cerca do boxplot só aponta candidatos, não autoriza remoção. Usar a mediana é defensável, mas omitir o pico no README não é: a decisão pode ser qualquer uma das três, desde que escrita. Em RF e jamming o outlier pode ser o próprio sinal de interesse (slide 37)."
         }
       ]
     },
@@ -54,38 +54,38 @@
         {
           "q": "Um KPM deixa de ser reportado exatamente nos segundos em que o jammer está ativo. Que tipo de ausência é essa, e o que fazer?",
           "alt": [
-            "MCAR — pode preencher com a média sem prejuízo",
-            "MNAR: a falta depende do próprio fenômeno medido. Não se preenche; a ausência vira variável e entra na análise",
-            "MAR — basta condicionar à hora do dia",
-            "Erro de coleta: descartar o experimento"
+            "MCAR: falha de coleta ao acaso; preencher com a média da fase é seguro",
+            "MNAR: a falta depende do fenômeno; registrar o gap como evidência",
+            "MAR: depende do estado RRC do UE; basta imputar condicionando a ele",
+            "MNAR: a falta depende do fenômeno; imputar pela mediana robusta da fase"
           ],
           "ok": 1,
           "pts": 2,
-          "porque": "O dado some porque a rede está degradada — a ausência É o sinal. Preencher com a média apagaria exatamente o efeito que se quer medir. O certo é tratar \"faltou\" como categoria e contar quantas janelas ficaram sem relatório."
+          "porque": "O dado some justamente porque o jammer degrada a rede: é MNAR, a falta depende do próprio fenômeno. Imputar, pela média ou pela mediana robusta, apagaria exatamente o efeito que se quer medir; o gap vira evidência, registrada e documentada no README. MAR seria uma falta explicada por outra variável observada, como o estado RRC, o que não é o caso."
         },
         {
-          "q": "Na fase de recuperação o DRB.UEThpUl tem máximo perto de 1,7×10⁵ e mediana perto de 3,7. Qual é a conduta?",
+          "q": "Na fase de recuperação, DRB.UEThpUl tem máximo perto de 1,7×10⁵ e mediana perto de 3,7. Qual é a conduta?",
           "alt": [
-            "Usar a média: ela incorpora o pico",
-            "Descartar a fase: os dados estão corrompidos",
-            "Usar a mediana e declarar o pico — a média descreveria o pico, não a fase",
-            "Normalizar tudo entre 0 e 1"
+            "Descrever a fase pela mediana e declarar o pico e a decisão tomada no README",
+            "Descrever a fase pela média, que incorpora o pico e por isso é mais completa",
+            "Descartar a fase inteira, porque a amostra está corrompida pelo pico",
+            "Trocar o pico por zero, já que vazão extrema em recuperação é impossível"
           ],
-          "ok": 2,
+          "ok": 0,
           "pts": 2,
-          "porque": "A média sobe para ~8.619 por causa de um único ponto; a mediana fica em 3,7 e descreve o que acontecia na maior parte do tempo. Escolher a mediana é correto — e dizer que existe o pico é o que separa análise de maquiagem."
+          "porque": "Com um único ponto de 172.317 kbps entre 20 amostras, a média da fase sobe para cerca de 8.619 e descreve o pico, não a fase; a mediana fica em 3,72 e descreve o regime. Escolher a mediana não autoriza esconder o ponto: o slide 43 pede investigar erro de escala, resíduo do stress ou reinício de contador e documentar a decisão. Trocar por zero cria um valor que ninguém mediu, e em série de rede gap não é zero."
         },
         {
           "q": "Um gráfico de série KPM chega sem janela, sem agregação e sem unidade declaradas. Por que é reprovado?",
           "alt": [
-            "Porque falta legenda de cores",
-            "Porque não é reproduzível nem interpretável: não dá para saber o que cada ponto representa nem comparar com outro gráfico",
-            "Porque série temporal precisa de escala logarítmica",
-            "Porque não tem título"
+            "Faltam cores por fase, e sem legenda de cores o gráfico não passa na rubrica do CP1",
+            "Série de KPM precisa de eixo logarítmico para mostrar o pico do recovery",
+            "Faltam título e fonte, e sem eles os demais campos não bastam para o CP1",
+            "Não se sabe o que cada ponto representa, então nada se reproduz nem se compara"
           ],
-          "ok": 1,
+          "ok": 3,
           "pts": 2,
-          "porque": "Sem janela não se sabe se um ponto é um segundo ou uma hora; sem agregação, se é média, mediana ou soma; sem unidade, se 159 é grave ou irrelevante — a diferença entre 159 µs e 159 ms conta histórias opostas. Um gráfico assim não sustenta decisão."
+          "porque": "Sem janela não se sabe se um ponto é um segundo ou uma hora; sem agregação, se é média, mediana, p95 ou máximo, que contam histórias diferentes; sem unidade, se 80.000 é kbps ou Mbps. Título e fonte também são obrigatórios, mas não substituem esses três: todo plot precisa de título, eixos com unidade, janela, agregação e fonte para ser auditável no CP1. Escala logarítmica e cor são escolhas, não requisitos."
         }
       ]
     },
@@ -96,38 +96,38 @@
         {
           "q": "Por que usar MAD em vez de desvio padrão para medir espalhamento numa série com picos?",
           "alt": [
-            "Porque é mais rápido de calcular",
-            "Porque a MAD se apoia na mediana e um ponto extremo quase não a move; o desvio padrão eleva o desvio ao quadrado e é dominado pelo pico",
-            "Porque a MAD já vem em porcentagem",
-            "Porque o desvio padrão só vale para distribuição normal"
+            "O desvio padrão exige distribuição normal para poder ser calculado",
+            "A MAD parte da mediana e resiste ao pico; o desvio eleva cada erro ao quadrado",
+            "A MAD pondera cada desvio pelo quadrado, o que amplia a cauda da série",
+            "A MAD já sai normalizada entre 0 e 1, enquanto o desvio fica na unidade da métrica"
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "É robustez. O quadrado do desvio padrão dá peso enorme ao ponto distante — um pico entorta a régua inteira. A MAD mede em torno da mediana e resiste. É por isso que o `robust-baseline-mad` do laboratório usa MAD, e não desvio padrão."
+          "porque": "É robustez. O desvio padrão eleva cada distância ao quadrado, e um ponto extremo domina a soma; a MAD é a mediana das distâncias à mediana, e um pico quase não a move. Por isso o detector do lab (robust-baseline-mad) usa MAD, e a aula recomenda preferi-la ao z-score com cauda longa. O desvio padrão pode ser calculado para qualquer distribuição, e a MAD fica na unidade da métrica, não entre 0 e 1."
         },
         {
-          "q": "O IQR define outlier sem supor o quê?",
+          "q": "Por que a cerca do IQR costuma apontar outliers de vazão melhor que o z-score?",
           "alt": [
-            "Sem supor que a amostra é grande",
-            "Sem supor que os dados seguem uma curva normal",
-            "Sem supor que há valores negativos",
-            "Sem supor que a série é temporal"
+            "Usa média e desvio da fase, que resumem bem uma série de cauda longa",
+            "Remove os pontos fora da cerca sem exigir justificativa no README",
+            "Usa quartis, e não média e desvio, que o próprio pico distorce",
+            "Supõe distribuição normal, que é a forma típica de vazão e atraso"
           ],
-          "ok": 1,
+          "ok": 2,
           "pts": 1,
-          "porque": "A cerca do boxplot sai dos quartis — dos 50% do meio — e não de média e desvio. Por isso vale para distribuição torta, que é a regra em telecom: vazão e atraso raramente são normais."
+          "porque": "O IQR é Q3 − Q1, e a cerca vai de Q1 − 1,5·IQR a Q3 + 1,5·IQR: tudo sai dos 50% centrais, que um pico isolado não move. O z-score usa média e desvio da fase, e os dois são puxados justamente pelo ponto que se quer detectar. Vazão e atraso raramente são normais, e mesmo assim a cerca só aponta candidatos: remover continua exigindo causa documentada."
         },
         {
-          "q": "Correlação de 0,92 entre vazão e PRB. O que isso permite afirmar?",
+          "q": "Correlação de 0,92 entre vazão e PRB na amostra UE-TP. O que isso permite afirmar?",
           "alt": [
-            "Que o PRB causa a vazão",
-            "Que as duas andam juntas na amostra — nada sobre causa, e é preciso checar se a correlação não vem de misturar fases diferentes",
-            "Que uma pode substituir a outra no relatório",
-            "Que a rede está saudável"
+            "Que o PRB causa a vazão, já que a associação linear é muito forte",
+            "Que uma das duas métricas é redundante e pode sair do relatório",
+            "Que a relação vale para uma rede real, já que a correlação passa de 0,9",
+            "Que PRB e vazão variam juntos nesta amostra, sem indicar causa"
           ],
-          "ok": 1,
+          "ok": 3,
           "pts": 1,
-          "porque": "Correlação não é causa, e correlação global pode ser artefato de mistura: no dado de UE-TP, vazão × atraso dá 0,48 no conjunto e cai para perto de zero dentro de cada fase. O número global compara rede parada com rede sob carga — dois mundos, não uma relação entre duas medidas."
+          "porque": "Pearson mede associação linear, não causa. E a correlação global do UE-TP mistura regimes: vazão × atraso dá 0,48 nas 100 amostras, mas fica entre −0,08 e 0,16 dentro de cada fase, porque o número global compara rede parada com rede sob carga. Amostra curta em RFSIM não generaliza para rede real, e duas métricas associadas não são redundantes: PRB é ocupação da célula, vazão é o que o UE transmitiu."
         }
       ]
     },
@@ -136,17 +136,18 @@
       "tipo": "ordem",
       "qs": [
         {
-          "q": "Ponha as etapas do ETL na ordem em que se executam.",
+          "q": "Ponha as etapas do ETL da amostra M09 na ordem da tabela da aula, seguidas do que vem depois delas.",
           "itens": [
-            "Extrair — ler a fonte como ela é, sem julgar",
-            "Tipar — transformar texto em número, data e categoria",
-            "Conferir qualidade — nulos, duplicados, faixas impossíveis, unidade",
-            "Enriquecer — carimbar fase, janela e chave",
-            "Agregar — reduzir à granularidade que a pergunta pede",
-            "Carregar — gravar no destino, de forma reproduzível"
+            "Extract — ler a fonte, kpm.jsonl ou kpm.sqlite",
+            "Validate — conferir schema, nulos e domínio (3 KPMs, fases esperadas, UTC)",
+            "Transform — tipar, limpar e derivar (to_datetime, parse do JSON, features)",
+            "Load — persistir o curado em CSV ou Parquet em derived/ ou numa tabela gold",
+            "QC — registrar contagens e descartes em etl_qc.json",
+            "EDA por fase sobre o dado curado: distribuições, outliers e correlações",
+            "Checkpoint 1 — gráficos auditáveis e README com a linhagem bronze, silver, plot"
           ],
           "pts": 10,
-          "porque": "A ordem não é decorativa. Tipar antes de conferir permite que a conferência trabalhe sobre número, não sobre texto. Agregar antes de conferir esconde o defeito dentro da média — e a partir daí ninguém mais o encontra."
+          "porque": "É a tabela do slide 47: Extract, Validate, Transform, Load e QC; só então vêm a EDA e os gráficos do Checkpoint 1. Validar antes de transformar barra o arquivo com KPM faltando ou fase inesperada antes que ele vire uma tabela bonita; carregar antes de transformar seria ELT, outro desenho. O etl_qc.json fecha o ETL com contagens e descartes, e é ele que permite à EDA dizer sobre quantas amostras cada número fala."
         }
       ]
     }

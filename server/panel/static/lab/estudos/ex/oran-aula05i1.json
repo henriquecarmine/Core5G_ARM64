@@ -1,0 +1,93 @@
+{
+  "h": "#oran/aula05i1",
+  "rot": "Aula 05 · Intervalo 1",
+  "t": "ML na RAN",
+  "pts": 9,
+  "fonte": "Lab de IA (Fundamentos), aulas 01 e 06 da cadeira 3 (MLRAN_A01, slides 33-35, 41 e 82-99; MLRAN_A06, slides 31, 152-153, 170-175 e 249-255) e a retomada das interfaces O-RAN da aula 01 da cadeira 2 (slides 44, 52 e 65-66)",
+  "blocos": [
+    {
+      "nome": "Quiz",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Uma equipe tem o histórico de KPMs por célula, mas ninguém anotou quais períodos foram de falha. Ela quer separar as células em grupos de comportamento parecido. Que família de aprendizado é essa?",
+          "alt": [
+            "Supervisionado, classificação: o estado da célula é a categoria prevista",
+            "Por reforço: o agente testa agrupamentos e recebe recompensa",
+            "Não supervisionado, clustering: sem rótulo, acha a estrutura nos dados",
+            "Supervisionado, regressão: o KPM é um número contínuo a ser previsto"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "Sem gabarito não há aprendizado supervisionado: classificação e regressão precisam de exemplos com a resposta certa. Agrupar parecidos sem rótulo é clustering, uma das técnicas não supervisionadas da página Fundamentos do Lab de IA e dos slides 82 e 90 da aula 01 da cadeira 3. Classificação é a tentação, mas só funcionaria se alguém tivesse marcado os estados. Reforço pede um agente agindo num ambiente e recebendo recompensa, o que não é o caso."
+        },
+        {
+          "q": "Em que escala de tempo o Near-RT RIC fecha seus laços de controle?",
+          "alt": [
+            "Abaixo de 1 ms, no ritmo das amostras IQ",
+            "Entre 10 ms e 1 s",
+            "Acima de 1 s, até horas",
+            "Abaixo de 10 ms, no ritmo do escalonamento por TTI"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O slide 52 da aula 01 da cadeira 2 dá os dois horizontes: Near-RT de 10 ms a 1 s, Non-RT acima de 1 s até horas. Abaixo de 10 ms, como o escalonamento por TTI e o beamforming, a decisão fica dentro do próprio gNB, e é por isso que essa alternativa engana. Essa escala limita o que um modelo pode fazer numa xApp: a inferência precisa caber no laço."
+        },
+        {
+          "q": "O que o Non-RT RIC hospeda e como ele chega à RAN?",
+          "alt": [
+            "xApps que leem KPM pela E2 e decidem em menos de 1 s",
+            "rApps que controlam a O-DU direto pela E2, sem passar pelo Near-RT RIC",
+            "Toda a inferência da RAN, inclusive a de handover por UE",
+            "rApps de laço acima de 1 s, no SMO, que orientam o Near-RT pela A1"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O Non-RT RIC vive no SMO, hospeda rApps de análise e modelos de longo prazo, treinados com volumes históricos, e publica políticas para o Near-RT pela A1 (slide 44 da aula 01 da cadeira 2; slide 35 da aula 01 da cadeira 3). A alternativa da E2 direta é a mais tentadora, mas o Non-RT não fala E2: quem fala é o Near-RT. Decisões por UE em escala de centenas de milissegundos ficam nas xApps."
+        }
+      ]
+    },
+    {
+      "nome": "Situações",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Uma equipe propõe um agente de aprendizado por reforço profundo numa xApp que decide o handover de cada UE a cada 2 ms, explorando ações direto na rede em operação. O que está errado no plano?",
+          "alt": [
+            "2 ms fica abaixo da escala do Near-RT, e a exploração devia acontecer num gêmeo digital, não na rede em operação",
+            "Basta a GPU do RIC inferir em menos de 2 ms, e explorar ações ao vivo é o modo normal de treinar reforço",
+            "A escala serve para um xApp, mas reforço precisa de rótulos: o certo seria treino supervisionado offline",
+            "O agente devia rodar no Non-RT RIC, com mais recursos, explorando ações só fora do horário de pico"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "São dois erros, e só a primeira alternativa pega os dois. O laço do Near-RT começa em 10 ms e inclui ir e voltar pela E2, então uma GPU rápida não traz a decisão para 2 ms (slide 52 da aula 01 da cadeira 2). E o reforço aprende por tentativa e erro: explorar ações ruins na rede real derruba chamadas, e por isso a aula 06 da cadeira 3 (slide 31) treina o agente num gêmeo digital antes de levar a política para a rede. Reforço não precisa de rótulos, aprende pela recompensa, e é, sim, uma família usada em decisões de RAN; o Non-RT é ainda mais lento, e fora do pico a exploração continua acontecendo com usuários reais."
+        },
+        {
+          "q": "Uma operadora quer um modelo único de previsão de tráfego que aproveite os dados de várias regionais, mas as regras internas proíbem tirar os dados brutos de cada regional. Que abordagem atende?",
+          "alt": [
+            "Centralizar tudo num data lake único e anonimizar só os identificadores das células",
+            "Treinar um modelo isolado por regional e nunca combinar o que cada um aprendeu",
+            "Federado: cada regional treina localmente e só envia atualizações do modelo",
+            "Aprendizado por reforço, que não precisa de dados históricos para treinar"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "No aprendizado federado os dados ficam onde nasceram, cada participante treina localmente e o servidor agrega as atualizações num modelo global (slides 152-153 da aula 06 da cadeira 3), como no FedAvg (slides 170-175). Modelos isolados respeitam a regra, mas não entregam o modelo único pedido, e anonimizar nomes não muda o fato de que os dados brutos saíram. Federado não é privacidade automática: as atualizações podem vazar informação ou ser envenenadas, e por isso existem defesas como a agregação segura (slides 249-255)."
+        },
+        {
+          "q": "Uma xApp treinada para maximizar a vazão média da célula foi para produção. A vazão média subiu, mas os UEs de baixa latência passaram a violar o alvo de atraso. Qual é a resposta adequada?",
+          "alt": [
+            "Manter: a métrica de treino subiu, então o modelo faz o que foi projetado para fazer",
+            "Rever o objetivo com várias métricas, validar em shadow mode e ter rollback pronto",
+            "Retreinar com o mesmo objetivo e mais dados, até a latência melhorar por conta própria",
+            "Trocar por uma rede neural maior, que capture melhor o comportamento da vazão"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "O modelo otimizou exatamente o que lhe pediram: quando um único número vira alvo, o resto piora sem ninguém ver. Mais dados ou um modelo maior otimizam o mesmo objetivo errado, então a correção está no objetivo e nas restrições, que o engenheiro define (slide 41 da aula 01 da cadeira 3). A retomada da cadeira 2 (slides 65-66) põe validação contra KPIs-chave e rollback no ciclo; o shadow mode, em que o modelo decide sem agir, tem o mesmo espírito da política A1 em dry-run do projeto da aula 01 da cadeira 4."
+        }
+      ]
+    }
+  ]
+}

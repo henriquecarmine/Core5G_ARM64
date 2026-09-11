@@ -232,7 +232,7 @@ interfaces abertas. A divisão funcional adotada pela O-RAN Alliance é o
 | E2 | Near-RT RIC ↔ O-gNB | E2AP sobre SCTP; E2SM-KPM/RC |
 | A1 | Non-RT RIC ↔ Near-RT RIC | REST/JSON; políticas de ML/QoS |
 | O1 | SMO ↔ todos os nós gerenciados | NETCONF/YANG |
-| F1-C/U | O-CU ↔ O-DU | NG-AP + GTP-U (3GPP TS 38.473) |
+| F1-C/U | O-CU ↔ O-DU | F1AP no F1-C (3GPP TS 38.473) + GTP-U no F1-U |
 | Open FH | O-DU ↔ O-RU | eCPRI sobre Ethernet (Split 7.2x) |
 | N2 | O-CU-CP ↔ AMF | NGAP sobre SCTP |
 | N3 | O-CU-UP ↔ UPF | GTP-U sobre UDP |

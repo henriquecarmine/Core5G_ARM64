@@ -1,0 +1,155 @@
+{
+  "h": "#ric/aula03",
+  "rot": "Aula 03",
+  "t": "Projeto 1 · A1",
+  "pts": 22,
+  "fonte": "Aula 03 da cadeira 2 (RIC) — Interface A1: políticas, enrichment information, ciclo de vida e A1 vs O1/E2, com o caminho A1 do lab (PMS e simulador, test_a1_flow.sh) e os seminários do Projeto 1 (slides aula03-interface_a1_seminarios.pdf)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O que trafega na interface A1?",
+          "alt": [
+            "Indications e mensagens de control do E2AP, com os modelos KPM e RC",
+            "Políticas JSON, enrichment information e gestão de modelos de ML",
+            "Configuração, alarmes e desempenho dos elementos RAN, com NETCONF/YANG",
+            "Amostras IQ trocadas entre gNB e UE pelo driver ZMQ do srsRAN"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "A A1 tem três serviços: gestão de políticas (A1-P), enrichment information (A1-EI) e gestão de modelos de ML, com sintaxe em JSON schema e A1AP sobre REST/HTTP, num ciclo acima de 1 s (slides 27 e 32). A alternativa do E2AP engana porque a política acaba virando controle, mas indication e control são a E2, perto do ciclo de RRM (slide 35). NETCONF/YANG é a O1. E o ZMQ do lab é um cabo de RF virtual para amostras IQ, não mensageria A1, E2 ou O1 (slide 57)."
+        },
+        {
+          "q": "Qual é a relação entre um intent e uma política A1?",
+          "alt": [
+            "O intent é o JSON schema do policy type, e a política é o valor de cada campo",
+            "O intent é o comando E2 enviado ao gNB, e a política é a regra que o gerou",
+            "O intent é a medição de KPI, e a política é o alarme disparado por ela",
+            "O intent é o objetivo de alto nível, e a política é a regra JSON que o traduz"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O slide 40 resume: intent é objetivo de alto nível (por exemplo, economizar energia sem ferir o SLA); a rApp no Non-RT RIC o traduz em políticas A1; a xApp executa pela E2 dentro dos limites da política. A política é o contrato com identificador, escopo e statements (slide 28). Confundir intent com schema mistura dois pares diferentes: schema e valores são o policy type e a policy instance, ambos já do lado da política. O comando E2 é o fim da cadeia, não o começo."
+        },
+        {
+          "q": "De onde uma rApp no Non-RT RIC tipicamente tira os dados para decidir?",
+          "alt": [
+            "De dados O1/VES, analytics e histórico de KPI, como os do InfluxDB",
+            "Das indications E2 que ela mesma assina nos nós RAN, em laço de 10 ms",
+            "Dos pacotes GTP-U da N3, inspecionados diretamente no UPF do core",
+            "Das amostras IQ que o driver ZMQ troca entre o gNB e o UE"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "A primeira fase do workflow de IA/ML do SUTD é a coleta de KPM via VES/O1 no InfluxDB (slide 37), e a síntese do slide 40 diz que a rApp recebe dados via O1. Como o ciclo é de minutos a horas (slide 25), ela trabalha sobre histórico e analytics, não sobre cada amostra. Assinar indications E2 é tarefa de xApp no Near-RT RIC: uma rApp não fala E2. GTP-U e IQ estão abaixo de qualquer RIC."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Uma rApp de energy saving e uma de QoS publicam políticas que puxam a mesma célula em direções opostas, e as duas chegam ao mesmo Near-RT RIC. Onde a aula diz que isso se resolve?",
+          "alt": [
+            "No gNB, que aplica a política que chegou por último e descarta a anterior",
+            "Na E2, que por atuar mais rápido sobrescreve qualquer política A1 vinda do Non-RT",
+            "No Near-RT RIC, que trata políticas concorrentes e mitiga conflito entre xApps",
+            "Na O1, com o SMO desligando uma das duas rApps pelo FCAPS"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "O slide 33 põe a coerência no RIC: políticas concorrentes são tratadas lá, com mitigação de conflito entre as xApps que atuariam sobre o mesmo objeto (o mesmo mecanismo aparece no slide 56 da aula 01). A política que chegou por último vencer é justamente o que se quer evitar, e política A1 nem chega ao gNB: ela termina no Near-RT RIC. Tratar a E2 como capaz de sobrescrever a A1 é a falha comum do slide 35, porque as duas são complementares."
+        },
+        {
+          "q": "A janela de energy saving acabou e o intent mudou, mas a política antiga continua ativa no Near-RT RIC. O que o ciclo de vida A1 prevê?",
+          "alt": [
+            "A rApp dona da política faz update ou delete e confere o ativo com query",
+            "Esperar a política expirar sozinha, já que toda política A1 tem prazo de validade",
+            "Reiniciar o Near-RT RIC para que as políticas guardadas em memória se percam",
+            "Mandar pela O1 uma configuração que sobrescreva a política no Near-RT RIC"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "O ciclo de vida do slide 33 é create, update, delete e query no Near-RT RIC alvo, e o NGO §4.4 mostra a ES-rApp atualizando ou revogando a política quando o SLA degrada. No lab, o último passo do test_a1_flow.sh faz exatamente isso: DELETE da política pelo PMS. Política A1 não expira por conta própria; o PMS até oferece supervisão do service por keep-alive, mas no testdata do lab ela está desligada (keep_alive_interval_seconds igual a 0). Reiniciar o RIC não é operação do ciclo de vida: é derrubar um serviço para apagar um estado. A O1 configura elementos de rede, não políticas (slide 34)."
+        },
+        {
+          "q": "O modelo de ML de uma rApp recomenda desligar uma célula num horário em que o SLA do operador proíbe perder cobertura. O que deve acontecer antes de algo sair pela A1?",
+          "alt": [
+            "Publicar mesmo assim: se a instância passa no schema do policy type, a política é válida",
+            "Checar a recomendação contra o SLA no Non-RT RIC e só publicar o que passar",
+            "Mandar o desligamento pela O1, que não passa pela validação de políticas",
+            "Rodar o modelo direto numa xApp, que decide mais perto da RAN e dispensa a política"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "A saída do modelo é uma recomendação: cabe à rApp traduzir o intent em política respeitando os limites que ele impõe (slide 40), e é por isso que a ES-rApp do NGO publica limiares de SLA junto com as células candidatas (slide 30) e mantém uma RU de cobertura ligada. Passar no schema é a armadilha: o create_schema do policy type do lab confere só estrutura (campos, tipos, obrigatórios), não se a ação fere o contrato. Mover a decisão para uma xApp ou para a O1 não valida nada, só contorna a camada de política."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Por que A1 e E2 são camadas complementares, e não substitutas?",
+          "alt": [
+            "Porque a A1 carrega o controle near-RT dos nós, e a E2 carrega só as medições",
+            "Porque a E2 substitui a A1 quando a decisão precisa sair em menos de 1 s",
+            "Porque a A1 fala direto com os nós RAN, e a E2 fala com o Non-RT RIC",
+            "Porque a A1 ajusta as regras acima de 1 s, e a E2 age perto do ciclo de RRM"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "Slide 35: a E2 faz assinaturas, reports, insert e control com vínculo próximo ao ciclo de RRM; a A1 ajusta regras e modelos que as xApps aplicarão ao longo do tempo. Uma dá a direção estratégica, a outra executa em near-RT. Achar que a E2 substitui a A1 quando a pressa é maior é a falha comum que o próprio slide aponta. No NGO, a KPM-xApp mede pela E2 e a ES-rApp orienta a TS-xApp pela A1, as duas no mesmo loop."
+        },
+        {
+          "q": "No teste A1 do lab (test_a1_flow.sh), o policy type 1 é carregado no simulador e depois a política core5g-smoke-001 é criada pelo PMS. Qual a relação entre os dois?",
+          "alt": [
+            "A política é o JSON schema, e o type é o conjunto de valores já preenchidos",
+            "O type é o schema dos campos aceitos, e a política é uma instância dele",
+            "O type identifica o Near-RT RIC alvo, e a política identifica o UE afetado",
+            "O type é a versão resumida da política, que o PMS expande ao enviá-la"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O policy_type.json traz um create_schema que exige scope (ueId e qosId) e qosObjectives (priorityLevel). O policy_smoke.json é uma instância desse type: tem policy_id, aponta policytype_id 1 e preenche scope com ue-smoke e priorityLevel com 10. É a estrutura do slide 28: identificador, escopo e statements, com schema por policy type. A alternativa do RIC e do UE engana porque esses dados existem, mas estão dentro da instância: o alvo em ric_id e o UE no scope."
+        },
+        {
+          "q": "Várias rApps criam políticas A1 no mesmo Near-RT RIC, todas passando pelo PMS. O que dá governança a essas políticas?",
+          "alt": [
+            "Cada rApp falando direto com o Near-RT, sem o PMS, para responder sozinha pelo que criou",
+            "Validar cada JSON contra o policy type, o que já garante que a política é segura para a rede",
+            "Cada política presa ao service que a criou, com query das ativas e update ou delete",
+            "Mandar os conflitos entre políticas para a O1, que já configura os elementos de rede"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "Governança é saber quem criou o quê, ver o que está ativo e poder revogar. No lab, cada política carrega o service_id de quem a criou (policy_smoke.json, com o service core5g registrado antes pelo test_a1_flow.sh), e o ciclo de vida do slide 33 dá a query do conjunto ativo e o update ou delete, como a ES-rApp faz quando o SLA degrada (NGO §4.4). Sem o PMS some esse registro central de quem criou cada política. Passar no schema do policy type só prova que a política está bem formada, não que é boa para a rede. E conflito entre políticas é tratado no RIC (slide 33), não pela O1, que configura elementos (slide 34)."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o ciclo que leva um intent até a rede e de volta.",
+          "itens": [
+            "O operador define um intent de alto nível, como economizar energia sem ferir o SLA",
+            "Uma rApp no Non-RT RIC traduz o intent numa policy instance que obedece ao schema do policy type",
+            "O Non-RT RIC cria a política no Near-RT RIC alvo pela A1, com A1AP sobre REST/HTTP",
+            "O Near-RT RIC valida a política e a repassa à xApp responsável",
+            "A xApp age sobre os nós RAN pela E2, dentro dos limites da política",
+            "O reporting O1 devolve ao Non-RT RIC o efeito nos KPIs",
+            "A rApp atualiza ou revoga a política se o objetivo não estiver sendo cumprido"
+          ],
+          "pts": 10,
+          "porque": "É a síntese do slide 40 com as pontas dos slides 31 e 33: a política nasce do intent, desce pela A1 com create no RIC alvo, vira ação da xApp pela E2 e só é refinada depois que o reporting O1 mostra o efeito. No lab, o test_a1_flow.sh exercita o terceiro passo: a política é criada pelo PMS e conferida no simulador que faz o papel de Near-RT RIC. A revisão fica no fim porque update e delete dependem da medida, como a ES-rApp do NGO §4.4."
+        }
+      ]
+    }
+  ]
+}

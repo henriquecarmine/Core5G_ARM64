@@ -10,40 +10,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "Uma linha de log traz DRB.UEThpUl: 55969.8. Na hierarquia DIKW, isso é o quê?",
+          "q": "Uma linha de log traz DRB.UEThpUl: 55969.8 kbps. Na hierarquia DIKW, isso é o quê?",
           "alt": [
-            "Informação — já tem nome de métrica e unidade",
-            "Dado — é o registro bruto de um evento, sem contexto",
-            "Conhecimento — permite decidir sobre a célula",
-            "Sabedoria — sustenta uma política A1"
+            "Informação: já vem com nome de métrica e unidade",
+            "Conhecimento: aponta saturação de uplink na célula",
+            "Dado: o registro bruto de um evento, sem contexto",
+            "Sabedoria: sustenta por si uma política A1"
           ],
-          "ok": 1,
+          "ok": 2,
           "pts": 1,
-          "porque": "É dado: o registro bruto de um evento numa RIC Indication. Vira informação quando ganha contexto — 'o UEThp médio caiu 90% depois do rate-limit'. Ter nome e unidade não basta; falta a comparação que dá sentido."
+          "porque": "É dado: o registro bruto de um evento dentro de uma RIC Indication (slide 66). Vira informação quando ganha contexto, como 'o UEThpUl médio caiu 90% depois do rate-limit'. Nome e unidade tornam o dado legível, mas não o tornam informação: falta a comparação que dá sentido. Apontar saturação de uplink já seria conhecimento, e exigiria cruzar com o PRB sob carga."
         },
         {
           "q": "PM pela O1 e KPM pela E2 medem a mesma rede. Por que um não substitui o outro?",
           "alt": [
-            "Porque a O1 é padronizada e a E2 é proprietária",
-            "Porque o PM mede o núcleo e o KPM mede o rádio",
-            "Porque respondem em escalas de tempo diferentes: o PM conta o histórico, o KPM alimenta a decisão de agora",
-            "Porque o KPM tem mais casas decimais"
+            "Escalas de tempo: o PM diz como a célula vem performando; o KPM, o que o RRM mede agora",
+            "A O1 segue norma O-RAN, enquanto a E2 depende do modelo proprietário de cada fornecedor",
+            "O PM mede o plano de controle do núcleo, e o KPM mede o rádio da célula",
+            "O KPM traz os alarmes e eventos de falha; o PM traz os contadores de desempenho"
           ],
-          "ok": 2,
+          "ok": 0,
           "pts": 1,
-          "porque": "As duas medem rádio. O PM pela O1 são contadores de segundos a minutos — servem para dizer como a rede vem indo. O KPM pela E2 chega em escala de sessão e é o que o near-RT RIC usa para agir. Trocar um pelo outro é trocar a pergunta."
+          "porque": "Pelo slide 56, o PM da O1 são contadores de segundos a minutos ('como a célula performou?') e o KPM da E2 são medidas near-RT de cerca de 100 ms a 1 s ('o que o RRM está medindo agora?'). Os dois medem o rádio, e O1 e E2 são interfaces abertas da O-RAN. Alarmes e eventos são a FM, não o KPM. Daí a regra do slide 57: escolha a fonte pela decisão e pela escala temporal."
         },
         {
-          "q": "No mapa O-RAN da aula, o SMO é o hub de quais interfaces?",
+          "q": "No mapa O-RAN da aula, o SMO é o hub dos dados de gestão. Por quais interfaces?",
           "alt": [
-            "E2 e A1",
-            "O1 e O2 — e o A1 sai do Non-RT RIC, que vive nele",
-            "Apenas a O1",
-            "N2, N3 e N4"
+            "E2 e A1; a O1 liga o Near-RT RIC diretamente ao gNB",
+            "O1 e E2; o Near-RT RIC que coleta o KPM vive no SMO",
+            "N2 e N3; o SMO recebe do AMF e do UPF o PM de gestão",
+            "O1 e O2; o A1 sai do Non-RT RIC, que vive no SMO"
           ],
-          "ok": 1,
+          "ok": 3,
           "pts": 1,
-          "porque": "O SMO gerencia os nós pela O1 e a nuvem pela O2. O A1 desce do Non-RT RIC, que mora dentro do SMO, até o near-RT. A E2 não passa pelo SMO: ela liga o near-RT RIC direto ao nó de rádio. N2/N3/N4 são do núcleo 5G, outro mundo."
+          "porque": "O SMO recebe FCAPS pela O1 (e pelo M-Plane da O-RU) e orquestra a O-Cloud pela O2; o Non-RT RIC mora dentro dele, e é de lá que sai o A1. A E2 não passa pelo SMO: liga o Near-RT RIC, que é um componente separado, direto aos nós O-CU e O-DU. N2 e N3 são as ligações da gNB com o AMF e o UPF, do mapa do core."
         }
       ]
     },
@@ -52,40 +52,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "O throughput de um UE caiu. Você tem PM pela O1, KPM pela E2 e métricas do UPF. Por onde começar, e por quê?",
+          "q": "O throughput de um UE caiu. A equipe olhou só o KPM da E2 e viu PRB baixo, sem saturação. O que a aula permite concluir?",
           "alt": [
-            "Pelo UPF: se o dado não passa, o problema é do plano de usuário",
-            "Pelo KPM da E2, porque ele mostra PRB, BLER e SINR daquele UE na janela em que a queda aconteceu",
-            "Pelo PM da O1, porque é a fonte oficial e padronizada",
-            "Por qualquer um: as três fontes dizem a mesma coisa com nomes diferentes"
+            "Que a falha é do aplicativo do usuário, já que o rádio da célula está saudável",
+            "Nada ainda: faltam o UPF em N3/N6 e a política de SMF/PCF; uma fonte só induz erro",
+            "Que é um jammer, pois vazão em queda com PRB baixo é a assinatura de interferência",
+            "Que o KPM falhou na coleta, já que vazão em queda deveria vir com PRB alto"
           ],
           "ok": 1,
           "pts": 2,
-          "porque": "A queda é um evento com hora marcada, e o KPM é a única fonte na escala da sessão. O PM da O1 diria como a célula vem indo em minutos — bom para tendência, tarde demais para este UE. O UPF entra depois, se o rádio estiver saudável."
+          "porque": "O mapa Open5GS da aula lembra que uma queda de throughput pode estar no rádio, no plano de usuário (UPF em N3/N6) ou na política de sessão (SMF/PCF), e que uma só fonte induz erro. PRB baixo tira a falta de capacidade da lista, mas não prova que o rádio está bom nem acusa um jammer: canal ruim, core e transporte continuam possíveis (slide 36 da aula 04), e sem indicador espectral não há como falar em interferência. O passo seguinte é cruzar RAN, plano de usuário e plano de controle."
         },
         {
-          "q": "Um relatório afirma: 'a QoE caiu 30% nesta célula'. Os dados são KPM da E2 — throughput, PRB e atraso. O que há de errado na afirmação?",
+          "q": "Um grupo propõe cruzar o KPM por UE com o cadastro de assinantes do UDR para explicar quedas de vazão. Pensando numa rede real, qual é a conduta?",
           "alt": [
-            "Nada: throughput baixo é QoE baixa",
-            "O período: KPM não tem série longa o bastante",
-            "A fonte não sustenta a conclusão — não há MOS nem nota de aplicação; atraso e vazão são proxy, não experiência",
-            "A unidade: QoE se mede em porcentagem, não em kbps"
+            "Seguir sem restrição, porque KPM é dado técnico de rádio e não identifica pessoas",
+            "Anonimizar na publicação final, mantendo o bruto identificado aberto à equipe",
+            "Trocar o KPM pelo PM agregado da célula, que responde à mesma pergunta sem risco",
+            "Minimizar e pseudonimizar identificadores e declarar base legal e retenção"
           ],
-          "ok": 2,
+          "ok": 3,
           "pts": 2,
-          "porque": "QoE é o que o usuário sente, e nada no KPM mede isso. Dá para dizer 'é risco para a experiência'; dizer 'a QoE caiu' afirma mais do que o dado sustenta — e dizer menos do que os dados permitem também é resultado."
+          "porque": "O slide 58 põe minimização e anonimização de identificadores como regra, com retenção, acesso e proveniência declarados, e a aula lembra que, em rede real, cruzar UDR com KPM por UE revela comportamento, localização e rotina de assinantes. KPM por UE não é 'só técnico': é o dado de alto risco da taxonomia. Anonimizar só no fim deixa o bruto exposto durante todo o trabalho, e trocar tudo por PM de célula reduz o risco, mas perde a resposta por UE e pode esconder a anomalia local."
         },
         {
           "q": "Você precisa de um número por célula, por hora, para um relatório mensal de capacidade. Qual fonte escolhe?",
           "alt": [
-            "KPM pela E2, porque é o dado mais fino",
-            "PM pela O1: contadores agregados na escala de minutos, feitos para série histórica",
-            "O log do gNB, porque tem tudo",
-            "A FM, porque registra o que deu errado"
+            "PM pela O1 em arquivo bulk: contadores agregados, com retenção longa para tendência",
+            "KPM pela E2, guardado por um mês inteiro, porque é a medida mais fina disponível",
+            "FM pela O1, porque o relatório de capacidade parte dos alarmes de sobrecarga da célula",
+            "iperf e ping do lab, porque medem o plano de usuário de ponta a ponta a cada hora"
           ],
-          "ok": 1,
+          "ok": 0,
           "pts": 2,
-          "porque": "A regra de escolha da fonte é a escala do loop. Relatório mensal é loop lento: PM pela O1. Guardar KPM de sessão por um mês inteiro é caro e não responde melhor a pergunta. A FM é alarme — diz o que quebrou, não quanta capacidade se usou."
+          "porque": "A regra é escolher a fonte pela decisão e pela escala temporal (slide 57): PM bulk em arquivo tem retenção longa e serve para tendência, que é o relatório mensal. Guardar KPM de 100 ms a 1 s por um mês é caro e não responde melhor a uma pergunta horária. A FM diz o que quebrou, não quanto recurso se usou, e iperf e ping validam o caminho do usuário, mas não substituem a medida da célula."
         }
       ]
     },
@@ -96,38 +96,38 @@
         {
           "q": "Por que o Open RAN amplia o volume de dados em relação a uma RAN monolítica?",
           "alt": [
-            "Porque os equipamentos passaram a medir mais rápido",
-            "Porque cada split vira uma fronteira observável, com interface aberta e telemetria própria",
-            "Porque a O-Cloud obriga a guardar tudo",
-            "Porque o 5G tem mais usuários que o 4G"
-          ],
-          "ok": 1,
-          "pts": 1,
-          "porque": "Antes o eNB era uma caixa: um ponto de medida. Ao separar em O-RU, O-DU e O-CU com interfaces abertas, cada fronteira passa a ser observável — e o RIC acrescenta E2 e A1 por cima. Mais fronteiras, mais dados, e de fornecedores diferentes."
-        },
-        {
-          "q": "Granularidade fina traz um risco que a agregada não traz. Qual?",
-          "alt": [
-            "Ocupa mais disco",
-            "Fica desatualizada mais rápido",
-            "Reidentificação: dado por UE e por instante pode reconstruir o comportamento de uma pessoa",
-            "É mais difícil de plotar"
+            "O PM da O1 passou a ser reportado a cada 100 ms, e não mais a cada 15 min",
+            "A O2 obriga a O-Cloud a replicar no SMO o PM gerado pela RAN",
+            "Cada split e cada interface aberta viram fonte de PM, FM, trace ou KPM",
+            "O 5G atende mais UEs por célula, e cada UE passa a gerar seu próprio PM"
           ],
           "ok": 2,
           "pts": 1,
-          "porque": "Disco é custo, não risco. O risco é de privacidade: quanto mais fino o dado, mais perto de identificar alguém — por isso a taxonomia da aula cruza granularidade com risco, e por isso o lab usa dado sintético."
+          "porque": "Até o 4G o eNB era uma caixa monolítica. O split em CU, DU e RU e as interfaces abertas (O1, O2, A1, E2, Open Fronthaul) transformam cada fronteira em fonte potencial de PM, FM, trace ou KPM, e o cenário multi-vendor obriga a correlacionar fornecedores. O PM da O1 continua na escala de segundos a minutos; a medida de 100 ms a 1 s é o KPM, que chega por outra interface, a E2."
         },
         {
-          "q": "Numa RIC Indication de E2SM-KPM, o que o cabeçalho traz que o corpo não traz?",
+          "q": "A turma tem o mapa Open5GS (CUPS) e o mapa O-RAN. Como os dois se ligam?",
           "alt": [
-            "Os valores medidos",
-            "A identificação de quem mediu e quando — nó E2, célula/UE e o instante da janela",
-            "A fórmula do indicador",
-            "A política A1 associada"
+            "O mapa O-RAN substitui o core: o Near-RT RIC assume os papéis do AMF e do SMF",
+            "Por NG-c/NG-u até AMF e UPF; O1, E2 e A1 acrescentam gestão e telemetria",
+            "Pela E2: o UPF também é nó E2 e manda KPM ao Near-RT RIC, como o gNB",
+            "Pela N4, que liga o SMF do core ao SMO e leva o PM de gestão da RAN"
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "O corpo carrega as medidas; o cabeçalho diz de quem e de quando elas são. Sem isso o número não se ancora em nada. É uma confusão comum: tomar o carimbo de hora DO ARQUIVO — que costuma ser o da ingestão — pela hora da medição, e com isso ordenar a série errado."
+          "porque": "Os mapas são complementares (slide 49): NG-c e NG-u, na figura O-RAN, são a ligação com o AMF e o UPF da figura Open5GS, e O1 e E2 acrescentam caminhos de dados que o core 3GPP sozinho não padroniza. Nenhum substitui o outro. A E2 liga o Near-RT RIC a O-CU e O-DU, não ao UPF, e a N4 liga SMF e UPF dentro do core, sem relação com o SMO."
+        },
+        {
+          "q": "No caso UE-TP do lab, quais são as três features KPM confirmadas?",
+          "alt": [
+            "RRU.PrbTotUl, DRB.RlcSduDelayDl e DRB.UEThpUl",
+            "RRU.PrbTotDl, DRB.RlcSduDelayUl e DRB.UEThpDl",
+            "RRU.PrbTotUl, DRB.UEThpUl e o RSRP do UE",
+            "DRB.UEThpUl, DRB.UEThpDl e RRU.PrbTotUl"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "Os slides 53 e 64 listam as features confirmadas: RRU.PrbTotUl (PRB no uplink), DRB.RlcSduDelayDl (atraso RLC no downlink) e DRB.UEThpUl (vazão do UE no uplink). A pegadinha é a direção: PRB e vazão são de uplink, porque o experimento carrega o UL, mas o atraso RLC é de downlink. RSRP, RSRQ e CQI não estão no artefato e só entram como contexto de hipótese."
         }
       ]
     },
@@ -139,14 +139,14 @@
           "q": "Ponha o ciclo mínimo de análise da disciplina na ordem em que ele acontece.",
           "itens": [
             "Observar — escolher a fonte certa para a pergunta (PM, KPM, FM, log)",
-            "Limpar — tipar, checar nulos e duplicados, carimbar a fase",
+            "Limpar — tipar, checar nulos e duplicados, harmonizar UTC e unidades",
             "Agregar — reduzir à granularidade que a pergunta pede",
             "Indicar — calcular o KPI/KQI com fórmula e unidade declaradas",
             "Interpretar — comparar com a linha de base e com o limite de validade",
             "Recomendar — dizer o que fazer, e declarar o que o dado NÃO permite dizer"
           ],
           "pts": 10,
-          "porque": "É o fio de todas as aulas: fonte, ingestão, limpeza, agregação, indicador, análise e decisão. A ordem importa porque cada passo restringe o seguinte — agregar antes de limpar propaga o erro, e recomendar antes de interpretar é opinião, não análise."
+          "porque": "É o ciclo mínimo do slide 18: observar, limpar e agregar, indicar (KPI/KQI), interpretar e recomendar com limites. A ordem importa porque cada passo restringe o seguinte: agregar antes de limpar esconde o defeito dentro da média, e recomendar antes de interpretar é opinião, não análise."
         }
       ]
     }

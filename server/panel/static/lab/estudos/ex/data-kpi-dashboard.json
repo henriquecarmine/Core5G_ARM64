@@ -1,0 +1,93 @@
+{
+  "h": "#data/kpi-dashboard",
+  "rot": "Dashboard KPI / NOC",
+  "t": "Monitoramento RAN (BI)",
+  "pts": 9,
+  "fonte": "Aula 05 da cadeira 4 (painel BI: slides 19, 20, 26 e 29) e o Dashboard KPI / NOC do Lab, sobre as 100 amostras kpm-ue-tp-sample",
+  "blocos": [
+    {
+      "nome": "Quiz",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Qual destes cartões de KPI segue a anatomia de cartão pedida na aula 05?",
+          "alt": [
+            "Utilização PRB UL: 99%, mediana de S01–S59, +97 pp vs baseline, em vermelho",
+            "RRU.PrbTotUl: 99, última amostra (S59), crítico acima de 85%, com ícone e rótulo",
+            "Utilização PRB UL: 99%, mediana de S01–S59, +97 pp vs baseline, crítico > 85%",
+            "Utilização PRB UL: 71%, média das 100 amostras, crítico > 85%, sem comparação"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O slide 20 lista o que o decisor lê em 5 segundos: nome legível, valor com unidade e janela, comparativo contra o baseline e limiar escrito. A primeira alternativa tem tudo, menos o limiar: é cor sem regra escrita, o erro que o slide manda evitar. A de RRU.PrbTotUl põe o contador cru no título e mostra uma amostra só, sem comparação. A de 71% mistura ócio e carga numa média que não descreve nenhuma fase."
+        },
+        {
+          "q": "Por que a página de decisão mostra uma única série temporal, e não um gráfico para cada métrica?",
+          "alt": [
+            "Porque as métricas sintéticas não deveriam aparecer em nenhum gráfico do painel",
+            "Porque a série escolhida é a que justifica a decisão; as outras vão ao drill-down",
+            "Porque métricas de unidades diferentes precisariam dividir um gráfico de dois eixos",
+            "Porque o semáforo dos cartões já dispensa qualquer gráfico na hora de decidir"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "É a terceira camada do slide 19: uma série temporal, o indicador que justifica a decisão, e não doze gráficos. Os demais continuam disponíveis num drill-down analítico, para quem precisa do porquê. Eixo duplo não resolve: duas escalas no mesmo gráfico sugerem uma correlação que o dado não tem. E o cartão sozinho não mostra quando o problema começou nem se ele é sustentado; a série é a evidência do cartão."
+        },
+        {
+          "q": "No cenário de interferência, o evento vai de S18 a S42. Um cartão que mostrasse só a última amostra do stress (S59) daria S_t = 1,0, em OK. Qual é o problema desse cartão?",
+          "alt": [
+            "S59 já pertence ao recovery, então o cartão está olhando a fase errada",
+            "O S_t deveria ser a média das 100 amostras, e não um valor pontual",
+            "O S_t só vale quando o PRB UL está abaixo de 70%, e em S59 ele ainda marca 99%",
+            "Sem janela escrita, um instante fora do evento esconde 25 amostras acima de 5"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "Todo cartão resume uma janela, e ela precisa estar escrita. Em S59 o evento acabou há 17 amostras, então o cartão diz OK sobre um problema que durou 25 amostras seguidas acima do limiar crítico; era a falha do painel original. A média das 100 amostras também engana, porque dilui as 25 amostras altas nas 75 normais. S59 é stress, não recovery, e o S_t não depende do PRB: a aula só lembra que um jammer sem carga aparece com PRB estável."
+        }
+      ]
+    },
+    {
+      "nome": "Situações",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Cenário de carga: de S01 a S59 o PRB UL fica em 99% e a vazão UL em 80,1 Mbps, contra 2% e praticamente zero no baseline. S_t (0,9), perda (0,22%) e backhaul (46,4%) seguem abaixo dos limiares. Qual a leitura e qual a alavanca?",
+          "alt": [
+            "Capacidade de rádio: alívio de carga no UL como política A1 candidata, em dry-run",
+            "Saturação com má eficiência: priorização e load balance, porque o PRB está em 99%",
+            "Interferência: investigação de RF, porque a célula não passa de 80 Mbps de vazão",
+            "Gargalo de transporte: ampliar o backhaul, porque todo o tráfego do rádio passa ali"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "É a primeira linha da matriz do slide 26: PRB alto com a vazão subindo junto indica congestionamento de capacidade, e a alavanca típica é o alívio de carga, simulado como política A1 em dry-run. Saturação com má eficiência seria PRB alto com a vazão caindo, o que não acontece aqui. Nada aponta para interferência (S_t baixo) nem para transporte (backhaul abaixo de 75%), e 80 Mbps é o que o UE entrega, não um sintoma."
+        },
+        {
+          "q": "Cenário de interferência: na janela S18–S42 o PRB UL continua em 99%, o S_t sobe de 0,92 para 7,59, a perda de 0,22% para 1,86% e a vazão UL cai de 79,4 para 61,5 Mbps (−22%) em relação à mesma carga sem o evento. O backhaul não muda. O que recomendar?",
+          "alt": [
+            "Pedir mais espectro ou uma célula nova, porque o PRB UL segue saturado em 99%",
+            "Política A1 de alívio de carga, porque a vazão caiu com o PRB em 99%",
+            "Ampliar o backhaul, porque a perda de pacotes passou do limiar crítico",
+            "Investigação de RF cruzando com o espectro (IQ), sem tratar como capacidade"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "O que muda na janela é o canal: S_t e perda sobem e a vazão cai com a mesma ocupação de rádio. O PRB em 99% já existia antes do evento, com a mesma carga, então não é ele que explica a queda. É o erro de decisão do slide 29: tratar jammer como falta de capacidade e investir em espectro ou em célula sem atacar a RF. Alívio de carga tiraria tráfego do usuário sem limpar o canal, e o backhaul estável descarta o transporte."
+        },
+        {
+          "q": "Cenário de backhaul: de S30 a S59 a utilização do backhaul sobe de 68,1% para 98,7%, com 7 amostras seguidas acima de 90%. PRB UL (99%), vazão UL (80,1 Mbps) e S_t ficam iguais aos da mesma carga sem o evento, e a perda segue em 0,22%. Qual a leitura correta?",
+          "alt": [
+            "Capacidade de rádio: o PRB UL fica em 99% durante toda a janela do evento",
+            "Gargalo no transporte: investigar o backhaul antes que a perda comece a subir",
+            "Nada a fazer por ora: a perda segue baixa, então o enlace ainda tem folga",
+            "Interferência leve: o backhaul alto indica retransmissões que ainda não viraram perda"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Contra a referência, a mesma carga antes do evento, nenhum KPI de rádio muda: o PRB já estava em 99%, então ele não explica o que aparece a partir de S30. O que muda é o enlace de transporte, que o E2 não mede. Com a perda ainda baixa há uma janela de prevenção, e esperar a perda subir é agir tarde, porque fila saturada acaba descartando pacote. Retransmissão de rádio apareceria no S_t e na vazão, que não se mexem."
+        }
+      ]
+    }
+  ]
+}

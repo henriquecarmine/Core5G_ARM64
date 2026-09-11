@@ -1,0 +1,156 @@
+{
+  "h": "#oran/aulae2",
+  "rot": "Interface E2",
+  "t": "Controle near-real-time",
+  "pts": 22,
+  "fonte": "Interface E2 da cadeira 1 (sem slides publicados): aula 04 da cadeira 2 — Pilha OAI + interface E2 via FlexRIC: E2 SETUP, subscription, INDICATION, E2SM-KPM e E2SM-RC (aula04-xapps_opensource.pdf); retomada das interfaces e dos horizontes de controle na aula 01 da cadeira 2; closed loop da aula 05 da cadeira 4; e os guias do lab E2 (server/oai-cn-gnb-e2/docs/E2_FLEXRIC.md e E2_SERVICE_MODELS.md, p2-test-e2-sm)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Para que serve a interface E2, e quem ela liga?",
+          "alt": [
+            "Liga Non-RT RIC e Near-RT RIC, para políticas em JSON de longo prazo",
+            "Liga Near-RT RIC e nós da RAN, para telemetria e controle em near-RT",
+            "Liga gNB e AMF sobre SCTP, para a sinalização de controle da NG-RAN",
+            "Liga o SMO aos elementos da RAN, para configuração, falhas e desempenho"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "A E2 liga o Near-RT RIC aos nós E2 (O-CU, O-DU, gNB) e o E2AP faz setup, subscription, indication e control, num laço entre 10 ms e 1 s (slide 58 da aula 01). A alternativa do AMF é a mais tentadora porque a E2 também usa SCTP, o mesmo transporte do NGAP na N2 (o próprio slide faz essa ponte), mas a N2 é entre gNB e core. Políticas em JSON são a A1, e configuração, falhas e desempenho pelo SMO são a O1."
+        },
+        {
+          "q": "Na arquitetura O-RAN, quem assina as medições da E2 e decide ações em menos de 1 s?",
+          "alt": [
+            "Um rApp no Non-RT RIC, que recebe as INDICATIONs pela interface A1",
+            "O SMO, que lê as INDICATIONs pelo VES Collector da interface O1",
+            "O agente E2 do gNB, que decide sozinho, sem precisar do RIC",
+            "Um xApp no Near-RT RIC, que fala E2AP e E2SM com o nó"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "É a tabela do slide 22 da aula 04: o xApp roda no Near-RT RIC, abaixo de 1 s, e sua interface é a E2 (E2AP mais E2SM); o exemplo do curso é o xapp_kpm_moni. O rApp roda no Non-RT RIC, acima de 1 s, e usa A1 e dados do SMO, e a A1 não transporta INDICATIONs. O VES Collector da O1 recebe eventos de PM e falha para o SMO, não as mensagens da E2. O agente E2 expõe as RAN functions e executa o que o RIC pede; a lógica de otimização fica no xApp."
+        },
+        {
+          "q": "No lab, quem é o nó E2, e como o Near-RT RIC fica sabendo o que ele oferece?",
+          "alt": [
+            "O gNB OAI, cujo agente E2 anuncia as RAN functions no E2 SETUP REQUEST",
+            "O nrUE, que anuncia as RAN functions ao RIC quando se registra no core OAI",
+            "O AMF do core OAI, que lista as funções da célula no NG Setup",
+            "O xApp, que declara as RAN functions ao se conectar ao RIC pelo E42"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O agente E2 embutido no nr-softmodem conecta ao FlexRIC e o log mostra E2 SETUP-REQUEST tx seguido de E2 SETUP RESPONSE rx (slide 39 da aula 04); no RIC aparecem as RAN functions registradas, com id 2 (KPM), 3 (RC), 142 (MAC), 143 (RLC), 144 (PDCP) e 148 (GTP) (slide 40). O xApp usa essas funções, não as declara: o E42 é só a conexão dele com o nearRT-RIC do FlexRIC. O NG Setup é procedimento da N2, entre gNB e AMF, e não passa pelo RIC."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O E2 SETUP fechou e o xapp_kpm_moni sobe e pede a subscription, mas nenhuma INDICATION chega. O UE está registrado no slice SST 1. O que corrigir?",
+          "alt": [
+            "Reiniciar o RIC depois do gNB, para que o E2 SETUP seja refeito do zero",
+            "Enviar um RIC CONTROL pedindo ao gNB que mande as medições KPM",
+            "Alinhar o filtro da subscription (SST 222, SD 123) com o slice do UE",
+            "Trocar KPM por E2SM-RC, que entrega medições periódicas por slice"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "A subscription KPM do lab filtra por S-NSSAI, com KPM_SST=222 e KPM_SD=123 no Report Style 4 (slide 43 da aula 04); um UE em SST 1 não casa com o filtro, e a tabela de problemas do guia E2_FLEXRIC.md traz o mesmo sintoma, xApp sem INDICATION por filtro de slice desencontrado. O E2 SETUP já fechou, e a ordem certa é Core, RIC, gNB e xApp (slide 34), então inverter RIC e gNB não ajuda. CONTROL não cria reports: medições chegam por subscription. E o E2SM-RC é aperiódico, entrega eventos RRC e não medições periódicas."
+        },
+        {
+          "q": "Um xApp envia um RIC CONTROL de E2SM-RC ao gNB OAI do lab, e o parâmetro esperado não muda. Qual é a primeira verificação?",
+          "alt": [
+            "Se o nó suporta esse estilo de CONTROL e o que ele devolveu ao pedido, ACKNOWLEDGE ou FAILURE",
+            "Se há uma subscription de REPORT ativa, já que CONTROL só vale dentro de uma",
+            "Se a política A1 chegou ao gNB, porque é a A1 que altera parâmetros do nó",
+            "Se o período das INDICATIONs KPM é curto o bastante para o CONTROL ser aplicado"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "O nó só executa o que declarou suportar para aquela RAN function, e o RIC CONTROL tem resposta própria, ACKNOWLEDGE ou FAILURE (quando o xApp pede confirmação, o que é o comum ao depurar). No OAI do lab o E2SM-RC implementa, no CONTROL, só o estilo 1 (Radio Bearer Control) e como prova de conceito: cria um novo DRB, e o controle real é limitado (E2_SERVICE_MODELS.md; a aula 05 da cadeira 4 também chama o RC deste lab de incompleto). A pegadinha é a subscription: no E2AP o CONTROL é um procedimento próprio e não precisa de REPORT ativo. E a A1 nunca chega ao gNB."
+        },
+        {
+          "q": "A equipe quer que um xApp escolha o MCS de cada UE a cada TTI, pela E2. O que responder?",
+          "alt": [
+            "Cabe, desde que as INDICATIONs KPM tenham período de 1 ms ou menos",
+            "Não cabe no Near-RT; o xApp teria de ir para o Non-RT RIC, com mais CPU",
+            "Cabe, desde que o SCTP da E2 seja trocado por UDP, sem retransmissão",
+            "Não cabe: por TTI decide o MAC do gNB; o xApp ajusta a scheduling policy"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "O Near-RT RIC atua entre 10 ms e 1 s (slides 44 e 52 da aula 01), em casos como load balancing, gestão de sessão e scheduling policy; o scheduling por TTI é laço de tempo real, abaixo de 10 ms, e fica no MAC do gNB, fora do alcance do Near-RT RIC (tabela de laços do slide 48 da aula 01 da cadeira 4). Encurtar o período de report não fecha o laço: ainda há medição, transporte, decisão e CONTROL de volta. Mandar o xApp para o Non-RT piora, porque lá o ciclo é acima de 1 s, e trocar o transporte não muda a classe do laço."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Um xApp pede medições por UE, com período curto, para 200 UEs, e o RIC começa a engasgar com INDICATIONs. O que controla esse volume?",
+          "alt": [
+            "A A1, que limita a taxa de mensagens que cada nó E2 tem permissão de gerar",
+            "O SCTP, que descarta INDICATIONs quando o RIC não dá conta de ler",
+            "O E2 SETUP, que fixa um único período de report para todos os xApps",
+            "O event trigger e as ações da subscription: período, estilo e medições"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "Quem define o que o nó reporta é a RIC SUBSCRIPTION: RAN function, event trigger e lista de ações, com o conteúdo dado pelo E2SM. No KPM isso é o período de report, o estilo (célula, UE, UEs filtrados por condição, como o Report Style 4 por slice do lab, com INDICATIONs de cerca de 1 s) e as medições pedidas. Para aliviar: período maior, agregação por célula ou filtro, só as medições necessárias. O E2 SETUP apenas anuncia as RAN functions, o SCTP entrega de forma confiável e a A1 não governa mensagens da E2."
+        },
+        {
+          "q": "Antes de liberar um xApp para mandar CONTROL sozinho em produção, que evidência a disciplina pede?",
+          "alt": [
+            "Acurácia offline do modelo acima de 90%, que já garante a decisão certa",
+            "Efeito medido antes e depois, e um rollback testado para desfazer a ação",
+            "O RIC CONTROL ACKNOWLEDGE, que prova o efeito da ação nos KPIs da célula",
+            "Um período de CONTROL bem curto, para corrigir logo qualquer erro"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Na aula 05 da cadeira 4, controle bem-sucedido é efeito mensurável e reversível; o risco é a ação sem evidência ou sem rollback, e o run validado registra action verified e rollback verified. O ACKNOWLEDGE é como o ENFORCED da A1: diz que o nó aceitou o pedido, não que o KPI melhorou. Acurácia offline não basta: a aula 01 pede regressão contra KPIs-chave, monitoramento de drift e rollback no playbook (slides 65 e 66), e o Near-RT ainda precisa mitigar conflitos quando vários xApps mexem no mesmo objeto (slide 56)."
+        },
+        {
+          "q": "O E2 SETUP do gNB está OK, mas um xApp KPM tirado de outra instalação do FlexRIC (em /usr/local) trava ao decodificar as mensagens. Qual é a causa mais provável?",
+          "alt": [
+            "O filtro de slice da subscription não bate com o SST e o SD do UE",
+            "O RIC subiu antes do gNB, e a sessão E2 ficou num estado inconsistente",
+            "Versões de E2AP ou E2SM diferentes das compiladas no gNB e no RIC",
+            "O KPM_TRAFFIC=0 zerou o volume, e o decodificador não aceita zeros"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "E2AP é o transporte e E2SM é a semântica (slide 25 da aula 04), e os dois lados precisam do mesmo contrato: gNB, RIC e xApps devem partilhar a mesma stack E2AP e as mesmas versões de E2SM (E2AP v2, KPM v2.03, RC v1.03), senão o setup falha ou as mensagens não decodificam (slide 36). O guia E2_FLEXRIC.md registra justamente crash de xApp vindo de /usr/local e manda usar só os do submódulo e o flexric-lib/. Filtro de slice errado dá silêncio, não travamento; subir o RIC antes do gNB é a ordem certa; e volume zero é esperado em RFSIM leve."
+        }
+      ]
+    },
+    {
+      "nome": "Ordenar o ciclo E2",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem um ciclo E2 completo, da ligação do nó até a retirada do xApp.",
+          "itens": [
+            "O agente E2 do gNB abre a associação SCTP com o Near-RT RIC",
+            "O gNB envia E2 SETUP REQUEST com suas RAN functions e recebe o E2 SETUP RESPONSE",
+            "O xApp pede, via RIC, uma RIC SUBSCRIPTION com event trigger e ação REPORT de KPM",
+            "O nó admite as ações pedidas na RIC SUBSCRIPTION RESPONSE",
+            "Chegam RIC INDICATIONs periódicas com as medições pedidas",
+            "O xApp avalia as medições e manda um RIC CONTROL REQUEST ao nó",
+            "O nó responde RIC CONTROL ACKNOWLEDGE, e as INDICATIONs seguintes mostram o efeito",
+            "Ao retirar o xApp, a RIC SUBSCRIPTION DELETE encerra os reports"
+          ],
+          "pts": 10,
+          "porque": "É o fluxo do slide 28 da aula 04 (E2 SETUP, subscribe, operate, retire com SUBSCRIPTION DELETE) com o CONTROL do slide 25 fechando o laço observar, decidir e agir da aula 01. Cada passo depende do anterior: não há setup sem associação SCTP, não se assina uma RAN function que o nó ainda não anunciou, INDICATION só chega depois de a ação ser admitida, e o CONTROL nasce da análise das medições. O efeito aparece nas INDICATIONs seguintes, e a subscription só é apagada quando o xApp sai."
+        }
+      ]
+    }
+  ]
+}

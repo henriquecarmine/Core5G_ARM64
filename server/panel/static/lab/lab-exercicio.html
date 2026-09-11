@@ -38,6 +38,17 @@
   .ord li button:disabled { opacity:.35; cursor:default; }
   .ord li.certa { border-color:var(--good); background:var(--good-soft); }
   .ord li.errada { border-color:var(--bad); background:var(--bad-soft); }
+  /* associar: cada item escolhe um alvo num menu — funciona no toque e no teclado */
+  .assoc { list-style:none; padding:0; margin:6px 0; }
+  .assoc li { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; border:1px solid var(--line);
+              border-radius:var(--r-sm); padding:8px 10px; margin:6px 0; line-height:1.4; }
+  .assoc li .txt { flex:1 1 220px; }
+  .assoc select { background:var(--surface-2); color:var(--ink); border:1px solid var(--line);
+                  border-radius:var(--r-sm); padding:5px 8px; font:inherit; font-size:var(--t-mini); max-width:100%; }
+  .assoc select:focus { outline:none; border-color:var(--accent); }
+  .assoc li.certa { border-color:var(--good); background:var(--good-soft); }
+  .assoc li.errada { border-color:var(--bad); background:var(--bad-soft); }
+  .assoc li .aceita { flex-basis:100%; font-size:var(--t-micro); color:var(--ink-2); }
   .porque { margin-top:11px; padding:10px 12px; border-left:3px solid var(--accent);
             background:var(--accent-soft); border-radius:0 var(--r-sm) var(--r-sm) 0;
             font-size:var(--t-mini); line-height:1.5; }
@@ -96,6 +107,19 @@ function pinta(){
       ${b.qs.map((q,qi)=>{
         n++;
         const id=`${bi}-${qi}`;
+        if(b.tipo==="associar"){
+          // a ordem de EXIBIÇÃO dos itens é sorteada uma vez; as escolhas ficam por índice do item
+          const vis=RESP["v"+id]||(RESP["v"+id]=embaralha(q.itens.map((_,i)=>i)));
+          const esc_=RESP[id]||(RESP[id]={});
+          return `<div class="perg" data-q="${id}">
+            <p class="en"><span class="n">${n}.</span>${esc(q.q)}</p>
+            <ul class="assoc">${vis.map(ii=>`
+              <li data-it="${ii}"><span class="txt">${esc(q.itens[ii].t)}</span>
+                <select data-assoc="${id}" data-it="${ii}" aria-label="${esc(q.itens[ii].t)}" ${corrigido?"disabled":""}>
+                  <option value="">—</option>${q.alvos.map((a,ai)=>`<option value="${ai}" ${esc_[ii]===ai?"selected":""}>${esc(a)}</option>`).join("")}
+                </select></li>`).join("")}</ul>
+            <div class="porque" hidden></div></div>`;
+        }
         if(b.tipo==="ordem"){
           const ordem=RESP[id]||(RESP[id]=embaralha(q.itens.map((_,i)=>i)));
           return `<div class="perg" data-q="${id}">
@@ -117,6 +141,10 @@ function pinta(){
 
   $("#corpo").querySelectorAll('input[type=radio]').forEach(r=>r.addEventListener("change",e=>{
     RESP[e.target.name.slice(1)]=parseInt(e.target.value,10);}));
+  $("#corpo").querySelectorAll("select[data-assoc]").forEach(sel=>sel.addEventListener("change",()=>{
+    const r=RESP[sel.dataset.assoc], it=parseInt(sel.dataset.it,10);
+    if(sel.value==="")delete r[it]; else r[it]=parseInt(sel.value,10);
+  }));
   $("#corpo").querySelectorAll("[data-mv]").forEach(b=>b.addEventListener("click",()=>{
     if(corrigido)return;
     const li=b.closest("li"), id=li.closest(".perg").dataset.q;
@@ -131,7 +159,18 @@ function corrige(){
   let acertos=0, respondidas=0;
   EX.blocos.forEach((b,bi)=>b.qs.forEach((q,qi)=>{
     const id=`${bi}-${qi}`, cx=$(`.perg[data-q="${id}"]`);
-    if(b.tipo==="ordem"){
+    if(b.tipo==="associar"){
+      const r=RESP[id]||{}; let certos=0;
+      cx.querySelectorAll(".assoc li").forEach(li=>{
+        const ii=parseInt(li.dataset.it,10), item=q.itens[ii], ok=item.ok.includes(r[ii]);
+        if(ok)certos++;
+        li.classList.add(ok?"certa":"errada");
+        li.querySelector("select").disabled=true;
+        if(!ok){const d=document.createElement("span");d.className="aceita";
+          d.textContent="→ "+item.ok.map(ai=>q.alvos[ai]).join(" ou ");li.appendChild(d);}
+      });
+      acertos+=Math.round(q.pts*certos/q.itens.length); respondidas++;
+    }else if(b.tipo==="ordem"){
       const o=RESP[id]||[]; let certas=0;
       o.forEach((oi,pos)=>{ const li=cx.querySelectorAll(".ord li")[pos];
         const ok=oi===pos; if(ok)certas++; li.classList.add(ok?"certa":"errada"); });

@@ -1,0 +1,178 @@
+{
+  "h": "#oran/lab-open5gs",
+  "rot": "Lab Open5GS",
+  "t": "Core e E2E",
+  "pts": 22,
+  "fonte": "Projeto 1 do painel (Open5GS + UERANSIM): server/docker-compose.yml, server/ueransim/docker-compose.yaml, server/ueransim/configs/gnb.yaml e ue.yaml, server/configs/open5gs/amf.yaml, smf.yaml e upf-a.yaml, e os comandos up-core, up-ran, status, test-ng-setup, test-registration, test-config-coherence e test-ue-connection (server/panel/ops.py e server/scripts, inclusive healthcheck.sh e add-subscriber.sh); aula 01 da cadeira 2 — lab Open5GS/UERANSIM, gnb.yaml, ue.yaml e troubleshooting (aula01-retomada_interfaces_oran-2.pdf, slides 73 a 88); roteiros docs/labs/01-core-open5gs.md e 02-ueransim-n2-n3-e2e.md, com os nomes trocados pelos do nosso servidor",
+  "blocos": [
+    {
+      "nome": "Core",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Com só o Core ligado, o Status / Healthcheck do painel mostra AMF não pode alcançar gNB e NG Setup não encontrado nos logs. O que concluir?",
+          "alt": [
+            "O AMF não abriu a porta 38412 da N2, e é preciso reiniciar o container dele",
+            "As redes N2 e N3 não foram criadas, e é preciso recriá-las antes de seguir",
+            "Nada quebrou: sem a RAN, não há gNB para pingar nem NG Setup no log",
+            "Falta cadastrar o assinante, sem o qual o AMF não aceita nenhum gNB"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O comando status roda o healthcheck.sh, que testa o caminho inteiro, inclusive o que depende do UERANSIM: o ping do AMF (10.20.0.11) para o gNB (10.20.0.101) e a linha NG Setup procedure is successful no log do container ueransim. Sem a RAN esses itens falham por definição, e o roteiro do Core avisa que isso é esperado. A porta 38412 é a tentação, mas o teste é um ping para o endereço do gNB, que ainda nem existe; e as redes N2 e N3 são criadas pelo próprio Core. O assinante também não entra: o NG Setup acontece entre gNB e AMF antes de qualquer UE. Com o Core sozinho, o que vale olhar são os processos das NFs e o NRF saudável."
+        },
+        {
+          "q": "No Projeto 1, onde fica gravado o assinante, e quem o consulta quando o UE se registra?",
+          "alt": [
+            "No ue.yaml do UERANSIM, que o AMF lê pela N2 durante o registro",
+            "No MongoDB do core, lido pelo UDR e usado por UDM e AUSF",
+            "No NRF, que guarda IMSI e chaves junto com o cadastro das NFs",
+            "No udm.yaml, carregado quando o UDM sobe, com IMSI e chaves"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O add-subscriber.sh, que o painel usa para cadastrar assinantes, grava o documento (IMSI, K, OPC, slice SST 1 e DNN internet) na coleção subscribers da base open5gs, no container open5gs-mongodb-containerized. O UDR lê esse banco e entrega os dados ao UDM, que os usa com o AUSF na autenticação 5G-AKA. O ue.yaml é o outro lado da conta, o chip do UE simulado, e o core nunca o lê. O udm.yaml engana por ter chaves, mas são as chaves da rede (hnet, para decifrar o SUCI) e o endereço SBI, sem nenhum IMSI; e o NRF cadastra NFs, não assinantes."
+        },
+        {
+          "q": "Na autenticação 5G-AKA, quais dados precisam coincidir entre o core e o UE simulado?",
+          "alt": [
+            "supi, key e op do ue.yaml com IMSI, K e OPC gravados no MongoDB",
+            "tac e PLMN do gnb.yaml com a lista tai do amf.yaml",
+            "gnbSearchList do ue.yaml com o ngapIp do gnb.yaml",
+            "apn e slice do ue.yaml com a DNN e a slice gravadas no MongoDB"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "Na 5G-AKA o core busca as credenciais pelo IMSI e calcula o desafio com K e OPC; o UE simulado faz a mesma conta com key e op do ue.yaml. Se o supi não existir no banco, ou se as chaves divergirem, o registro para ali. A DNN e a slice do assinante também precisam bater com o ue.yaml, e por isso enganam, mas entram depois da autenticação: a slice na lista de slices permitidas e a DNN na sessão PDU. TAC e PLMN decidem o NG Setup, e o gnbSearchList decide se o UE encontra o gNB."
+        }
+      ]
+    },
+    {
+      "nome": "Ordenar o roteiro",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o roteiro do Projeto 1, do servidor parado até o tráfego do UE.",
+          "itens": [
+            "Ligar o Core (up-core)",
+            "Cadastrar o assinante (add-subscriber.sh)",
+            "Ligar a RAN (up-ran), que já dispara o registro do UE",
+            "Rodar o test-ng-setup",
+            "Rodar o test-registration",
+            "Rodar o test-ue-connection"
+          ],
+          "pts": 6,
+          "porque": "Cada passo depende do anterior. O cadastro grava na coleção subscribers do MongoDB, que só existe com o Core no ar (o add-subscriber.sh para se o mongodb não estiver rodando), e a RAN usa como externas as redes open5gs-containerized_net-n2 e open5gs-containerized_net-n3, criadas pelo compose do Core: o up_ran.sh se recusa a subir sem elas. O assinante vem antes da RAN porque o container ueransim sobe gNB e UE juntos, e o UE tenta o registro logo em seguida; sem cadastro o registro falha e o UE precisa ser reiniciado. É a ordem que o up_core.sh sugere e que o test-system-status recomenda (add-subscriber.sh e depois up_ran.sh). Depois a validação sobe de camada: o test-ng-setup confere a N2 entre gNB e AMF, o test-registration confere registro e sessão PDU, e o test-ue-connection confere o tráfego pelo plano de usuário."
+        }
+      ]
+    },
+    {
+      "nome": "N2/N3 e E2E",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Numa captura no host, qual filtro mostra o NGSetupRequest que o gNB (10.20.0.101) envia ao AMF (10.20.0.11)?",
+          "alt": [
+            "udp.port == 2152",
+            "sctp.port == 38412",
+            "sctp.port == 36412",
+            "udp.port == 8805"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O NG Setup é sinalização de controle entre gNB e AMF: NGAP sobre SCTP, na porta 38412 que o gnb.yaml aponta em amfConfigs (o slide 77 da retomada sugere o mesmo filtro no tcpdump). A 36412 é a vizinha que engana: é a porta SCTP do S1AP, a interface equivalente do 4G entre eNB e MME. A 2152 é o GTP-U da N3, que leva os pacotes do UE entre o gNB (10.30.0.11) e o UPF, e a 8805 é o PFCP da N4, com que o SMF programa o UPF. A regra da aula 01 da cadeira 2 resume: N2 é controle, N3 é dado, N4 configura o túnel da N3."
+        },
+        {
+          "q": "O test-ng-setup passou, e o test-registration falhou. O que já está provado?",
+          "alt": [
+            "Que o túnel GTP-U da N3 está pronto, e só falta o UE receber o IP",
+            "Que o assinante foi autenticado, e só falta a sessão PDU",
+            "Nada ainda, porque o NG Setup só é confirmado depois do registro",
+            "Que a N2 funciona: o gNB concluiu o NG Setup com o AMF"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O NG Setup é um procedimento do gNB, não do UE: o gNB abre a associação SCTP, envia NGSetupRequest com PLMN, TAC e slices e recebe o NGSetupResponse. O test-ng-setup confere isso pela linha NG Setup procedure is successful no log do ueransim e pela atividade NGAP do gNB no log do AMF. Registro, autenticação e sessão PDU vêm depois, em NAS carregado dentro do NGAP, então a falha está do UE para cima, e nada dela prova que o assinante foi autenticado. O túnel da N3 nem começou: ele só é montado na sessão PDU."
+        },
+        {
+          "q": "O test-registration terminou com sessão PDU estabelecida e IP em uesimtun0. O que ainda não está provado, e qual teste prova?",
+          "alt": [
+            "Que os pacotes do UE chegam à internet; prova-o o test-ue-connection",
+            "Que o NG Setup foi concluído na N2; prova-o o test-ng-setup",
+            "Que PLMN e slice batem entre gNB e UE; prova-o o test-config-coherence",
+            "Que o assinante existe no MongoDB; prova-o o comando status"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "Um IP em uesimtun0 prova que o controle funcionou inteiro: NG Setup, registro e sessão PDU, com o endereço vindo do pool 10.60.0.0/16 da DNN internet. Ele não prova que um pacote atravessa o plano de usuário. O test-ue-connection faz exatamente isso: ping a DNS públicos, resolução de nomes, HTTP e rota padrão do UE, passando por gNB, N3, UPF e N6. As outras três alternativas pedem prova de coisas que o próprio registro bem-sucedido já implica."
+        }
+      ]
+    },
+    {
+      "nome": "Troubleshooting",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Sintoma: ao ligar a RAN (up-ran), o log mostra ERRO: Rede Docker open5gs-containerized_net-n2 não encontrada, e a RAN não sobe. Qual é a causa, e a primeira ação correta?",
+          "alt": [
+            "UPF parado; reiniciar o container open5gs-upf-containerized-a",
+            "Rede apagada; criá-la com docker network create e religar a RAN",
+            "Core desligado; ligar o Core (up-core) e só então a RAN",
+            "Assinante ausente; cadastrá-lo e religar a RAN"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "O server/ueransim/docker-compose.yaml declara net-n2 e net-n3 como redes externas, com os nomes open5gs-containerized_net-n2 e open5gs-containerized_net-n3, e quem as cria é o compose do Core (server/docker-compose.yml); o up_ran.sh confere isso antes de subir e para com essa mensagem. Criar a rede à mão é a tentação, mas só troca o erro: nessa rede não existe AMF nem UPF, então o NG Setup não acontece, e a causa real, o Core desligado, continua lá. Assinante e UPF entram depois, e nenhum deles cria rede."
+        },
+        {
+          "q": "Sintoma: depois de uma edição no gnb.yaml, o AMF passa a responder ao NGSetupRequest com NGSetupFailure, e o test-ng-setup acusa a falha. O test-config-coherence continua passando. O que conferir primeiro?",
+          "alt": [
+            "Se PLMN, TAC e slices do gnb.yaml constam em tai e plmn_support do amf.yaml",
+            "Se o amfConfigs do gnb.yaml ainda aponta para o AMF em 10.20.0.11, porta 38412",
+            "Se o supi do ue.yaml está cadastrado no MongoDB, com a mesma slice do gNB",
+            "Se o gtpIp do gnb.yaml continua na rede N3, a mesma dos dois UPFs do Core"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "No NG Setup o gNB anuncia PLMN, TAC e slices (S-NSSAI), e o AMF só aceita o que está no amf.yaml: tai com PLMN 001/01 e TAC 7, e plmn_support com SST 1. O que não bate é recusado com NGSetupFailure (slide 87 da retomada: NG Setup falha por PLMN, TAC ou SST divergentes), e é o que o próprio test-ng-setup sugere ao acusar a falha. O amfConfigs é a tentação, mas uma NGSetupFailure é resposta do AMF: com endereço ou porta errados, a associação SCTP nem se formaria. O test-config-coherence passa porque compara o gnb.yaml com o ue.yaml, não com o AMF, e nem compara o TAC. O gtpIp é da N3, que só entra na sessão PDU, e o assinante não participa do NG Setup, que acontece antes de qualquer UE."
+        },
+        {
+          "q": "Sintoma: depois de apagar e cadastrar de novo o assinante, o test-ng-setup passa, mas o test-registration não encontra Registration accept, e uesimtun0 não aparece. Qual verificação é a mais importante?",
+          "alt": [
+            "Se a associação PFCP entre SMF e UPF aparece no Status / Healthcheck",
+            "Se o IMSI cadastrado é o do supi do ue.yaml, com as mesmas K e OPC",
+            "Se o tac do gnb.yaml bate com a lista tai do amf.yaml",
+            "Se a rota padrão do container ueransim aponta para uesimtun0"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "O supi do server/ueransim/configs/ue.yaml é imsi-001010000000002, que também é o IMSI padrão do add-subscriber.sh. Se o novo cadastro gravou outro IMSI, ou chaves diferentes de key e op do ue.yaml, o core não encontra ou não autentica o UE e rejeita o registro: sem Registration accept não há sessão PDU nem uesimtun0 (slide 87 da retomada: UE sem IP, assinante ausente). O PFCP tenta porque falta o IP, mas ele só entra na sessão PDU, que vem depois do registro. O TAC já foi provado pelo NG Setup bem-sucedido, e rota padrão é assunto de UE que já tem IP; a correção é cadastrar o IMSI certo e reiniciar o UE (docker restart ueransim, como o próprio script sugere)."
+        },
+        {
+          "q": "Sintoma: o UE registra (Registration accept, MM-REGISTERED), mas a sessão PDU é recusada porque o SMF não tem nenhum UPF disponível, embora os containers dos dois UPFs estejam rodando. Qual é a causa mais provável, e a correção?",
+          "alt": [
+            "A N2 caiu depois do registro; reiniciar o ueransim e refazer o NG Setup",
+            "Pool de IPs do UE esgotado; ampliar a subnet 10.60.0.0/16 do smf.yaml",
+            "A K do assinante diverge; recadastrá-lo com a key que está no ue.yaml",
+            "Sem associação PFCP na N4; alinhar endereços em smf.yaml e upf-a.yaml"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "Registro aceito prova que N2, assinante e credenciais estão certos; o que falta é a sessão PDU, e para criá-la o SMF precisa de um UPF associado por PFCP (UDP 8805). No lab o smf.yaml procura os UPFs em 10.40.0.21 e 10.40.0.22, na rede N4, e o upf-a.yaml e o upf-b.yaml têm de escutar nesses endereços e apontar o SMF em 10.40.0.12; o Status / Healthcheck mostra Associação PFCP estabelecida quando isso funciona. Um endereço de loopback 127.0.0.x, como o do modelo upf.yaml, só funciona com tudo na mesma máquina, nunca entre containers. O pool esgotado engana porque também deixaria o UE sem IP, mas com um UE só ele está longe de acabar, e o SMF acusaria falta de endereço, não de UPF."
+        },
+        {
+          "q": "Sintoma: o test-ue-connection mostra o UE com IP 10.60.0.x, mas nenhum DNS público responde ao ping. Qual sequência de checagem é a mais coerente?",
+          "alt": [
+            "Associação SCTP na N2, NG Setup no AMF e tac do gnb.yaml na lista tai",
+            "IMSI no MongoDB, K e OPC do assinante e a autenticação 5G-AKA no AUSF",
+            "Rota do UE para uesimtun0, túnel GTP-U na N3 e saída do UPF pela N6",
+            "Registro das NFs no NRF, porta SBI 7777 e resposta do UDM ao AMF"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "Com IP no UE, todo o controle já funcionou: NG Setup, registro com 5G-AKA e sessão PDU, com a regra PFCP instalada no UPF. O problema é o plano de usuário, e o jeito eficiente é segui-lo trecho a trecho, como o próprio test-ue-connection organiza: rota padrão do UE (ip route no container ueransim), túnel GTP-U na N3 (UDP 2152, do gNB em 10.30.0.11 ao UPF-A em 10.30.0.21, dono da metade 10.60.0.0/17 do pool) e saída do UPF pela N6 (10.50.0.0/16). As outras três sequências revisam N2, autenticação e SBI, justamente o que o IP no UE já provou estar certo. É a linha registrado, ping falha: UPF, PFCP e N6 do slide 87 da retomada."
+        }
+      ]
+    }
+  ]
+}

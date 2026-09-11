@@ -1317,9 +1317,10 @@
   // Numa aula o termo se apresenta uma vez — depois já é vocabulário.
   // O que NUNCA se marca: o que já foi marcado, os chips, e CÓDIGO — dentro de
   // um `<code>` a sigla é literal, não vocabulário; sublinhar ali sugere que o
-  // texto do programa mudou. `opcoes.pular` acrescenta seletores da página
-  // (ex.: o console de instrumentos do lab).
-  var NUNCA = '.glos-termo, .glos-exp, .chip, code, pre, kbd, samp';
+  // texto do programa mudou. Nem campo de formulário: um `<option>` só aceita
+  // texto, e um balão dentro dele quebraria o menu. `opcoes.pular` acrescenta
+  // seletores da página (ex.: o console de instrumentos do lab).
+  var NUNCA = '.glos-termo, .glos-exp, .chip, code, pre, kbd, samp, select, option, textarea';
 
   function marcar(raizes, opcoes) {
     var lista = Array.isArray(raizes) ? raizes : [raizes];

@@ -1,0 +1,154 @@
+{
+  "h": "#ric/aula05",
+  "rot": "Aula 05",
+  "t": "Design e SMO",
+  "pts": 22,
+  "fonte": "Aula 05 da cadeira 2 (RIC) — Design integrado, SMO e validação da pilha OAI+OSC: saúde antes do RIC, Fases 1 a 3, O1/O2/R1, fluxo SMO → rApp → xApp e checklist de design de xApp (slides aula05-design_smo.pdf); o callback do SDK foi conferido no xapp_kpm_moni.c do FlexRIC do lab",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "No FlexRIC, cada INDICATION chega ao xApp por um callback em C (slide 70). Como esse callback deve ser escrito?",
+          "alt": [
+            "Pode esperar com sleep pela próxima INDICATION, porque o RIC guarda as mensagens em fila",
+            "Curto e não bloqueante, com o estado compartilhado protegido por lock",
+            "Síncrono com o CONTROL: só retorna depois que o gNB confirmar que executou a ação",
+            "Refazendo a subscription a cada chamada, para garantir que a próxima INDICATION venha"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O SDK chama o callback a cada INDICATION, fora do fluxo principal do xApp: se ele dorme ou espera uma confirmação, as mensagens seguintes atrasam e a decisão perde a janela near-RT. O xapp_kpm_moni do lab mostra o padrão: o sm_cb_kpm só registra as medidas, dentro de um lock sobre um mutex. A subscription é pedida uma vez (report_sm_xapp_api) e removida só no fim; refazê-la a cada chamada não traz nada. Separar a lógica de negócio do codec ASN.1, como pede o slide 70, segue a mesma ideia."
+        },
+        {
+          "q": "Na arquitetura do SMO de Polese (slide 66), por qual interface o SMO gerencia os nós da RAN e por qual faz o deploy de VNFs e CNFs?",
+          "alt": [
+            "E2 para gerir os nós da RAN, e A1 para o deploy na O-Cloud",
+            "O2 para gerir os nós da RAN, e O1 para o deploy na O-Cloud",
+            "R1 para gerir os nós da RAN, e O2 para o deploy na O-Cloud",
+            "O1 para gerir os nós da RAN, e O2 para o deploy na O-Cloud"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O slide 66 põe a O1 como a gerência da RAN, por onde passam falhas, configuração e desempenho (FCAPS), como no ES-rApp que põe RRUs para dormir e no PM-rApp de alarmes. A O2 é o deploy e o ciclo de vida de VNFs e CNFs na O-Cloud, que no lab corresponde, bem simplificado, ao up_core.sh com o Compose (slides 16 e 17). E2 e A1 não são do SMO: E2 liga o Near-RT RIC ao gNB, e A1 liga o Non-RT ao Near-RT. A R1 também não chega à RAN: é a porta dos rApps. No lab, o SMO só aparece na Fase 3, com O1 simulado."
+        },
+        {
+          "q": "Que estado um xApp precisa guardar para operar e encerrar com segurança?",
+          "alt": [
+            "As subscriptions ativas e seus IDs, as políticas A1 vigentes e o cache das KPIs",
+            "Só o último valor de cada KPI, porque é o RIC que guarda as subscriptions por ele",
+            "O inventário de nós E2 da rede inteira, que no O-RAN SC é mantido pelo próprio xApp",
+            "A configuração RRC de cada UE, copiada do gNB a cada INDICATION recebida"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "Sem o ID da subscription o xApp não consegue apagá-la: a aula registra que o gNB aborta quando se interrompe o xApp com Ctrl+C sem apagar a subscription (slide 62), e o slide 75 manda observar justamente o subscription ID. A política A1 vigente diz o que o xApp deve cumprir, e o cache de KPI é com o que a decisão compara. O inventário de nós E2 não é do xApp: no O-RAN SC ele fica na RNIB, no Redis do ric_dbaas."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Duas threads do xApp tratam a mesma INDICATION, e o gNB recebe dois CONTROL idênticos para o mesmo UE. O que corrigir?",
+          "alt": [
+            "Aumentar o intervalo entre INDICATIONs, para que duas não cheguem juntas",
+            "Mover a decisão para um rApp, que manda o CONTROL ao gNB pela interface A1",
+            "Serializar a decisão numa fila única e tornar a ação idempotente por UE",
+            "Apagar e refazer a subscription depois de cada CONTROL enviado ao gNB"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "É uma condição de corrida: o defeito não é a taxa de INDICATIONs, e sim duas decisões sobre o mesmo evento. Uma fila única, ou um lock em volta da decisão, garante que só uma thread decide, e a idempotência faz um CONTROL repetido para o mesmo UE não ter efeito duplo. Espaçar as INDICATIONs só esconde o problema, porque duas threads ainda podem pegar a mesma mensagem. E A1 não carrega CONTROL: leva políticas do Non-RT ao Near-RT, e quem age no gNB é o xApp, pela E2."
+        },
+        {
+          "q": "O SMO recebe um alarme crítico de falha numa célula, mas um xApp de otimização continua mandando CONTROL agressivo para ela. Que integração falta?",
+          "alt": [
+            "Levar o alarme ao RIC como política A1, via Non-RT, que ponha o xApp em modo seguro",
+            "O xApp deve assinar os alarmes de falha direto no gNB, pela mesma conexão E2 da KPM",
+            "Nenhuma: alarme de falha é assunto da gerência e não deve interferir no Near-RT",
+            "O SMO deve mandar o CONTROL oposto ao gNB pela E2, desfazendo a ação do xApp"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "O fluxo integrado do slide 67 desce por camadas: o SMO e o Non-RT traduzem a intenção em política A1, e o xApp no Near-RT age pela E2. O assurance fecha o laço comparando o observado com a política vigente (slide 66), então um alarme crítico tem de descer por esse caminho como limite ou modo degradado. Os alarmes de gerência da RAN chegam ao SMO pela O1, não por uma subscription E2 do xApp, e o SMO não fala E2 com o gNB. Ignorar o alarme é deixar o xApp piorar uma célula que já está em falha."
+        },
+        {
+          "q": "Depois de reiniciar só o nearRT-RIC, ele cai com 'E2 Node not found in the tree'. Qual a sequência de recuperação?",
+          "alt": [
+            "Subir o xApp antes do RIC, para ele registrar o callback primeiro, e reiniciar o gNB depois",
+            "Parar os xApps que sobraram, subir o RIC, reiniciar o gNB (novo SETUP) e só então o xApp",
+            "Recompilar o gNB com --build-e2, porque o agente E2 perdeu a configuração do RIC",
+            "Trocar a porta E2 do RIC para 36422, a do O-RAN SC, para forçar o gNB a se associar de novo"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "É o troubleshooting documentado do lab (TUTORIAL_LAB_E2.md): a causa são xApps zumbis que se ligam ao RIC sem nó E2 registrado, ou o gNB desalinhado depois que o RIC reinicia. Por isso a recuperação para os xApps que sobraram (down_flexric.sh e pkill), sobe o RIC e reinicia o gNB. A plataforma vem antes da aplicação: o gNB tem de refazer o E2 SETUP, e só então o xApp encontra um nó onde subscrever. Nada precisa ser recompilado. E 36422 é a porta E2 do O-RAN SC; no FlexRIC essa porta atende os xApps (E42), e o E2 do gNB fica na 36421."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Qual destes itens está no checklist de design de xApp da aula (slides 68 e 70)?",
+          "alt": [
+            "Pedir KPM com o intervalo mais curto possível, já que o nó RFSIM não sente a carga",
+            "Acoplar a lógica de negócio ao codec ASN.1, para ganhar desempenho na decisão",
+            "Deixar o Control Panel da porta 8181 aberto na rede para o xApp consultar as políticas",
+            "Tratar timeout E2, porta errada e E2SM não suportado, com o filtro de slice alinhado"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O slide 68 lista o checklist: quais E2SM e estilos usar, filtro de slice 222/123, periodicidade compatível com a carga do nó RFSIM e tratamento de falhas como timeout E2, porta errada e E2SM não suportado. A primeira alternativa contraria o item da periodicidade: o nó RFSIM sente a carga, sim. O slide 70 pede o oposto da segunda: separar a lógica de negócio do codec ASN.1, nas duas stacks. E o Control Panel da 8181 não deve ser exposto em rede pública (slide 74)."
+        },
+        {
+          "q": "O grupo quer estender o Projeto 2 além do KPM básico. Que extensão conta no critério P3 da avaliação?",
+          "alt": [
+            "Migrar o Near-RT para o O-RAN SC da Fase 2, com A1 Mediator e xApps em Python",
+            "Ligar o SMO da Fase 3, com O1 simulado pelo ntsim-ng e topologia no TEIV",
+            "Um xApp customizado, o uso do RC ou um SM próprio, no mesmo lab FlexRIC",
+            "Reapresentar, com mais profundidade, a leitura de Polese e NGO feita no Projeto 1"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O slide 9 da aula 06 define P3 como extensão dentro do mesmo lab FlexRIC: xApp customizado, RC ou service model próprio. O-RAN SC, Non-RT da OSC e SMO foram mostrados nesta aula como referência e ficam explicitamente fora da nota (slide 8 da aula 06), por mais trabalho que deem. A leitura de artigos foi o Projeto 1."
+        },
+        {
+          "q": "Na arquitetura do SMO vista na aula (slide 66), o que a interface R1 liga?",
+          "alt": [
+            "Os rApps ao Near-RT RIC, para eles lerem a KPM das INDICATIONs",
+            "Os rApps ao SMO, com o intent do operador e os dados de que precisam",
+            "Os xApps ao SMO, para eles publicarem as métricas usadas no assurance",
+            "Os rApps direto aos nós da RAN, para aplicarem o sleep das RRUs"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "R1 é a interface dos rApps: o slide 66 a descreve como SMO ↔ rApps, com intent e dashboards do operador, e por ela chegam os dados e serviços que o SMO e o framework do Non-RT expõem. O rApp não fala com o Near-RT: o caminho até lá é a política A1, e a telemetria da E2 é assunto dos xApps. Um xApp vive no Near-RT e não usa R1. E o rApp não atua direto na RAN: quem gerencia os nós é o SMO, pela O1, e é por isso que o ES-rApp aparece ao lado da O1 no slide."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o fluxo integrado do SMO até a RAN e de volta, como desenhado na aula.",
+          "itens": [
+            "O operador define a intenção (intent) no SMO ou no Control Panel do Non-RT",
+            "Um rApp no Non-RT RIC deriva dessa intenção uma política A1",
+            "A política chega ao Near-RT RIC pela A1 (na Fase 2, pelo A1 Mediator)",
+            "O xApp no Near-RT age sobre a RAN pela E2, com subscription e CONTROL",
+            "A telemetria de O1 e de E2/KPM, já com o efeito da ação, sobe para o assurance",
+            "O assurance compara o SLA observado com a política e realimenta o Non-RT"
+          ],
+          "pts": 10,
+          "porque": "É o fluxo do slide 67, com o laço de assurance do slide 66 no fim. Cada camada traduz a de cima: o intent é o que o operador quer, a política A1 é essa vontade formalizada, e o CONTROL pela E2 é a ação concreta no gNB. A telemetria só mostra o efeito depois que a ação aconteceu, e é a comparação com a política que fecha o laço. Na Fase 1 do lab os passos da E2 e da telemetria acontecem sem SMO real, e a política vai para um simulador A1, não para o FlexRIC."
+        }
+      ]
+    }
+  ]
+}

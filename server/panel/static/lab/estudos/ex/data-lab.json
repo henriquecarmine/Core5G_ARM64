@@ -10,40 +10,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "No pipeline do lab, quem produz o dado e quem o escreve em arquivo?",
+          "q": "No pipeline do lab, quem mede o dado e quem o grava em arquivo?",
           "alt": [
-            "O SMO produz e o Non-RT RIC escreve",
-            "O gNB mede e reporta pela E2; um xApp assinante recebe a indicação e escreve a linha",
-            "O UPF produz e o núcleo escreve",
-            "O próprio painel mede diretamente do rádio"
+            "O Near-RT RIC mede o rádio pela E2; o Non-RT RIC grava o histórico",
+            "O gNB mede e envia pela O1 ao SMO, que grava o PM em arquivo",
+            "O gNB mede e reporta pela E2; o xApp assinante recebe e grava",
+            "O UPF mede a vazão em N3; o xApp lê do UPF e grava a amostra"
           ],
-          "ok": 1,
+          "ok": 2,
           "pts": 1,
-          "porque": "O gNB é quem mede — é onde o rádio acontece. Ele empacota num relatório E2SM-KPM e envia pela E2 ao near-RT RIC. O xApp assina o serviço e, a cada indicação, escreve uma linha. Ninguém digita nada: o arquivo é subproduto da rede funcionando."
+          "porque": "O gNB é quem mede, porque é onde o rádio acontece: empacota as medidas num relatório E2SM-KPM e envia pela E2 ao Near-RT RIC. O xApp assina o serviço e grava cada Indication; ninguém digita nada. O RIC não mede o rádio: encaminha e hospeda o xApp. E o lab não tem O1 real no gNB OAI monolítico (slide 64 da aula 01), por isso o PM de gestão não é a fonte aqui."
         },
         {
           "q": "Por que a política A1 do lab roda em dry-run?",
           "alt": [
-            "Porque o A1 ainda não foi padronizado",
-            "Porque é ambiente de ensino: a decisão é exercitada de ponta a ponta sem que nada seja aplicado na rede",
-            "Porque o FlexRIC não aceita políticas",
-            "Porque falta permissão no SMO"
+            "Porque o padrão é exercitar a decisão sem mudar a rede; commit é opt-in",
+            "Porque a A1 comanda o gNB direto e poderia derrubar a célula no meio da aula",
+            "Porque o baseline MAD ainda não tem amostras suficientes para decidir apply",
+            "Porque a A1 ainda não tem policy types padronizados pela O-RAN Alliance"
           ],
-          "ok": 1,
+          "ok": 0,
           "pts": 1,
-          "porque": "O valor pedagógico está no CAMINHO — medir, decidir, emitir a política com escopo e objetivo. Aplicar de verdade mudaria o comportamento do rádio no meio de uma aula. Por isso o modo de atuação fica em emulação: o artefato é real, o efeito não."
+          "porque": "O valor está no caminho: medir, decidir e emitir a política com escopo e intenção. O padrão do projeto é simulação, e commit real só com AI_POLICY_COMMIT=1, autorização e a Fase 2 saudável. A alternativa mais tentadora erra duas vezes: A1 não é comando direto ao gNB, é política que o Non-RT RIC entrega ao Near-RT RIC, e quem a traduz em ação é o consumer ou o xApp. O artefato é real; o efeito, não."
         },
         {
           "q": "O que a camada silver acrescenta ao arquivo bronze?",
           "alt": [
-            "Compressão",
-            "Tipagem, conferência de qualidade e o carimbo da fase — o dado deixa de ser texto e passa a ser confiável",
-            "Um índice para busca rápida",
-            "A tradução dos nomes das colunas para português"
+            "Agregação por fase e cálculo dos KPIs com fórmula e unidade declaradas",
+            "Tipagem, nulos e duplicados conferidos, e UTC e unidades harmonizados",
+            "O timestamp de ingestão e o caminho do log de onde cada linha saiu",
+            "O score MAD de cada amostra e o voto da janela para a decisão"
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "Bronze é o que caiu, linha a linha, sem julgamento. Silver é onde cada campo vira número, data ou categoria, onde se conferem nulos e duplicados e onde a fase é carimbada. É a primeira camada em que dá para confiar numa conta."
+          "porque": "Bronze é o que caiu, com ingested_at e source_path; no kpm.jsonl a fase e o sample_index já vêm no envelope. Silver é onde cada campo vira número, data ou categoria, com UTC, unidades e chaves harmonizados e duplicatas removidas: a primeira camada em que dá para confiar numa conta (slide 38 da aula 02). Agregar por fase e calcular KPI é o gold, e o score MAD e a decisão vêm depois ainda."
         }
       ]
     },
@@ -52,40 +52,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "O detector do laboratório marca as três métricas como anômalas e decide 'apply'. Sua análise conclui que não há usuário mal servido. Há contradição?",
+          "q": "O detector do lab marca as três métricas como anômalas e decide 'apply'. Sua análise conclui que não há usuário mal servido. Há contradição?",
           "alt": [
-            "Sim: um dos dois está errado",
-            "Não — são perguntas diferentes. O detector pergunta 'isto é diferente do repouso?'; a análise pergunta 'o usuário está mal servido?'",
-            "Sim: a análise deve seguir o artefato do laboratório",
-            "Não, porque o detector não olha vazão"
+            "Sim: se o detector decidiu apply, a análise usou o limiar errado de atraso",
+            "Não, porque o detector ignora a vazão, e a análise é feita justamente sobre ela",
+            "Sim: anomalia sustentada em 2 de 3 métricas é, por definição, degradação do UE",
+            "Não: o detector acusa mudança de regime, e a análise mede qualidade do serviço"
           ],
-          "ok": 1,
+          "ok": 3,
           "pts": 2,
-          "porque": "Anômalo não é ruim. Mudar de regime — sair do repouso e entrar sob carga — é anomalia por construção, e é exatamente o que o experimento provoca. Qualidade é outra pergunta. Quem confunde as duas recomenda política onde só houve capacidade sendo usada."
+          "porque": "Anômalo não é ruim. O experimento tira a rede do repouso e a põe sob carga, o que é anomalia por construção: no stress o PRB vai de 2 para 99, a vazão para cerca de 80 mil kbps e o atraso sobe, e as três métricas estouram o score. O detector usa as três KPMs, inclusive a vazão. Qualidade é outra pergunta, e quem confunde as duas recomenda política onde só houve capacidade sendo usada."
         },
         {
           "q": "O modelo do detector tem MAD igual a zero nas três métricas e um piso de 1,0. O que isso implica?",
           "alt": [
-            "Que o modelo está quebrado",
-            "Que o repouso é constante demais: sem dispersão, o piso vira o divisor e qualquer variação estoura o limiar",
-            "Que as métricas estão na unidade errada",
-            "Que faltam amostras de treino"
+            "O modelo quebrou: com MAD zero o score fica indefinido e o detector não dispara",
+            "Repouso sem dispersão: o piso vira divisor e 3,5 unidades de desvio disparam",
+            "As métricas estão na unidade errada, e o piso corrige a escala para 1,0",
+            "Faltam amostras de treino, e o piso de 1,0 compensa o baseline curto"
           ],
           "ok": 1,
           "pts": 2,
-          "porque": "MAD zero significa que, no repouso, a métrica praticamente não varia. Como não dá para dividir por zero, entra o piso — e aí qualquer desvio acima do limiar dispara. O detector fica sensível por construção: ele acusa mudança de regime, não degradação."
+          "porque": "No baseline do lab o PRB fica em 2, mais da metade das vazões é exatamente 3,72 e mais da metade dos atrasos é zero: a mediana dos desvios dá zero nas três. Como não se divide por zero, entra o piso de 1,0 e o score vira |x − mediana| na unidade da métrica; com limiar 3,5, um PRB de 6 já é anômalo. O modelo não quebrou, fica sensível por construção: acusa mudança de regime, não degradação. É a limitação que o próprio p2-tema-t2 imprime."
         },
         {
-          "q": "Você precisa comparar exercícios que valem 9 e 22 pontos, ou fases com números de amostra diferentes. Qual é a leitura correta?",
+          "q": "O p2-test-a1 criou a política pelo PMS, e ela chegou ao outro lado do A1. O que o grupo pode afirmar na apresentação?",
           "alt": [
-            "O valor absoluto, porque é o que foi medido",
-            "O percentual — e, no caso das fases, declarar quantas amostras sustentam cada número",
-            "A soma dos dois",
-            "A diferença entre o maior e o menor"
+            "Que a rede aplicou a prioridade ao UE, já que a política foi aceita pelo Near-RT",
+            "Que o gNB recebeu a prioridade pela E2SM-RC, acionada pela chegada da política",
+            "Que a intenção percorreu o caminho A1, não que o rádio mudou",
+            "Nada, porque política criada pelo PMS sem commit não sai do Non-RT RIC"
           ],
-          "ok": 1,
+          "ok": 2,
           "pts": 2,
-          "porque": "Absoluto só se compara dentro da mesma escala. O percentual normaliza — e o n ao lado impede a armadilha oposta: 100% de duas amostras não vale o mesmo que 100% de sessenta. Comparar sem declarar o n é comparar confiança diferente com a mesma cara."
+          "porque": "O p2-test-a1 prova o caminho PMS → A1: carrega o policy type, cria a política, confere que ela chegou e apaga. Do outro lado está um simulador (a1-sim), não o A1 Mediator com consumer e actuator, e mesmo no lab do professor ENFORCED prova aceitação no caminho A1, não mutação no gNB. Efeito só se afirma com nova KPM comparada à anterior (effect_report). Dizer 'nada' também erra: a chegada da política é evidência real do caminho e deve ser relatada com o limite."
         }
       ]
     },
@@ -94,40 +94,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "A política A1 emitida no lab é do tipo 1, com escopo de UE e um objetivo de prioridade. O que ela NÃO consegue pedir?",
+          "q": "A política A1 candidata do lab é do tipo 1: escopo com ueId e qosId e objetivo com priorityLevel. O que ela NÃO consegue pedir?",
           "alt": [
-            "Prioridade para um UE",
-            "Cota de PRB — isso seria controle de RAN pela E2, não política pela A1",
-            "Escopo por identificador de UE",
-            "Um objetivo de QoS"
+            "Uma cota de PRB reservada para esse UE na célula",
+            "Prioridade maior para um UE específico da célula",
+            "Um escopo que combine ueId e qosId",
+            "Um objetivo de QoS expresso em priorityLevel"
           ],
-          "ok": 1,
+          "ok": 0,
           "pts": 1,
-          "porque": "A1 desce INTENÇÃO: 'trate este usuário com esta prioridade'. Quem aloca bloco de recurso é o escalonador, e mexer nele é E2SM-RC pela E2. Confundir os dois é pedir pela interface errada — e o near-RT RIC responderia que não sabe do que se trata."
+          "porque": "O schema do tipo 1 (server/nonrt-ric/testdata/policy_type.json) aceita scope com ueId e qosId e qosObjectives com priorityLevel, e proíbe campos adicionais. Cota de PRB não cabe nele: A1 desce intenção, e quem aloca recurso é o escalonador, alcançável por E2SM-RC pela E2, o que o lab não afirma (slide 64 da aula 01: nada de PRB quota via action 6). As outras três alternativas são justamente o que o tipo 1 expressa."
         },
         {
-          "q": "Por que o índice da amostra, e não o carimbo de hora, ordena a série do lab?",
+          "q": "Por que o sample_index, e não o carimbo de hora, ordena a série do lab?",
           "alt": [
-            "Porque o índice é menor e ocupa menos espaço",
-            "Porque o carimbo disponível é o da ingestão, não o da medição — ordenar por ele embaralharia a série",
-            "Porque o carimbo está em UTC",
-            "Porque a série não é temporal"
+            "O carimbo está em UTC, e ordenar por ele trocaria a ordem das fases pelo fuso",
+            "O índice ocupa menos espaço e deixa a ordenação mais rápida no SQLite",
+            "O carimbo é o da medição no gNB, mas vem arredondado ao minuto",
+            "O carimbo é o da ingestão, repetido em muitas linhas, e não o da medição"
           ],
-          "ok": 1,
+          "ok": 3,
           "pts": 1,
-          "porque": "Há três tempos possíveis num registro: quando o evento ocorreu, quando foi coletado e quando foi carregado. O arquivo traz o último. Usá-lo como ordem cronológica é assumir que carregamento preserva a sequência — e não preserva."
+          "porque": "Há três tempos (slide 49 da aula 03): evento na rede, coleta e ingestão. O kpm.jsonl do lab traz só o ingested_at, e as 100 amostras dividem apenas 3 valores dele: ordenar por esse carimbo não separa uma amostra da seguinte. Por isso a aula manda usar o sample_index como eixo quando o relógio da Indication não está no payload. UTC não é o problema; o problema é que esse carimbo não mede o evento."
         },
         {
-          "q": "Um resultado do lab vale para uma rede real?",
+          "q": "Um resultado numérico do lab vale para uma rede real?",
           "alt": [
-            "Sim: o protocolo é o mesmo",
-            "Não como número. É rádio simulado, canal ideal, um usuário e uma execução — o que se leva é o método, não a medida",
-            "Sim, se multiplicado pelo número de usuários",
-            "Só se o RIC estiver em modo real"
+            "Não como número: é RFSIM, um UE, uma execução; o que se leva é o método",
+            "Sim, porque o E2SM-KPM é padronizado e mede igual numa rede comercial",
+            "Sim, desde que o número seja multiplicado pelo número de UEs da célula",
+            "Vale se o RIC estiver em modo commit, e não em dry-run, durante a coleta"
           ],
-          "ok": 1,
+          "ok": 0,
           "pts": 1,
-          "porque": "Falta desvanecimento, interferência e disputa entre usuários — tudo o que torna uma rede real difícil. O laboratório ensina o caminho: escolher a fonte, limpar, indicar, interpretar e declarar o limite. Esse caminho viaja; o número, não."
+          "porque": "Faltam RF real e propagação, interferência, mobilidade e disputa entre usuários: uma célula RFSIM com um UE satura os PRBs sozinho. O protocolo ser padrão garante que o nome da medida é o mesmo, não que o valor se repita. Commit ou dry-run muda o que se faz com a decisão, não a representatividade da coleta. O que viaja é o caminho: escolher a fonte, limpar, indicar, interpretar e declarar o limite."
         }
       ]
     },
@@ -138,16 +138,15 @@
         {
           "q": "Ponha o pipeline do laboratório na ordem, da rede até a política.",
           "itens": [
-            "O gNB mede e envia a indicação E2SM-KPM pela E2",
-            "O xApp assinante recebe e grava a linha no arquivo (bronze)",
-            "O ETL tipa, confere qualidade e carimba a fase (silver)",
-            "A agregação reduz à granularidade da pergunta (gold)",
-            "Os indicadores são calculados, com fórmula e unidade declaradas",
-            "A regra do tema é avaliada contra os limiares",
-            "A política A1 é emitida em dry-run, com escopo e objetivo"
+            "O gNB envia as RIC Indications E2SM-KPM ao Near-RT RIC pela E2",
+            "As amostras vão para o store (kpm.jsonl e kpm.sqlite) com run, fase e índice",
+            "O baseline MAD é treinado só na fase calma e salvo no model.json",
+            "Cada amostra ganha um score por métrica contra a mediana e a MAD do baseline",
+            "A janela de 5 amostras vota, e a decisão sai como apply ou observe",
+            "A política A1 candidata é emitida em dry-run, com escopo e intenção"
           ],
           "pts": 10,
-          "porque": "É o laço completo do O-RAN em miniatura: observar, tratar, decidir, agir. Cada etapa só é honesta se a anterior foi feita — emitir política sobre um gold construído em cima de dado não conferido é automatizar um erro, e rápido."
+          "porque": "É o pipeline do slide 64 da aula 01 (capturar KPM, armazenar, treinar o baseline, avaliar, política A1 em dry-run) com o contrato do detector da aula 05. Não há score sem baseline treinado, e não há decisão sem score: uma amostra é anômala quando passa de 3,5 em pelo menos 2 das 3 métricas, e a janela decide. Emitir política antes da decisão, ou treinar o baseline com a fase de carga dentro, é automatizar um erro, e rápido."
         }
       ]
     }

@@ -32,7 +32,7 @@ Cada trilha tem `bibliography/ code/ docs/ slides/`:
 
 (A disciplina 02, do Prof. Tesolin, não faz parte deste repositório.)
 
-`*/slides/` está **vazio** — os slides saem só pela plataforma; seguem sendo
+`*/slides/` está **vazio** — os slides saíam só pela plataforma (fora do ar desde set/2026); seguem sendo
 arquivados em `pdfs/`.
 
 ## O que interessa para a disciplina atual (`data/`)

@@ -35,9 +35,9 @@ adicionar à pasta*.
 
 - **Projeto integrador (50%)** — pipeline + KPIs + apresentação/defesa na Aula 06
   → [`projeto/`](projeto/)
-- **Exercícios individuais na plataforma (30%)** —
-  [cesar-activities → `#data`](https://cesar-activities-cxapa2g7ia-rj.a.run.app/#data),
-  fluxos `#data/aula01` … `#data/aula06` (concluir em ritmo semanal; briefing:
+- **Exercícios individuais (30%)** — os 8 do `#data` (aulas 01 a 06, lab e
+  dashboard KPI/NOC), feitos e corrigidos no próprio painel em `/lab/estudo/4`
+  (a plataforma do professor saiu do ar em set/2026; briefing original:
   [`briefing-plataforma.md`](../../external/cesar-school-repo/data/docs/briefing-plataforma.md))
   → [`trabalhos/`](trabalhos/)
 - **Engajamento técnico e checkpoints (20%)** — estudos de caso, checkpoints e

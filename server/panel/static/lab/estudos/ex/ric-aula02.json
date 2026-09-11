@@ -1,0 +1,155 @@
+{
+  "h": "#ric/aula02",
+  "rot": "Aula 02",
+  "t": "Artigo NGO — OSS RIC",
+  "pts": 22,
+  "fonte": "Aula 02 da cadeira 2 (RIC) — Artigo NGO et al. (ICT Express, 2024): plataformas open source de Non-RT e Near-RT RIC, proxy E2, rApps e xApps do campus SUTD e preparação do Projeto 1 (slides aula02-oss_nonrt_nearrt_ric.pdf)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Por que o artigo NGO chama o RIC de cérebro da O-RAN?",
+          "alt": [
+            "Porque hospeda xApps e rApps que decidem sobre a RAN a partir de dados",
+            "Porque assume o registro e a mobilidade dos UEs, que antes eram papel do AMF",
+            "Porque executa o scheduler MAC a cada TTI, dentro do próprio gNB",
+            "Porque concentra o processamento das amostras IQ que chegam pelo fronthaul"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O RIC é a camada software-defined de controle inteligente: xApps no Near-RT, entre 10 ms e 1 s pela E2, e rApps no Non-RT, acima de 1 s pela A1 (slides 15 e 21). Ele decide sobre a RAN, não sobre o core, então não toma o lugar do AMF. A confusão mais comum é achar que ele faz o scheduling por TTI: decisões abaixo de 10 ms ficam dentro do próprio gNB, fora do alcance do RIC."
+        },
+        {
+          "q": "No campus SUTD, a BBU comercial QCT não tinha E2 nativo. Que plataforma forneceu o agente E2 usado como proxy?",
+          "alt": [
+            "O Near-RT RIC da OSC, com seu E2 termination",
+            "O SD-RAN da ONF, com o onos-e2t",
+            "O FlexRIC (OAI/MOSAIC5G), com seu E2 agent",
+            "O NONRTRIC da ORAN-SC, com o A1 controller"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "É o FlexRIC: seu E2 agent emulável roda na própria BBU e a transforma em nó E2 (slides 22, 34 e 40). As alternativas da OSC e do SD-RAN enganam porque também falam E2, mas E2 termination e onos-e2t são a ponta do lado do RIC, que recebe o E2 de quem já o implementa. O problema da BBU era justamente não ter a outra ponta. O NONRTRIC é Non-RT e fala A1, não E2."
+        },
+        {
+          "q": "Que resultado o artigo reporta para a ES-rApp?",
+          "alt": [
+            "Acurácia de 91,1% ao prever quando desligar cada RRU",
+            "Cerca de 65% da energia de transmissão por ano, em simulação",
+            "Cerca de 65% de economia medida em campo durante os walk tests",
+            "Redução de 37 para 14 dBm em todas as RRUs, o dia inteiro"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O número é cerca de 65% da energia de TX por ano, e vem de simulação com o modelo da O-RAN WG1 e a especificação da QCT (slides 24, 47 e 53). O mesmo 65% dito como medição em campo é o erro que mais aparece em seminário: os walk tests geraram o dataset dos modelos de ML, não uma medida de energia. 91,1% é a acurácia da Localization com LSTM, e 37 para 14 dBm vale só para a RU de cobertura outdoor mantida ligada na janela de economia."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Uma equipe escolheu o Near-RT RIC da OSC para um protótipo de semestre com uma única célula, mas ninguém domina Kubernetes. Que decisão o comparativo do artigo sustenta?",
+          "alt": [
+            "Trocar pelo SD-RAN, que roda monolítico, sem containers nem Kubernetes",
+            "Manter o OSC, já que o Kubernetes só é exigido pelo Non-RT RIC",
+            "Usar o NONRTRIC da ORAN-SC, que faz o papel de Near-RT sem Kubernetes",
+            "Prototipar no FlexRIC, monolítico, aceitando a escala limitada"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "No comparativo (slides 33 a 36), o FlexRIC é o Near-RT monolítico de princípio zero-overhead, sem containers nem Kubernetes, indicado para redes privadas com poucos clientes críticos; o preço é escala e resiliência limitadas. O SD-RAN parece saída, mas o monolito do comparativo é o FlexRIC: o SD-RAN é justamente uma arquitetura de microsserviços µ-ONOS (slide 35). O Near-RT da OSC ocupa três namespaces Kubernetes (ricinfra, ricplt, ricxapp), e o NONRTRIC é Non-RT, não Near-RT."
+        },
+        {
+          "q": "Um grupo quer repetir o proxy E2 do artigo numa BBU de outro fornecedor, também sem E2 nativo. O que precisa ser reescrito?",
+          "alt": [
+            "O E2-agent inteiro, porque cada fornecedor usa uma versão própria de E2AP",
+            "A KPM-xApp, que passa a precisar conhecer a API da nova BBU",
+            "Só o serviço gRPC que chama a API da nova BBU; o E2-agent é reaproveitado",
+            "Nada: basta instalar os dois containers e a BBU passa a falar E2 nativo"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "O proxy foi desenhado em duas peças (slide 40): o E2-agent do FlexRIC recebe E2AP do RIC e conversa por gRPC com um serviço que chama a API proprietária da BBU. Trocar a BBU significa reescrever só esse serviço gRPC; o E2-agent é reutilizado. Achar que basta instalar os containers é o erro tentador: é o wrapper que traduz as rotinas E2 para a API de cada fornecedor. A KPM-xApp não sabe nada da BBU, ela só enxerga E2."
+        },
+        {
+          "q": "A ES-rApp mandou uma RRU dormir e os UEs daquela célula perderam a sessão. Que etapa do loop de energy saving faltou?",
+          "alt": [
+            "O AMF devia ter feito o handover dos UEs para outra célula antes do sleep",
+            "A TS-xApp devia ter desviado o tráfego via E2 antes do sleep",
+            "A ES-rApp devia ter mandado o sleep pela A1, e não pela O1",
+            "A KPM-xApp devia estar ligada para monitorar o impacto depois do sleep"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "O slide 43 descreve exatamente esse cuidado: a ES-rApp define a política, a TS-xApp desvia o tráfego antes do sleep da RRU e usa os dados da KPM-xApp para evitar ruptura de sessão. Monitorar com a KPM-xApp também está no loop, e por isso engana, mas vem depois e só mede o estrago. O sleep é mesmo pela O1 (slide 47); a A1 serve para orientar a TS-xApp. E o desvio de tráfego é decisão da RAN, não do AMF."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Qual descrição corresponde ao Non-RT RIC no artigo NGO?",
+          "alt": [
+            "Hospeda xApps, fala E2 com O-DU e O-CU e decide entre 10 ms e 1 s",
+            "Hospeda rApps, decide acima de 1 s e orienta o Near-RT RIC pela A1",
+            "Roda dentro do gNB e decide abaixo de 10 ms, junto do scheduler MAC",
+            "Hospeda rApps, decide em milissegundos e fala E2 direto com o gNB"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Slides 14 e 21: o Non-RT RIC hospeda rApps, trabalha acima de 1 s, pode residir no SMO e orienta o Near-RT RIC pela A1 (e usa O1 para dados e provisionamento). Hospedar xApps e falar E2 entre 10 ms e 1 s é o Near-RT. A última alternativa mistura as duas camadas e costuma pegar quem viu que as rApps do artigo inferem em menos de 30 µs: a inferência é rápida, mas o laço de decisão continua acima de 1 s (slide 53)."
+        },
+        {
+          "q": "Por que a coleta de KPM, com o VES Collector gravando no InfluxDB, é o tema 1 dos sete casos do §6.1, antes da Localization-rApp?",
+          "alt": [
+            "Porque é a etapa dos sete temas que roda no Near-RT RIC, pela E2",
+            "Porque é a rApp que publica a política A1 de energy saving para a TS-xApp seguir",
+            "Porque é ela que comanda o sleep das RRUs pela O1 na janela de economia",
+            "Porque gera as métricas que as rApps seguintes usam para treinar e inferir"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "A cadeia do slide 46 começa em KPM/VES no InfluxDB porque tudo o que vem depois consome esses dados: a Localization classifica o andar, a UE-TP prevê throughput e a Cell-TP agrega por célula. A ordem dos temas (slides 48 e 57) segue essa dependência. A alternativa do Near-RT confunde o tema com a KPM-xApp, que mede pela E2 mas não faz parte dos sete temas. Publicar a política A1 e mandar o sleep pela O1 são papéis da ES-rApp, o tema 5."
+        },
+        {
+          "q": "O que o Projeto 1, apresentado na aula 03, pede de cada grupo?",
+          "alt": [
+            "Ler Polese e NGO e apresentar, em 20 minutos, o caso do §6.1 sorteado",
+            "Subir a pilha OAI + FlexRIC e demonstrar uma xApp própria",
+            "Retreinar os modelos do dataset SUTD e superar a acurácia do artigo",
+            "Entregar um relatório escrito sobre as plataformas OSS, sem apresentação"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O slide 57 define: leitura obrigatória de Polese e NGO, um dos sete casos do §6.1 por sorteio, 20 minutos por grupo, correlacionando A1, E2, O1 e O2 com o caso do SUTD. Vale 40% da nota (slide 59). A pilha OAI + FlexRIC é o Projeto 2, das aulas 04 a 06 (slide 91 da aula 01), e é a confusão mais comum entre os dois. O dataset público pode ajudar a discutir métricas, mas retreinar modelos não é o que o enunciado pede."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o loop fechado de energy saving do artigo NGO.",
+          "itens": [
+            "A KPM de cada UE chega pelo VES Collector e é gravada no InfluxDB",
+            "A Localization-rApp e a UE-TP-rApp estimam o andar e o throughput de cada UE",
+            "A Cell-TP-rApp agrega essas previsões em demanda por célula",
+            "A ES-rApp publica uma política A1 com as células candidatas e os limiares de SLA",
+            "A TS-xApp desvia o tráfego das células candidatas via E2",
+            "A O1 executa o sleep da RRU",
+            "A KPM-xApp monitora o impacto nas métricas dos UEs"
+          ],
+          "pts": 10,
+          "porque": "É a cadeia de rApps do slide 46 emendada no fluxo integrado do slide 52. Cada passo consome o anterior: sem KPM no InfluxDB não há o que classificar e prever, e a Cell-TP só agrega o que Localization e UE-TP produziram (as duas correm em paralelo, por isso estão no mesmo item). A política A1 vem antes do desvio porque é ela que orienta a TS-xApp, e o desvio vem antes do sleep para não derrubar sessões (slide 43). A KPM-xApp fecha o laço medindo o efeito (Fig. 9)."
+        }
+      ]
+    }
+  ]
+}

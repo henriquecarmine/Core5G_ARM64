@@ -86,7 +86,7 @@ html.embed .wrap{padding:14px 18px 20px}
 .previa-tag{display:inline-block;margin-left:6px;padding:1px 8px;border:1px solid var(--accent);border-radius:999px;color:var(--accent);font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;vertical-align:middle}
 
 /* seletor de idioma (mesmo do Lab de IA) */
-/* ---- exercícios do professor (Plataforma de Atividades da CESAR School) ---- */
+/* ---- exercícios da cadeira (feitos no painel: estudos/ex/*.json) ---- */
 .ativs{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
 .ativ{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent-2);border-radius:var(--r-sm);padding:12px 14px}
 .ativ-rot{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
@@ -94,7 +94,7 @@ html.embed .wrap{padding:14px 18px 20px}
 .ativ p{color:var(--ink-2);font-size:.84rem}
 /* o exercício do professor é a ação principal do cartão; o nosso lab é apoio */
 .ativ-go{align-self:flex-start;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:var(--r-sm);padding:6px 12px;font-size:.8rem;font-weight:700;text-decoration:none}
-.ativ-go:hover{filter:brightness(1.06)}
+.ativ-go:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
 .ativ-prep{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line);font-size:.74rem;color:var(--ink-3)}
 .ativ-prep .runb,.prepl{border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink-2);padding:4px 9px;font-size:.75rem;font-weight:650;text-decoration:none}
 .ativ-prep .runb:hover,.prepl:hover{border-color:var(--accent);color:var(--accent);filter:none}
@@ -106,11 +106,6 @@ html.embed .wrap{padding:14px 18px 20px}
 .barra{flex:1;min-width:70px;height:6px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
 .barra i{display:block;height:100%;background:var(--accent)}
 .pct{font-family:var(--mono);font-weight:700;color:var(--ink);font-size:.78rem}
-.reg{border:none;background:none;padding:0;color:var(--accent);font:inherit;font-size:.74rem;font-weight:650;cursor:pointer;text-decoration:underline}
-.reg.sec{color:var(--ink-3)}
-.ativ-form{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.74rem;color:var(--ink-3)}
-.ativ-form input{width:52px;padding:3px 6px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2);color:var(--ink);font:inherit;font-family:var(--mono);text-align:center}
-.ativ-form input:focus{outline:none;border-color:var(--accent)}
 .ativ-resumo{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 14px;margin:0 0 12px;font-size:.86rem;color:var(--ink-2)}
 .ativ-resumo .barra{min-width:120px;height:8px}
 .ativ-resumo .pct{font-size:1.05rem}
@@ -151,8 +146,6 @@ details.resumo .lead{margin-top:8px}
 
 /* Exercício NOSSO: a nota é calculada aqui dentro, não declarada. O link cheio
    distingue do que ainda sai para a plataforma de fora, que fica em contorno. */
-.ativ-go.nosso { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
-.ativ-go.nosso:hover { background:var(--accent-hover); border-color:var(--accent-hover); }
 
 /* A LINHA DA MÉDIA na barra de resultado. O aluno vê 64% e, sem referência,
    não sabe se é bom — o traço diz onde é a passagem, no mesmo lugar em todas

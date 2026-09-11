@@ -1,0 +1,155 @@
+{
+  "h": "#oran/aulao2",
+  "rot": "Interface O2",
+  "t": "O-Cloud",
+  "pts": 22,
+  "fonte": "Esta aula não tem slides próprios: aula 01 da cadeira 2 (retomada das interfaces O-RAN, slides 41, 48, 51, 65, 66 e 70), aula 05 da cadeira 2 (O2 no lab × Polese e saúde antes do RIC, slides 16 a 19 e 66), aula 01 da cadeira 4 (O2 e telemetria de infraestrutura, slides 46, 48 e 51), aula 02 da cadeira 4 (O-Cloud no problema motivador, localidade edge/regional e RNIB × InfluxDB, slides 9, 42 e 66) e a arquitetura de nuvem e a interface O2 da O-RAN Alliance (WG6)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "A interface O2 liga o SMO a quê?",
+          "alt": [
+            "Às funções gerenciadas da RAN, para FCAPS com NETCONF e YANG",
+            "À O-Cloud, a plataforma de nuvem que hospeda as funções",
+            "Ao Near-RT RIC, para políticas e enrichment information",
+            "Às O-RUs, pelo M-Plane do Open Fronthaul"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O slide 48 da aula 01 da cadeira 2 define: O2 é SMO ↔ O-Cloud, para orquestrar e provisionar a infraestrutura virtualizada. A O-Cloud é o conjunto de nós físicos, camada de virtualização ou contêineres e gestão onde rodam O-CU, O-DU e o Near-RT RIC (virtualização é um dos quatro princípios da O-RAN, slide 41). A confusão mais comum é com a O1, que também sai do SMO, mas gerencia as funções em si, e não a nuvem que as hospeda."
+        },
+        {
+          "q": "Do lado da O-Cloud, a O2 se divide em dois serviços, O2ims e O2dms. Qual é a divisão correta?",
+          "alt": [
+            "O2ims: alarmes e PM da RAN; O2dms: políticas enviadas ao Near-RT RIC",
+            "O2ims: implantar e escalar funções; O2dms: inventário e monitoramento da infraestrutura",
+            "O2ims: inventário e monitoramento da infraestrutura; O2dms: implantar e escalar funções",
+            "O2ims: serviço usado pelo Near-RT RIC; O2dms: serviço usado pelo Non-RT RIC"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "IMS é Infrastructure Management Services e DMS é Deployment Management Services: um responde o que existe na nuvem e em que estado está, o outro o que está implantado nela. No SMO, quem consome o O2ims é o FOCOM (orquestração e gestão federada das O-Clouds) e quem consome o O2dms é o NFO (orquestrador das funções de rede). Trocar os dois é a armadilha, e o nome resolve: deployment é implantação. Nenhum deles transporta FM e PM da RAN, que são O1, nem política, que é A1."
+        },
+        {
+          "q": "Comparada ao controle que os RICs exercem sobre a RAN, do que a O2 cuida?",
+          "alt": [
+            "Da infraestrutura: onde cada função roda, com que recursos e com que saúde",
+            "Dos laços de 10 ms a 1 s sobre o RRM, com xApps assinando as medições da célula",
+            "Das metas de desempenho do rádio, publicadas como políticas pelos rApps",
+            "Do escalonamento de recursos de rádio abaixo de 10 ms, dentro da O-DU"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "Os RICs controlam o comportamento do rádio, o Near-RT pela E2 e o Non-RT com políticas A1. A O2 cuida da plataforma onde tudo isso roda: infraestrutura provisionada e monitorada (slide 51 da aula 01 da cadeira 2) e placement sobre Kubernetes ou OpenStack (slide 70). As três alternativas erradas são os três laços de tempo do slide 48 da aula 01 da cadeira 4, todos sobre o rádio."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O SMO não enxerga capacidade livre no cluster de borda onde deve implantar uma O-DU, mas a equipe da nuvem mostra nós ociosos nesse mesmo cluster. Onde está o problema mais provável?",
+          "alt": [
+            "No RNIB do Near-RT RIC, que guarda o inventário dos clusters",
+            "Nos arquivos de PM da O1, que deveriam informar a capacidade dos nós",
+            "No número de réplicas da O-DU, que precisa subir para o cluster reportar folga",
+            "Na integração O2ims com o cluster: endpoint, credenciais e permissões"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "Se a nuvem tem folga e o SMO não a vê, a visão do SMO está desatualizada ou bloqueada, e essa visão chega pelo inventário do O2ims, consumido pelo FOCOM. O RNIB é a pegadinha: ele é o inventário do Near-RT, com E2 nodes e subscrições (slide 66 da aula 02 da cadeira 4), e não sabe nada de clusters. O PM da O1 fala do desempenho da RAN, e pedir mais réplicas sem capacidade visível só piora o diagnóstico."
+        },
+        {
+          "q": "Na atualização do Near-RT RIC numa O-Cloud, as instâncias novas ficam pendentes e nunca chegam a iniciar, enquanto as antigas seguem rodando. O que examinar primeiro?",
+          "alt": [
+            "Os eventos da implantação: quota, recursos, admissão ou imagem",
+            "A porta E2 e o E2 SETUP das novas instâncias com os gNBs",
+            "A política A1 que a nova versão do RIC ainda não recebeu do Non-RT",
+            "A configuração NETCONF do Near-RT RIC enviada pelo SMO pela O1"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "Instância que nunca inicia é problema de plataforma, antes de qualquer interface da RAN: ou não coube (recurso, quota), ou foi barrada (política de admissão), ou não tem o que executar (imagem). Esses motivos ficam nos eventos do orquestrador, que a observabilidade da O2 precisa cobrir. A porta E2 é a tentação de quem já passou pelo lab, mas o E2 SETUP só acontece depois que o processo sobe; é o mesmo princípio da aula 05 da cadeira 2, que valida as camadas de baixo antes do RIC (slides 18 e 19)."
+        },
+        {
+          "q": "Uma O-DU foi implantada e está saudável, com CPU folgada, mas o fronthaul com as O-RUs estoura o orçamento de latência. O inventário mostra que ela caiu num site regional, longe das células. Qual é a correção?",
+          "alt": [
+            "Subir mais réplicas da O-DU no mesmo site regional para dividir a carga",
+            "Dar mais CPU e memória à O-DU, mantendo-a no site regional onde ela está",
+            "Refazer o placement com restrição de local: um site de borda perto das O-RUs",
+            "Relaxar a meta de latência numa política A1 enviada ao Near-RT RIC pelo Non-RT"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "Com CPU folgada, o atraso não vem de falta de processamento: vem da distância, e distância não se resolve com mais réplicas nem com mais recurso no lugar errado. Escolher o site é o placement, que depende do inventário por localidade que a O2 expõe (a localidade edge ou regional é a leitura de Wong indicada no slide 9 da aula 02 da cadeira 4). Funções ligadas ao fronthaul ficam na borda. Uma política A1 muda o comportamento do rádio, não a física do enlace."
+        }
+      ]
+    },
+    {
+      "nome": "Operação contínua",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Um nó da O-Cloud roda a inferência de um xApp do Near-RT RIC. Que sinal da telemetria de infraestrutura costuma anteceder a saturação?",
+          "alt": [
+            "Memória alta e estável há semanas, sem erros nem reinícios do contêiner",
+            "CPU em throttling e fila crescendo sem aumento da vazão atendida",
+            "Mais alarmes de célula chegando ao SMO pela O1 nas últimas horas",
+            "Queda da vazão média dos UEs na KPM da E2 durante o pico"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Saturação é quando pedir mais não rende mais: a CPU bate no limite e é estrangulada, a fila cresce e o que sai por segundo fica igual. Memória alta e estável é a pegadinha, porque pode ser só cache e uso normal; preocupa a tendência de alta ou o reinício por falta de memória. Alarme de célula e vazão do UE podem até ser consequência, mas chegam depois e por outras interfaces, e cruzar os dois lados é o que o slide 46 da aula 01 da cadeira 4 propõe (KPI de rádio × falha de infraestrutura)."
+        },
+        {
+          "q": "Como referenciar a imagem de uma CNF crítica que vai para produção em vários sites?",
+          "alt": [
+            "Pela tag latest, com varredura de vulnerabilidades no pipeline antes de cada deploy",
+            "Por digest assinado, recompilando a imagem em cada site para ajustá-la ao hardware",
+            "Por tag de versão reaproveitada, com canário e remoção da imagem anterior",
+            "Por digest assinado, com varredura de vulnerabilidades e liberação canário"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O digest identifica exatamente os bytes que foram testados, a assinatura prova a origem, a varredura barra vulnerabilidades conhecidas antes do deploy e o canário limita o estrago. A tag latest é a pegadinha: muda de conteúdo sem mudar de nome, e varrer no pipeline não impede dois sites de rodarem coisas diferentes achando que é a mesma versão. Recompilar em cada site gera bytes diferentes e anula o digest que foi assinado e testado. E apagar a imagem anterior tira o rollback, que a aula 01 da cadeira 2 põe no playbook (slide 66); o catálogo versionado é o mesmo cuidado que ela pede para modelos (slide 65)."
+        },
+        {
+          "q": "O que a observabilidade da infraestrutura exposta pela O2 deve cobrir?",
+          "alt": [
+            "Só CPU e memória dos nós, porque as falhas de nó já chegam como alarmes pela O1",
+            "Os contadores de PM das células, que passam a chegar pela O2 em vez da O1",
+            "Eventos do orquestrador, estado dos nós e consumo, alinhados aos KPIs de rádio",
+            "A KPM por UE, para que o SMO deixe de depender da E2 no diagnóstico"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O slide 46 da aula 01 da cadeira 4 diz o que a O2 traz (CPU, memória, eventos) e para quê: separar KPI de rádio ruim por causa do rádio de KPI ruim por causa da infraestrutura. Para isso é preciso saber o que o orquestrador fez, em que estado estão os nós e quanto se consome, com o tempo alinhado ao PM e à KPM. Ficar só com CPU e memória é tentador, mas perde os eventos, como reinício e reagendamento, que explicam os degraus. PM e KPM continuam nas suas interfaces, O1 e E2."
+        }
+      ]
+    },
+    {
+      "nome": "Ordenar rollout típico",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o rollout de uma nova versão de uma função O-RAN numa O-Cloud.",
+          "itens": [
+            "Registrar no catálogo do SMO o pacote da nova versão, com a imagem por digest e os requisitos de recursos",
+            "Escolher o site cruzando os requisitos do pacote com o inventário do O2ims: capacidade, quotas e localização",
+            "Pedir pelo O2dms a implantação no cluster escolhido",
+            "Acompanhar os probes de readiness até a função ficar pronta",
+            "Rodar um smoke test curto, ainda sem tráfego real",
+            "Liberar o tráfego aos poucos, observando KPIs e eventos da plataforma",
+            "Registrar a nova baseline de consumo e capacidade para os próximos ciclos"
+          ],
+          "pts": 10,
+          "porque": "Cada passo usa o resultado do anterior: o site só se escolhe sabendo o que o pacote pede, e a implantação só se pede a um cluster já escolhido. Readiness mostra que o processo subiu, o smoke test mostra que ele funciona, e só então entra tráfego real, em etapas e com rollback à mão. A baseline vem por último porque só vale a medida depois de estável. É o ciclo que falta ao up_core.sh do lab, que faz só instantiate e health-check, sem SMO, catálogo nem lifecycle (slide 17 da aula 05 da cadeira 2)."
+        }
+      ]
+    }
+  ]
+}

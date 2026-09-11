@@ -12,38 +12,38 @@
         {
           "q": "O slide 18 diz que um KPI só existe com definição formal. Qual lista está completa?",
           "alt": [
-            "Fórmula e unidade",
-            "Nome, cor, eixo e legenda",
-            "Nome, fórmula, unidade, granularidade, fonte, alvo/limiar e janela temporal",
-            "Mínimo, máximo, média e desvio"
+            "Nome, fórmula, unidade, fonte, alvo/limiar e interpretação",
+            "Nome, fórmula, unidade, granularidade, fonte, alvo/limiar e janela",
+            "Nome, fórmula, unidade, granularidade, fonte, média e p95",
+            "Nome, métrica KPM, unidade, janela temporal, baseline e valor atual"
           ],
-          "ok": 2,
+          "ok": 1,
           "pts": 1,
-          "porque": "São sete campos, e cada um fecha uma porta para a ambiguidade. A fórmula diz como se calcula e a unidade dá sentido à grandeza; a granularidade diz de que recorte o número fala (por UE, por célula, por fase) e a fonte diz de qual coluna de qual arquivo ele saiu. O alvo ou limiar diz quando o número vira problema, e a janela temporal diz sobre que período ele vale. A anatomia do slide 22 ainda acrescenta a interpretação. Faltando um campo, dois analistas chegam a números diferentes com o mesmo nome."
+          "porque": "São os sete campos do slide 18: nome, fórmula, unidade, granularidade, fonte, alvo ou limiar e janela temporal. A granularidade diz de que recorte o número fala (por UE, por célula, por fase) e a janela, sobre que período ele vale; a lista com interpretação é a armadilha, porque a anatomia do slide 22 acrescenta a interpretação, mas não dispensa esses dois campos. Média e p95 são escolhas de agregação que a fórmula declara, não campos da definição. Faltando um campo, dois analistas chegam a números diferentes com o mesmo nome."
         },
         {
           "q": "Qual é a diferença entre QoS e QoE?",
           "alt": [
-            "QoS é medida no núcleo e QoE no rádio",
-            "QoS é o que a rede PROMETE e configura (5QI, GBR, bearers); QoE é o que o usuário PERCEBE",
-            "São sinônimos em contextos diferentes",
-            "QoS é do 4G e QoE é do 5G"
+            "QoS é percebida pelo usuário e vira MOS; QoE é medida pela rede e vira KPM",
+            "QoS se mede no núcleo, pelo 5QI do fluxo; QoE se mede no rádio, pelo KPM da E2",
+            "QoE é o QoS agregado por célula ao longo do mês, na visão do NOC",
+            "QoS é objetiva e contratável em SLA; QoE é a qualidade percebida por quem usa"
           ],
-          "ok": 1,
+          "ok": 3,
           "pts": 1,
-          "porque": "QoS é contrato dentro da rede: prioridade, banda garantida, tratamento do bearer. QoE é a experiência de quem usa — o vídeo travou ou não travou. Dá para ter QoS impecável e QoE ruim, e é justamente essa distância que a aula existe para nomear."
+          "porque": "Slide 54: QoS é a qualidade do serviço entregue pela rede, objetiva, mensurável e contratável (latência abaixo de 50 ms, perda abaixo de 0,1%); QoE é a qualidade percebida pelo usuário, subjetiva ou estimada, expressa por MOS, 'travou' ou churn. A inversão é a armadilha: MOS é QoE, e KPM é medida de rede. Dá para ter QoS impecável e QoE ruim, e no lab não há MOS, só proxy via KQI."
         },
         {
           "q": "Na cadeia do slide 55, qual é a diferença entre KPI e KQI?",
           "alt": [
-            "São o mesmo indicador, com nomes diferentes no rádio e no core",
-            "KPI olha o recurso e a rede ('a célula está saturada?', como o PRB médio); KQI olha a qualidade do serviço ('o atraso prejudica?', como a % do tempo com atraso acima de um limiar L)",
-            "KQI é um KPI calculado com mais amostras",
-            "KPI é contratual e KQI é interno"
+            "KPI olha recurso e rede (PRB médio); KQI olha o serviço (% do tempo com atraso acima de L)",
+            "O KPI é o contador que o nó reporta, como o PRB; o KQI é esse contador já agregado por fase",
+            "O KPI vem da E2 e o KQI vem da O1, por isso o KQI tem granularidade de minutos",
+            "O KPI é interno à operadora, e o KQI é a cláusula contratual confrontada com o SLA"
           ],
-          "ok": 1,
+          "ok": 0,
           "pts": 1,
-          "porque": "O KPI responde se a infraestrutura está saudável; o KQI responde se o serviço está bom para quem usa. O mesmo contador pode alimentar os dois: a média do atraso RLC é KPI, a fração do tempo com atraso acima de L já é KQI, porque traz a pergunta do serviço. Contrato é o degrau seguinte, a QoS, quando o KQI é confrontado com o SLA."
+          "porque": "O KPI responde se a infraestrutura está saudável; o KQI responde se o serviço está bom para quem usa. O mesmo contador alimenta os dois: a média do atraso RLC é KPI, e a fração do tempo com atraso acima de L já é KQI, porque traz a pergunta do serviço. O contador reportado é a medida, o degrau anterior, e agregá-lo por fase não o torna KQI. O confronto com o contrato é o degrau seguinte, a QoS (SLA)."
         }
       ]
     },
@@ -52,40 +52,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "O DRB.RlcSduDelayDl marcou 158 na fase de carga. Isso é um problema de QoE?",
+          "q": "Na fase de carga, 30% das amostras de DRB.RlcSduDelayDl ficaram acima do limiar L que o grupo justificou pelo baseline. O relatório diz 'a QoE caiu'. O que o dado sustenta?",
           "alt": [
-            "Sim: 158 ms passa do limiar de 150 ms, então a experiência caiu",
-            "Não dá para afirmar. Primeiro confirme a unidade na fonte, e mesmo confirmada, atraso é proxy: sem nota MOS ou KQI de aplicação não se conclui nada sobre a experiência",
-            "Sim, porque qualquer atraso acima de 100 derruba a QoE",
-            "Não: atraso não tem relação com experiência"
+            "QoE medida, porque atraso acima do limiar é o que o usuário sente como travamento",
+            "Violação de SLA, porque um limiar justificado pelo baseline já é cláusula de contrato",
+            "Um KQI de atraso; sem MOS nem nota de aplicação, só 'risco para a experiência'",
+            "Um KPI de recurso, como o PRB médio, que não diz nada sobre o serviço"
           ],
-          "ok": 1,
+          "ok": 2,
           "pts": 2,
-          "porque": "Duas armadilhas numa pergunta só. A primeira é a unidade: o JSONL não a carrega, os slides 43 e 48 escrevem ms, e o log de Indication do slide 66 da aula 01 imprime esse mesmo contador em 'us' (microssegundos); 158 ms e 158 µs estão separados por um fator de mil. A segunda é o salto de proxy para experiência: o slide 55 manda declarar quando a QoE é só proxy. Dizer 'é risco para a experiência' é honesto; dizer 'a QoE caiu' afirma mais do que o dado sustenta."
+          "porque": "A fração de amostras acima de L é o KQI do slide 55, e L justificado pelo baseline é limiar estatístico, não contratual: só vira verificação de QoS se o grupo declarar L como SLA. QoE é o que o usuário sente, e o lab não tem MOS nem nota de aplicação; o slide manda declarar quando a QoE é só proxy. 'Risco para a experiência' é o que o dado sustenta, e 'a QoE caiu' afirma mais. Ao publicar o número, declare também a unidade do atraso e de onde ela veio."
         },
         {
           "q": "Um SLA promete 'vazão média de 50 Mbps'. Por que isso protege pouco o cliente?",
           "alt": [
-            "Porque 50 Mbps é pouco",
-            "Porque a média esconde o pior caso: dá para cumprir a média com longos períodos ruins compensados por picos",
-            "Porque falta dizer se é subida ou descida",
-            "Porque média não é um indicador válido"
+            "O SLA deveria usar o máximo, que mostra o pico de capacidade entregue ao cliente",
+            "A média se cumpre com longos períodos ruins compensados por picos de vazão",
+            "Vazão não entra em SLA de rádio, que se escreve em latência e disponibilidade",
+            "A média de vazão é KQI, e um SLA precisa citar KPI de recurso, como o PRB médio"
           ],
           "ok": 1,
           "pts": 2,
-          "porque": "Média é a agregação mais fácil de cumprir e a menos sentida pelo usuário. Um SLA que morde escreve-se em PERCENTIL — 'p95 do atraso abaixo de X' ou 'vazão acima de Y em 95% das janelas' —, porque é o quase-pior caso que o cliente reclama."
+          "porque": "Média é a agregação mais fácil de cumprir e a menos sentida pelo usuário: horas ruins somem atrás de picos. Um SLA útil diz indicador, agregação, janela e a fração do tempo em que a meta vale, e costuma usar percentil, como 'vazão acima de Y em 95% das janelas' (slide 42: o p95 é o quase pior caso). O máximo é pior ainda, porque é ruim sozinho como SLA (slide 51). E vazão mínima aparece como exemplo de QoS contratável no slide 54."
         },
         {
-          "q": "O mesmo dado, agregado de três formas, dá 3,7 · 8.619 · 82.190. Como isso é possível, e o que escolher?",
+          "q": "Na fase de recuperação, a mesma série DRB.UEThpUl resumida de três formas dá 3,7 · 8.619 · 172.317. O que são esses números, e qual descreve a fase?",
           "alt": [
-            "Erro de cálculo: só um pode estar certo",
-            "São mediana, média e p95 da mesma série: a agregação muda o significado, e escolhe-se pela pergunta — típico, total ou quase-pior caso",
-            "São três fases diferentes",
-            "São três unidades diferentes"
+            "Mediana, média e máximo; a mediana descreve o regime e a média é puxada pelo pico",
+            "Média, mediana e p95; a média descreve o regime, pois considera cada amostra",
+            "Mediana, média e máximo; o máximo descreve a fase, pois mostra a capacidade real",
+            "Resumos de três fases diferentes; cada fase deve ser lida pela sua própria média"
           ],
-          "ok": 1,
+          "ok": 0,
           "pts": 2,
-          "porque": "Nenhum está errado; eles respondem a perguntas diferentes. A mediana descreve o típico, a média é puxada pelo pico, o p95 mostra o quase-pior caso. Por isso a granularidade e a agregação entram na anatomia do KPI: sem elas, o mesmo nome cobre três números."
+          "porque": "Com 19 amostras perto de 3,7 kbps e um único ponto de 172.317, a mediana fica em 3,7, a média sobe para cerca de 8.619 e o máximo é o próprio pico. Nenhum está errado; respondem a perguntas diferentes (slide 51): a mediana é robusta a picos, a média é sensível a outliers e o máximo é pico, útil para capacidade e ruim sozinho. Por isso agregação e granularidade entram na definição do KPI: sem elas, o mesmo nome cobre três números."
         }
       ]
     },
@@ -94,40 +94,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "Um KPI de rádio muito usado é a taxa de sucesso de acesso (RRC Setup Success Rate). O que ela mede?",
+          "q": "Um KPI de rádio muito usado é a taxa de sucesso de acesso (CSSR). O que ela mede?",
           "alt": [
-            "Quantos UEs estão conectados agora",
-            "A fração das tentativas de estabelecer conexão de rádio que terminaram bem",
-            "A vazão média no momento do acesso",
-            "O tempo até o primeiro pacote"
+            "A fração das sessões estabelecidas que terminaram sem queda anormal",
+            "A fração das tentativas de handover concluídas na célula vizinha",
+            "A fração do tempo em que a célula esteve no ar, sem outage nem bloqueio",
+            "A fração das tentativas de estabelecer conexão RRC que foram concluídas"
           ],
-          "ok": 1,
+          "ok": 3,
           "pts": 1,
-          "porque": "É uma razão entre tentativas e sucessos na camada RRC. Importa porque uma rede pode ter ótima vazão para quem está dentro e ser péssima para quem tenta entrar — e o usuário que não conecta não aparece em nenhum indicador de vazão."
+          "porque": "Acessibilidade é sucessos sobre tentativas de estabelecimento na mesma janela (CSSR bom acima de 98%). A confusão comum é com a retenção: o drop rate conta sessões encerradas anormalmente depois de estabelecidas, quando o serviço já tinha começado. Handover é mobilidade (HOSR) e tempo no ar é disponibilidade. Importa porque uma rede pode ter ótima vazão para quem está dentro e ser péssima para quem tenta entrar, e esse usuário não aparece em nenhum indicador de vazão."
         },
         {
           "q": "Por que um indicador precisa de limiar E persistência antes de virar decisão?",
           "alt": [
-            "Para caber no gráfico",
-            "Porque um único ponto acima do limiar pode ser ruído; exigir que a condição se mantenha evita agir sobre oscilação",
-            "Porque a norma exige dois parâmetros",
-            "Para reduzir o volume de dados"
+            "Sem persistência o indicador é um KPI; a sequência acima do limiar o torna KQI",
+            "A persistência substitui a justificativa do limiar, que dispensa o baseline",
+            "Um ponto acima do limiar pode ser ruído; a sequência evita reagir à oscilação",
+            "O limiar mede a média da fase, e a persistência mede o p95 da mesma janela"
           ],
-          "ok": 1,
+          "ok": 2,
           "pts": 1,
-          "porque": "Limiar sem persistência gera política oscilante: entra, sai, entra de novo — e cada troca custa. É o mesmo motivo pelo qual um alarme sério pede N ocorrências em M janelas. Decidir sobre um ponto é decidir sobre ruído."
+          "porque": "Limiar sem persistência gera decisão oscilante: entra, sai, entra de novo, e cada troca custa. O detector do lab só decide apply quando a janela de 5 amostras vota anômala, e o duty de anomalia do slide 67 é justamente a persistência da ameaça. Persistência não transforma KPI em KQI (o que faz isso é a pergunta de serviço) nem dispensa justificar L pelo baseline ou por requisito."
         },
         {
-          "q": "Onde ficam os indicadores de fronthaul, midhaul e backhaul na cadeia?",
+          "q": "Em que domínio ficam os indicadores de fronthaul, midhaul e backhaul?",
           "alt": [
-            "São KQIs de aplicação",
-            "São indicadores de TRANSPORTE — atraso, jitter e perda nos trechos entre O-RU, O-DU, O-CU e o núcleo",
-            "São medidos só pelo SMO",
-            "São a mesma coisa que os KPIs de rádio"
+            "RAN: KPIs da O-DU reportados pela E2SM-KPM, junto com o PRB",
+            "Transporte: latência, perda e utilização dos enlaces de x-haul",
+            "Core: medidos no UPF em N3, que é onde o backhaul termina",
+            "Serviço: KQIs de aplicação, porque afetam direto a experiência"
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "O split do O-RAN criou trechos de transporte com requisitos duros — o fronthaul é o mais exigente, com sincronismo na casa do microssegundo. Um problema ali aparece como degradação de rádio sem que o rádio tenha nada: por isso o transporte tem indicadores próprios."
+          "porque": "Os indicadores vivem em domínios: RAN (PRB, atraso RLC, vazão do UE), core (sucesso de sessão, drop rate), transporte (latência e perda de fronthaul, utilização de enlace) e terminal. O slide 59 põe latência e jitter em 'RLC, x-haul, UDP/TCP', com decisão típica de priorização ou upgrade de fronthaul. A armadilha é tratar tudo como KPI de rádio: um problema no x-haul aparece como degradação de rádio sem que o rádio tenha nada, e por isso o transporte tem indicador próprio."
         }
       ]
     },

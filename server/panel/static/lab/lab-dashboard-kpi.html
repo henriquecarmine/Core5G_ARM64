@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="/static/favicon.svg?v=%VER%" type="image/svg+xml">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard KPI / NOC · Core5G_ARM64</title>
+<link rel="stylesheet" href="/static/tokens.css?v=%VER%">
+<link rel="stylesheet" href="/static/lab/lab-ponte.css?v=%VER%">
+<link rel="stylesheet" href="/static/lab/lab-estudos.css?v=%VER%">
+<script>document.documentElement.dataset.theme = localStorage.getItem("c5g-theme") || "dark";</script>
+<style>
+  .wrap{max-width:1120px}
+  .lead{max-width:82ch}
+  .origem{font-family:var(--fonte-instrumento);font-size:var(--t-micro);color:var(--ink-3);margin:8px 0 14px;overflow-wrap:anywhere}
+
+  .cenarios{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .cenarios button{font:inherit;font-size:var(--t-corpo);font-weight:650;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:var(--r-full);padding:7px 14px;cursor:pointer}
+  .cenarios button:hover{border-color:var(--accent);color:var(--ink)}
+  .cenarios button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+  .bloco{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:clamp(14px,2.2vw,22px);margin-bottom:14px}
+  .rot{font-family:var(--fonte-instrumento);font-size:var(--t-micro);letter-spacing:var(--tr-etiqueta);text-transform:uppercase;color:var(--ink-3);font-weight:700}
+  .headline h2{font-size:var(--t-med);font-weight:750;line-height:1.3;margin-top:6px}
+  .nota{font-size:var(--t-mini);color:var(--ink-2);margin-top:6px;max-width:96ch}
+
+  /* cartões de KPI: nome legível, valor+unidade+janela, comparativo, limiar escrito, estado com ícone e rótulo */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px}
+  .kpi{border:1px solid var(--line);border-top:3px solid var(--line-strong);border-radius:var(--r-md);padding:12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+  .kpi[data-lv="ok"]{border-top-color:var(--good)} .kpi[data-lv="warn"]{border-top-color:var(--warn)} .kpi[data-lv="crit"]{border-top-color:var(--bad)}
+  .kpi h3{font-size:var(--t-corpo);font-weight:700;line-height:1.3}
+  .fonte-k{font-size:var(--t-micro);color:var(--ink-3)}
+  .sint{font-family:var(--fonte-instrumento);font-size:var(--t-micro);letter-spacing:.04em;text-transform:uppercase;border:1px dashed var(--line-strong);border-radius:var(--r-sm);padding:0 5px;color:var(--ink-2)}
+  .valor{font-size:1.75rem;font-weight:720;line-height:1.1;margin-top:4px}
+  .valor small{font-size:var(--t-corpo);font-weight:600;color:var(--ink-2);margin-left:3px}
+  .janela,.limiar{font-size:var(--t-micro);color:var(--ink-3)}
+  .delta{font-size:var(--t-mini);font-weight:650;color:var(--ink)}
+  .delta span{font-weight:400;color:var(--ink-2)}
+  .estado{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;font-size:var(--t-mini);border-radius:var(--r-sm);padding:3px 8px;background:var(--surface-2);color:var(--ink-2)}
+  .kpi .estado{margin-top:auto}
+  .kpi .limiar{margin-bottom:6px}
+  .estado .ic{font-weight:800}
+  .estado .por{font-weight:400}
+  .estado[data-lv="ok"]{background:var(--good-soft);color:var(--good-text)}
+  .estado[data-lv="warn"]{background:var(--warn-soft);color:var(--warn-text)}
+  .estado[data-lv="crit"]{background:var(--bad-soft);color:var(--bad-text)}
+
+  /* gráficos: SVG escrito à mão, linha de 2px, grade recessiva, um eixo Y */
+  .graf{margin-top:10px}
+  .graf .area{position:relative}
+  .graf svg{display:block;width:100%;height:auto;font-family:var(--fonte-texto)}
+  .graf svg:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  svg .banda{fill:var(--ink);fill-opacity:.045}
+  svg .sep{stroke:var(--line-2);stroke-width:1}
+  svg .grade{stroke:var(--line);stroke-width:1}
+  svg .eixo{fill:var(--ink-3);font-size:10px;font-family:var(--fonte-instrumento)}
+  svg .fase-t{fill:var(--ink-2);font-size:10px;font-weight:600}
+  svg .hach{stroke:var(--ink-3);stroke-width:1.2;stroke-opacity:.45}
+  svg .ev-borda{stroke:var(--ink-3);stroke-width:1}
+  svg .ev-t,svg .lim-t{font-size:10px;paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+  svg .ev-t{fill:var(--ink);font-weight:650}
+  svg .lim-t{fill:var(--ink-2)}
+  svg .lim-l{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:4 3}
+  svg .linha{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+  svg .cruz{stroke:var(--line-strong);stroke-width:1}
+  svg .ponto{stroke:var(--surface);stroke-width:2}
+  .dica{position:absolute;pointer-events:none;z-index:5;background:var(--surface);border:1px solid var(--line);box-shadow:var(--elev-2);border-radius:var(--r-sm);padding:6px 9px;font-size:var(--t-mini);white-space:nowrap}
+  .dica .k{display:inline-block;width:12px;height:2px;border-radius:1px;vertical-align:middle;margin-right:6px}
+  .dica .v{font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums}
+  .dica .l{color:var(--ink-2)}
+  .dica .onde{color:var(--ink-3);margin-top:2px}
+  .legenda{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:var(--t-mini);color:var(--ink-2);margin-bottom:4px}
+  .legenda i{display:inline-block;width:16px;height:2px;border-radius:1px;vertical-align:middle;margin-right:6px}
+  .vertab{font:inherit;font-size:var(--t-mini);font-weight:650;color:var(--accent-text);background:none;border:1px solid var(--line);border-radius:var(--r-full);padding:3px 10px;cursor:pointer;margin-top:8px}
+  .vertab:hover{border-color:var(--accent)}
+  .tabwrap{max-height:260px;overflow:auto;margin-top:8px;border:1px solid var(--line);border-radius:var(--r-sm)}
+  .tabwrap table{border-collapse:collapse;width:100%;font-size:var(--t-mini);font-variant-numeric:tabular-nums}
+  .tabwrap th{position:sticky;top:0;background:var(--surface-2);text-align:left;font-weight:650;color:var(--ink-2)}
+  .tabwrap th,.tabwrap td{padding:4px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .tabwrap .num{text-align:right}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  .alertas{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+  .alerta{border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px}
+  .alerta-topo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+  .alerta h3{font-size:var(--t-corpo);font-weight:700}
+  .alerta .onde{font-family:var(--fonte-instrumento);font-size:var(--t-micro);color:var(--ink-3);margin-left:auto}
+  .alerta .regra{font-size:var(--t-mini);color:var(--ink);margin-top:6px}
+  .alerta .regra b{font-weight:650;color:var(--ink-2)}
+  .alerta .det{font-size:var(--t-mini);color:var(--ink-2);margin-top:2px}
+
+  .sehal{display:grid;gap:10px;margin:10px 0 0}
+  .sehal div{display:grid;grid-template-columns:170px 1fr;gap:12px;align-items:baseline}
+  @media (max-width:560px){.sehal div{grid-template-columns:1fr;gap:2px}}
+  .sehal dt{font-weight:700;font-size:var(--t-corpo);display:flex;align-items:center;gap:8px}
+  .letra{display:inline-grid;place-items:center;width:22px;height:22px;flex:none;border-radius:var(--r-full);background:var(--accent-soft);color:var(--accent-text);font-family:var(--fonte-instrumento);font-size:var(--t-mini);font-weight:800}
+  .sehal dd{margin:0;color:var(--ink-2);font-size:var(--t-corpo)}
+
+  .limites{margin:10px 0 0;padding-left:18px;color:var(--ink-2);font-size:var(--t-corpo);display:grid;gap:6px}
+  .unidade{margin-top:14px;border-left:3px solid var(--accent-2);background:var(--surface-2);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:10px 14px}
+  .unidade h3{font-size:var(--t-corpo);font-weight:700}
+  .unidade p{font-size:var(--t-mini);color:var(--ink-2);margin-top:4px}
+
+  details.drill>summary{cursor:pointer;font-weight:700;color:var(--accent-text);list-style:none}
+  details.drill>summary::-webkit-details-marker{display:none}
+  details.drill>summary::before{content:"▸ "}
+  details.drill[open]>summary::before{content:"▾ "}
+  .grafs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:18px;margin-top:12px}
+  .graf-card{min-width:0}
+  .graf-card h3{font-size:var(--t-corpo);font-weight:700}
+
+  footer.pe{margin-top:18px}
+  .pe-links{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:8px}
+  .pe-links a{font-weight:650;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="ident">
+    <a href="/lab/estudo/4" class="back" data-t="back">← Estudo 4</a>
+    <div class="trilha" data-t="trilha">Estudo 4</div>
+    <div class="dir"><div id="langsel" class="langsel"></div><button class="themebtn" id="themeBtn" title="Alternar tema" aria-label="Alternar tema">◐</button></div>
+  </div>
+  <div class="tit"><h1 data-t="h1">Dashboard KPI / NOC</h1></div>
+  <p class="lead" id="lead"></p>
+  <p class="origem" id="origem"></p>
+  <div class="cenarios" id="cenarios" role="group"></div>
+
+  <section class="bloco headline"><p class="rot" data-t="r.headline"></p><h2 id="headline"></h2></section>
+
+  <section class="bloco"><p class="rot" data-t="r.kpis"></p><p class="nota" id="kpisNota"></p><div class="kpis" id="kpis"></div></section>
+
+  <section class="bloco"><p class="rot" data-t="r.serie"></p><p class="nota" id="serieNota"></p><div class="graf" id="gDecisao"></div></section>
+
+  <section class="bloco"><p class="rot" data-t="r.alertas"></p><p class="nota" id="alertasNota"></p><ul class="alertas" id="alertas"></ul></section>
+
+  <section class="bloco"><p class="rot" data-t="r.sehal"></p><dl class="sehal" id="sehal"></dl></section>
+
+  <section class="bloco" id="limites"><p class="rot" data-t="r.limites"></p><ul class="limites" id="limLista"></ul>
+    <div class="unidade"><h3 data-t="unid.t"></h3><p id="unidTexto"></p></div></section>
+
+  <details class="bloco drill" id="drill"><summary data-t="r.drill"></summary><p class="nota" id="drillNota"></p><div class="grafs" id="grafs"></div></details>
+
+  <footer class="pe"><p id="peNota"></p>
+    <p class="pe-links"><a href="/lab/estudo/4/aula/5" data-t="pe.aula"></a><a href="/lab/estudo/4/exercicio/data-kpi-dashboard" data-t="pe.ex"></a></p></footer>
+</div>
+
+<script src="/static/lab/lab-i18n.js?v=%VER%"></script>
+<script src="/static/ops/glossario.js?v=%VER%"></script>
+<script>
+/* ===========================================================================
+   Dashboard KPI / NOC — reconstrução do item "data/kpi-dashboard" da plataforma
+   de atividades (aula 05 da cadeira 4), no molde de um painel de decisão
+   (slide 19): headline, 3 a 5 cartões, UMA série que justifica a decisão,
+   alertas, recomendação (SEHAL) e limitações; o resto fica no drill-down.
+
+   DADOS. As 100 amostras são o NOSSO arquivo, não uma transcrição:
+     server/oai-cn-gnb-e2/scripts/temas/samples/kpm_ue_tp_sample.jsonl
+   (o mesmo dos p2-tema-*). Só /static chega ao navegador, então o conteúdo vai
+   embutido em KPM, gerado deste jeito:
+     python3 - <<'EOF'
+     import json
+     R=[json.loads(l) for l in open('server/oai-cn-gnb-e2/scripts/temas/samples/kpm_ue_tp_sample.jsonl')]
+     g=lambda v:int(v) if float(v).is_integer() else v
+     o={"run_id":R[0]["run_id"],"source":"kpm-ue-tp-sample","campos":["DRB.UEThpUl","DRB.RlcSduDelayDl","RRU.PrbTotUl"]}
+     for f in ("baseline","stress","recovery"):
+         o[f]=[[g(x["metrics"][c]) for c in o["campos"]] for x in sorted((x for x in R if x["phase"]==f),key=lambda x:x["sample_index"])]
+     print(json.dumps(o,separators=(",",":")))
+     EOF
+   Conferido amostra a amostra contra o bundle do painel original: 0 divergências.
+
+   OVERLAYS. `serie()` reproduz a conta determinista do original (ruído por
+   hash de seno, sem Math.random): os valores de S_t, perda, backhaul, atraso e
+   vazão por amostra batem com os do painel antigo nos três cenários. O volume
+   acumulado saiu (é a soma da vazão, não traz evidência nova).
+
+   O QUE MUDOU EM RELAÇÃO AO ORIGINAL, E POR QUÊ
+   1. Os cartões mostravam a ÚLTIMA amostra do stress (S59). No cenário de
+      interferência o evento acaba em S42, então os cartões nem mostravam o
+      evento. Agora cada cartão resume a JANELA DA DECISÃO (mediana), e o estado
+      é o nível mais alto que pelo menos SUST amostras SEGUIDAS atingem.
+   2. O alerta de atraso disparava em B01, com a célula ociosa, porque não
+      olhava a carga. Agora ele só vale com PRB UL alto e é RELATIVO à mediana
+      da mesma carga sem evento: uma razão vale em µs ou em ms.
+   3. O atraso era rotulado "ms". O painel trata DRB.RlcSduDelayDl em µs (log de
+      Indication, aula 01); a página rotula µs e explica a divergência. Nenhum
+      cartão nem conclusão de QoE sai do valor absoluto do atraso.
+   4. Alertas e cartões usam os MESMOS limiares escritos, e todo alerta traz a
+      regra ao lado.
+
+   GRÁFICOS. Eram 7, um por métrica. Aqui: 1 série da decisão (a que muda o
+   diagnóstico em cada cenário) + 5 no drill-down. PRB UL e backhaul dividem um
+   gráfico porque são a mesma unidade (% de 0 a 100) — é justamente a comparação
+   rádio × transporte. Nunca eixo duplo.
+   CORES. As 4 faixas validadas `--serie-N`. Só o gráfico de utilização tem duas
+   linhas (PRB = serie-1, backhaul = serie-2, par validado para daltonismo);
+   gráfico de uma linha usa serie-3 — o título diz o que é, e seis cores
+   distintas não passam na validação.
+   =========================================================================== */
+const KPM = {"run_id":"ue-tp-20260804-174422","source":"kpm-ue-tp-sample","campos":["DRB.UEThpUl","DRB.RlcSduDelayDl","RRU.PrbTotUl"],"baseline":[[4.46,55,2],[3.72,218,2],[3.72,137,2],[3.72,171,2],[3.72,39,2],[3.72,45,2],[3.72,161,2],[3.72,184,2],[3.7,95,2],[3,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2]],"stress":[[15.16,134.79,2],[79787.77,264.75,97],[74298.14,133.74,99],[82823.86,161.63,99],[80928.66,155.4,99],[77567.93,160.61,99],[80699.91,158.25,99],[79394.26,158.63,99],[79436.41,153.87,99],[79404.48,159.29,99],[80060.69,173.61,99],[79853.9,161.59,99],[79780.77,159.59,99],[78515.58,145.85,99],[79185.02,158.81,99],[82156.06,155.39,99],[79060.13,171.36,99],[80313.02,149.26,99],[80639.18,170.26,99],[80088.72,157.51,99],[80167.22,167.72,99],[79330.18,161.96,99],[82284.39,161.56,99],[81196.07,141.93,99],[81777.18,154.37,99],[81443.46,146.9,99],[79968.72,135.89,99],[80331.03,159.69,99],[81129.86,150.45,99],[77372.11,154.69,99],[79068.26,142.33,99],[79986.66,158.45,99],[81696.05,137.26,99],[82092.61,190.84,99],[80187.61,160.03,99],[81983.9,166.5,99],[79942.97,156.34,99],[80944.26,178.58,99],[81614,153.42,99],[81043.27,185.37,98],[81397.52,160.21,99],[82298.58,151.61,99],[79574.72,164.65,99],[80312.95,164.65,99],[79248.61,161,99],[81252.03,177.44,99],[78660.5,157.56,99],[80223.98,151.7,99],[80918.74,153.18,99],[80681.71,156.55,99],[82184.54,135.41,99],[79330.32,197.1,99],[78482.06,173.21,99],[78508.06,176.24,99],[79166.74,182.97,99],[73893.9,198.07,99],[73730.85,157.66,99],[74542.9,176.99,99],[73830.38,158.99,99],[77216.56,154.88,99]],"recovery":[[172316.9,34,21],[3.72,60,2],[3.72,135,2],[3.72,390,2],[3.72,101,2],[3.72,470,2],[3.72,66,2],[3.72,126,2],[3.7,195,2],[3.72,0,2],[3,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2],[3.72,0,2]]};
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const FASES = ["baseline", "stress", "recovery"];
+const CENARIOS = ["lab", "interference", "backhaul"];
+const SUST = 3;       // "sustentado": amostras SEGUIDAS além do limiar
+const QC_THP = 50;    // Mbps — vazão que não cabe numa célula com PRB baixo
+
+// Limiares escritos: os do painel original; os de PRB são os do slide 20.
+// `d` = casas da série (tabela, dica); `dc` = casas do cartão.
+const MET = {
+  prb:   {u: "%",    d: 1, dc: 0, w: 70,  c: 85,  cor: "--serie-1", code: "RRU.PrbTotUl"},
+  bh:    {u: "%",    d: 1, dc: 1, w: 75,  c: 90,  cor: "--serie-2"},
+  thp:   {u: "Mbps", d: 2, dc: 1, rel: [.85, .60], cor: "--serie-3", code: "DRB.UEThpUl"},
+  st:    {u: "",     d: 2, dc: 2, w: 3,   c: 5,   cor: "--serie-3"},
+  loss:  {u: "%",    d: 2, dc: 2, w: .5,  c: 1.5, cor: "--serie-3"},
+  delay: {u: "µs",   d: 1, dc: 1, k: 1.5,         cor: "--serie-3", code: "DRB.RlcSduDelayDl"},
+};
+const ICONE = {ok: "✓", warn: "▲", crit: "✕", info: "i"};
+
+// ---------------------------------------------------------------- overlays
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function jn(a, y, r) { const n = Math.sin(a * 12.9898 + y * 78.233) * 43758.5453; return (n - Math.floor(n) - .5) * 2 * r; }
+
+function serie(cen) {
+  const am = [];
+  FASES.forEach(f => KPM[f].forEach((m, i) => am.push({fase: f, i, thp: m[0], delay: m[1], prb: m[2]})));
+  const st = am.map((a, k) => a.fase === "stress" ? k : -1).filter(k => k >= 0);
+  const s0 = st[0], s1 = st[st.length - 1], len = Math.max(1, s1 - s0 + 1);
+  const iA = s0 + Math.floor(len * .3), iB = s0 + Math.floor(len * .7);      // interferência: miolo do stress
+  const bA = s0 + Math.floor(len * .5), bB = Math.min(am.length - 1, s1 + 6); // backhaul: 2ª metade até R05
+  return am.map((a, y) => {
+    let thp = a.thp / 1000, delay = a.delay, ev = null;
+    let bh = clamp(28 + jn(3, y, 4) + a.prb / 100 * 18, 5, 55);
+    let sti = .7 + Math.abs(jn(5, y, .35));
+    let loss = clamp(.05 + Math.abs(jn(7, y, .04)) + a.prb / 100 * .15, .02, .4);
+    if (cen === "interference" && y >= iA && y <= iB) {
+      const I = Math.sin((y - iA) / Math.max(1, iB - iA) * Math.PI);
+      sti = clamp(7.2 + jn(9, y, 1.6) + Math.abs(jn(19, y, .9)), 5.5, 11.5);
+      loss = clamp(.2 + I * 2.2 + Math.abs(jn(11, y, .15)), 0, 6);
+      delay = clamp(delay * (1 + .55 * I) + I * 90 + Math.abs(jn(17, y, 12)), 0, 600);
+      thp = thp * (1 - .35 * I);
+      ev = cen;
+    }
+    if (cen === "backhaul" && y >= bA && y <= bB) {
+      const I = Math.min(1, (y - bA) / Math.max(1, bB - bA) * 1.2);
+      bh = clamp(70 + I * 28 + jn(13, y, 2), 5, 99);
+      ev = cen;
+    }
+    return {t: a.fase[0].toUpperCase() + String(a.i).padStart(2, "0"), fase: a.fase, ev,
+      prb: Math.round(a.prb * 10) / 10, thp: Math.round(thp * 100) / 100, delay: Math.round(delay * 10) / 10,
+      bh: Math.round(bh * 10) / 10, st: Math.round(sti * 100) / 100, loss: Math.round(loss * 100) / 100};
+  });
+}
+
+// ---------------------------------------------------------------- análise
+const med = a => { const v = [...a].sort((x, y) => x - y), m = v.length; return m % 2 ? v[(m - 1) / 2] : (v[m / 2 - 1] + v[m / 2]) / 2; };
+const rot = (a, b) => a === b ? a : `${a}–${b}`;
+
+function maiorSeq(arr, p) {               // a sequência mais longa que cumpre p
+  let best = null, a = -1;
+  arr.forEach((x, k) => {
+    if (p(x)) { if (a < 0) a = k; if (!best || k - a > best.b - best.a) best = {a, b: k}; } else a = -1;
+  });
+  return best && {a: arr[best.a].t, b: arr[best.b].t, n: best.b - best.a + 1};
+}
+function primeiraSeq(arr, p) {            // a primeira sequência com pelo menos SUST amostras
+  let a = -1;
+  for (let k = 0; k <= arr.length; k++) {
+    if (k < arr.length && p(arr[k])) { if (a < 0) a = k; continue; }
+    if (a >= 0 && k - a >= SUST) return {a: arr[a].t, b: arr[k - 1].t, n: k - a};
+    a = -1;
+  }
+  return null;
+}
+
+// Níveis de cada regra, do mais grave ao menos: [nível, predicado, limiar, "abaixo"?]
+function niveis(k, base) {
+  const M = MET[k], carga = x => x.prb > MET.prb.c;
+  if (k === "thp") return [["crit", x => carga(x) && x.thp < M.rel[1] * base.thp, M.rel[1] * base.thp, true],
+                           ["warn", x => carga(x) && x.thp < M.rel[0] * base.thp, M.rel[0] * base.thp, true]];
+  if (k === "delay") return [["warn", x => carga(x) && x.delay >= M.k * base.delay, M.k * base.delay, false]];
+  if (k === "bhrisk") return [["warn", x => x.bh > MET.bh.c && x.loss <= MET.loss.w, MET.bh.c, false]];
+  return [["crit", x => x[k] > M.c, M.c, false], ["warn", x => x[k] > M.w, M.w, false]];
+}
+function estado(k, arr, base) {
+  const L = niveis(k, base);
+  for (const [lv, p, lim, abaixo] of L) { const s = maiorSeq(arr, p); if (s && s.n >= SUST) return {lv, seq: s, lim, abaixo}; }
+  const u = L[L.length - 1];
+  return {lv: "ok", lim: u[2], abaixo: u[3]};
+}
+function alertas(S, base) {
+  const out = [];
+  for (const id of ["prb", "thp", "delay", "st", "loss", "bh", "bhrisk"])
+    for (const [lv, p] of niveis(id, base)) { const s = primeiraSeq(S, p); if (s) { out.push({id, lv, seq: s}); break; } }
+  const qc = S.filter(x => x.thp > QC_THP && x.prb < MET.prb.w);   // qualidade do dado: basta uma
+  if (qc.length) out.push({id: "qc", lv: "info", seq: {a: qc[0].t, b: qc[qc.length - 1].t, n: qc.length, solta: true}});
+  const ordem = {crit: 0, warn: 1, info: 2};
+  return out.sort((a, b) => ordem[a.lv] - ordem[b.lv]);
+}
+
+function analisa(cen) {
+  const S = serie(cen);
+  const sobCarga = x => x.prb > MET.prb.w;          // carga pelo DADO, não pelo rótulo da fase (S00 tem PRB 2%)
+  const semEvento = S.filter(x => sobCarga(x) && !x.ev);
+  // Janela da decisão: o stress sustentado (carga) ou o evento dentro do stress.
+  const janela = cen === "lab" ? S.filter(x => x.fase === "stress" && sobCarga(x)) : S.filter(x => x.ev && x.fase === "stress");
+  // Referência: para a carga, a célula ociosa; para um evento, a MESMA carga sem ele.
+  const ref = cen === "lab" ? S.filter(x => x.fase === "baseline") : semEvento;
+  const base = {thp: med(semEvento.map(x => x.thp)), delay: med(semEvento.map(x => x.delay))};
+  const m = (arr, k) => med(arr.map(x => x[k]));
+  const cartoes = ["prb", "thp", "st", "loss", "bh"].map(k => ({k, v: m(janela, k), r: m(ref, k),
+    min: Math.min(...janela.map(x => x[k])), max: Math.max(...janela.map(x => x[k])), ...estado(k, janela, base)}));
+  return {cen, S, janela, ref, base, cartoes, alertas: alertas(S, base)};
+}
+const ANALISE = Object.fromEntries(CENARIOS.map(c => [c, analisa(c)]));
+
+// ---------------------------------------------------------------- textos
+const D = {
+pt: {
+  "title": "Dashboard KPI / NOC · Core5G_ARM64", "back": "← Estudo 4", "trilha": "Estudo 4 · Aula 05 · BI e NOC", "tema": "Alternar tema",
+  "h1": "Dashboard KPI / NOC",
+  "lead": "Monitoramento RAN sobre as 100 amostras KPM do lab (E2SM-KPM, fases baseline, stress e recovery). Escolha o cenário e leia de cima para baixo, na ordem de um painel de decisão: headline, cartões, a série que justifica a decisão, alertas, recomendação e limitações.",
+  "origem": "fonte {src} · run {run} · n = {n} ({nb} baseline · {ns} stress · {nr} recovery)",
+  "cen.aria": "Cenário", "cen.lab": "Carga · dado real do lab", "cen.interference": "Interferência · overlay sintético", "cen.backhaul": "Backhaul · overlay sintético",
+  "r.headline": "Headline", "r.kpis": "Cartões de KPI", "r.serie": "Série da decisão", "r.alertas": "Alertas", "r.sehal": "Recomendação (SEHAL)", "r.limites": "Limitações", "r.drill": "Drill-down analítico: todas as séries",
+  "kpis.nota": "Valor = mediana de {win} ({n} amostras), comparada com {ref}. Estado = o nível mais alto que pelo menos {s} amostras seguidas da janela atingem: uma amostra sozinha não pinta o cartão.",
+  "ref.base": "o baseline ocioso (B00–B19)", "ref.load": "a mesma carga fora do evento ({n} amostras)",
+  "vs.base": "vs baseline", "vs.load": "vs carga sem evento", "u.pp": "pp",
+  "k.prb": "Utilização PRB UL", "k.thp": "Vazão UL", "k.st": "Interferência (S_t)", "k.loss": "Perda de pacotes", "k.bh": "Utilização do backhaul",
+  "src.kpm": "KPM do lab", "src.kpmov": "KPM do lab + overlay", "src.syn": "sintético",
+  "c.janela": "mediana · {win} · faixa {a}–{b}",
+  "c.lim": "atenção > {w}{u} · crítico > {c}{u}",
+  "c.limthp": "atenção < {w} · crítico < {c} Mbps (85% e 60% da carga sem evento)",
+  "lv.ok": "OK", "lv.warn": "Atenção", "lv.crit": "Crítico", "lv.info": "Info",
+  "c.porok": "nenhuma sequência de {s} além do limiar", "c.poracima": "{n} seguidas acima de {v}{u}", "c.porabaixo": "{n} seguidas abaixo de {v}{u}",
+  "serie.lab": "Utilização PRB UL por fase: o salto de {prbRef}% para {prb}% é a evidência de capacidade.",
+  "serie.interference": "S_t por fase: passa do limiar crítico só dentro da janela do evento ({win}).",
+  "serie.backhaul": "Utilização do backhaul: a rampa começa em {a} e cruza {bc}% no fim do stress.",
+  "alertas.nota": "Cada alerta mostra a regra que o disparou. Todas pedem {s} amostras seguidas, menos a de qualidade do dado.",
+  "a.regra": "Regra:", "a.onde": "{a}–{b} · {n} seguidas", "a.onde1": "{a} · 1 amostra", "a.onden": "{a}–{b} · {n} amostras",
+  "a.prb.t": "Saturação de PRB UL", "a.prb.r": "PRB UL > {c}% (crítico) ou > {w}% (atenção)", "a.prb.d": "O rádio está sem folga de recursos.",
+  "a.thp.t": "Vazão abaixo da carga normal", "a.thp.r": "com PRB UL > {p}%, vazão < {c} Mbps (crítico) ou < {w} Mbps (atenção): 60% e 85% da carga sem evento", "a.thp.d": "Mesma ocupação de rádio, menos vazão: a eficiência caiu.",
+  "a.delay.t": "Atraso RLC acima da carga normal", "a.delay.r": "com PRB UL > {p}%, atraso ≥ {k} × {ref} µs, a mediana da carga sem evento", "a.delay.d": "É uma razão, não um valor absoluto: vale em µs ou ms e não mede QoE.",
+  "a.st.t": "Interferência no canal (S_t)", "a.st.r": "S_t > {c} (crítico) ou > {w} (atenção)", "a.st.d": "Score espectral acima do limiar.",
+  "a.loss.t": "Perda de pacotes", "a.loss.r": "perda > {c}% (crítico) ou > {w}% (atenção)", "a.loss.d": "Pacotes perdidos depois das retransmissões.",
+  "a.bh.t": "Backhaul saturando", "a.bh.r": "utilização > {c}% (crítico) ou > {w}% (atenção)", "a.bh.d": "O enlace de transporte se aproxima do limite.",
+  "a.bhrisk.t": "Risco de perda no transporte", "a.bhrisk.r": "backhaul > {c}% com perda ≤ {w}%", "a.bhrisk.d": "A perda ainda não subiu: é a janela para agir antes do descarte em fila.",
+  "a.qc.t": "Amostra incoerente", "a.qc.r": "vazão > {q} Mbps com PRB UL < {w}% (basta 1 amostra)", "a.qc.d": "Tratar no controle de qualidade do dado, não como nova carga.",
+  "sehal.S": "Situação", "sehal.E": "Evidência", "sehal.H": "Hipótese", "sehal.A": "Ação", "sehal.L": "Limitação",
+  "hl.lab": "Célula sem folga de rádio no stress: PRB UL em {prb}% com {thp} Mbps de vazão UL",
+  "hl.interference": "Canal degradado sob carga: S_t em {st} e vazão UL {drop}% contra a mesma carga, com PRB UL em {prb}%",
+  "hl.backhaul": "Backhaul chega a {bhmax}% no fim do stress, com rádio e perda iguais aos da mesma carga",
+  "lab.S": "No stress sustentado ({win}), o PRB UL vai de {prbRef}% no baseline para {prb}%, e a vazão UL de {thpRef} para {thp} Mbps (medianas).",
+  "lab.E": "Cartão de PRB UL em crítico ({runPrb} amostras seguidas acima de {pc}%) e a série do PRB UL por fase. S_t ({st}), perda ({loss}%) e backhaul ({bh}%) ficam abaixo dos limiares.",
+  "lab.H": "Congestionamento de capacidade no rádio: carga e vazão sobem juntas, e nada aponta para o canal ou para o transporte.",
+  "lab.A": "Recomendar alívio de carga no UL como política A1 candidata, em dry-run. KPI de sucesso: PRB UL fora do crítico; KPI de risco: a vazão do tráfego priorizado.",
+  "lab.L": "RFSIM com um UE e {n} amostras de stress; dry-run não é efeito na rede.",
+  "interference.S": "No miolo do stress ({win}), com o PRB UL ainda em {prb}%, o S_t vai de {stRef} para {st}, a perda de {lossRef}% para {loss}% e a vazão UL de {thpRef} para {thp} Mbps ({drop}%).",
+  "interference.E": "Cartões de S_t e perda em crítico e de vazão em atenção; a série do S_t com a janela do evento. PRB UL igual ao da mesma carga e backhaul em {bh}%, sem mudança.",
+  "interference.H": "Interferência no canal: retransmissões HARQ e RLC derrubam a eficiência, e a vazão cai com o PRB saturado. O PRB alto vem da carga, que já existia antes do evento.",
+  "interference.A": "Abrir investigação de RF e cruzar com o watchdog de IQ antes de qualquer ação de capacidade. Sucesso: S_t abaixo de {sw} e vazão de volta perto de {thpRef} Mbps.",
+  "interference.L": "S_t, perda, atraso extra e a queda de vazão na janela são overlays sintéticos sobre a KPM real. Um jammer sem carga apareceria com PRB estável e baixo.",
+  "backhaul.S": "Na segunda metade do stress ({win}), a utilização do backhaul sobe de {bhFirst}% para {bhmax}% (mediana {bh}%), enquanto PRB UL ({prb}%), vazão UL ({thp} Mbps) e perda ({loss}%) ficam iguais às da mesma carga sem o evento.",
+  "backhaul.E": "Cartão do backhaul em crítico ({runBh} amostras seguidas acima de {bc}%) e perda em OK; a série do backhaul com os limiares. Nenhum KPI de rádio muda contra a referência.",
+  "backhaul.H": "Gargalo no transporte, fora do E2: o rádio entrega o mesmo tráfego e é o enlace que chega ao limite. Com a perda ainda baixa, há uma janela de prevenção.",
+  "backhaul.A": "Investigar capacidade e priorização do backhaul antes que a perda suba. Cortar tráfego no rádio aliviaria o enlace à custa do usuário, sem tratar a causa. Sucesso: backhaul abaixo de {bw}% com a perda estável.",
+  "backhaul.L": "A utilização do backhaul é correlato sintético (o E2 não mede transporte), e o overlay a mantém alta até {bhEnd}, já com a célula ociosa.",
+  "lim.1": "RFSIM: sem RF real nem propagação, uma célula e um UE típico. O comportamento não se transfere direto para campo.",
+  "lim.2": "n = {n} amostras de um único run, {ns} delas no stress, e janelas de {wmin} a {wmax} amostras. Por isso os cartões usam mediana e o estado pede {s} amostras seguidas.",
+  "lim.3": "Só PRB UL, vazão UL e atraso RLC vêm do KPM. S_t, perda e utilização do backhaul são correlatos sintéticos em todos os cenários, inclusive no de carga, e os eventos de interferência e de backhaul são overlays didáticos: treinam o diagnóstico, não descrevem a rede.",
+  "lim.4": "O overlay de backhaul é uma forma, não um modelo de tráfego: mantém o enlace em {bhR}% ou mais de {bhIni} a {bhEnd}, com a célula já ociosa.",
+  "lim.5": "Coleta: {s00} é transição (PRB UL {s00prb}%) e {r00} traz {r00thp} Mbps com PRB UL {r00prb}%. Nenhuma das duas entra nas janelas de decisão.",
+  "lim.6": "Neste run o atraso sob carga (mediana {dl} µs) fica perto do das amostras ociosas com tráfego medido ({dia}–{dib}, mediana {di} µs). Sozinho, ele não separa carga de ócio.",
+  "unid.t": "Unidade do atraso: µs",
+  "unid.d": "O contador <code>DRB.RlcSduDelayDl</code> chega sem unidade no JSONL. O log de Indication da aula 01 (slide 66) o imprime em us, microssegundos; as aulas 04 a 06 escrevem ms. Esta página segue o log, como o resto do painel. Nenhuma regra aqui usa o valor absoluto do atraso: o alerta o compara com a mediana da mesma carga, uma razão que vale nas duas unidades, e nenhuma conclusão de QoE sai dele.",
+  "drill.nota": "Um gráfico por unidade, sem eixo duplo. PRB e backhaul dividem o gráfico porque ambos são % de 0 a 100. O volume acumulado do painel original saiu: é a soma da vazão e não traz evidência nova.",
+  "g.util": "Utilização (%)", "g.thp": "Vazão UL (Mbps)", "g.st": "Interferência S_t (score)", "g.loss": "Perda de pacotes (%)", "g.delay": "Atraso RLC DL (µs)",
+  "g.delaynota": "Unidade µs (ver Limitações). A linha tracejada é a regra do alerta de atraso.",
+  "s.prb": "PRB UL", "s.bh": "Backhaul", "s.thp": "Vazão UL", "s.st": "S_t", "s.loss": "Perda", "s.delay": "Atraso RLC",
+  "t.ver": "ver tabela", "t.ocultar": "ocultar tabela", "t.amostra": "Amostra", "t.fase": "Fase", "t.evento": "Evento",
+  "ev.interference": "interferência RF (sintético)", "ev.backhaul": "saturação do backhaul (sintético)", "banda.evento": "evento sintético",
+  "lim.atencao": "atenção", "lim.critico": "crítico", "lim.delay": "{k} × carga sem evento",
+  "g.aria": "{t}. As setas percorrem as amostras.",
+  "pe.aula": "Revisar a aula 05", "pe.ex": "Fazer o exercício",
+  "pe.nota": "Reconstrução do Dashboard KPI / NOC da plataforma de atividades, com os mesmos overlays deterministas e três correções: os cartões resumem a janela da decisão, não a última amostra; o alerta de atraso só vale sob carga e é relativo; o atraso é rotulado em µs."
+},
+en: {
+  "title": "KPI / NOC Dashboard · Core5G_ARM64", "back": "← Study 4", "trilha": "Study 4 · Lesson 05 · BI and NOC", "tema": "Toggle theme",
+  "h1": "KPI / NOC Dashboard",
+  "lead": "RAN monitoring over the lab's 100 KPM samples (E2SM-KPM, baseline, stress and recovery phases). Pick a scenario and read top to bottom, in the order of a decision dashboard: headline, cards, the series that justifies the decision, alerts, recommendation and limitations.",
+  "origem": "source {src} · run {run} · n = {n} ({nb} baseline · {ns} stress · {nr} recovery)",
+  "cen.aria": "Scenario", "cen.lab": "Load · real lab data", "cen.interference": "Interference · synthetic overlay", "cen.backhaul": "Backhaul · synthetic overlay",
+  "r.headline": "Headline", "r.kpis": "KPI cards", "r.serie": "Decision series", "r.alertas": "Alerts", "r.sehal": "Recommendation (SEHAL)", "r.limites": "Limitations", "r.drill": "Analytical drill-down: all series",
+  "kpis.nota": "Value = median of {win} ({n} samples), compared with {ref}. State = the highest level reached by at least {s} consecutive samples in the window: a single sample does not colour the card.",
+  "ref.base": "the idle baseline (B00–B19)", "ref.load": "the same load outside the event ({n} samples)",
+  "vs.base": "vs baseline", "vs.load": "vs load without event", "u.pp": "pp",
+  "k.prb": "UL PRB utilization", "k.thp": "UL throughput", "k.st": "Interference (S_t)", "k.loss": "Packet loss", "k.bh": "Backhaul utilization",
+  "src.kpm": "lab KPM", "src.kpmov": "lab KPM + overlay", "src.syn": "synthetic",
+  "c.janela": "median · {win} · range {a}–{b}",
+  "c.lim": "warning > {w}{u} · critical > {c}{u}",
+  "c.limthp": "warning < {w} · critical < {c} Mbps (85% and 60% of the load without event)",
+  "lv.ok": "OK", "lv.warn": "Warning", "lv.crit": "Critical", "lv.info": "Info",
+  "c.porok": "no run of {s} beyond the threshold", "c.poracima": "{n} in a row above {v}{u}", "c.porabaixo": "{n} in a row below {v}{u}",
+  "serie.lab": "UL PRB utilization by phase: the jump from {prbRef}% to {prb}% is the capacity evidence.",
+  "serie.interference": "S_t by phase: it crosses the critical threshold only inside the event window ({win}).",
+  "serie.backhaul": "Backhaul utilization: the ramp starts at {a} and crosses {bc}% at the end of the stress.",
+  "alertas.nota": "Each alert shows the rule that fired it. All require {s} consecutive samples, except the data-quality one.",
+  "a.regra": "Rule:","a.onde": "{a}–{b} · {n} in a row", "a.onde1": "{a} · 1 sample", "a.onden": "{a}–{b} · {n} samples",
+  "a.prb.t": "UL PRB saturation", "a.prb.r": "UL PRB > {c}% (critical) or > {w}% (warning)", "a.prb.d": "The radio has no spare resources.",
+  "a.thp.t": "Throughput below normal load", "a.thp.r": "with UL PRB > {p}%, throughput < {c} Mbps (critical) or < {w} Mbps (warning): 60% and 85% of the load without event", "a.thp.d": "Same radio occupancy, less throughput: efficiency dropped.",
+  "a.delay.t": "RLC delay above normal load", "a.delay.r": "with UL PRB > {p}%, delay ≥ {k} × {ref} µs, the median of the load without event", "a.delay.d": "A ratio, not an absolute value: it holds in µs or ms and does not measure QoE.",
+  "a.st.t": "Channel interference (S_t)", "a.st.r": "S_t > {c} (critical) or > {w} (warning)", "a.st.d": "Spectral score above the threshold.",
+  "a.loss.t": "Packet loss", "a.loss.r": "loss > {c}% (critical) or > {w}% (warning)", "a.loss.d": "Packets lost after retransmissions.",
+  "a.bh.t": "Backhaul saturating", "a.bh.r": "utilization > {c}% (critical) or > {w}% (warning)", "a.bh.d": "The transport link is approaching its limit.",
+  "a.bhrisk.t": "Risk of transport loss", "a.bhrisk.r": "backhaul > {c}% with loss ≤ {w}%", "a.bhrisk.d": "Loss has not risen yet: this is the window to act before queue drops.",
+  "a.qc.t": "Inconsistent sample", "a.qc.r": "throughput > {q} Mbps with UL PRB < {w}% (1 sample is enough)", "a.qc.d": "Handle it in data quality control, not as new load.",
+  "sehal.S": "Situation", "sehal.E": "Evidence", "sehal.H": "Hypothesis", "sehal.A": "Action", "sehal.L": "Limitation",
+  "hl.lab": "Cell out of radio headroom under stress: UL PRB at {prb}% with {thp} Mbps of UL throughput",
+  "hl.interference": "Channel degraded under load: S_t at {st} and UL throughput {drop}% against the same load, with UL PRB at {prb}%",
+  "hl.backhaul": "Backhaul reaches {bhmax}% at the end of the stress, with radio and loss unchanged from the same load",
+  "lab.S": "During sustained stress ({win}), UL PRB goes from {prbRef}% at baseline to {prb}%, and UL throughput from {thpRef} to {thp} Mbps (medians).",
+  "lab.E": "UL PRB card critical ({runPrb} consecutive samples above {pc}%) and the UL PRB series by phase. S_t ({st}), loss ({loss}%) and backhaul ({bh}%) stay below their thresholds.",
+  "lab.H": "Radio capacity congestion: load and throughput rise together, and nothing points to the channel or to transport.",
+  "lab.A": "Recommend UL load relief as a candidate A1 policy, in dry-run. Success KPI: UL PRB out of critical; risk KPI: throughput of the prioritized traffic.",
+  "lab.L": "RFSIM with one UE and {n} stress samples; a dry-run is not an effect on the network.",
+  "interference.S": "In the middle of the stress ({win}), with UL PRB still at {prb}%, S_t goes from {stRef} to {st}, loss from {lossRef}% to {loss}% and UL throughput from {thpRef} to {thp} Mbps ({drop}%).",
+  "interference.E": "S_t and loss cards critical, throughput in warning; the S_t series with the event window. UL PRB equal to the same load, and backhaul at {bh}%, unchanged.",
+  "interference.H": "Channel interference: HARQ and RLC retransmissions cut efficiency, and throughput falls with PRB saturated. The high PRB comes from the load, which existed before the event.",
+  "interference.A": "Open an RF investigation and cross-check with the IQ watchdog before any capacity action. Success: S_t below {sw} and throughput back near {thpRef} Mbps.",
+  "interference.L": "S_t, loss, extra delay and the throughput drop in the window are synthetic overlays on the real KPM. A jammer without load would show a stable, low PRB.",
+  "backhaul.S": "In the second half of the stress ({win}), backhaul utilization climbs from {bhFirst}% to {bhmax}% (median {bh}%), while UL PRB ({prb}%), UL throughput ({thp} Mbps) and loss ({loss}%) match the same load without the event.",
+  "backhaul.E": "Backhaul card critical ({runBh} consecutive samples above {bc}%) and loss OK; the backhaul series with its thresholds. No radio KPI changes against the reference.",
+  "backhaul.H": "Transport bottleneck, outside E2: the radio delivers the same traffic and it is the link that reaches its limit. With loss still low, there is a prevention window.",
+  "backhaul.A": "Investigate backhaul capacity and prioritization before loss rises. Cutting traffic at the radio would relieve the link at the user's expense, without addressing the cause. Success: backhaul below {bw}% with stable loss.",
+  "backhaul.L": "Backhaul utilization is a synthetic correlate (E2 does not measure transport), and the overlay keeps it high until {bhEnd}, with the cell already idle.",
+  "lim.1": "RFSIM: no real RF or propagation, one cell and one typical UE. The behaviour does not transfer directly to the field.",
+  "lim.2": "n = {n} samples from a single run, {ns} of them under stress, and windows of {wmin} to {wmax} samples. That is why the cards use the median and the state requires {s} consecutive samples.",
+  "lim.3": "Only UL PRB, UL throughput and RLC delay come from KPM. S_t, loss and backhaul utilization are synthetic correlates in every scenario, including the load one, and the interference and backhaul events are didactic overlays: they train diagnosis, they do not describe the network.",
+  "lim.4": "The backhaul overlay is a shape, not a traffic model: it keeps the link at {bhR}% or more from {bhIni} to {bhEnd}, with the cell already idle.",
+  "lim.5": "Collection: {s00} is a transition (UL PRB {s00prb}%) and {r00} carries {r00thp} Mbps with UL PRB {r00prb}%. Neither enters the decision windows.",
+  "lim.6": "In this run the delay under load (median {dl} µs) is close to that of idle samples with measured traffic ({dia}–{dib}, median {di} µs). On its own it does not separate load from idle.",
+  "unid.t": "Delay unit: µs",
+  "unid.d": "The <code>DRB.RlcSduDelayDl</code> counter arrives without a unit in the JSONL. The Indication log in lesson 01 (slide 66) prints it in us, microseconds; lessons 04 to 06 write ms. This page follows the log, like the rest of the panel. No rule here uses the absolute delay value: the alert compares it with the median of the same load, a ratio that holds in both units, and no QoE conclusion is drawn from it.",
+  "drill.nota": "One chart per unit, no dual axis. PRB and backhaul share a chart because both are % from 0 to 100. The original dashboard's cumulative volume was dropped: it is the sum of throughput and adds no new evidence.",
+  "g.util": "Utilization (%)", "g.thp": "UL throughput (Mbps)", "g.st": "Interference S_t (score)", "g.loss": "Packet loss (%)", "g.delay": "RLC DL delay (µs)",
+  "g.delaynota": "Unit µs (see Limitations). The dashed line is the delay alert rule.",
+  "s.prb": "UL PRB", "s.bh": "Backhaul", "s.thp": "UL throughput", "s.st": "S_t", "s.loss": "Loss", "s.delay": "RLC delay",
+  "t.ver": "show table", "t.ocultar": "hide table", "t.amostra": "Sample", "t.fase": "Phase", "t.evento": "Event",
+  "ev.interference": "RF interference (synthetic)", "ev.backhaul": "backhaul saturation (synthetic)", "banda.evento": "synthetic event",
+  "lim.atencao": "warning", "lim.critico": "critical", "lim.delay": "{k} × load without event",
+  "g.aria": "{t}. Arrow keys step through the samples.",
+  "pe.aula": "Review lesson 05", "pe.ex": "Do the exercise",
+  "pe.nota": "Rebuild of the activities platform's KPI / NOC Dashboard, with the same deterministic overlays and three fixes: the cards summarize the decision window, not the last sample; the delay alert only applies under load and is relative; the delay is labelled in µs."
+},
+es: {
+  "title": "Dashboard KPI / NOC · Core5G_ARM64", "back": "← Estudio 4", "trilha": "Estudio 4 · Clase 05 · BI y NOC", "tema": "Cambiar tema",
+  "h1": "Dashboard KPI / NOC",
+  "lead": "Monitoreo de la RAN sobre las 100 muestras KPM del lab (E2SM-KPM, fases baseline, stress y recovery). Elija el escenario y lea de arriba abajo, en el orden de un panel de decisión: titular, tarjetas, la serie que justifica la decisión, alertas, recomendación y limitaciones.",
+  "origem": "fuente {src} · run {run} · n = {n} ({nb} baseline · {ns} stress · {nr} recovery)",
+  "cen.aria": "Escenario", "cen.lab": "Carga · dato real del lab", "cen.interference": "Interferencia · overlay sintético", "cen.backhaul": "Backhaul · overlay sintético",
+  "r.headline": "Titular", "r.kpis": "Tarjetas de KPI", "r.serie": "Serie de la decisión", "r.alertas": "Alertas", "r.sehal": "Recomendación (SEHAL)", "r.limites": "Limitaciones", "r.drill": "Drill-down analítico: todas las series",
+  "kpis.nota": "Valor = mediana de {win} ({n} muestras), comparada con {ref}. Estado = el nivel más alto que alcanzan al menos {s} muestras seguidas de la ventana: una muestra sola no colorea la tarjeta.",
+  "ref.base": "el baseline ocioso (B00–B19)", "ref.load": "la misma carga fuera del evento ({n} muestras)",
+  "vs.base": "vs baseline", "vs.load": "vs carga sin evento", "u.pp": "pp",
+  "k.prb": "Utilización de PRB UL", "k.thp": "Caudal UL", "k.st": "Interferencia (S_t)", "k.loss": "Pérdida de paquetes", "k.bh": "Utilización del backhaul",
+  "src.kpm": "KPM del lab", "src.kpmov": "KPM del lab + overlay", "src.syn": "sintético",
+  "c.janela": "mediana · {win} · rango {a}–{b}",
+  "c.lim": "atención > {w}{u} · crítico > {c}{u}",
+  "c.limthp": "atención < {w} · crítico < {c} Mbps (85% y 60% de la carga sin evento)",
+  "lv.ok": "OK", "lv.warn": "Atención", "lv.crit": "Crítico", "lv.info": "Info",
+  "c.porok": "ninguna secuencia de {s} más allá del umbral", "c.poracima": "{n} seguidas por encima de {v}{u}", "c.porabaixo": "{n} seguidas por debajo de {v}{u}",
+  "serie.lab": "Utilización de PRB UL por fase: el salto de {prbRef}% a {prb}% es la evidencia de capacidad.",
+  "serie.interference": "S_t por fase: supera el umbral crítico solo dentro de la ventana del evento ({win}).",
+  "serie.backhaul": "Utilización del backhaul: la rampa empieza en {a} y cruza el {bc}% al final del stress.",
+  "alertas.nota": "Cada alerta muestra la regla que la disparó. Todas piden {s} muestras seguidas, salvo la de calidad del dato.",
+  "a.regra": "Regla:","a.onde": "{a}–{b} · {n} seguidas", "a.onde1": "{a} · 1 muestra", "a.onden": "{a}–{b} · {n} muestras",
+  "a.prb.t": "Saturación de PRB UL", "a.prb.r": "PRB UL > {c}% (crítico) o > {w}% (atención)", "a.prb.d": "La radio no tiene recursos libres.",
+  "a.thp.t": "Caudal por debajo de la carga normal", "a.thp.r": "con PRB UL > {p}%, caudal < {c} Mbps (crítico) o < {w} Mbps (atención): 60% y 85% de la carga sin evento", "a.thp.d": "Misma ocupación de radio, menos caudal: la eficiencia cayó.",
+  "a.delay.t": "Retardo RLC por encima de la carga normal", "a.delay.r": "con PRB UL > {p}%, retardo ≥ {k} × {ref} µs, la mediana de la carga sin evento", "a.delay.d": "Es una razón, no un valor absoluto: vale en µs o en ms y no mide QoE.",
+  "a.st.t": "Interferencia en el canal (S_t)", "a.st.r": "S_t > {c} (crítico) o > {w} (atención)", "a.st.d": "Score espectral por encima del umbral.",
+  "a.loss.t": "Pérdida de paquetes", "a.loss.r": "pérdida > {c}% (crítico) o > {w}% (atención)", "a.loss.d": "Paquetes perdidos después de las retransmisiones.",
+  "a.bh.t": "Backhaul saturándose", "a.bh.r": "utilización > {c}% (crítico) o > {w}% (atención)", "a.bh.d": "El enlace de transporte se acerca a su límite.",
+  "a.bhrisk.t": "Riesgo de pérdida en el transporte", "a.bhrisk.r": "backhaul > {c}% con pérdida ≤ {w}%", "a.bhrisk.d": "La pérdida aún no subió: es la ventana para actuar antes del descarte en cola.",
+  "a.qc.t": "Muestra incoherente", "a.qc.r": "caudal > {q} Mbps con PRB UL < {w}% (basta 1 muestra)", "a.qc.d": "Tratarla en el control de calidad del dato, no como nueva carga.",
+  "sehal.S": "Situación", "sehal.E": "Evidencia", "sehal.H": "Hipótesis", "sehal.A": "Acción", "sehal.L": "Limitación",
+  "hl.lab": "Celda sin margen de radio en el stress: PRB UL en {prb}% con {thp} Mbps de caudal UL",
+  "hl.interference": "Canal degradado bajo carga: S_t en {st} y caudal UL {drop}% frente a la misma carga, con PRB UL en {prb}%",
+  "hl.backhaul": "El backhaul llega al {bhmax}% al final del stress, con radio y pérdida iguales a los de la misma carga",
+  "lab.S": "En el stress sostenido ({win}), el PRB UL pasa de {prbRef}% en el baseline a {prb}%, y el caudal UL de {thpRef} a {thp} Mbps (medianas).",
+  "lab.E": "Tarjeta de PRB UL en crítico ({runPrb} muestras seguidas por encima de {pc}%) y la serie del PRB UL por fase. S_t ({st}), pérdida ({loss}%) y backhaul ({bh}%) quedan por debajo de los umbrales.",
+  "lab.H": "Congestión de capacidad en la radio: carga y caudal suben juntos, y nada apunta al canal ni al transporte.",
+  "lab.A": "Recomendar alivio de carga en el UL como política A1 candidata, en dry-run. KPI de éxito: PRB UL fuera de crítico; KPI de riesgo: el caudal del tráfico priorizado.",
+  "lab.L": "RFSIM con un UE y {n} muestras de stress; dry-run no es efecto en la red.",
+  "interference.S": "En el centro del stress ({win}), con el PRB UL aún en {prb}%, el S_t va de {stRef} a {st}, la pérdida de {lossRef}% a {loss}% y el caudal UL de {thpRef} a {thp} Mbps ({drop}%).",
+  "interference.E": "Tarjetas de S_t y pérdida en crítico y de caudal en atención; la serie del S_t con la ventana del evento. PRB UL igual al de la misma carga y backhaul en {bh}%, sin cambios.",
+  "interference.H": "Interferencia en el canal: las retransmisiones HARQ y RLC reducen la eficiencia, y el caudal cae con el PRB saturado. El PRB alto viene de la carga, que ya existía antes del evento.",
+  "interference.A": "Abrir una investigación de RF y cruzarla con el watchdog de IQ antes de cualquier acción de capacidad. Éxito: S_t por debajo de {sw} y caudal de vuelta cerca de {thpRef} Mbps.",
+  "interference.L": "S_t, pérdida, retardo extra y la caída de caudal en la ventana son overlays sintéticos sobre la KPM real. Un jammer sin carga aparecería con PRB estable y bajo.",
+  "backhaul.S": "En la segunda mitad del stress ({win}), la utilización del backhaul sube de {bhFirst}% a {bhmax}% (mediana {bh}%), mientras PRB UL ({prb}%), caudal UL ({thp} Mbps) y pérdida ({loss}%) quedan iguales a los de la misma carga sin el evento.",
+  "backhaul.E": "Tarjeta del backhaul en crítico ({runBh} muestras seguidas por encima de {bc}%) y pérdida en OK; la serie del backhaul con sus umbrales. Ningún KPI de radio cambia frente a la referencia.",
+  "backhaul.H": "Cuello de botella en el transporte, fuera de E2: la radio entrega el mismo tráfico y es el enlace el que llega al límite. Con la pérdida aún baja, hay una ventana de prevención.",
+  "backhaul.A": "Investigar capacidad y priorización del backhaul antes de que suba la pérdida. Recortar tráfico en la radio aliviaría el enlace a costa del usuario, sin tratar la causa. Éxito: backhaul por debajo de {bw}% con la pérdida estable.",
+  "backhaul.L": "La utilización del backhaul es un correlato sintético (E2 no mide el transporte), y el overlay la mantiene alta hasta {bhEnd}, con la celda ya ociosa.",
+  "lim.1": "RFSIM: sin RF real ni propagación, una celda y un UE típico. El comportamiento no se traslada directamente al campo.",
+  "lim.2": "n = {n} muestras de un único run, {ns} de ellas en stress, y ventanas de {wmin} a {wmax} muestras. Por eso las tarjetas usan la mediana y el estado pide {s} muestras seguidas.",
+  "lim.3": "Solo PRB UL, caudal UL y retardo RLC vienen de KPM. S_t, pérdida y utilización del backhaul son correlatos sintéticos en todos los escenarios, incluido el de carga, y los eventos de interferencia y de backhaul son overlays didácticos: entrenan el diagnóstico, no describen la red.",
+  "lim.4": "El overlay de backhaul es una forma, no un modelo de tráfico: mantiene el enlace en {bhR}% o más de {bhIni} a {bhEnd}, con la celda ya ociosa.",
+  "lim.5": "Recolección: {s00} es transición (PRB UL {s00prb}%) y {r00} trae {r00thp} Mbps con PRB UL {r00prb}%. Ninguna de las dos entra en las ventanas de decisión.",
+  "lim.6": "En este run el retardo bajo carga (mediana {dl} µs) está cerca del de las muestras ociosas con tráfico medido ({dia}–{dib}, mediana {di} µs). Por sí solo no separa carga de ocio.",
+  "unid.t": "Unidad del retardo: µs",
+  "unid.d": "El contador <code>DRB.RlcSduDelayDl</code> llega sin unidad en el JSONL. El log de Indication de la clase 01 (diapositiva 66) lo imprime en us, microsegundos; las clases 04 a 06 escriben ms. Esta página sigue el log, como el resto del panel. Ninguna regla aquí usa el valor absoluto del retardo: la alerta lo compara con la mediana de la misma carga, una razón que vale en ambas unidades, y de él no sale ninguna conclusión de QoE.",
+  "drill.nota": "Un gráfico por unidad, sin doble eje. PRB y backhaul comparten gráfico porque ambos son % de 0 a 100. El volumen acumulado del panel original se quitó: es la suma del caudal y no aporta evidencia nueva.",
+  "g.util": "Utilización (%)", "g.thp": "Caudal UL (Mbps)", "g.st": "Interferencia S_t (score)", "g.loss": "Pérdida de paquetes (%)", "g.delay": "Retardo RLC DL (µs)",
+  "g.delaynota": "Unidad µs (ver Limitaciones). La línea discontinua es la regla de la alerta de retardo.",
+  "s.prb": "PRB UL", "s.bh": "Backhaul", "s.thp": "Caudal UL", "s.st": "S_t", "s.loss": "Pérdida", "s.delay": "Retardo RLC",
+  "t.ver": "ver tabla", "t.ocultar": "ocultar tabla", "t.amostra": "Muestra", "t.fase": "Fase", "t.evento": "Evento",
+  "ev.interference": "interferencia RF (sintética)", "ev.backhaul": "saturación del backhaul (sintética)", "banda.evento": "evento sintético",
+  "lim.atencao": "atención", "lim.critico": "crítico", "lim.delay": "{k} × carga sin evento",
+  "g.aria": "{t}. Las flechas recorren las muestras.",
+  "pe.aula": "Repasar la clase 05", "pe.ex": "Hacer el ejercicio",
+  "pe.nota": "Reconstrucción del Dashboard KPI / NOC de la plataforma de actividades, con los mismos overlays deterministas y tres correcciones: las tarjetas resumen la ventana de la decisión, no la última muestra; la alerta de retardo solo vale bajo carga y es relativa; el retardo se rotula en µs."
+},
+fr: {
+  "title": "Tableau de bord KPI / NOC · Core5G_ARM64", "back": "← Étude 4", "trilha": "Étude 4 · Cours 05 · BI et NOC", "tema": "Changer de thème",
+  "h1": "Tableau de bord KPI / NOC",
+  "lead": "Supervision RAN sur les 100 échantillons KPM du lab (E2SM-KPM, phases baseline, stress et recovery). Choisissez le scénario et lisez de haut en bas, dans l'ordre d'un tableau de décision : titre, cartes, la série qui justifie la décision, alertes, recommandation et limites.",
+  "origem": "source {src} · run {run} · n = {n} ({nb} baseline · {ns} stress · {nr} recovery)",
+  "cen.aria": "Scénario", "cen.lab": "Charge · donnée réelle du lab", "cen.interference": "Interférence · overlay synthétique", "cen.backhaul": "Backhaul · overlay synthétique",
+  "r.headline": "Titre", "r.kpis": "Cartes KPI", "r.serie": "Série de la décision", "r.alertas": "Alertes", "r.sehal": "Recommandation (SEHAL)", "r.limites": "Limites", "r.drill": "Drill-down analytique : toutes les séries",
+  "kpis.nota": "Valeur = médiane de {win} ({n} échantillons), comparée à {ref}. État = le niveau le plus élevé atteint par au moins {s} échantillons consécutifs de la fenêtre : un échantillon isolé ne colore pas la carte.",
+  "ref.base": "la baseline au repos (B00–B19)", "ref.load": "la même charge hors événement ({n} échantillons)",
+  "vs.base": "vs baseline", "vs.load": "vs charge sans événement", "u.pp": "pts",
+  "k.prb": "Utilisation PRB UL", "k.thp": "Débit UL", "k.st": "Interférence (S_t)", "k.loss": "Perte de paquets", "k.bh": "Utilisation du backhaul",
+  "src.kpm": "KPM du lab", "src.kpmov": "KPM du lab + overlay", "src.syn": "synthétique",
+  "c.janela": "médiane · {win} · plage {a}–{b}",
+  "c.lim": "attention > {w}{u} · critique > {c}{u}",
+  "c.limthp": "attention < {w} · critique < {c} Mbps (85 % et 60 % de la charge sans événement)",
+  "lv.ok": "OK", "lv.warn": "Attention", "lv.crit": "Critique", "lv.info": "Info",
+  "c.porok": "aucune série de {s} au-delà du seuil", "c.poracima": "{n} consécutifs au-dessus de {v}{u}", "c.porabaixo": "{n} consécutifs en dessous de {v}{u}",
+  "serie.lab": "Utilisation PRB UL par phase : le saut de {prbRef} % à {prb} % est la preuve de capacité.",
+  "serie.interference": "S_t par phase : il franchit le seuil critique uniquement dans la fenêtre de l'événement ({win}).",
+  "serie.backhaul": "Utilisation du backhaul : la rampe commence en {a} et franchit {bc} % à la fin du stress.",
+  "alertas.nota": "Chaque alerte indique la règle qui l'a déclenchée. Toutes exigent {s} échantillons consécutifs, sauf celle de qualité des données.",
+  "a.regra": "Règle :","a.onde": "{a}–{b} · {n} consécutifs", "a.onde1": "{a} · 1 échantillon", "a.onden": "{a}–{b} · {n} échantillons",
+  "a.prb.t": "Saturation PRB UL", "a.prb.r": "PRB UL > {c} % (critique) ou > {w} % (attention)", "a.prb.d": "La radio n'a plus de ressources libres.",
+  "a.thp.t": "Débit sous la charge normale", "a.thp.r": "avec PRB UL > {p} %, débit < {c} Mbps (critique) ou < {w} Mbps (attention) : 60 % et 85 % de la charge sans événement", "a.thp.d": "Même occupation radio, moins de débit : l'efficacité a baissé.",
+  "a.delay.t": "Délai RLC au-dessus de la charge normale", "a.delay.r": "avec PRB UL > {p} %, délai ≥ {k} × {ref} µs, la médiane de la charge sans événement", "a.delay.d": "C'est un rapport, pas une valeur absolue : il vaut en µs comme en ms et ne mesure pas la QoE.",
+  "a.st.t": "Interférence sur le canal (S_t)", "a.st.r": "S_t > {c} (critique) ou > {w} (attention)", "a.st.d": "Score spectral au-dessus du seuil.",
+  "a.loss.t": "Perte de paquets", "a.loss.r": "perte > {c} % (critique) ou > {w} % (attention)", "a.loss.d": "Paquets perdus après les retransmissions.",
+  "a.bh.t": "Backhaul en saturation", "a.bh.r": "utilisation > {c} % (critique) ou > {w} % (attention)", "a.bh.d": "Le lien de transport approche de sa limite.",
+  "a.bhrisk.t": "Risque de perte dans le transport", "a.bhrisk.r": "backhaul > {c} % avec perte ≤ {w} %", "a.bhrisk.d": "La perte n'a pas encore augmenté : c'est le moment d'agir avant les rejets en file.",
+  "a.qc.t": "Échantillon incohérent", "a.qc.r": "débit > {q} Mbps avec PRB UL < {w} % (1 échantillon suffit)", "a.qc.d": "À traiter dans le contrôle qualité des données, pas comme une nouvelle charge.",
+  "sehal.S": "Situation", "sehal.E": "Éléments de preuve", "sehal.H": "Hypothèse", "sehal.A": "Action", "sehal.L": "Limite",
+  "hl.lab": "Cellule sans marge radio pendant le stress : PRB UL à {prb} % avec {thp} Mbps de débit UL",
+  "hl.interference": "Canal dégradé sous charge : S_t à {st} et débit UL {drop} % par rapport à la même charge, avec PRB UL à {prb} %",
+  "hl.backhaul": "Le backhaul atteint {bhmax} % en fin de stress, radio et perte identiques à la même charge",
+  "lab.S": "Pendant le stress soutenu ({win}), le PRB UL passe de {prbRef} % en baseline à {prb} %, et le débit UL de {thpRef} à {thp} Mbps (médianes).",
+  "lab.E": "Carte PRB UL en critique ({runPrb} échantillons consécutifs au-dessus de {pc} %) et la série du PRB UL par phase. S_t ({st}), perte ({loss} %) et backhaul ({bh} %) restent sous leurs seuils.",
+  "lab.H": "Congestion de capacité radio : charge et débit montent ensemble, et rien ne désigne le canal ni le transport.",
+  "lab.A": "Recommander un allègement de charge UL comme politique A1 candidate, en dry-run. KPI de succès : PRB UL hors du critique ; KPI de risque : le débit du trafic priorisé.",
+  "lab.L": "RFSIM avec un UE et {n} échantillons de stress ; un dry-run n'est pas un effet sur le réseau.",
+  "interference.S": "Au cœur du stress ({win}), avec le PRB UL toujours à {prb} %, le S_t passe de {stRef} à {st}, la perte de {lossRef} % à {loss} % et le débit UL de {thpRef} à {thp} Mbps ({drop} %).",
+  "interference.E": "Cartes S_t et perte en critique, débit en attention ; la série du S_t avec la fenêtre de l'événement. PRB UL identique à la même charge et backhaul à {bh} %, sans changement.",
+  "interference.H": "Interférence sur le canal : les retransmissions HARQ et RLC réduisent l'efficacité, et le débit chute avec le PRB saturé. Le PRB élevé vient de la charge, qui existait avant l'événement.",
+  "interference.A": "Ouvrir une investigation RF et la croiser avec le watchdog IQ avant toute action de capacité. Succès : S_t sous {sw} et débit revenu près de {thpRef} Mbps.",
+  "interference.L": "S_t, perte, délai supplémentaire et baisse de débit dans la fenêtre sont des overlays synthétiques sur la KPM réelle. Un brouilleur sans charge apparaîtrait avec un PRB stable et bas.",
+  "backhaul.S": "Dans la seconde moitié du stress ({win}), l'utilisation du backhaul monte de {bhFirst} % à {bhmax} % (médiane {bh} %), tandis que PRB UL ({prb} %), débit UL ({thp} Mbps) et perte ({loss} %) restent identiques à la même charge sans l'événement.",
+  "backhaul.E": "Carte backhaul en critique ({runBh} échantillons consécutifs au-dessus de {bc} %) et perte OK ; la série du backhaul avec ses seuils. Aucun KPI radio ne change par rapport à la référence.",
+  "backhaul.H": "Goulot d'étranglement dans le transport, hors E2 : la radio délivre le même trafic et c'est le lien qui atteint sa limite. Avec une perte encore faible, il y a une fenêtre de prévention.",
+  "backhaul.A": "Examiner la capacité et la priorisation du backhaul avant que la perte n'augmente. Couper du trafic côté radio soulagerait le lien au détriment de l'utilisateur, sans traiter la cause. Succès : backhaul sous {bw} % avec une perte stable.",
+  "backhaul.L": "L'utilisation du backhaul est un corrélat synthétique (E2 ne mesure pas le transport), et l'overlay la maintient élevée jusqu'à {bhEnd}, alors que la cellule est déjà au repos.",
+  "lim.1": "RFSIM : pas de RF réelle ni de propagation, une cellule et un UE type. Le comportement ne se transpose pas directement sur le terrain.",
+  "lim.2": "n = {n} échantillons d'un seul run, dont {ns} en stress, et des fenêtres de {wmin} à {wmax} échantillons. D'où la médiane dans les cartes et les {s} échantillons consécutifs exigés pour l'état.",
+  "lim.3": "Seuls le PRB UL, le débit UL et le délai RLC viennent de la KPM. S_t, perte et utilisation du backhaul sont des corrélats synthétiques dans tous les scénarios, y compris celui de charge, et les événements d'interférence et de backhaul sont des overlays didactiques : ils entraînent le diagnostic, ils ne décrivent pas le réseau.",
+  "lim.4": "L'overlay de backhaul est une forme, pas un modèle de trafic : il maintient le lien à {bhR} % ou plus de {bhIni} à {bhEnd}, alors que la cellule est déjà au repos.",
+  "lim.5": "Collecte : {s00} est une transition (PRB UL {s00prb} %) et {r00} porte {r00thp} Mbps avec un PRB UL de {r00prb} %. Aucun des deux n'entre dans les fenêtres de décision.",
+  "lim.6": "Dans ce run, le délai sous charge (médiane {dl} µs) est proche de celui des échantillons au repos avec trafic mesuré ({dia}–{dib}, médiane {di} µs). Seul, il ne distingue pas la charge du repos.",
+  "unid.t": "Unité du délai : µs",
+  "unid.d": "Le compteur <code>DRB.RlcSduDelayDl</code> arrive sans unité dans le JSONL. Le log d'Indication du cours 01 (diapositive 66) l'affiche en us, microsecondes ; les cours 04 à 06 écrivent ms. Cette page suit le log, comme le reste du panneau. Aucune règle ici n'utilise la valeur absolue du délai : l'alerte le compare à la médiane de la même charge, un rapport valable dans les deux unités, et aucune conclusion de QoE n'en est tirée.",
+  "drill.nota": "Un graphique par unité, sans double axe. PRB et backhaul partagent un graphique car tous deux sont en % de 0 à 100. Le volume cumulé du tableau d'origine a été retiré : c'est la somme du débit, sans preuve nouvelle.",
+  "g.util": "Utilisation (%)", "g.thp": "Débit UL (Mbps)", "g.st": "Interférence S_t (score)", "g.loss": "Perte de paquets (%)", "g.delay": "Délai RLC DL (µs)",
+  "g.delaynota": "Unité µs (voir Limites). La ligne pointillée est la règle de l'alerte de délai.",
+  "s.prb": "PRB UL", "s.bh": "Backhaul", "s.thp": "Débit UL", "s.st": "S_t", "s.loss": "Perte", "s.delay": "Délai RLC",
+  "t.ver": "voir le tableau", "t.ocultar": "masquer le tableau", "t.amostra": "Échantillon", "t.fase": "Phase", "t.evento": "Événement",
+  "ev.interference": "interférence RF (synthétique)", "ev.backhaul": "saturation du backhaul (synthétique)", "banda.evento": "événement synthétique",
+  "lim.atencao": "attention", "lim.critico": "critique", "lim.delay": "{k} × charge sans événement",
+  "g.aria": "{t}. Les flèches parcourent les échantillons.",
+  "pe.aula": "Revoir le cours 05", "pe.ex": "Faire l'exercice",
+  "pe.nota": "Reconstruction du tableau de bord KPI / NOC de la plateforme d'activités, avec les mêmes overlays déterministes et trois corrections : les cartes résument la fenêtre de décision, et non le dernier échantillon ; l'alerte de délai ne vaut que sous charge et est relative ; le délai est étiqueté en µs."
+}
+};
+
+let LANG = "pt";
+const LOC = {pt: "pt-BR", en: "en-US", es: "es-ES", fr: "fr-FR"};
+function T(k, p) {
+  let s = (D[LANG] && D[LANG][k] != null) ? D[LANG][k] : (D.pt[k] != null ? D.pt[k] : k);
+  if (p) for (const n in p) s = s.split("{" + n + "}").join(p[n]);
+  return s;
+}
+const fmt = (v, d = 2) => new Intl.NumberFormat(LOC[LANG] || "pt-BR", {maximumFractionDigits: d}).format(v);
+const un = u => u === "%" ? (LANG === "fr" ? " %" : "%") : (u ? " " + u : "");
+// o sinal segue o número JÁ ARREDONDADO: "+0 Mbps" diria que algo subiu
+const sinal = (v, txt) => (/^0(?:[.,]0*)?(?:\s|$)/.test(txt) ? "±" : v > 0 ? "+" : v < 0 ? "−" : "±") + txt;
+
+// ---------------------------------------------------------------- gráficos
+let GRAFS = [], NG = 0;
+
+function escala(max) {
+  if (!(max > 0)) max = 1;
+  const bruto = max / 4, mag = Math.pow(10, Math.floor(Math.log10(bruto))), nrm = bruto / mag;
+  const passo = (nrm <= 1 ? 1 : nrm <= 2 ? 2 : nrm <= 2.5 ? 2.5 : nrm <= 5 ? 5 : 10) * mag;
+  const hi = Math.ceil(max / passo - 1e-9) * passo, ticks = [];
+  for (let i = 0; i * passo <= hi + 1e-9; i++) ticks.push(+(i * passo).toFixed(6));
+  return {hi, ticks};
+}
+
+function montaGrafico(host, cfg) {
+  const g = {cfg, id: ++NG, idx: null, W: 0};
+  const legenda = cfg.series.length > 1
+    ? `<div class="legenda">${cfg.series.map(k => `<span><i style="background:var(${MET[k].cor})"></i>${esc(T("s." + k))}</span>`).join("")}</div>` : "";
+  host.innerHTML = `${legenda}<div class="area"></div><button type="button" class="vertab" aria-expanded="false">${esc(T("t.ver"))}</button><div class="tabwrap" hidden></div>`;
+  g.area = $(".area", host);
+  const bt = $(".vertab", host), tw = $(".tabwrap", host);
+  bt.addEventListener("click", () => {
+    const abrir = tw.hidden;
+    if (abrir && !tw.firstChild) tw.innerHTML = tabelaHTML(cfg);
+    tw.hidden = !abrir;
+    bt.setAttribute("aria-expanded", String(abrir));
+    bt.textContent = T(abrir ? "t.ocultar" : "t.ver");
+  });
+  GRAFS.push(g);
+  desenha(g);
+}
+
+function tabelaHTML(cfg) {
+  const S = cfg.S, temEv = S.some(x => x.ev);
+  const cab = `<tr><th>${esc(T("t.amostra"))}</th><th>${esc(T("t.fase"))}</th>${temEv ? `<th>${esc(T("t.evento"))}</th>` : ""}`
+    + cfg.series.map(k => `<th class="num">${esc(T("s." + k))}${MET[k].u ? ` (${esc(MET[k].u)})` : ""}</th>`).join("") + "</tr>";
+  const lin = S.map(x => `<tr><td>${x.t}</td><td>${x.fase}</td>${temEv ? `<td>${x.ev ? esc(T("ev." + x.ev)) : ""}</td>` : ""}`
+    + cfg.series.map(k => `<td class="num">${fmt(x[k], MET[k].d)}</td>`).join("") + "</tr>").join("");
+  return `<table><caption class="sr">${esc(cfg.titulo)}</caption><thead>${cab}</thead><tbody>${lin}</tbody></table>`;
+}
+
+function desenha(g) {
+  const W = Math.floor(g.area.clientWidth);
+  if (!W || W === g.W) return;              // escondido (drill-down fechado) ou sem mudança
+  g.W = W;
+  const {S, series, lims = [], dom} = g.cfg;
+  const H = g.cfg.alto || 190, mL = 42, mR = 8, mT = 20, mB = 22;
+  const pw = W - mL - mR, ph = H - mT - mB, n = S.length, passo = pw / (n - 1);
+  const X = i => mL + i * passo;
+  let hi, ticks;
+  if (dom) { hi = 100; ticks = [0, 25, 50, 75, 100]; }
+  // o limiar entra na escala com folga, para a linha e o rótulo não colarem no topo
+  else ({hi, ticks} = escala(Math.max(...series.flatMap(k => S.map(x => x[k])), ...lims.map(l => l.v * 1.15))));
+  const Y = v => mT + ph - v / hi * ph;
+  const r1 = v => Math.round(v * 10) / 10;
+  let s = "";
+
+  // faixas de fase: baseline | stress (sombreado) | recovery
+  const blocos = FASES.map(fz => { const i0 = S.findIndex(x => x.fase === fz); let i1 = i0; while (i1 + 1 < n && S[i1 + 1].fase === fz) i1++; return {fz, i0, i1}; });
+  for (const b of blocos) {
+    const x0 = Math.max(mL, X(b.i0) - passo / 2), x1 = Math.min(mL + pw, X(b.i1) + passo / 2);
+    if (b.fz === "stress") s += `<rect class="banda" x="${r1(x0)}" y="${mT}" width="${r1(x1 - x0)}" height="${ph}"/>`;
+    if (b.i0 > 0) s += `<line class="sep" x1="${r1(x0)}" x2="${r1(x0)}" y1="${mT - 16}" y2="${mT + ph}"/>`;
+    s += `<text class="fase-t" x="${r1((x0 + x1) / 2)}" y="${mT - 6}" text-anchor="middle">${b.fz}</text>`;
+  }
+  for (const v of ticks)
+    s += `<line class="grade" x1="${mL}" x2="${mL + pw}" y1="${r1(Y(v))}" y2="${r1(Y(v))}"/><text class="eixo" x="${mL - 6}" y="${r1(Y(v) + 3)}" text-anchor="end">${fmt(v, 2)}</text>`;
+
+  // janela do evento sintético: hachura a 45°, para não competir com as fases
+  const ev = S.map((x, i) => x.ev ? i : -1).filter(i => i >= 0);
+  if (ev.length) {
+    const x0 = X(ev[0]) - passo / 2, x1 = Math.min(mL + pw, X(ev[ev.length - 1]) + passo / 2);
+    s += `<defs><pattern id="hach${g.id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="hach" x1="0" y1="0" x2="0" y2="6"/></pattern></defs>`
+      + `<rect x="${r1(x0)}" y="${mT}" width="${r1(x1 - x0)}" height="${ph}" fill="url(#hach${g.id})"/>`
+      + `<line class="ev-borda" x1="${r1(x0)}" x2="${r1(x0)}" y1="${mT}" y2="${mT + ph}"/><line class="ev-borda" x1="${r1(x1)}" x2="${r1(x1)}" y1="${mT}" y2="${mT + ph}"/>`
+      // rótulo embaixo: no início de cada janela as séries estão longe do zero (em cima, o backhaul a 98% o riscava)
+      + `<text class="ev-t" x="${r1(x0 + 4)}" y="${mT + ph - 6}">${esc(T("banda.evento"))}</text>`;
+  }
+  for (const l of lims) if (l.v <= hi) {
+    const yy = r1(Y(l.v));
+    // rótulo à esquerda: no baseline todas as séries ficam abaixo dos limiares; à direita, os picos do recovery o cortavam
+    s += `<line class="lim-l" x1="${mL}" x2="${mL + pw}" y1="${yy}" y2="${yy}"/><text class="lim-t" x="${mL + 4}" y="${yy - 4}">${esc(l.t)}</text>`;
+  }
+  for (const k of series)
+    s += `<path class="linha" style="stroke:var(${MET[k].cor})" d="${S.map((x, i) => `${i ? "L" : "M"}${r1(X(i))} ${r1(Y(x[k]))}`).join("")}"/>`;
+  const marcas = [0, ...blocos.slice(1).map(b => b.i0), n - 1];
+  marcas.forEach((i, j) => {
+    const anc = j === 0 ? "start" : j === marcas.length - 1 ? "end" : "middle";
+    s += `<text class="eixo" x="${r1(X(i))}" y="${H - 6}" text-anchor="${anc}">${S[i].t}</text>`;
+  });
+  s += `<g class="cursor" visibility="hidden"><line class="cruz" y1="${mT}" y2="${mT + ph}"/>${series.map(k => `<circle class="ponto" r="4" style="fill:var(${MET[k].cor})"/>`).join("")}</g>`;
+
+  g.area.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" tabindex="0" role="img" aria-label="${esc(T("g.aria", {t: g.cfg.titulo}))}">${s}</svg><div class="dica" hidden></div>`;
+  const svg = $("svg", g.area), cur = $(".cursor", svg), dica = $(".dica", g.area);
+
+  // dica: o valor na frente, o rótulo atrás; texto via textContent
+  const mostra = i => {
+    i = g.idx = Math.max(0, Math.min(n - 1, i));
+    const x = X(i), ln = $("line", cur);
+    cur.setAttribute("visibility", "visible");
+    ln.setAttribute("x1", x); ln.setAttribute("x2", x);
+    cur.querySelectorAll("circle").forEach((c, j) => { c.setAttribute("cx", x); c.setAttribute("cy", Y(S[i][series[j]])); });
+    dica.replaceChildren();
+    for (const k of series) {
+      const row = document.createElement("div"), key = document.createElement("i"), v = document.createElement("span");
+      key.className = "k"; key.style.background = `var(${MET[k].cor})`;
+      v.className = "v"; v.textContent = fmt(S[i][k], MET[k].d) + un(MET[k].u);
+      row.append(key, v);
+      if (series.length > 1) { const l = document.createElement("span"); l.className = "l"; l.textContent = " " + T("s." + k); row.append(l); }
+      dica.append(row);
+    }
+    const onde = document.createElement("div");
+    onde.className = "onde";
+    onde.textContent = [S[i].t, S[i].fase, S[i].ev ? T("ev." + S[i].ev) : ""].filter(Boolean).join(" · ");
+    dica.append(onde);
+    dica.hidden = false;
+    const esc_ = svg.getBoundingClientRect().width / W, dw = dica.offsetWidth, px = x * esc_;
+    let left = px + 12;
+    if (left + dw > g.area.clientWidth) left = px - 12 - dw;
+    dica.style.left = Math.max(0, left) + "px";
+    dica.style.top = (mT + 4) * esc_ + "px";
+  };
+  const esconde = () => { cur.setAttribute("visibility", "hidden"); dica.hidden = true; };
+  svg.addEventListener("pointermove", e => {
+    const r = svg.getBoundingClientRect();
+    mostra(Math.round(((e.clientX - r.left) * W / r.width - mL) / passo));
+  });
+  svg.addEventListener("pointerleave", esconde);
+  svg.addEventListener("focus", () => mostra(g.idx ?? 0));
+  svg.addEventListener("blur", esconde);
+  svg.addEventListener("keydown", e => {
+    const d = {ArrowLeft: -1, ArrowRight: 1, Home: -n, End: n}[e.key];
+    if (d == null) return;
+    e.preventDefault();
+    mostra((g.idx ?? 0) + d);
+  });
+}
+
+function limiares(k, A) {
+  const M = MET[k];
+  if (M.c != null) return [{v: M.w, t: `${T("lim.atencao")} ${fmt(M.w)}${un(M.u)}`}, {v: M.c, t: `${T("lim.critico")} ${fmt(M.c)}${un(M.u)}`}];
+  if (k === "delay") return [{v: M.k * A.base.delay, t: T("lim.delay", {k: fmt(M.k)})}];
+  return [];
+}
+
+// ---------------------------------------------------------------- tela
+function cartaoHTML(c, A) {
+  const M = MET[c.k], dc = M.dc;
+  const src = c.k === "prb" ? "kpm" : c.k === "thp" ? (A.cen === "interference" ? "kpmov" : "kpm") : "syn";
+  const fonte = src === "syn" ? `<span class="sint">${esc(T("src.syn"))}</span>` : `${esc(T("src." + src))} · <code>${M.code}</code>`;
+  const dv = c.v - c.r;
+  let delta;
+  if (M.u === "%") delta = sinal(dv, `${fmt(Math.abs(dv), dc)} ${T("u.pp")}`);
+  else if (c.k === "thp") delta = sinal(dv, `${fmt(Math.abs(dv), 1)} Mbps`) + (c.r >= 1 ? ` (${sinal(dv, fmt(Math.abs(dv / c.r * 100), 0))}${un("%")})` : "");
+  else delta = sinal(dv, fmt(Math.abs(dv), dc));
+  const lim = c.k === "thp"
+    ? T("c.limthp", {w: fmt(M.rel[0] * A.base.thp, 1), c: fmt(M.rel[1] * A.base.thp, 1)})
+    : T("c.lim", {w: fmt(M.w), c: fmt(M.c), u: un(M.u)});
+  const por = c.lv === "ok" ? T("c.porok", {s: SUST})
+    : T(c.abaixo ? "c.porabaixo" : "c.poracima", {n: c.seq.n, v: fmt(c.lim, dc), u: un(M.u)});
+  const win = rot(A.janela[0].t, A.janela[A.janela.length - 1].t);
+  return `<article class="kpi" data-lv="${c.lv}">
+    <h3>${esc(T("k." + c.k))}</h3>
+    <div class="fonte-k">${fonte}</div>
+    <div class="valor">${fmt(c.v, dc)}<small>${esc(M.u)}</small></div>
+    <div class="janela">${esc(T("c.janela", {win, a: fmt(c.min, dc), b: fmt(c.max, dc)}))}</div>
+    <div class="delta">${esc(delta)} <span>${esc(T(A.cen === "lab" ? "vs.base" : "vs.load"))}</span></div>
+    <div class="limiar">${esc(lim)}</div>
+    <div class="estado" data-lv="${c.lv}"><span class="ic" aria-hidden="true">${ICONE[c.lv]}</span><b>${esc(T("lv." + c.lv))}</b><span class="por">${esc(por)}</span></div>
+  </article>`;
+}
+
+function alertaHTML(a, A) {
+  const M = MET[a.id] || {};
+  const p = a.id === "thp" ? {p: fmt(MET.prb.c), w: fmt(MET.thp.rel[0] * A.base.thp, 1), c: fmt(MET.thp.rel[1] * A.base.thp, 1)}
+    : a.id === "delay" ? {p: fmt(MET.prb.c), k: fmt(MET.delay.k), ref: fmt(A.base.delay, 1)}
+    : a.id === "bhrisk" ? {c: fmt(MET.bh.c), w: fmt(MET.loss.w)}
+    : a.id === "qc" ? {q: fmt(QC_THP), w: fmt(MET.prb.w)}
+    : {c: fmt(M.c), w: fmt(M.w)};
+  const onde = a.seq.solta ? (a.seq.n === 1 ? T("a.onde1", {a: a.seq.a}) : T("a.onden", a.seq)) : T("a.onde", a.seq);
+  return `<li class="alerta">
+    <div class="alerta-topo"><span class="estado" data-lv="${a.lv}"><span class="ic" aria-hidden="true">${ICONE[a.lv]}</span><b>${esc(T("lv." + a.lv))}</b></span>
+      <h3>${esc(T("a." + a.id + ".t"))}</h3><span class="onde">${esc(onde)}</span></div>
+    <p class="regra"><b>${esc(T("a.regra"))}</b> ${esc(T("a." + a.id + ".r", p))}</p>
+    <p class="det">${esc(T("a." + a.id + ".d"))}</p></li>`;
+}
+
+function params(A) {
+  const w = A.janela, cv = k => A.cartoes.find(c => c.k === k), thp = cv("thp");
+  const drop = thp.r >= 1 ? Math.round((thp.v - thp.r) / thp.r * 100) : 0;
+  const ev = A.S.filter(x => x.ev);
+  return {win: rot(w[0].t, w[w.length - 1].t), a: w[0].t, n: w.length,
+    prb: fmt(cv("prb").v, 0), prbRef: fmt(cv("prb").r, 0), thp: fmt(thp.v, 1), thpRef: fmt(thp.r, 1),
+    st: fmt(cv("st").v, 2), stRef: fmt(cv("st").r, 2), loss: fmt(cv("loss").v, 2), lossRef: fmt(cv("loss").r, 2), bh: fmt(cv("bh").v, 1),
+    drop: (drop > 0 ? "+" : drop < 0 ? "−" : "±") + Math.abs(drop),
+    bhFirst: fmt(w[0].bh, 1), bhmax: fmt(Math.max(...w.map(x => x.bh)), 1),
+    runPrb: cv("prb").seq ? cv("prb").seq.n : 0, runBh: cv("bh").seq ? cv("bh").seq.n : 0,
+    pc: fmt(MET.prb.c), bc: fmt(MET.bh.c), bw: fmt(MET.bh.w), sw: fmt(MET.st.w),
+    bhEnd: ev.length ? ev[ev.length - 1].t : ""};
+}
+
+function paramsLimites() {
+  const lab = ANALISE.lab.S, bh = ANALISE.backhaul.S;
+  const carga = lab.filter(x => x.prb > MET.prb.w);
+  const ocioso = lab.filter(x => x.fase === "baseline" && x.delay > 0);
+  const bhRec = bh.filter(x => x.ev && x.fase === "recovery");
+  const s00 = lab.find(x => x.fase === "stress"), qc = lab.find(x => x.thp > QC_THP && x.prb < MET.prb.w);
+  const tam = CENARIOS.map(c => ANALISE[c].janela.length);
+  return {n: lab.length, ns: lab.filter(x => x.fase === "stress").length, s: SUST, wmin: Math.min(...tam), wmax: Math.max(...tam),
+    bhR: fmt(Math.min(...bhRec.map(x => x.bh)), 1), bhIni: bhRec[0].t, bhEnd: bhRec[bhRec.length - 1].t,
+    s00: s00.t, s00prb: fmt(s00.prb, 0), r00: qc.t, r00thp: fmt(qc.thp, 1), r00prb: fmt(qc.prb, 0),
+    dl: fmt(med(carga.map(x => x.delay)), 1), di: fmt(med(ocioso.map(x => x.delay)), 0), dia: ocioso[0].t, dib: ocioso[ocioso.length - 1].t};
+}
+
+const DRILL = [{id: "util", series: ["prb", "bh"], dom: true}, {id: "thp", series: ["thp"]}, {id: "st", series: ["st"]},
+               {id: "loss", series: ["loss"]}, {id: "delay", series: ["delay"]}];
+// A série da decisão é a que muda o diagnóstico em cada cenário.
+const DECISAO = {lab: "prb", interference: "st", backhaul: "bh"};
+let CEN = CENARIOS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "lab";
+
+function renderCenario() {
+  const A = ANALISE[CEN], P = params(A);
+  document.querySelectorAll("#cenarios button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === CEN)));
+  $("#headline").textContent = T("hl." + CEN, P);
+  $("#kpisNota").textContent = T("kpis.nota", {win: P.win, n: P.n, s: SUST, ref: CEN === "lab" ? T("ref.base") : T("ref.load", {n: A.ref.length})});
+  $("#kpis").innerHTML = A.cartoes.map(c => cartaoHTML(c, A)).join("");
+  $("#serieNota").textContent = T("serie." + CEN, P);
+  $("#alertas").innerHTML = A.alertas.map(a => alertaHTML(a, A)).join("");
+  $("#sehal").innerHTML = ["S", "E", "H", "A", "L"].map(l =>
+    `<div><dt><span class="letra">${l}</span>${esc(T("sehal." + l))}</dt><dd>${esc(T(CEN + "." + l, P))}</dd></div>`).join("");
+
+  GRAFS = [];
+  const dk = DECISAO[CEN];
+  montaGrafico($("#gDecisao"), {S: A.S, series: [dk], titulo: T("k." + dk), alto: 230, dom: MET[dk].u === "%", lims: limiares(dk, A)});
+  $("#grafs").innerHTML = DRILL.map(d => `<div class="graf-card"><h3>${esc(T("g." + d.id))}</h3>`
+    + (d.id === "delay" ? `<p class="nota">${esc(T("g.delaynota"))}</p>` : "") + `<div class="graf" data-g="${d.id}"></div></div>`).join("");
+  DRILL.forEach(d => montaGrafico($(`[data-g="${d.id}"]`),
+    {S: A.S, series: d.series, dom: d.dom, titulo: T("g." + d.id), lims: d.series.length > 1 ? [] : limiares(d.series[0], A)}));
+}
+
+function renderEstatico() {
+  LANG = (window.LABI18N && LABI18N.lang) || "pt";
+  document.documentElement.lang = LOC[LANG] ? (LANG === "pt" ? "pt-BR" : LANG) : "pt-BR";
+  document.title = T("title");
+  document.querySelectorAll("[data-t]").forEach(e => { e.textContent = T(e.dataset.t); });
+  $("#themeBtn").title = T("tema");
+  $("#themeBtn").setAttribute("aria-label", T("tema"));
+  $("#lead").textContent = T("lead");
+  $("#origem").textContent = T("origem", {src: KPM.source, run: KPM.run_id, n: FASES.reduce((s, f) => s + KPM[f].length, 0),
+    nb: KPM.baseline.length, ns: KPM.stress.length, nr: KPM.recovery.length});
+  const cen = $("#cenarios");
+  cen.setAttribute("aria-label", T("cen.aria"));
+  cen.innerHTML = CENARIOS.map(c => `<button type="button" data-c="${c}">${esc(T("cen." + c))}</button>`).join("");
+  cen.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    CEN = b.dataset.c;
+    history.replaceState(null, "", "#" + CEN);
+    renderCenario();
+  }));
+  const PL = paramsLimites();
+  $("#limLista").innerHTML = ["lim.1", "lim.2", "lim.3", "lim.4", "lim.5", "lim.6"].map(k => `<li>${esc(T(k, PL))}</li>`).join("");
+  $("#unidTexto").innerHTML = T("unid.d");     // texto nosso, com <code>
+  $("#alertasNota").textContent = T("alertas.nota", {s: SUST});
+  $("#drillNota").textContent = T("drill.nota");
+  $("#peNota").textContent = T("pe.nota");
+}
+
+// As siglas se explicam uma vez por página, no texto que não muda com o cenário.
+function explicaSiglas() {
+  try { if (window.Glossario) Glossario.marcar([$("#lead"), $("#limites"), $("#drillNota")], {umaVez: true}); }
+  catch (e) { console.warn("glossário:", e); }
+}
+
+function render() { renderEstatico(); renderCenario(); explicaSiglas(); }
+
+$("#themeBtn").addEventListener("click", () => {
+  // o tema é do ALUNO, não da página: mesma chave do painel
+  const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("c5g-theme", next); } catch (e) {}
+});
+$("#drill").addEventListener("toggle", () => GRAFS.forEach(desenha));
+new ResizeObserver(() => GRAFS.forEach(desenha)).observe($("#wrap"));
+if (window.LABI18N) LABI18N.onChange(render);
+render();
+</script>
+</body>
+</html>

@@ -56,6 +56,18 @@ def lab_classificacao_page() -> HTMLResponse:
     return pagina(LAB_DIR / "lab-classificacao.html")
 
 
+# Inferência no navegador: desenhe um dígito, o modelo (pesos em JSON) responde.
+@router.get("/lab/digitos")
+def lab_digitos_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-digitos.html")
+
+
+# Painel de NOC sobre as 100 amostras KPM do lab (cadeira 4, aula 05).
+@router.get("/lab/dashboard-kpi")
+def lab_dashboard_kpi_page() -> HTMLResponse:
+    return pagina(LAB_DIR / "lab-dashboard-kpi.html")
+
+
 # Casos do artigo (Ngo et al. 2024) sobre os dados reais do SUTD — classificadores.
 @router.get("/lab/localizacao")
 def lab_localizacao_page() -> HTMLResponse:
@@ -155,9 +167,10 @@ def lab_questions(request: Request) -> JSONResponse:
 
 
 # ===========================================================================
-# Exercícios do professor: o aluno registra o que acertou; o painel guarda e
-# consolida o PERCENTUAL. A pontuação bruta não interessa — o que se compara
-# entre exercícios de tamanhos diferentes (9, 22 pontos) é a fração acertada.
+# Exercícios das cadeiras: a página do exercício corrige e manda os acertos; o
+# painel guarda e consolida o PERCENTUAL. A pontuação bruta não interessa — o
+# que se compara entre exercícios de tamanhos diferentes (9, 22 pontos) é a
+# fração acertada.
 #
 # A chave é o E-MAIL do aluno, não o login: os alunos entram todos pelo mesmo
 # usuário convidado (`GUEST_USER`) e se identificam com nome + e-mail. Cada um
@@ -212,21 +225,19 @@ def estudos_resultado(payload: dict, request: Request) -> JSONResponse:
     if ex not in validos:
         raise HTTPException(400, "exercício desconhecido")
 
+    # O total vem SEMPRE do catálogo: o navegador só diz quantos acertou.
+    total = validos[ex]
+    try:
+        acertos = int(payload.get("acertos"))
+    except (TypeError, ValueError):
+        raise HTTPException(400, "acertos precisa ser um número")
+    if not total or not 0 <= acertos <= total:
+        raise HTTPException(400, "acertos fora do intervalo do exercício")
+
     with _estudos_res_lock:
         todos = _ler_resultados()
         meus = dict(todos.get(quem, {}))
-        if payload.get("limpar"):
-            meus.pop(ex, None)
-        else:
-            try:
-                acertos = int(payload.get("acertos"))
-                # o total vem do catálogo; só os 3 exercícios sem `pts` o pedem
-                total = int(payload.get("total")) if validos[ex] is None else int(validos[ex])
-            except (TypeError, ValueError):
-                raise HTTPException(400, "acertos e total precisam ser números")
-            if total <= 0 or not 0 <= acertos <= total:
-                raise HTTPException(400, "acertos fora do intervalo do exercício")
-            meus[ex] = {"a": acertos, "t": total, "ts": time.time()}
+        meus[ex] = {"a": acertos, "t": total, "ts": time.time()}
         todos[quem] = meus
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         tmp = _ESTUDOS_RES_FILE.with_suffix(".json.tmp")

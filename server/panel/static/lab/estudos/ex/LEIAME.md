@@ -27,6 +27,16 @@ O catálogo (`../index.json`) continua sendo a fonte da lista, dos pontos e do
         { "q": "enunciado",
           "itens": ["1º", "2º", "3º"],   // NA ORDEM CERTA; a tela embaralha
           "pts": 10,
+          "porque": "…" } ] },
+
+    { "nome": "Comparação", "tipo": "associar", "qs": [
+        { "q": "Classifique cada característica.",
+          "alvos": ["RAN tradicional", "vRAN", "O-RAN"],   // as opções do menu de cada item
+          "itens": [
+            { "t": "Hardware proprietário integrado", "ok": [0] },
+            { "t": "Hardware COTS", "ok": [1, 2] }        // mais de um alvo aceito
+          ],
+          "pts": 10,
           "porque": "…" } ] }
   ]
 }
@@ -38,8 +48,14 @@ O catálogo (`../index.json`) continua sendo a fonte da lista, dos pontos e do
   `test:exercicios` reprova se não der — e o total gravado por aluno vem do
   catálogo, não do navegador, então uma soma errada viraria nota errada.
 - `porque` é **obrigatório**. Um exercício que só diz "errou" não ensina; a
-  diferença entre isto e a plataforma de fora é justamente a explicação.
+  diferença entre isto e a plataforma antiga do professor (que saiu do ar) é
+  justamente a explicação.
 - Em `ordem`, os `itens` são escritos **na ordem certa** e a tela embaralha.
   A correção dá **crédito parcial**: pontos proporcionais às posições certas.
+- Em `associar`, cada item escolhe um alvo num menu; `ok` é a **lista** de
+  alvos aceitos (um item pode valer em mais de uma coluna). A tela sorteia a
+  ordem dos itens, então nunca alinhe itens e alvos de propósito. Crédito
+  parcial: pontos proporcionais aos itens certos. O teste reprova item sem alvo
+  válido e pergunta em que todo item aceita todo alvo.
 - Conteúdo em **português**, como o resto dos Estudos. O glossário cuida das
   siglas na tela.

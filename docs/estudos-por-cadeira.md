@@ -39,7 +39,8 @@ server/panel/static/lab/estudos/
 ├── index.json    # catálogo: 4 cadeiras, rótulos dos comandos, os 7 temas (fórmulas)
 ├── e1a01.json    # uma aula = um arquivo (extraído dos slides do professor)
 ├── e2a01.json … e2a06.json
-└── e4a01.json … e4a03.json
+├── e4a01.json … e4a06.json
+└── ex/          # os exercícios (ver "Exercícios das cadeiras")
 ```
 
 Schema de uma aula: `id, n, titulo, slide, resumo, objetivos[], conceitos[{t,d}],
@@ -79,78 +80,105 @@ baseline (o script avisa). Endpoints: `GET /api/lab-data/kpm`,
 professor). O arquivo fica em `panel_uploads/labdata/kpm/kpm_custom.txt` e
 `run_command` injeta `KPM_FILE` nos comandos `p2-tema-*`.
 
-## Exercícios do professor (Plataforma de Atividades — v0.72.0)
+## Exercícios das cadeiras — todos no painel (v0.87.0)
 
-O Prof. Jonas mantém os exercícios das três cadeiras numa aplicação própria, a
-**Plataforma de Atividades da CESAR School** (Cloud Run, pública, rotas por
-hash). Participação e conclusão contam na nota — a plataforma avisa o docente
-por e-mail. O painel **não reproduz os enunciados nem responde nada por lá**:
-lista os exercícios e leva até eles, e liga cada um ao que já temos.
+Até a v0.86 os exercícios viviam na **Plataforma de Atividades da CESAR School**,
+uma aplicação React do Prof. Jonas (Cloud Run, rotas por hash, conclusão
+avisada ao docente por e-mail), e o painel só listava e levava até lá. A
+plataforma **saiu do ar em setembro de 2026**. Os 27 exercícios passaram a ser
+nossos: escritos no nosso formato, corrigidos na hora, com o porquê de cada
+resposta, e o resultado gravado na ficha do aluno.
 
-| Plataforma | Cadeira do painel | Exercícios |
-|------------|-------------------|-----------:|
-| Módulo 05 `#oran` — Interfaces e Protocolos O-RAN | Estudo 1 | 12 |
-| Módulo 07 `#ric` — RAN Intelligent Controller (RIC) | Estudo 2 | 7 |
-| Módulo 09 `#data` — Análise de Dados em Redes de Telecom | Estudo 4 | 7 |
-| — | Estudo 3 (IA/ML em RIC) | 3, por referência cruzada ao Módulo 05 |
+| Cadeira do painel | Módulo da especialização | Exercícios |
+|---|---|--:|
+| Estudo 1 — Interfaces e Protocolos O-RAN | Módulo 05 (`#oran`) | 12 |
+| Estudo 2 — RAN Intelligent Controller (RIC) | Módulo 07 (`#ric`) | 7 |
+| Estudo 3 — Aplicações de IA e ML em RIC | (usa 3 do Módulo 05, os de IA/ML) | 3 |
+| Estudo 4 — Análise de Dados em Redes de Telecom | Módulo 09 (`#data`) | 8 |
 
-O Estudo 3 não tem módulo próprio na plataforma; recebe os três exercícios de
-IA/ML que vivem no Módulo 05, com o aviso na tela de que vêm de lá.
+O `h` de cada exercício (`#data/aula04`, `#oran/aulaa1`…) herdou o hash da
+plataforma e continua sendo **só a chave estável** do resultado do aluno —
+trocar o nome apagaria o histórico de quem já fez.
 
-Schema, dentro de cada estudo do `index.json`:
+### Onde está cada coisa
 
-```jsonc
-"atividades": {
-  "modulo": "Módulo 09", "hash": "#data",   // "cruzada": true no Estudo 3
-  "itens": [
-    {"rot": "Aula 04", "t": "KPIs e QoE", "d": "…", "h": "#data/aula04",
-     "prep": {"aula": 4, "cmd": "p2-kpi-qoe"}}
-  ]
-}
+```
+server/panel/static/lab/estudos/
+├── index.json          # catálogo: `atividades.itens` com rot, t, d, h, pts, partes, prep
+└── ex/
+    ├── LEIAME.md       # o formato (escolha · ordem · associar) e as regras
+    └── <modulo>-<id>.json   # um arquivo por exercício: #ric/aula03 → ric-aula03.json
+server/panel/static/lab/lab-exercicio.html   # /lab/estudo/{n}/exercicio/{slug}
+server/panel/static/lab/lab-digitos.html     # /lab/digitos (inferência no navegador)
+server/panel/static/lab/lab-dashboard-kpi.html  # /lab/dashboard-kpi (NOC sobre as 100 amostras KPM)
 ```
 
-`prep` é a ponte para o nosso lab e aceita três formas, combináveis:
-`{"aula": n}` (aula desta cadeira), `{"cmd": "id"}` (comando do console, rótulo
-vindo de `index.comandos`) e `{"href": "/lab/…", "rot": "…"}` (página do Lab de
-IA). O domínio da plataforma fica **uma vez só**, em `index.plataforma.url`; os
-itens guardam apenas o hash.
+`prep` liga o exercício ao que se estuda antes, em três formas combináveis:
+`{"aula": n}`, `{"cmd": "id"}` (comando do console) e `{"href": "/lab/…", "rot": "…"}`.
 
-Os textos dos exercícios são **citação literal** da plataforma e ficam em
-português nos quatro `index*.json` — é o que o aluno vê ao clicar. Só a moldura
-da seção é traduzida (chaves `est.ativ_*` em `lab-i18n.js`); `atividades.modulo`
-vira "Module 0N" em en/fr.
+### Pontuação: fiel à estrutura do professor
 
-Renderiza no fim de `/lab/estudo/N`, depois de "Próximas aulas": cartão por
-exercício com rótulo, título, descrição, o botão **Abrir ↗** (ação principal,
-abre em outra aba) e a linha "Prepare-se aqui" com os atalhos do nosso lab.
-
-### Registro do resultado e o percentual (v0.73.0)
-
-O que interessa entre exercícios de tamanhos diferentes não é a pontuação
-bruta, é a **fração acertada**. O aluno faz o exercício na plataforma e
-registra aqui quanto acertou; o painel calcula o percentual e consolida a
-cadeira. Ninguém vê o resultado de ninguém.
-
-O **denominador** saiu do bundle da própria plataforma (estrutura de pontuação
-dos componentes React), não de estimativa — 23 dos 26 exercícios:
+A composição de cada exercício saiu do código da plataforma (os `maxPoints` e
+as telas de cada componente), para que a nota continue comparável:
 
 | Exercícios | Composição | Total |
 |---|---|--:|
-| 14 aulas dos Módulos 07 e 09 | Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10 | 22 |
+| 7 do Módulo 07, 6 aulas + lab do Módulo 09 | Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10 | 22 |
 | Interfaces A1, E2, O1, O2 (M05) | mesma composição, rótulos próprios | 22 |
+| Aventura O-RAN (M05, aula 02) | Conceitos 3 · Mapeamento 6 · Fronthaul 3 · Comparação 10 | 22 |
+| Lab Open5GS (M05) | Core 3 · Ordenar o roteiro 6 · N2/N3 e E2E 3 · Troubleshooting 10 | 22 |
 | Fronthaul, eCPRI, ML na RAN, Workflow IA/ML (M05) | Quiz 3 · Situações 6 | 9 |
-| Aula 01 do M05 | Bloco 1 · 2 · 3, 3 pontos cada | 9 |
-| Aventura O-RAN, Lab de dígitos, Lab Open5GS | componente próprio | **sem `pts`** |
+| Lab de dígitos (M05) · Dashboard KPI/NOC (M09) | Quiz 3 · Situações 6 | 9 |
+| Aula 01 do M05 | Bloco 1 · 2 · 3 (3 cada) · Organizar funções nas unidades 6 | 15 |
 
-Sem `pts` no item, o formulário pede os **dois** números; com `pts`, pede só os
-acertos e o total vem do catálogo (o navegador não escolhe o denominador).
+Três exercícios da plataforma não tinham nota no original e ganharam agora:
+**Aventura O-RAN** (o arrasta-e-solta e a classificação viraram o tipo
+`associar`, com item que aceita mais de um alvo), **Lab Open5GS** (reescrito
+para o nosso P1 — o original citava o ambiente `open5gs-containerized` do
+professor, que o aluno não tem) e **Lab de dígitos**, que no site nunca
+funcionou (o endpoint de inferência veio vazio no build) e aqui é uma página
+de verdade com o modelo rodando no navegador. A **Aula 01 do M05** vale 15, e não os 9 que o painel anunciava desde a 0.73: o
+levantamento antigo não viu a quarta tela do componente (arrastar 6 funções
+para RU, DU e CU, 6 pontos). O **Dashboard KPI/NOC** era só
+uma página no site; virou página + exercício de diagnóstico.
+
+### Como foram escritos
+
+Cada exercício cobre **os mesmos conceitos** do original, na mesma proporção —
+foi para isso que o aluno estudou — mas nenhum foi copiado: no original a
+certa era quase sempre a primeira alternativa e as erradas às vezes absurdas.
+Os nossos têm distratores que representam confusões reais, a posição da certa
+variando, `porque` em toda pergunta e cada fato conferido nos slides, nas
+aulas do painel ou no código do lab. Onde o original estava errado, a versão
+nossa corrige.
+
+### O arquivo da plataforma (fora do git)
+
+Antes de o site sair do ar, o bundle foi guardado em
+`external/plataforma-cesar/2026-09-11/` (ignorado pelo git: é material do
+professor e o repositório é público): `index.html`, `assets/`, `SHA256SUMS`,
+`exercicios-extraidos.json` (módulos e os objetos de configuração de `#data` e
+`#ric`), `fontes/<modulo>-<id>.js.txt` (o código de cada exercício, com as
+subtelas e as constantes de dados) e `analise-4-especiais.md` (os quatro
+interativos destrinchados, com gabaritos). Os scripts que extraíram tudo
+(`extrair.js`, `extrair-oran.js`, `fontes-por-exercicio.js`) ficam junto. A
+extração é estática: nenhum exercício foi aberto no site, porque abrir e
+concluir avisava o professor por e-mail.
+
+### Resultado e percentual
+
+O que se compara entre exercícios de tamanhos diferentes é a **fração
+acertada**. A página do exercício corrige, mostra o placar contra a média de
+passagem (`media` do catálogo, 70%) e manda só os **acertos**; o total vem
+sempre do catálogo, nunca do navegador. O hub da cadeira mostra o percentual de
+cada um e o consolidado. Ninguém vê o resultado de ninguém.
 
 Endpoints em `lab.py`, guardando em `RESULTS_DIR/estudos_resultados.json`
 (escrita atômica via arquivo temporário + `replace`):
 
 - `GET /api/estudos/resultados` — só o registro de quem está logado.
-- `POST /api/estudos/resultado` — `{ex, acertos[, total]}` ou `{ex, limpar}`.
-  Recusa hash fora do catálogo (400) e acerto fora do intervalo (400).
+- `POST /api/estudos/resultado` — `{ex, acertos}`. Recusa hash fora do
+  catálogo e acerto fora de `0..pts` (400).
 
 **A chave é o e-mail, não o login**: os alunos entram todos pelo mesmo usuário
 convidado e se identificam com nome + e-mail (o mesmo par que a presença já
@@ -163,6 +191,9 @@ usa). O Professor, que tem login próprio, é chaveado pelo login.
   existem nos 4 idiomas. Desde a 0.72.0 o teste cobre **dois** dicionários:
   `static/i18n.js` e `static/lab/lab-i18n.js` (este último estava fora, e é
   onde vive toda a moldura dos Estudos).
+- `cd server/panel/test && node exercicios.js` — todo item do catálogo tem
+  arquivo, pontos batendo, `porque` em toda pergunta, gabarito apontando para
+  alternativa ou alvo que existe; e nenhuma página cita o domínio da plataforma.
 - `python3 server/oai-cn-gnb-e2/scripts/temas/temas_projeto.py --tema all --file
   server/oai-cn-gnb-e2/scripts/temas/samples/kpm_ue_tp_sample.jsonl` — rc 0 e a
   tabela "7 temas lado a lado".
@@ -172,9 +203,9 @@ usa). O Professor, que tem login próprio, é chaveado pelo login.
 
 ## Pendências
 
-- Conteúdo das aulas só em PT (a UI do console segue nos 4 idiomas).
-- Estudo 4: aulas 04–06 entram quando o professor compartilhar os slides.
-- Estudo 1: só a aula 01 existe em PDF.
+- Os enunciados dos exercícios só em PT (aulas e UI seguem nos 4 idiomas).
+- Estudo 1: só a aula 01 existe em PDF; os exercícios das aulas 02, 04 e 05 do
+  Módulo 05 foram escritos a partir do escopo da plataforma e das aulas do RIC.
 
 ## Unidades das três KPMs (corrigido em 0.64.2)
 

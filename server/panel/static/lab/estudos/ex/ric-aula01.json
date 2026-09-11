@@ -1,0 +1,155 @@
+{
+  "h": "#ric/aula01",
+  "rot": "Aula 01",
+  "t": "Retomada O-RAN + lab",
+  "pts": 22,
+  "fonte": "Aula 01 da cadeira 2 (RIC) — Retomada das interfaces O-RAN (A1, E2, O1, O2) e lab Open5GS/UERANSIM: N1, N2, N3, gnb.yaml, ue.yaml e troubleshooting (slides aula01-retomada_interfaces_oran-2.pdf)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Quais entidades a interface E2 conecta, e o que ela carrega?",
+          "alt": [
+            "Non-RT RIC e Near-RT RIC; políticas e enrichment information em JSON sobre REST",
+            "SMO e elementos da RAN; configuração, alarmes e desempenho com NETCONF/YANG",
+            "Near-RT RIC e nós RAN (O-CU, O-DU); telemetria e controle via E2AP e E2SM",
+            "gNB e AMF; sinalização de controle NGAP sobre SCTP"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "A E2 liga o Near-RT RIC aos nós E2 da RAN: o E2AP faz setup, subscription, indication e control, e os modelos E2SM definem o conteúdo, como KPM (medições) e RC (controle), conforme os slides 48 e 58. A alternativa mais tentadora é a do gNB com o AMF, porque a E2 também usa SCTP, o mesmo transporte do NGAP. Mas gNB com AMF é a N2, uma interface 3GPP. Políticas em JSON são a A1, e NETCONF/YANG é a O1."
+        },
+        {
+          "q": "No lab Open5GS/UERANSIM, por qual transporte e porta o gNB alcança o AMF na N2?",
+          "alt": [
+            "UDP 2152",
+            "SCTP 38412",
+            "SCTP 36412",
+            "TCP 38412"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O NGAP da N2 roda sobre SCTP, e o AMF escuta na porta 38412: é o que está em amfConfigs no gnb.yaml (port: 38412) e na tabela dos slides 74 e 83. O número certo com o transporte errado (TCP) é a pegadinha: o filtro de captura da aula é sctp and port 38412, e um tcpdump filtrando TCP não mostra nada. SCTP 36412 é a porta do S1AP, a interface equivalente do 4G entre eNB e MME, e UDP 2152 é o GTP-U da N3."
+        },
+        {
+          "q": "O que a interface A1 liga e o que trafega nela?",
+          "alt": [
+            "Near-RT RIC e O-DU/O-CU; medições KPM e comandos de controle RC",
+            "SMO e O-Cloud; orquestração e provisionamento da infraestrutura virtualizada",
+            "Non-RT RIC e elementos RAN; FCAPS e configuração operacional",
+            "Non-RT RIC e Near-RT RIC; políticas, intent e enrichment information"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "A A1 é o elo entre os dois RICs: o Non-RT RIC, com ciclo acima de 1 s, publica políticas em JSON, intent e enrichment information para o Near-RT RIC via A1AP sobre REST/HTTP (slides 48 e 57). KPM e RC com o O-DU são a E2, a infraestrutura na O-Cloud é a O2 e FCAPS nos elementos RAN é a O1. Lembre a frase do slide 52: A1 define o que buscar; E2 executa como reagir."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Ao subir o UERANSIM, o NG Setup falha com slice-not-supported. O que você confere primeiro?",
+          "alt": [
+            "Se PLMN (mcc/mnc), TAC e SST do gnb.yaml batem com o que o AMF serve",
+            "Se o IMSI (supi) do ue.yaml está cadastrado como assinante no MongoDB/WebUI",
+            "Se o túnel GTP-U na porta 2152 está passando entre gNB e UPF",
+            "Se o SMF conseguiu programar as regras do UPF por PFCP"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "O NG Setup é uma conversa só entre gNB e AMF, antes de qualquer UE: no NGSetupRequest o gNB apresenta PLMN, TAC e slices, e o AMF aceita ou rejeita (slide 77). A tabela de troubleshooting do slide 87 liga slice-not-supported a PLMN, TAC ou SST divergentes entre gnb.yaml e AMF. O assinante no MongoDB parece uma boa suspeita, mas só entra em jogo depois, no registro do UE (o sintoma dele é UE sem IP). GTP-U e PFCP são plano de usuário, que nem começou."
+        },
+        {
+          "q": "O UE aparece REGISTERED e tem IP em uesimtun0, mas o ping -I uesimtun0 8.8.8.8 não responde. Onde investigar?",
+          "alt": [
+            "No NG Setup: PLMN e TAC do gnb.yaml contra os do AMF",
+            "Nas credenciais key e op do ue.yaml, que o UDM precisa aceitar no 5G-AKA",
+            "No plano de usuário: logs de SMF e UPF, regras PFCP e rota de saída N6",
+            "No Near-RT RIC, que precisa estar de pé para liberar o tráfego do UE"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "Se o UE registrou, a sinalização passou: NG Setup, autenticação 5G-AKA e NAS estão bons. O que falha é o caminho do dado, e o slide 80 responde exatamente essa pergunta: N2 pode estar OK e o ping falhar por PFCP, DNN ou rota do UPF para a N6 (também na tabela do slide 87). Voltar ao NG Setup ou às credenciais é olhar para o que já funcionou. E o lab nem tem Near-RT RIC (slide 88)."
+        },
+        {
+          "q": "Ao subir o UERANSIM, o Docker diz que a rede da N2 não existe (no roteiro do professor, network core_net-n2 not found). O que fazer?",
+          "alt": [
+            "Corrigir o ngapIp do gnb.yaml, que aponta para uma sub-rede errada",
+            "Subir o core antes com up_core.sh, que é quem cria as redes N2 e N3",
+            "Criar a rede à mão com docker network create e subir o UERANSIM de novo",
+            "Reiniciar o daemon do Docker, que perdeu as redes na última subida"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "O compose do UERANSIM declara as redes N2 e N3 como externas: quem as cria é o compose do core. Por isso a ordem é sempre core antes do UERANSIM (slides 74 e 86), e o slide 87 liga esse erro a core não iniciado. No nosso servidor as redes se chamam open5gs-containerized_net-n2 e _net-n3, e o up_ran.sh já para com a mesma orientação. Criar a rede à mão só troca um erro por outro: o core continua desligado, não há AMF do outro lado para o NG Setup, e a rede improvisada não tem a sub-rede 10.20.0.0/16 que os IPs fixos do lab esperam. Um ngapIp errado não faz a rede sumir."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O que trafega na N3 do lab, e como isso aparece numa captura?",
+          "alt": [
+            "NGAP sobre SCTP, porta 38412, com a Initial UE Message de cada UE",
+            "PFCP sobre UDP 8805, com as regras que o SMF instala no UPF",
+            "GTP-U sobre UDP 2152, com um TEID por túnel de PDU Session",
+            "NAS do UE (registro e sessão), encapsulado dentro de mensagens NGAP"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "A N3 liga gNB e UPF e é plano de usuário: GTP-U na porta UDP 2152, com um TEID por túnel de PDU Session (slides 75 e 79); no Wireshark, o filtro é udp.port == 2152. A confusão comum é com o PFCP, que tem tudo a ver com a N3 mas não passa nela: ele vai do SMF ao UPF pela N4 e programa o túnel antes de o tráfego fluir. NGAP e NAS são controle, na N2 e na N1."
+        },
+        {
+          "q": "Qual interface liga o SMO aos elementos da RAN para OAM e FCAPS, e com que tecnologia?",
+          "alt": [
+            "O1, com NETCONF/YANG",
+            "O2, com Kubernetes ou OpenStack",
+            "E2, com E2AP e E2SM-KPM",
+            "A1, com JSON sobre REST/HTTP"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "A O1 é a interface de gestão: falha, configuração, contabilidade, desempenho e segurança dos elementos RAN, com NETCONF/YANG (tabela do slide 70; figura do O-RAN SC nos slides 59 a 61, com O1 Adapter, VES Collector e Kafka). A O2 também sai do SMO, e por isso engana, mas vai para a O-Cloud, a infraestrutura virtualizada, e não para os elementos RAN. E2 é controle near-RT, e A1 é política entre os RICs."
+        },
+        {
+          "q": "O que o lab Open5GS/UERANSIM desta aula NÃO permite estudar?",
+          "alt": [
+            "O NG Setup entre gNB e AMF na N2",
+            "O registro do UE e a criação da PDU Session",
+            "O plano de usuário até a internet, já que o rádio é simulado",
+            "A interface E2 com um Near-RT RIC e xApps"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O slide 88 é direto: sem E2 nem RIC, só 3GPP N2/N3; e o slide 90 lista E2, Near-RT RIC e xApps como fora do escopo, lacuna que a pilha OAI + FlexRIC do Projeto 2 preenche. A alternativa do plano de usuário engana porque o Uu é mesmo simulado, com gNB e UE no mesmo container, mas a N3 é real: há túnel GTP-U até o UPF e saída pela N6, e o ping -I uesimtun0 8.8.8.8 prova isso."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o caminho no lab, do gNB recém-ligado até o UE com tráfego IP.",
+          "itens": [
+            "O gNB fecha o NG Setup com o AMF (NGAP sobre SCTP, porta 38412)",
+            "O UE envia o Registration Request (NAS, N1) pelo rádio simulado",
+            "O gNB entrega essa mensagem ao AMF dentro de uma Initial UE Message (NGAP, N2)",
+            "O AMF autentica o UE com AUSF e UDM (5G-AKA) e aceita o registro",
+            "O UE pede a PDU Session para o DNN internet",
+            "Acionado pelo AMF (N11), o SMF programa as regras do túnel no UPF por PFCP (N4)",
+            "O UE recebe IP em uesimtun0 e o tráfego segue em GTP-U pela N3 até o UPF e a N6"
+          ],
+          "pts": 10,
+          "porque": "É o exercício guiado do slide 80 com o NG Setup na frente: sem a associação NGAP, o gNB não tem para onde levar o NAS do UE, e o log esperado segue essa ordem (NG Setup OK, depois UE REGISTERED, depois IP em uesimtun0, slide 86). A sessão só é pedida por um UE já registrado. Dentro dela, o túnel é programado antes de o dado passar: o slide 79 lembra que o PFCP instala as regras no UPF antes de o tráfego fluir na N3. Quem programa é o SMF, pela N4; o UPF recebe as regras, não as cria."
+        }
+      ]
+    }
+  ]
+}

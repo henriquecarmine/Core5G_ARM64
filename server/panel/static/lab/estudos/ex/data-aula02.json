@@ -12,38 +12,38 @@
         {
           "q": "Qual a diferença entre schema-on-write e schema-on-read?",
           "alt": [
-            "Um escreve mais rápido; o outro lê mais rápido",
-            "No schema-on-write o formato é exigido na entrada; no schema-on-read o dado entra como veio e a estrutura é imposta na hora de consultar",
-            "Schema-on-read só funciona em banco NoSQL",
-            "São o mesmo conceito com nomes de fornecedores diferentes"
+            "Read dispensa esquema de vez; write infere o esquema do próprio arquivo na hora de ler",
+            "Write cobra o esquema na carga; read guarda como veio e aplica o esquema na consulta",
+            "Write grava o dado cru no lake; read é o warehouse validando e tipando antes de gravar",
+            "Write grava em linhas, como no OLTP; read lê em colunas, como no OLAP"
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "É onde a validação acontece. O warehouse cobra o esquema na porta de entrada — nada entra torto, mas nada entra sem alguém ter modelado antes. O lake aceita o arquivo como caiu e cobra a estrutura na leitura. No nosso lab: a zona bronze é schema-on-read, o SQLite da silver é schema-on-write."
+          "porque": "A diferença é o momento em que o esquema é imposto. O warehouse valida e tipa na carga (DDL mais ETL); o lake guarda o dado como chegou e o interpreta na consulta. Schema-on-read não é ausência de esquema: continua exigindo contrato, metadados e linhagem, ou vira swamp. No lab, o kpm.jsonl e o log de Indication são schema-on-read, e o SQLite tipado é schema-on-write."
         },
         {
-          "q": "O que caracteriza um data warehouse pelos quatro traços de Inmon?",
+          "q": "Quais são os quatro traços de Inmon para um data warehouse?",
           "alt": [
-            "Rápido, barato, elástico e na nuvem",
-            "Orientado a assunto, integrado, não volátil e variante no tempo",
-            "Relacional, indexado, normalizado e replicado",
-            "Bronze, silver, gold e platinum"
+            "Temático, integrado, volátil e atualizado em tempo real",
+            "Bruto, schema-on-read, elástico e reprocessável",
+            "Fato, dimensão, esquema estrela e esquema floco",
+            "Temático, integrado, variável no tempo e não volátil"
           ],
-          "ok": 1,
+          "ok": 3,
           "pts": 1,
-          "porque": "São os quatro de Inmon. \"Não volátil\" e \"variante no tempo\" é o par que mais importa aqui: o warehouse guarda o histórico e não sobrescreve — por isso ele responde \"como estava em maio\", coisa que o banco operacional não responde."
+          "porque": "São os quatro traços do EDW de Inmon: temático (um domínio, como capacidade RAN), integrado (nomes e unidades coerentes entre fornecedores), variável no tempo (KPI por célula ao longo de meses) e não volátil (corrige-se por nova carga versionada, sem editar o passado). A primeira alternativa errada inverte justamente o traço que permite responder 'como estava em maio'. Bruto e schema-on-read descrevem o lake; fato, dimensão, estrela e floco são a modelagem de Kimball."
         },
         {
-          "q": "As camadas bronze, silver e gold guardam o quê, nessa ordem?",
+          "q": "No lab, qual é o mapeamento das camadas bronze, silver e gold, nessa ordem?",
           "alt": [
-            "Dado cru como caiu · dado tipado e conferido · dado agregado para a pergunta",
-            "Dado público · dado interno · dado confidencial",
-            "Backup diário · semanal · mensal",
-            "Rádio · núcleo · aplicação"
+            "kpm.sqlite · kpm.jsonl · agregações e decision.json",
+            "Log de Indication · kpm.jsonl · kpm.sqlite",
+            "kpm.jsonl · kpm.sqlite · agregações e decision.json",
+            "kpm.jsonl · agregações por fase · decision.json"
           ],
-          "ok": 0,
+          "ok": 2,
           "pts": 1,
-          "porque": "É o padrão medallion. No projeto integrador isso é literal: bronze é o `kpm.jsonl` do jeito que o xApp escreveu, silver é o SQLite com tipo e fase carimbados, gold é a tabela agregada, uma linha por fase. Cada camada é reproduzível a partir da anterior — quem só tem o gold não consegue refazer a conta."
+          "porque": "Bronze é o bruto como chegou, silver é o dado limpo e tipado e gold são os indicadores curados; o slide 38 resume o lab como JSONL → SQLite → decision.json. O kpm.jsonl guarda uma linha por amostra como foi ingerida, o kpm.sqlite tipa as tabelas runs e kpm_samples, e as agregações por fase e o decision.json são o gold. Pôr o SQLite no bronze confunde 'primeiro arquivo que abri' com 'dado como chegou'. Medallion é convenção de organização, não norma O-RAN."
         }
       ]
     },
@@ -52,40 +52,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "Você quer treinar um modelo com 2 horas de histórico de UE-TP. O Redis do `ric_dbaas` guarda o estado do near-RT RIC. Por que ele não serve?",
+          "q": "Você quer treinar um modelo com 2 horas de KPM do UE-TP, e alguém sugere ler o Redis do ric_dbaas. Por que ele não serve?",
           "alt": [
-            "Porque Redis não aceita séries numéricas",
-            "Porque é um armazenamento de ESTADO, feito para o valor de agora e com expiração — não guarda série histórica",
-            "Porque fica em outro contêiner",
-            "Porque só o SMO pode ler o SDL"
-          ],
-          "ok": 1,
-          "pts": 2,
-          "porque": "O SDL existe para o RIC não perder contexto entre um instante e o seguinte: chave-valor, em memória, com TTL. Treinar pede série longa e imutável — isso é TSDB ou lake. Usar o Redis para isso é confundir plano operacional com plano analítico."
-        },
-        {
-          "q": "Um relatório mensal por célula, um alarme em tempo real e o cadastro de assinantes. Qual família de banco para cada um?",
-          "alt": [
-            "OLAP para o relatório · TSDB/stream para o alarme · OLTP para o cadastro",
-            "OLTP para os três, porque é o mais confiável",
-            "OLAP para os três, porque é o que agrega",
-            "TSDB para o relatório · OLAP para o alarme · OLTP para o cadastro"
+            "É o RNIB/SDL do Near-RT: inventário em memória de nós e subscrições, não série histórica",
+            "É o InfluxDB do caminho Non-RT, que guarda o PM por UE agregado em janelas de 15 minutos",
+            "É o MySQL do core OAI, que guarda as assinaturas 5G e não as medidas de rádio",
+            "Serve, desde que o SDL seja lido pela A1, que é a interface de dados do Non-RT"
           ],
           "ok": 0,
           "pts": 2,
-          "porque": "Cada família responde a uma forma de pergunta. OLTP: muitas escritas pequenas, uma linha por vez — o cadastro. TSDB: medida com carimbo de tempo, janela curta — o alarme. OLAP: poucas consultas varrendo muita linha — o relatório. Forçar um a fazer o papel do outro custa caro e responde pior."
+          "porque": "O ric_dbaas é Redis chave-valor em memória com o RNIB/SDL do Near-RT: quais E2 nodes estão registrados e quais subscrições estão ativas, com retenção curta e no caminho crítico da RAN. Treino pede série histórica, que fica num TSDB como o InfluxDB do caminho Non-RT do O-RAN SC ou no lake e no warehouse; no lab, no kpm.jsonl e no kpm.sqlite. Assinaturas 5G ficam no MySQL do core, e a A1 leva políticas, não leitura de banco."
+        },
+        {
+          "q": "Um relatório mensal de KPI por célula, um alarme de anomalia em tempo quase real e o cadastro de assinantes do core. Qual família de banco para cada um, nessa ordem?",
+          "alt": [
+            "TSDB · OLAP · OLTP",
+            "OLAP · OLTP · TSDB",
+            "OLTP · TSDB · OLAP",
+            "OLAP · TSDB · OLTP"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "OLTP serve a função de rede: muitas escritas pequenas e consulta pontual, como o MySQL que guarda as assinaturas 5G no core OAI (slide 61). TSDB guarda métricas recentes indexadas no tempo, com retenção de dias a semanas: é onde o alarme olha a janela curta. OLAP, o warehouse, guarda KPIs históricos por meses para agregação e drill-down: é o relatório mensal. Trocar TSDB e OLAP é o erro mais comum, porque os dois lidam com tempo; a diferença está na retenção e no tipo de consulta."
         },
         {
           "q": "O lab acumulou arquivos de KPM de vários experimentos, sem esquema, sem catálogo e sem quem responda pelo dado. Como se chama isso, e qual é o conserto?",
           "alt": [
-            "Chama-se lake, e o conserto é comprar mais disco",
-            "Chama-se data swamp; o conserto é governança — catálogo, dono, esquema declarado e linhagem",
-            "Chama-se lakehouse, e já está certo",
-            "Chama-se bronze, e é assim mesmo"
+            "Lakehouse; o conserto é converter para Parquet e pôr transações ACID por cima",
+            "Data swamp; o conserto é catálogo, dono, linhagem e retenção definida",
+            "Zona bronze; é o estado normal do bruto, e a camada silver resolve depois",
+            "Data swamp; o conserto é mais armazenamento para manter o histórico"
           ],
           "ok": 1,
           "pts": 2,
-          "porque": "Lake sem governança vira swamp: o dado existe e ninguém consegue usar. A diferença entre os dois não é tecnologia, é catálogo, dono e linhagem — saber de onde veio, quem responde e o que significa. Bronze é uma camada com regra, não uma pilha."
+          "porque": "Lake sem catálogo, linhagem e retenção vira data swamp (slide 29): o dado existe e ninguém consegue usá-lo com confiança. Volume não é observabilidade, então mais disco agrava o problema. Parquet e ACID são tecnologia de lakehouse, mas não dizem de onde o dado veio nem quem responde por ele. E bronze é uma camada com contrato e timestamp de ingestão, não uma pilha sem dono: sem saber o que cada arquivo significa, a silver não tem como tipá-lo."
         }
       ]
     },
@@ -94,40 +94,40 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "Na modelagem de Kimball, o que distingue estrela de floco de neve?",
+          "q": "Na modelagem dimensional, o que distingue o esquema estrela do floco de neve?",
           "alt": [
-            "Estrela usa SQL e floco usa NoSQL",
-            "No floco as dimensões são normalizadas em sub-tabelas; na estrela ficam achatadas ao redor do fato",
-            "Estrela é para lote e floco para streaming",
-            "Floco tem mais fatos que a estrela"
+            "Na estrela as dimensões se normalizam em subníveis; no floco ficam achatadas no fato",
+            "A estrela é o modelo de Kimball, e o floco é o modelo corporativo de Inmon",
+            "No floco as dimensões se normalizam em subníveis; na estrela ligam-se direto ao fato",
+            "A estrela tem uma tabela fato por dimensão; o floco reúne os fatos numa tabela única"
           ],
-          "ok": 1,
+          "ok": 2,
           "pts": 1,
-          "porque": "É uma troca entre repetição e junção. A estrela achata a dimensão — mais espaço, menos JOIN, consulta mais simples. O floco normaliza — menos repetição, mais JOIN. Em telecom a estrela costuma ganhar porque a pergunta analítica é ampla e frequente."
+          "porque": "Na estrela cada dimensão é uma tabela desnormalizada ligada direto ao fato: poucos joins, ideal para BI. No floco a dimensão se normaliza em subníveis (dim_celula liga a dim_site, que liga a dim_regiao): menos redundância, mais joins. O slide 27 desfaz a confusão mais tentadora: Inmon e Kimball são estratégias de construção, e estrela e floco são a forma do modelo que o analista consulta, não 'o modelo de cada um'."
         },
         {
           "q": "Quando ELT faz mais sentido que ETL?",
           "alt": [
-            "Sempre: é a evolução do ETL",
-            "Quando o destino é mais forte que a máquina que transformaria — carrega-se cru e transforma-se lá dentro",
-            "Quando o dado é pequeno",
-            "Quando não há esquema"
+            "Quando se quer preservar o bruto e poder recalcular os KPIs depois, com outra fórmula",
+            "Quando o KPI é rígido e o painel do NOC precisa receber o dado já validado na entrada",
+            "Quando o destino é um warehouse que cobra o esquema antes de aceitar a carga",
+            "Quando o volume é pequeno o bastante para transformar tudo antes de gravar"
           ],
-          "ok": 1,
+          "ok": 0,
           "pts": 1,
-          "porque": "Não é evolução, é onde fica o músculo. Com um warehouse elástico, carregar cru e transformar dentro dele aproveita a escala do destino. Com um destino modesto — o SQLite do nosso lab — transformar antes é mais barato, e aí é ETL."
+          "porque": "ELT carrega o bruto primeiro no lake, preserva a origem e transforma depois, gerando as tabelas gold (slide 53): máxima flexibilidade e dado reprocessável. ETL transforma antes de carregar e dá governança na entrada, que é o que KPI rígido de NOC e warehouse schema-on-write pedem. O pipeline do lab é ELT: o log bruto entra inteiro e o CSV e os KPIs são derivados depois, e por isso dá para refazer a conta quando a fórmula muda."
         },
         {
-          "q": "Lote ou streaming: o que decide?",
+          "q": "Lote ou streaming: o que decide como o dado deve chegar?",
           "alt": [
-            "O volume de dados",
-            "A janela em que a decisão ainda vale — se a resposta serve amanhã, é lote; se precisa valer em segundos, é streaming",
-            "O formato do arquivo",
-            "O fornecedor do banco"
+            "A interface: a O1 entrega em lote, por arquivo, e a E2 entrega o KPM em streaming",
+            "O uso: treino offline aceita lote; alarme de NOC e closed loop pedem streaming",
+            "O volume: acima de alguns gigabytes por dia, o lote deixa de ser viável",
+            "O formato: arquivo PM chega em lote, e JSONL de KPM chega em streaming"
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "É a escala do loop de decisão, a mesma regra da aula 01. Relatório mensal aceita lote. Um xApp que decide em 10 ms não espera o lote da meia-noite. Volume influencia o custo, mas não decide a arquitetura."
+          "porque": "O slide 36 separa pelo uso: lote serve a agregações diárias ou horárias, backfill e treino offline; streaming serve a alarmes, anomalias em tempo quase real, NOC e closed loop. A interface não decide: a O1 entrega PM em bulk e também em streaming (slide 52 da aula 01). Volume e formato mexem no custo, mas não dizem se a decisão pode esperar."
         }
       ]
     },
@@ -136,18 +136,18 @@
       "tipo": "ordem",
       "qs": [
         {
-          "q": "Ponha o caminho do dado no lab, do que o rádio mede até o número do relatório.",
+          "q": "Ponha o caminho do dado no lab na ordem, da subscrição até o consumo do gold.",
           "itens": [
-            "O gNB mede e empacota num relatório E2SM-KPM",
-            "A indicação sobe pela E2 até o near-RT RIC",
-            "O xApp assina o serviço e escreve uma linha no arquivo",
-            "Bronze: o arquivo cru, uma linha por medição, sem limpeza",
-            "Silver: tipagem, conferência de qualidade e carimbo da fase",
-            "Gold: a tabela agregada, uma linha por fase",
-            "O indicador e o gráfico que sustentam a recomendação"
+            "O xApp assina o serviço E2SM-KPM junto ao Near-RT RIC",
+            "O gNB mede e envia as RIC Indications pela E2",
+            "O xApp registra cada Indication no log do experimento",
+            "Bronze: o log é ingerido no kpm.jsonl, uma linha por amostra, com ingested_at",
+            "Silver: o kpm.sqlite tipa as amostras e harmoniza UTC, unidades e chaves",
+            "Gold: agregações por fase e decision.json, com os indicadores curados",
+            "O painel ou o rApp consome o gold para sustentar a recomendação"
           ],
           "pts": 10,
-          "porque": "É o mesmo fio da aula 01 e do projeto integrador. Cada passo depende do anterior e restringe o seguinte: agregar antes de conferir a qualidade propaga o erro para dentro do gold, e aí o gráfico fica bonito e errado."
+          "porque": "Sem subscrição não há Indication: o gNB só envia o relatório E2SM-KPM que um xApp assinou, e 'subscribe OK não é dado OK' enquanto a linha de Indication não aparece no log. Daí a ingestão monta o bronze (cada linha do kpm.jsonl guarda o source_path do log de onde veio), a silver tipa no kpm.sqlite e o gold agrega (slide 38: JSONL → SQLite → decision.json). Agregar antes de tipar e conferir leva o defeito para dentro do gold, e aí o gráfico fica bonito e errado."
         }
       ]
     }

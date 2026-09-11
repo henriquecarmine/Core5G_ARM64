@@ -1,0 +1,189 @@
+{
+  "h": "#oran/aula01",
+  "rot": "Aula 01",
+  "t": "Introdução Open RAN",
+  "pts": 15,
+  "fonte": "Aula 01 da cadeira 1 — Revisão 5G e motivação para Open RAN (slides 37 e 91-97), com a retomada das interfaces O-RAN da aula 01 da cadeira 2 (slides 43-58)",
+  "blocos": [
+    {
+      "nome": "Bloco 1",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O que o termo Open RAN descreve?",
+          "alt": [
+            "Uma RAN cujo software é obrigatoriamente de código aberto, como OAI e srsRAN",
+            "Uma RAN virtualizada em nuvem, com as interfaces internas definidas por cada fabricante",
+            "Uma RAN com interfaces abertas e padronizadas entre as unidades, para combinar fornecedores",
+            "Um núcleo 5G aberto que substitui a NG-RAN especificada pelo 3GPP por uma arquitetura própria"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O aberto de Open RAN está nas interfaces: especificações públicas entre RU, DU, CU e controle, para que peças de fornecedores diferentes funcionem juntas (slides 95 e 97 da aula 01 da cadeira 1). Código aberto é outra coisa: OAI e srsRAN são implementações abertas, mas uma RAN comercial fechada pode ser Open RAN se respeitar as interfaces. Virtualizar a RAN (vRAN) também não basta, porque ela pode continuar amarrada a um fornecedor. E a O-RAN complementa o 3GPP, não o substitui."
+        },
+        {
+          "q": "Qual problema da RAN tradicional o Open RAN ataca diretamente?",
+          "alt": [
+            "O vendor lock-in: interfaces proprietárias entre RU, DU e CU impedem misturar fabricantes",
+            "A falta de separação entre plano de controle e plano de usuário, que obriga AMF e UPF a rodar juntos",
+            "A ausência de interface entre gNB e núcleo, que o Open RAN cria com a N2",
+            "A latência do núcleo 5G, que o Open RAN reduz levando o UPF para a borda"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "É a motivação central dos slides 91 a 93 da aula 01 da cadeira 1: sem interface aberta de fronthaul e midhaul não há competição por componente, e o operador fica preso a um fornecedor por site, com CAPEX e OPEX altos e inovação lenta. A separação de planos (CUPS) e a N2 já existem no 3GPP e pertencem ao núcleo. O UPF na borda aparece na aula como caso de uso que precisa de coordenação aberta, não como o problema que o Open RAN resolve."
+        },
+        {
+          "q": "Na divisão funcional que o Open RAN padroniza, a estação base (gNB) é separada em quais unidades?",
+          "alt": [
+            "BBU e RRH, a banda base centralizada e a cabeça de rádio remota do C-RAN",
+            "O-RU, Near-RT RIC e SMO, cada um com sua interface aberta",
+            "RU, DU e CU: rádio, processamento de tempo real e funções não críticas de tempo",
+            "gNB-CU, AMF e UPF, ligados pelas interfaces N2 e N3"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "RU (Radio Unit), DU (Distributed Unit) e CU (Centralized Unit) são as três unidades da gNB desagregada, e o que o Open RAN acrescenta é abrir e padronizar as interfaces entre elas. BBU e RRH são a separação do C-RAN, anterior e sem interfaces abertas entre fornecedores. O RIC e o SMO controlam e gerenciam a RAN, mas não são pedaços da estação base, e AMF e UPF pertencem ao núcleo 5G."
+        }
+      ]
+    },
+    {
+      "nome": "Bloco 2",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O que é o RIC (RAN Intelligent Controller) na arquitetura O-RAN?",
+          "alt": [
+            "Uma função do 5GC que decide o handover de cada UE a partir dos dados de mobilidade do AMF",
+            "A plataforma que hospeda xApps e rApps e usa a telemetria da RAN para decidir e agir",
+            "O agente embutido no gNB que exporta as métricas pela interface E2",
+            "O orquestrador que provisiona a infraestrutura virtualizada pela interface O2"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O RIC é o cérebro programável da O-RAN: o Near-RT RIC hospeda xApps e o Non-RT RIC hospeda rApps, e os dois leem dados da RAN para decidir e agir (slides 44 e 53 da aula 01 da cadeira 2). O agente E2 existe, mas fica do outro lado, dentro do nó da RAN, e só expõe medições e recebe comandos. Provisionar a O-Cloud pela O2 é papel do SMO, e o RIC não é função do núcleo."
+        },
+        {
+          "q": "Na arquitetura O-RAN, o fronthaul é o enlace entre quais elementos?",
+          "alt": [
+            "O-CU e O-DU, pela interface F1",
+            "O-CU e o 5GC, pelas interfaces N2 e N3",
+            "Near-RT RIC e O-DU, pela interface E2",
+            "O-DU e O-RU, pela Open Fronthaul"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "Fronthaul é o trecho entre a unidade de processamento e o rádio: O-DU e O-RU, especificado pelo WG4 da O-RAN Alliance como Open Fronthaul (slide 43 da aula 01 da cadeira 2). O enlace F1 entre CU e DU é o midhaul, e N2/N3 até o núcleo formam o backhaul. A E2 é interface de controle do RIC, não um trecho do transporte de rádio."
+        },
+        {
+          "q": "O que distingue o Non-RT RIC do Near-RT RIC?",
+          "alt": [
+            "Non-RT: acima de 1 s, rApps, orienta o Near-RT pela A1. Near-RT: 10 ms a 1 s, xApps, E2",
+            "Non-RT: laços abaixo de 10 ms, dentro do gNB. Near-RT: 10 ms a 1 s, xApps, E2 com a O-DU",
+            "Non-RT: laços acima de 1 s, xApps, fala E2 com a RAN. Near-RT: 10 ms a 1 s, rApps, A1",
+            "Non-RT e Near-RT: mesma escala de tempo; o Non-RT só fica fora do site, na nuvem"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O slide 52 da aula 01 da cadeira 2 separa os dois pelo horizonte: Near-RT de 10 ms a 1 s, com xApps e E2; Non-RT acima de 1 s até horas, com rApps, políticas e ML agregado, falando com o Near-RT pela A1. A troca de xApp por rApp é a confusão mais comum: rApps moram no Non-RT e só o Near-RT, com suas xApps, fala E2. Laços abaixo de 10 ms ficam dentro do próprio gNB e não são cobertos pelos RICs."
+        }
+      ]
+    },
+    {
+      "nome": "Bloco 3",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "No split 7.2x, onde fica a fronteira entre O-DU e O-RU?",
+          "alt": [
+            "Entre PDCP e RLC, a mesma fronteira da interface F1",
+            "Entre MAC e PHY, com a PHY inteira na O-RU",
+            "Dentro da PHY: a PHY alta fica na O-DU e a PHY baixa e o RF, na O-RU",
+            "Entre PHY e RF, com a O-RU recebendo só amostras IQ no domínio do tempo"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O 7.2x corta a própria camada física: codificação e modulação ficam na O-DU, e FFT/IFFT, prefixo cíclico e RF ficam na O-RU. Por isso o fronthaul precisa ser rápido e com atraso controlado. A fronteira entre PHY e RF, com amostras no domínio do tempo, é a do CPRI clássico (split 8), que exige ainda mais taxa. Entre PDCP e RLC está o F1 entre CU e DU, e entre MAC e PHY seria outra opção de split."
+        },
+        {
+          "q": "Uma xApp de balanceamento de carga no Near-RT RIC precisa ler medições por célula e mandar ajustes. Por qual interface?",
+          "alt": [
+            "A1, que liga o Near-RT RIC ao Non-RT RIC e carrega as políticas",
+            "E2, com E2SM-KPM para medir e E2SM-RC para controlar",
+            "O1, que traz PM e alarmes dos nós da RAN até o SMO",
+            "F1, que liga a O-CU à O-DU e carrega a sinalização RRC"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "A E2 liga o Near-RT RIC aos nós da RAN (O-CU e O-DU) com E2AP e modelos de serviço: KPM para medições e RC para controle de rádio, em escala abaixo de 1 s (slide 58 da aula 01 da cadeira 2). A O1 também carrega PM, mas vai para o SMO com granularidade de gestão, não fecha o laço near-RT. A A1 traz políticas do Non-RT RIC, não medições da RAN, e a F1 é interface interna do gNB."
+        },
+        {
+          "q": "Que família de funções a interface O1 concentra?",
+          "alt": [
+            "Políticas e enrichment information do Non-RT RIC para o Near-RT RIC",
+            "Orquestração e provisionamento da infraestrutura virtualizada, a O-Cloud",
+            "Medições e controle near-RT das xApps sobre O-CU e O-DU",
+            "OAM dos nós da RAN: falhas, configuração, desempenho e inventário"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "A O1 liga o SMO aos elementos da RAN para OAM, FCAPS, provisionamento e telemetria de gestão, com NETCONF/YANG (slides 48 e 70 da aula 01 da cadeira 2). A confusão típica é com a O2, que também sai do SMO, mas vai para a O-Cloud, a infraestrutura onde as funções rodam. Políticas descem pela A1 e o controle near-RT passa pela E2."
+        }
+      ]
+    },
+    {
+      "nome": "Organizar funções nas unidades",
+      "tipo": "associar",
+      "qs": [
+        {
+          "q": "Leve cada função da pilha de rádio para a unidade onde ela roda numa gNB desagregada (split 7.2x entre RU e DU, split 2 entre DU e CU).",
+          "alvos": [
+            "RU (Radio Unit)",
+            "DU (Distributed Unit)",
+            "CU (Centralized Unit)"
+          ],
+          "itens": [
+            {
+              "t": "Conversão de RF e amplificação",
+              "ok": [
+                0
+              ]
+            },
+            {
+              "t": "PHY baixa (FFT e prefixo cíclico)",
+              "ok": [
+                0
+              ]
+            },
+            {
+              "t": "Escalonador (scheduler) dos recursos de rádio",
+              "ok": [
+                1
+              ]
+            },
+            {
+              "t": "MAC",
+              "ok": [
+                1
+              ]
+            },
+            {
+              "t": "PDCP",
+              "ok": [
+                2
+              ]
+            },
+            {
+              "t": "RRC",
+              "ok": [
+                2
+              ]
+            }
+          ],
+          "pts": 6,
+          "porque": "O critério é o tempo. Tudo o que precisa reagir em milissegundos fica perto da antena: a conversão de RF e a PHY baixa na RU, e o MAC com o escalonador, que decide a cada slot quem transmite, na DU. PDCP e RRC não têm essa urgência (cifragem, ordenação e sinalização de controle) e por isso podem subir para a CU, centralizada e compartilhada por várias DUs. O erro mais comum é pôr o escalonador na CU por ele 'decidir': ele decide em tempo real, e é justamente por isso que fica na DU."
+        }
+      ]
+    }
+  ]
+}

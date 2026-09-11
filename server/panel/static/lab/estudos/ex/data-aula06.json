@@ -12,38 +12,38 @@
         {
           "q": "Como é composta a nota da disciplina?",
           "alt": [
-            "Projeto integrador 50% · plataforma individual 30% · engajamento e checkpoints 20%",
-            "Projeto 30% · plataforma 50% · engajamento 20%",
-            "Prova 60% · projeto 40%",
-            "Projeto 100%, com a plataforma valendo bônus"
+            "Projeto 50% · plataforma individual 30% · engajamento e checkpoints 20%",
+            "Projeto 30% · plataforma individual 50% · engajamento e checkpoints 20%",
+            "Projeto 1 40% · Projeto 2 40% · participação e plataforma 20%",
+            "Projeto 50% · checkpoints 30% · plataforma individual e engajamento 20%"
           ],
           "ok": 0,
           "pts": 1,
-          "porque": "Está nos acordos didáticos (slide 7) e se repete no encerramento. Metade da nota é o projeto com a defesa, e é por isso que a aula final gasta três horas e meia em apresentações. A presença é conferida à parte, no início, nos intervalos e no encerramento."
+          "porque": "Está nos acordos didáticos (slide 7) e se repete no encerramento (slide 29). Metade da nota é o projeto integrador com a defesa, e é por isso que a aula final gasta três horas e meia em apresentações. Dois projetos de 40% e participação de 20% é a composição da disciplina de RIC, não desta. A presença é conferida à parte, no início, nos intervalos e no encerramento."
         },
         {
           "q": "Como está montada a rúbrica do projeto (0 a 10)?",
           "alt": [
-            "Dados vale 4,0 e os outros quatro critérios valem 1,5",
-            "A apresentação vale metade da nota do projeto",
-            "Dez critérios de 1,0 ponto",
-            "Cinco critérios de 2,0 pontos: dados; ETL e reprodutibilidade; KPIs e KQIs; análise e recomendação; governança, limitações e defesa"
+            "Cinco critérios: dados vale 4,0 e os outros quatro valem 1,5 cada",
+            "Quatro critérios de 2,5 pontos; a apresentação e a defesa ficam fora dela",
+            "Dez critérios de 1,0 ponto, e a defesa individual é um deles",
+            "Cinco critérios de 2,0; governança, limitações e defesa estão num deles"
           ],
           "ok": 3,
           "pts": 1,
-          "porque": "Os cinco pesam igual, e isso tem consequência: governança e limitações valem tanto quanto os KPIs. Um grupo com análise excelente e sem a seção de limitações perde o equivalente a errar todos os indicadores."
+          "porque": "O slide 15 dá cinco critérios de 2,0 pontos: dados; ETL e reprodutibilidade; KPIs e KQIs; análise e recomendação; e governança, limitações, documentação e apresentação/defesa. Os cinco pesam igual, e isso tem consequência: governança e limitações valem tanto quanto os KPIs, e a defesa está dentro da rúbrica. A seção de limitações não é enfeite."
         },
         {
           "q": "O que a defesa individual, de 1 a 2 minutos por pessoa, pede?",
           "alt": [
-            "Repetir a apresentação do grupo em versão curta",
-            "A fórmula de um KPI, uma decisão habilitada pelos dados ou uma limitação que você defende",
-            "Rodar o código ao vivo",
-            "Responder à pergunta final de discussão da aula 05"
+            "Um resumo curto da fala do grupo: problema, pipeline, KPIs, insight e limitações",
+            "A fórmula de um KPI, uma decisão habilitada ou uma limitação que você defende",
+            "Rodar ao vivo o notebook de ETL do grupo e explicar cada célula dele",
+            "Responder à pergunta final da aula 05: até onde o analytics pode decidir"
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "É um recorte, não um resumo. Cada pessoa mostra que domina uma peça: como um indicador é calculado, que decisão o dado sustenta ou o que o dado não sustenta. Em dois minutos, fechar uma dessas inteira vale mais do que tocar nas três."
+          "porque": "É um recorte, não um resumo (slide 16). O resumo com problema, pipeline, KPIs, insight e limitações é o roteiro da apresentação do grupo, de 20 a 25 minutos. Na defesa, cada pessoa mostra que domina uma peça: como um indicador é calculado, que decisão o dado sustenta ou o que o dado não sustenta. O slide diz 'ou': em dois minutos, fechar uma dessas inteira vale mais do que tocar nas três."
         }
       ]
     },
@@ -54,38 +54,38 @@
         {
           "q": "O grupo entregou a política A1 em dry-run, sem commit, e a demo do professor mostrou um effect_report. O que é correto dizer?",
           "alt": [
-            "O grupo perde pontos por não ter feito commit",
-            "Dry-run e closed loop provam a mesma coisa",
-            "O dry-run mostra a intenção justificada por KPI e limiar; o closed loop prova o efeito com before/after. Commit não é critério, a demo é do docente",
-            "Só a demo precisa declarar limitações"
+            "O grupo perde pontos na rúbrica, porque a política não foi commitada como na demo",
+            "O dry-run prova o mesmo efeito, desde que cite o KPI e o limiar da decisão",
+            "O dry-run justifica a intenção; o efeito, só o before/after do closed loop prova",
+            "A demo já provou o efeito, então o grupo pode citar o effect_report como seu"
           ],
           "ok": 2,
           "pts": 2,
-          "porque": "A última linha da tabela do slide 20 resolve: a entrega do aluno não exige commit, e a demo não é critério extra. O que diferencia os dois é o tipo de evidência. O risco para a nota é o contrário: dizer no projeto que a política 'melhorou a rede', um efeito que o dry-run não mediu."
+          "porque": "A tabela do slide 20 resolve: a entrega do aluno não exige commit, e a demo é do docente, não critério extra. O que diferencia os dois é o tipo de evidência: o dry-run mostra a intenção justificada por KPI e limiar; o closed loop prova o efeito com before/after. O risco para a nota é o contrário de não commitar: dizer no projeto que a política 'melhorou a rede', ou tomar emprestado o effect_report da demo, um efeito que o dry-run do grupo não mediu."
         },
         {
           "q": "Na defesa, um colega diz: 'a policy ficou ENFORCED, então a vazão caiu por causa dela'. O que falta nesse argumento?",
           "alt": [
-            "Nada, ENFORCED é a prova",
-            "O before/after da KPM (effect_report) e o rollback com recuperação: ENFORCED prova aceitação no caminho A1, não mutação nativa do gNB",
-            "Citar o policytype_id",
-            "Trocar ENFORCED por APPLIED no texto"
+            "Nada: o PMS só marca ENFORCED depois que o gNB aplica a política",
+            "O before/after da KPM e o rollback com recuperação, que ENFORCED não dá",
+            "O policytype_id 22008 e o policy_id do run, que ligam a queda à política certa",
+            "Trocar ENFORCED por APPLIED, o status que confirma a mutação no gNB"
           ],
           "ok": 1,
           "pts": 2,
-          "porque": "É o aviso do slide 21. ENFORCED diz que o consumer aceitou a política; causalidade pede a medida antes e depois, uma medida independente da ação (o iperf a 7,81 contra o alvo de 8) e a volta ao normal quando a ação sai. Sem isso, a queda poderia ser qualquer outra coisa acontecendo na mesma janela."
+          "porque": "É o aviso do slide 21: ENFORCED prova aceitação no caminho A1, não mutação nativa do gNB. Causalidade pede a medida antes e depois, uma medida independente da ação (o iperf a 7,81 contra o alvo de 8) e a volta ao normal quando a ação sai. Os identificadores amarram o registro, mas não provam efeito, e não existe status que confirme mutação no gNB. Sem before/after, a queda poderia ser qualquer outra coisa acontecendo na mesma janela."
         },
         {
           "q": "Depois do rate-limit de 8 Mbit/s, a vazão média ficou em 39,0 Mbit/s e a mediana em 8,08 Mbit/s. Que leitura você defende?",
           "alt": [
-            "O rate-limit falhou: a média ficou quase cinco vezes acima do alvo",
-            "A mediana está errada, porque não pode ser menor que a média",
-            "kbps e Mbit/s não se comparam, então não dá para concluir",
-            "A mediana e o iperf (7,81) mostram o limite funcionando; a média de 12 amostras é puxada por um transiente na primeira, e as duas devem aparecer no slide"
+            "O rate-limit falhou: a média de 39,0 Mbit/s ficou quase cinco vezes acima do alvo",
+            "A conta tem erro: numa série de 12 amostras, a mediana não fica tão abaixo da média",
+            "Não dá para concluir: a KPM sai em kbps e o alvo do rate_limit foi dado em kbit",
+            "O limite funcionou: mediana e iperf ficam perto de 8, e a média sofre um transiente"
           ],
           "ok": 3,
           "pts": 2,
-          "porque": "No gráfico do slide 26 a primeira amostra do after está perto de 380 Mbit/s e as outras onze em torno de 8: (378 + 11 × 8,08) / 12 ≈ 39. Com n = 12, um único ponto move a média. A mediana pode, sim, ficar abaixo da média, e é justamente o sinal de cauda à direita. A conversão é trivial: 8 Mbit/s = 8 000 kbps."
+          "porque": "No gráfico do slide 26 a primeira amostra do after está perto de 380 Mbit/s e as outras onze em torno de 8: (378 + 11 × 8,08) / 12 ≈ 39. Com n = 12, um único ponto move a média, e o iperf a 7,81 confirma o limite. A mediana pode, sim, ficar bem abaixo da média: é o sinal de cauda à direita. A conversão é trivial: 8 Mbit/s = 8 000 kbps. No slide do grupo, as duas estatísticas devem aparecer, com a explicação do transiente."
         }
       ]
     },
@@ -96,38 +96,38 @@
         {
           "q": "No roteiro da demo, por que o MAD é treinado com KPM_TRAFFIC=0 antes do stress?",
           "alt": [
-            "Porque o baseline tem de descrever o normal: treinado com carga, a mediana e o MAD absorvem a anomalia e o score não passa do limiar",
-            "Para economizar CPU no servidor",
-            "Porque o iperf não pode rodar junto com o treino",
-            "Porque o A1 exige tráfego zero para aceitar a política"
+            "Porque o baseline tem de descrever o normal; com carga, o stress viraria referência",
+            "Para poupar a CPU do servidor, que não aguenta rodar o treino e o iperf ao mesmo tempo",
+            "Porque, com tráfego, as INDICATIONs atrasam e o treino perde amostras da janela",
+            "Porque o PMS só aceita criar a política se o baseline foi medido sem tráfego"
           ],
           "ok": 0,
           "pts": 1,
-          "porque": "O score é a distância à mediana dividida pelo MAD do baseline. Se o baseline incluir a carga, a mediana sobe, o MAD alarga e as amostras de stress deixam de parecer estranhas: a decisão apply nunca sai. É o motivo do passo 2 vir antes do passo 3."
+          "porque": "O score é a distância à mediana dividida pelo MAD do baseline. Se o baseline incluir a carga, a mediana sobe, o MAD alarga e as amostras de stress deixam de parecer estranhas: a decisão apply nunca sai. É o motivo do passo 2 (baseline calmo) vir antes do passo 3 (stress) no roteiro do slide 23. O PMS não olha como o baseline foi medido: ele gerencia a política."
         },
         {
           "q": "OSC e ONAP aparecem nos temas finais, em 'software e deploy'. O que são?",
           "alt": [
-            "Padrões de rádio do 3GPP",
-            "Comunidades de software aberto (O-RAN Software Community e Open Network Automation Platform) com implementações de RIC, gerência e orquestração",
-            "Fabricantes de O-RU",
-            "Formatos de arquivo do data lake"
+            "Grupos do 3GPP que padronizam o rádio e o core 5G usados no lab",
+            "Comunidades de software aberto com RIC, gerência e orquestração",
+            "Fornecedores comerciais de O-RU e de RIC integrados ao BSS/OSS",
+            "Associações do ecossistema, ao lado de TIP e SCF, que fazem política"
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "São onde o O-RAN vira código. A O-RAN SC publica RICs, PMS e simuladores (o PMS do nosso Non-RT RIC vem de lá), e o ONAP é uma plataforma de automação e orquestração de rede, terreno do SMO. O slide liga os dois a dados de inventário e configuração: quem faz deploy também gera dados."
+          "porque": "São onde o O-RAN vira código: O-RAN Software Community e Open Network Automation Platform. A O-RAN SC publica RICs, PMS e simuladores (o PMS do nosso Non-RT RIC vem de lá), e o ONAP é uma plataforma de automação e orquestração de rede, terreno do SMO. O slide 13 liga os dois a dados de inventário e configuração: quem faz deploy também gera dados. TIP, SCF, 3GPP e a Open RAN Policy Coalition aparecem em outro item do mesmo slide, o de ecossistema."
         },
         {
           "q": "O que o ciclo de testes da O-RAN Alliance acrescenta ao pipeline de dados?",
           "alt": [
-            "Substitui a análise exploratória",
-            "Define a nota do projeto integrador",
-            "Valida os KPIs antes de ir para produção, para que problemas de integração entre fornecedores não sejam descobertos em campo",
-            "Cria automaticamente o policy type"
+            "Substitui a EDA do projeto, porque os KPIs já chegam validados do fornecedor",
+            "Define os KPIs obrigatórios que cada operador tem de coletar pelo O1",
+            "Valida os KPIs antes da produção, na integração entre fornecedores",
+            "Gera o policy type A1 que o PMS usa para aceitar a política do rApp"
           ],
           "ok": 2,
           "pts": 1,
-          "porque": "Numa RAN aberta, peças de fornecedores diferentes precisam funcionar juntas. O slide coloca o teste como etapa de validação de KPIs antes da produção: é o mesmo raciocínio do Checkpoint 2 (validar o indicador antes de decidir com ele), levado para a integração de sistemas."
+          "porque": "Numa RAN aberta, peças de fornecedores diferentes precisam funcionar juntas. O slide 13 coloca o ciclo de testes da O-RAN Alliance como etapa de validação de KPIs antes da produção, para que problemas de integração não sejam descobertos em campo. É o mesmo raciocínio do Checkpoint 2 (validar o indicador antes de decidir com ele), levado para a integração de sistemas; não substitui a EDA do projeto."
         }
       ]
     },

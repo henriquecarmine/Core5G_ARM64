@@ -1,6 +1,6 @@
 # trabalhos/ — exercícios e checkpoints (30% + 20%)
 
-Exercícios individuais da plataforma (`#data/aula01` … `#data/aula06`) e os
+Exercícios individuais do painel (`#data/aula01` … `#data/aula06`) e os
 materiais dos checkpoints por aula.
 
 Sugestão de organização — uma subpasta por aula:

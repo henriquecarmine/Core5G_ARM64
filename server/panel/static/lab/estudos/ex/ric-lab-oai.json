@@ -1,0 +1,155 @@
+{
+  "h": "#ric/lab-oai",
+  "rot": "Lab OAI+FlexRIC",
+  "t": "E2, E2SM e xApps",
+  "pts": 22,
+  "fonte": "Lab OAI+FlexRIC da cadeira 2 (RIC) — roteiro do nosso lab em server/oai-cn-gnb-e2 (README, docs/TUTORIAL_LAB_E2.md, docs/E2_FLEXRIC.md, docs/E2_SERVICE_MODELS.md e os scripts de subida, de teste E2 e de parada, que o painel roda em p2-test-e2-sm, p2-test-e2-kpm, p2-test-e2-rc e p2-kpm-real), com os slides das aulas 04 e 06",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Além de subir os contêineres do 5GC com o core-network.py, o que o up_core.sh faz?",
+          "alt": [
+            "Coloca o IP 192.168.70.129 na demo-oai, para o gNB falar NGAP com a AMF",
+            "Cadastra o IMSI do nrUE no MySQL do core, para o attach ser aceito",
+            "Compila o nr-softmodem com --build-e2 quando o binário ainda não existe no host",
+            "Habilita o IP forwarding no host, para o tráfego do UE sair à rede externa"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O up_core.sh liga o net.ipv4.ip_forward (e o forwarding IPv6), põe a política FORWARD do iptables em ACCEPT e, depois de chamar o core-network.py (start-basic-vpp, scenario 1), espera a AMF ficar healthy. Sem forwarding, o ping do UE para 8.8.8.8 falha mesmo com o core healthy (slide 31 da aula 05). O IP 192.168.70.129 na demo-oai é trabalho do up_gnb_oai.sh, que vem depois; compilar é do build_e2.sh, que vem antes; e o up_core.sh não mexe no cadastro de assinantes."
+        },
+        {
+          "q": "O que o RFSIM faz no lab?",
+          "alt": [
+            "Substitui o hardware de rádio: gNB e nrUE trocam as amostras de RF por software",
+            "Simula o 5GC por dentro do gNB, para que ele suba sem depender da AMF nem do NRF do core",
+            "Emula um Near-RT RIC, para testar o agente E2 sem precisar do FlexRIC",
+            "Roda gNB e UE no mesmo contêiner Docker, do jeito que o UERANSIM faz"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "RFSIM é o simulador de rádio em software do OAI: no lugar de um SDR ou USRP (slide 11 da aula 04), o nr-softmodem e o nr-uesoftmodem trocam as amostras por socket, e os scripts sobem os dois com --rfsim. Com ele há attach, PDU session e métricas sem hardware, o que basta para desenvolver xApps. Core e RIC continuam reais: a AMF está no Docker e o FlexRIC é um processo à parte. E gNB e nrUE rodam nativos no host, não em contêiner."
+        },
+        {
+          "q": "Em que o test_e2_rc_attach.sh foge da ordem usual de subida do lab, e por quê?",
+          "alt": [
+            "Sobe o gNB antes do RIC, porque o E2SM-RC não depende do E2 SETUP para funcionar",
+            "Sobe o UE antes do gNB, para que o RRCSetupComplete seja gerado antes de tudo",
+            "Dispensa o core, já que os eventos RRC acontecem só entre UE e gNB, sem a AMF",
+            "Sobe o xApp RC antes do gNB e do UE, para a subscription já existir no attach"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "A ordem desse teste é RIC, xApp RC, gNB e só então o UE (slide 41 da aula 04): os eventos do E2SM-RC são aperiódicos, e o RRCSetupComplete só acontece no attach. Se o xApp subscrever depois, o evento já passou e nenhuma INDICATION chega. O RIC continua vindo primeiro, o gNB ainda faz E2 SETUP normalmente, e o core segue necessário, porque sem AMF o attach não se completa."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Ao rodar up_gnb_oai.sh, o script para com 'Interface demo-oai não encontrada'. O que fazer?",
+          "alt": [
+            "Subir o nearRT-RIC com up_flexric.sh, que é quem cria essa interface",
+            "Subir o core com up_core.sh: a demo-oai é a rede Docker criada por ele",
+            "Recompilar o gNB com build_e2.sh, porque o binário veio sem o agente E2",
+            "Remover o IP 192.168.70.129 duplicado da interface e rodar o script de novo"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "A demo-oai é criada pelo Docker quando o core sobe (slide 23 da aula 05), e o up_gnb_oai.sh precisa dela para colocar ali o IP 192.168.70.129, de onde o gNB fala NGAP com a AMF. Por isso o próprio script manda iniciar o core primeiro. O RIC é um processo no host e não cria rede nenhuma, e não há IP duplicado possível numa interface que nem existe."
+        },
+        {
+          "q": "O nearRT-RIC está no ar em 127.0.0.1 e o gNB subiu depois dele. Mesmo assim, o log do gNB mostra 'nearRT-RIC IP Address = 10.0.2.10, PORT = 36421' e nunca E2 SETUP RESPONSE rx. O que corrigir?",
+          "alt": [
+            "A porta E2 no gnb.conf, trocando 36421 por 36422 para que o gNB alcance o nearRT-RIC",
+            "O filtro de slice do xApp KPM, rodando o teste com KPM_SST=222 e KPM_SD=123",
+            "O near_ric_ip_addr do bloco e2_agent no gnb.conf, que deve apontar para 127.0.0.1",
+            "O tráfego do UE, rodando com KPM_TRAFFIC=1 para gerar pacotes até o DN"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "O próprio log entrega a causa: o agente E2 procura o RIC num IP onde ele não está (10.0.2.10 é o endereço do RIC da Fase 2, do O-RAN SC, na aula 05). Esse endereço vem do near_ric_ip_addr do bloco e2_agent do gnb.conf, e no lab do FlexRIC ele é 127.0.0.1 (TUTORIAL_LAB_E2.md). A porta 36421 já é a E2 do FlexRIC; a 36422 é a E42, por onde entram os xApps. Filtro de slice e tráfego só importam depois da associação, na subscription KPM."
+        },
+        {
+          "q": "Com o sm_dir apontando para /usr/local/lib/flexric/, o gNB aborta assim que a KPM começa, com 'cp_amf_region_id_to_bit_string: Assertion src < 64 failed'. O que resolve?",
+          "alt": [
+            "Rodar o xApp com KPM_SST=1, que é o slice padrão que essas bibliotecas esperam",
+            "Ativar KPM_TRAFFIC=1, porque o crash vem de INDICATIONs geradas sem nenhum tráfego",
+            "Subir o RIC depois do gNB, para ele carregar as bibliotecas já com o nó E2 associado",
+            "Usar os SMs do submodule em flexric-lib/, que aceitam o AMF Region ID 128 do core"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "É o troubleshooting do TUTORIAL_LAB_E2.md: a libkpm_sm.so instalada em /usr/local é de uma versão antiga e quebra com o AMF Region ID 128 do core OAI. A saída é usar os .so do submodule dev em flexric-lib/, gerados pelo build_flexric_tools.sh ou copiados pelo sync_flexric_lib.sh; os scripts do lab já passam --e2_agent.sm_dir com esse caminho. SST=1 é o padrão do xapp_oran_moni de /usr/local, justamente o que o lab evita, e tráfego ou ordem de subida não mudam a versão da biblioteca."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "No diagrama do Projeto 2, que interface e porta ligam o gNB OAI ao FlexRIC, e como os xApps chegam ao RIC?",
+          "alt": [
+            "E2AP sobre SCTP na 36421 entre gNB e RIC; os xApps entram pela E42 na 36422",
+            "E2AP na 36422 entre gNB e RIC, como no O-RAN SC; os xApps entram pela 36421",
+            "A1 na 36421 entre gNB e RIC; os xApps recebem as INDICATIONs pelo RMR",
+            "NGAP na 36421 entre gNB e RIC; os xApps leem a KPM direto do arquivo de log do gNB"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O diagrama do TUTORIAL_LAB_E2.md mostra o nearRT-RIC com duas portas: 36421 para o E2AP sobre SCTP que vem do agente E2 do gNB, e 36422 para a E42, a interface do FlexRIC com os xApps (o 'E42 SETUP' do slide 28 da aula 04). A confusão comum vem do O-RAN SC, onde 36422 é a porta E2 do ric_e2term. NGAP é do gNB com a AMF, A1 é do Non-RT com o Near-RT, e RMR é o roteador interno do O-RAN SC, não do FlexRIC."
+        },
+        {
+          "q": "Nas aulas 02 e 03 a RAN de software era o srsRAN com ZMQ. Por que o lab de RIC passou para o gNB OAI com RFSIM?",
+          "alt": [
+            "Porque o srsRAN com ZMQ exigia um SDR de verdade, enquanto o RFSIM dispensa o hardware",
+            "Porque naquele lab o E2 não estava exposto, e o gNB OAI traz o agente E2 integrado",
+            "Porque o srsRAN não conseguia falar NGAP com um core 5G SA, e o gNB OAI consegue",
+            "Porque o lab do srsRAN era de A1, e o Projeto 2 precisava trocar a A1 pela E2"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O slide 9 da aula 04 conta o fio condutor: Open5GS, srsRAN ZMQ e desagregação CU/DU nas aulas 01 a 03, sem E2 exposto, e a partir da aula 04 a pilha OAI com agente E2 integrado ao gNB. O ZMQ, como o RFSIM, já dispensava hardware de rádio, e o srsRAN falava NGAP com o core normalmente. A A1 do Projeto 1 era leitura e conceito (slide 24 da aula 06), não uma interface que o lab do srsRAN usasse."
+        },
+        {
+          "q": "Terminado o teste, o grupo quer parar gNB e RIC, mas manter o core de pé para a próxima rodada. O que usar?",
+          "alt": [
+            "down_core.sh, que para o core e derruba o gNB e o RIC junto com ele",
+            "down_flexric.sh, que para o RIC, o gNB e o nrUE de uma só vez",
+            "down_e2_lab.sh, que para gNB e RIC e só derruba o core com --all",
+            "down_all.sh, que por padrão preserva o core e para só a RAN e o near-RT RIC"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O down_e2_lab.sh chama o down_gnb_oai.sh e o down_flexric.sh e deixa o core ativo; com --all, chama também o down_core.sh (E2_FLEXRIC.md e o próprio script). O down_flexric.sh para só o RIC e os xApps, e o down_core.sh só o core em Docker, sem tocar em gNB nem RIC. O down_all.sh para gNB, UERANSIM e core, justamente o que não se quer aqui."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o roteiro do lab OAI+FlexRIC, do build até desligar.",
+          "itens": [
+            "Compilar gNB e nrUE com --build-e2 e o FlexRIC do mesmo submodule (build_e2.sh e build_flexric_tools.sh)",
+            "up_core.sh: core 5G OAI em Docker",
+            "up_flexric.sh: nearRT-RIC no host",
+            "up_gnb_oai.sh: gNB e nrUE em RFSIM, com o agente E2 ativo",
+            "Conferir E2 SETUP RESPONSE rx em logs/gnb_oai.log",
+            "test_e2_kpm.sh: subscription KPM no slice 222/123 e INDICATIONs no log do xApp",
+            "Parar o laboratório ao fim da rodada"
+          ],
+          "pts": 10,
+          "porque": "É a opção passo a passo do TUTORIAL_LAB_E2.md, que o up_e2_lab.sh automatiza, e o fim é o down_e2_lab.sh. Cada etapa precisa da anterior: sem binário não há o que subir, sem o core não existe a demo-oai de que o gNB precisa, sem o RIC escutando o agente E2 do gNB não completa o SETUP, e sem SETUP o xApp não tem nó onde subscrever. No painel, o p2-test-e2-kpm roda exatamente o test_e2_kpm.sh, e o p2-kpm-real faz a coleta com tráfego real pelo kpm_collect_real.sh."
+        }
+      ]
+    }
+  ]
+}

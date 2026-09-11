@@ -1,0 +1,155 @@
+{
+  "h": "#oran/aulao1",
+  "rot": "Interface O1",
+  "t": "OAM / FCAPS",
+  "pts": 22,
+  "fonte": "Esta aula não tem slides próprios: aula 01 da cadeira 2 (retomada das interfaces O-RAN, slides 44, 48, 59 a 62, 66 e 70), aula 05 da cadeira 2 (SMO e O1 simulado, slides 65 a 67), aula 01 da cadeira 4 (SMO, serviços de gestão da O1 e PM × FM × KPM, slides 48, 51, 52, 56 e 72), aula 02 da cadeira 4 (camadas bronze e silver e caminho VES → InfluxDB, slides 38, 45 e 65) e a especificação da interface O1 da O-RAN Alliance (WG10), e a RFC 6241 (NETCONF: datastores e commit confirmado)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "A interface O1 pertence a qual família de funções?",
+          "alt": [
+            "Controle near-RT do RRM, com medições KPM e comandos RC em laços abaixo de 1 s",
+            "OAM no modelo FCAPS: falhas, configuração, contabilidade, desempenho e segurança",
+            "Políticas declarativas e enrichment information entre o Non-RT e o Near-RT RIC",
+            "Orquestração da infraestrutura de nuvem onde as funções da RAN são implantadas e escaladas"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O1 é a interface de gestão entre o SMO e as funções da RAN, e FCAPS é o recorte clássico dessa gestão (slides 48 e 70 da aula 01 da cadeira 2). As outras três são as vizinhas com que ela mais se confunde: controle near-RT com KPM e RC é E2, política e enrichment information é A1, e orquestrar a nuvem é O2. A tentação de marcar E2 vem de as duas levarem medidas, mas o PM da O1 é a visão agregada e histórica, e a KPM da E2 é o dado fino do laço near-RT."
+        },
+        {
+          "q": "Quais elementos o SMO gerencia pela O1?",
+          "alt": [
+            "As funções gerenciadas da O-RAN, como O-CU, O-DU e o Near-RT RIC",
+            "Os nós e clusters da O-Cloud onde essas funções são executadas",
+            "As funções do core 5G, como AMF, SMF e UPF, pela mesma sessão de gestão da RAN",
+            "Somente as O-RUs, que recebem a configuração pelo Open Fronthaul"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "A O1 termina nas funções gerenciadas da arquitetura O-RAN, inclusive no Near-RT RIC. A O-RU é a exceção que costuma confundir: a gestão dela usa o M-Plane do Open Fronthaul, e o slide 51 da aula 01 da cadeira 4 separa as duas coisas (FCAPS via O1 para as funções O-RAN, M-Plane para a O-RU). Nós e clusters da O-Cloud são assunto da O2, e o core 5G tem gestão própria definida pelo 3GPP, fora da O1."
+        },
+        {
+          "q": "Chega ao SMO um alarme de perda de sincronismo da O-DU e, a cada período, um arquivo com os contadores dela. Quais serviços de gestão da O1 estão em jogo?",
+          "alt": [
+            "Performance Assurance para os dois, já que ambos descrevem o estado da O-DU",
+            "Provisioning para o alarme e Trace para os contadores",
+            "Fault Supervision para o alarme e Performance Assurance para os contadores",
+            "Trace para o alarme e Heartbeat para os contadores"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O slide 52 da aula 01 da cadeira 4 lista os serviços de gestão (MnS) da O1: Provisioning configura, Fault Supervision cuida de alarmes e eventos, Performance Assurance entrega PM em arquivo (bulk) ou streaming, Trace registra procedimentos e Heartbeat mostra que o elemento está vivo. A tabela do slide 56 dá o critério: FM responde 'o que quebrou?' e PM responde 'como a célula performou?'. Juntar os dois em Performance Assurance apaga justamente essa diferença."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Alarmes gerados por uma O-DU simulada não aparecem no painel do SMO, mas a mesma O-DU continua respondendo às leituras de configuração pela O1. Por onde começar?",
+          "alt": [
+            "Pela sessão NETCONF da O-DU, reabrindo-a para que os alarmes voltem a subir",
+            "Pelo caminho dos eventos: envio VES da O-DU, VES Collector e Kafka",
+            "Pelo Data File Collector, que busca na O-DU os arquivos com os alarmes",
+            "Pela subscrição E2SM-KPM do Near-RT RIC, que também transporta os alarmes da O-DU"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Na figura do O-RAN SC (slide 60 da aula 01 da cadeira 2), o VES Collector e o Kafka fazem a ingestão e o transporte dos eventos de FM e PM. Se a leitura de configuração funciona, a sessão NETCONF está de pé, e o defeito está no outro caminho, o dos eventos. O Data File Collector é a alternativa tentadora, mas ele trata os arquivos de PM, não alarmes; e a KPM da E2 não carrega FM."
+        },
+        {
+          "q": "O painel de PM da O-DU tem buracos. Para todo período chega o evento VES avisando que o arquivo de PM está pronto, mas algumas séries não aparecem no InfluxDB. Qual a investigação certa?",
+          "alt": [
+            "Concluir que a O-DU parou de medir e abrir um chamado de falha no elemento",
+            "Aumentar a periodicidade do report KPM na E2 para cobrir os períodos que faltam",
+            "Reenviar a configuração da O-DU pela NETCONF, porque cada arquivo depende de um commit",
+            "Seguir o arquivo após o aviso: Data File Collector, conversão e Influx Logger"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "O caminho do slide 65 da aula 02 da cadeira 4 é: a RAN avisa por VES que há arquivo, o Data File Collector busca o XML e converte, o PM Producer distribui por Kafka os tipos de medição assinados e o Influx Logger grava os contadores selecionados. Se o aviso chega em todo período, a O-DU mediu e produziu o arquivo; o buraco está depois do aviso, e culpar o elemento é o erro mais comum. Trocar por KPM não conserta o PM, porque uma fonte não substitui a outra (slide 48 da aula 01 da cadeira 4)."
+        },
+        {
+          "q": "Um parâmetro alterado pela O1 aparece com o valor novo em todas as leituras durante dias, mas volta ao valor antigo quando a O-DU reinicia. Qual a explicação mais provável?",
+          "alt": [
+            "A mudança ficou no running e não foi copiada para o startup, lido no boot",
+            "O commit confirmado expirou sem confirmação e o elemento fez rollback da mudança",
+            "O modelo YANG rejeitou o valor, e a leitura mostrava apenas o que tinha sido pedido",
+            "A configuração feita pela O1 precisa ser reenviada por VES a cada boot do elemento"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "No NETCONF, um elemento pode ter o datastore startup separado do running (capacidade :startup). Nesse caso a edição vale na hora, mas só sobrevive ao reinício se for copiada para o startup. O commit confirmado é a alternativa tentadora, só que o rollback dele acontece quando o prazo de confirmação acaba, em minutos, e não dias depois num reboot. Uma rejeição do YANG impediria o valor de aparecer na leitura, e VES carrega eventos, não configuração."
+        }
+      ]
+    },
+    {
+      "nome": "Governança e modelo",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O inventário do SMO registra a versão de software A para uma O-DU, mas o elemento, lido pela O1, informa a versão B. Que prática evita que divergências assim se acumulem?",
+          "alt": [
+            "Corrigir o registro à mão sempre que alguém notar a diferença num relatório mensal",
+            "Tratar o inventário como verdade e reinstalar a versão A no elemento",
+            "Reconciliar o inventário periodicamente com os elementos, por identificadores únicos",
+            "Guardar a versão como texto livre na descrição do site, que aceita qualquer formato de fornecedor"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "Inventário é dado de contexto (topologia, inventário, versão de software e capacidade, slide 45 da aula 02 da cadeira 4) e envelhece se ninguém o compara com a rede. A reconciliação automática, com uma chave única dos dois lados, é o que mantém catálogo e realidade alinhados; no scaffold de SMO do lab, topologia e inventário ficam no TEIV (slide 65 da aula 05 da cadeira 2). Reinstalar A é tentador, mas decide sem saber qual lado está errado: B pode ser a atualização legítima que o inventário não registrou."
+        },
+        {
+          "q": "Uma mudança de parâmetro pela O1 vai atingir centenas de células. O que não pode faltar no plano?",
+          "alt": [
+            "Janela de manutenção, aplicação simultânea em todas as células e rollback pronto",
+            "Janela de manutenção, aplicação em etapas, validação pós-commit e rollback",
+            "Aplicação em etapas e validação pós-commit, com a coleta de alarmes suspensa na janela",
+            "Janela e aplicação em etapas, sem rollback, já que o elemento valida contra o YANG"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "Os quatro planos parecem completos, e três têm um furo. Mudança sensível se planeja para errar com pouco estrago: janela combinada, lotes pequenos primeiro, verificação de KPIs e alarmes depois do commit e o caminho de volta pronto (monitorar e ter rollback no playbook, slide 66 da aula 01 da cadeira 2). Aplicar em todas ao mesmo tempo transforma um erro em incidente de centenas de células. A validação YANG é a justificativa enganosa para dispensar rollback: ela garante que o valor cabe no modelo, não que é bom para a rede. E suspender os alarmes tira justamente a evidência que diria se a mudança quebrou algo."
+        },
+        {
+          "q": "Qual destas práticas é um anti-padrão ao analisar o PM coletado pela O1?",
+          "alt": [
+            "Normalizar os timestamps para UTC antes de calcular os KPIs de cada célula",
+            "Guardar o arquivo de PM bruto antes de transformá-lo",
+            "Usar o PM da O1 para histórico e a KPM da E2 para o diagnóstico fino, lado a lado",
+            "Cruzar PM de fornecedores sem alinhar fuso, granularidade e chaves de célula"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O slide 56 da aula 01 da cadeira 4 avisa que, sem alinhar timestamps, granularidade e fuso, a correlação mente; e com vários fornecedores as chaves de célula também precisam ser normalizadas (camada silver, slide 38 da aula 02). As outras três são boas práticas: UTC é regra da silver, o bruto preservado na bronze permite reprocessar, e O1 para histórico com E2 para alta resolução é a resposta da discussão do slide 72 da aula 01."
+        }
+      ]
+    },
+    {
+      "nome": "Ordenar mudança assistida",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem uma mudança de configuração assistida pela O1, da abertura ao encerramento.",
+          "itens": [
+            "Abrir a mudança formal com escopo, risco, janela e plano de rollback",
+            "Já dentro da janela, ler a configuração atual pela O1 e registrar a baseline de PM e os alarmes ativos",
+            "Editar o datastore candidate e validar a alteração contra o modelo YANG",
+            "Aplicar com commit confirmado, que se desfaz sozinho se não for confirmado no prazo",
+            "Observar alarmes e contadores durante a janela de estabilização",
+            "Confirmar o commit, já com a evidência de que o elemento ficou estável",
+            "Encerrar a mudança documentando o delta e o estado final auditável"
+          ],
+          "pts": 10,
+          "porque": "Cada passo depende do anterior: sem a mudança aberta não há janela nem rollback combinados, e a leitura inicial é feita já dentro da janela, para ser a foto mais recente com que comparar depois. Validar antes de aplicar pega erro de modelo sem tocar na rede. O commit confirmado é o que torna a observação segura: se a O-DU ficar inalcançável ou os alarmes dispararem, basta não confirmar e o elemento volta sozinho ao estado anterior (NETCONF, RFC 6241). Por isso confirmar vem depois de observar, e só então se documenta o que mudou. Na prática o prazo do commit confirmado (600 s por padrão) é estendido quando os contadores de PM chegam em janelas mais longas que isso, para dar tempo de observar."
+        }
+      ]
+    }
+  ]
+}

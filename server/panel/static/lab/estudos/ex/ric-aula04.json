@@ -1,0 +1,155 @@
+{
+  "h": "#ric/aula04",
+  "rot": "Aula 04",
+  "t": "xApps e open source",
+  "pts": 22,
+  "fonte": "Aula 04 da cadeira 2 (RIC) — Pilha OAI + interface E2 via FlexRIC: build e subida do lab, E2AP e E2SM, ciclo de vida do xApp e plataformas RIC open source (slides aula04-xapps_opensource.pdf)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Na pilha da aula 04, quem faz cada papel da interface E2?",
+          "alt": [
+            "O 5GC OAI é o E2 node, o FlexRIC é o Near-RT RIC e o xApp roda embutido dentro do gNB",
+            "O nrUE é o E2 node, o gNB OAI é o Near-RT RIC e o FlexRIC hospeda os xApps",
+            "O gNB OAI é o E2 node, o FlexRIC é o Near-RT RIC e o xApp consome as INDICATIONs",
+            "O FlexRIC é o E2 node, o gNB OAI roteia as subscriptions e o xApp fala A1"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "Slide 16: o E2 node é o gNB OAI (nr-softmodem), que tem o agente E2 embutido e expõe RAN functions como KPM, RC, MAC e RLC. O FlexRIC, no papel de Near-RT RIC, roteia subscriptions e INDICATIONs entre o gNB e os xApps, e o xApp consome as métricas e os eventos. O core não tem agente E2: ele fala NGAP e GTP-U com o gNB, não E2 com o RIC."
+        },
+        {
+          "q": "O que faz o xapp_kpm_moni, o xApp de referência usado no lab?",
+          "alt": [
+            "Assina o E2SM-KPM e recebe INDICATIONs periódicas com medidas como throughput e PRB",
+            "Assina o E2SM-RC e recebe os eventos RRC do attach do UE, como o RRCSetupComplete decodificado",
+            "Lê os service models próprios de MAC, RLC, PDCP e GTP, com encoding plain",
+            "Recebe políticas A1 do Non-RT RIC e as repassa ao gNB como CONTROL"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "É o monitor de KPM do FlexRIC (slides 22 e 34): pede a subscription na RAN function 2 e imprime as medidas de cada INDICATION, como DRB.UEThpDl e RRU.PrbTotUl. Os eventos RRC são do xapp_rc_moni, pelo E2SM-RC (test_e2_rc_attach.sh), e as camadas L2/L3 são dos SMs custom do test_e2_sm.sh cust. E o FlexRIC não integra A1 (slide 63 da aula 05): política A1 é assunto do Non-RT RIC."
+        },
+        {
+          "q": "No comparativo de plataformas open source do NGO (slide 33), o que descreve o FlexRIC?",
+          "alt": [
+            "Cobre Non-RT e Near-RT, é O-RAN compliant e escala em Kubernetes, mas tem muitos pods",
+            "Traz RANsim e SDK em Go e Python, bom para lab rápido, mas sem PHY nem plano de usuário real",
+            "É um Non-RT RIC leve, focado em políticas A1 e em rApps de machine learning",
+            "É só Near-RT, enxuto, com proxy E2 e baixa latência, mas monolítico e de escala limitada"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "A primeira alternativa é o O-RAN SC (OSC) e a segunda é o SD-RAN, as outras duas linhas da tabela. O FlexRIC é só Near-RT, e é essa leveza que o faz caber no lab: um binário no host e os service models em flexric-lib/. O preço é o monolito, que não escala como a OSC em Kubernetes. Não é Non-RT: A1 e rApps ficam fora dele."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Ao rodar up_gnb_oai.sh, o script para dizendo que não encontrou o nr-softmodem em ran_build/build. O que resolve?",
+          "alt": [
+            "Rodar up_core.sh antes, porque o binário do gNB só aparece depois que o core sobe",
+            "Compilar gNB e nrUE com o agente E2 pelo build_e2.sh (build_oai com --build-e2)",
+            "Rodar build_flexric_tools.sh, que compila o nearRT-RIC e também os binários da RAN",
+            "Instalar o FlexRIC em /usr/local, que é onde o script procura o nr-softmodem"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "O nr-softmodem é o binário do gNB e sai do build da RAN: depois das dependências (build_oai --ninja -I, uma vez), o build_e2.sh compila gNB e nrUE com --gNB --nrUE -w SIMU --build-e2, fixando E2AP_V2 e KPM_V2_03 (slide 14). O build_flexric_tools.sh é a outra metade: gera o nearRT-RIC, os xApps e os .so de flexric-lib/, mas não o gNB. O up_core.sh só sobe os contêineres do 5GC e não compila nada."
+        },
+        {
+          "q": "O nearRT-RIC já estava no ar quando o gNB subiu. O gNB saiu do build_e2.sh, mas o RIC foi compilado à parte, de um clone do FlexRIC fora do submodule. O log do gNB mostra E2 SETUP-REQUEST tx e nunca a RESPONSE. Qual a causa mais provável?",
+          "alt": [
+            "O UE ainda não fez attach, e sem UE conectado o gNB não completa o E2 SETUP",
+            "O filtro de slice do xApp não bate com o SST 222 e o SD 123 que estão configurados no core",
+            "Falta tráfego no UE: sem KPM_TRAFFIC=1 o RIC não chega a responder ao SETUP",
+            "gNB e RIC estão em versões de E2AP e E2SM diferentes, que precisam ser idênticas"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "A regra de ouro dos slides 14 e 36 é que gNB, nearRT-RIC e xApps partilhem a mesma pilha: E2AP v2, E2SM-KPM v2.03 e E2SM-RC v1.03. Com versões diferentes o SETUP falha ou as INDICATIONs não decodificam, e por isso o lab usa o RIC e os SMs do mesmo submodule. A ordem de subida está certa no enunciado, e as outras causas não mexem no SETUP: o E2 é entre gNB e RIC e não depende do UE, e filtro de slice e tráfego só pesam depois, na subscription KPM."
+        },
+        {
+          "q": "Um colega propõe usar o UERANSIM no Projeto 2, porque ele sobe em segundos e o ping pelo core já passou. O que responder?",
+          "alt": [
+            "Só serve como smoke test do core: o UERANSIM não expõe agente E2 para o RIC",
+            "Serve: basta configurar o near_ric_ip_addr do UERANSIM para 127.0.0.1, como no gNB OAI",
+            "Serve, desde que o UE do UERANSIM use o slice SST 222 e SD 123 do filtro KPM",
+            "Não serve, porque o UERANSIM não fala NGAP com a AMF e nem chega a registrar no core"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "O fio condutor da aula 04 é sair das RANs sem E2 exposto das aulas 01 a 03 para o gNB OAI, que traz o agente E2 integrado (slide 9). A aula 05 fecha a questão: o UERANSIM não expõe agente E2 e fica como smoke test do core, validando N2, N3 e N6. A última alternativa é a armadilha: ele fala NGAP e GTP-U normalmente, tanto que o ping passou; o que falta é a E2."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O que o Projeto 2, lançado nesta aula, pede como entrega?",
+          "alt": [
+            "Um seminário de leitura de Polese e NGO, com foco na interface A1 e nas políticas",
+            "O deploy do O-RAN SC em Kubernetes, com Helm chart e descriptor YAML",
+            "Relatório técnico e demo (vídeo ou logs) do lab OAI+FlexRIC, apresentados na aula 06",
+            "Apenas o log do E2 SETUP, deixando a subscription e as INDICATIONs para uma etapa posterior"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "Slide 49: implementar o lab conforme o roteiro, entregar relatório técnico e demo com vídeo ou logs, com uma extensão como um xApp customizado, e apresentar na aula 06, 20 minutos por grupo. O seminário de leitura de Polese e NGO era o Projeto 1, da aula 03, sobre um caso do §6.1 e não sobre a A1; política A1 só aparece no Projeto 2 como extensão possível. O O-RAN SC aparece na aula 05 como referência e fica fora da nota do Projeto 2 (slide 8 da aula 06)."
+        },
+        {
+          "q": "Na comparação entre produção e laboratório (slide 27), como um xApp é empacotado no O-RAN SC e no nosso lab?",
+          "alt": [
+            "No O-RAN SC, binário nativo com as .so no host; no lab, contêiner com Helm chart e descriptor YAML",
+            "No O-RAN SC, contêiner com Helm chart e descriptor YAML; no lab, binário e .so em flexric-lib/",
+            "Nos dois, um contêiner Docker registrado no marketplace de xApps do SMO",
+            "Nos dois, só o código-fonte, que o nearRT-RIC compila na hora do onboard"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "A tabela do slide 27 contrasta as duas pontas. Em produção o xApp vira contêiner com Helm chart e descriptor YAML, roda em pod Kubernetes com limites de CPU e memória e RBAC, e entra por catálogo. No lab o onboard é simplificado (slide 26): um binário da pasta build/examples/xApp/ mais os service models em flexric-lib/, rodando como processo no host. A primeira alternativa inverte as colunas."
+        },
+        {
+          "q": "O que o bloco e2_agent do gnb.conf define?",
+          "alt": [
+            "O IP da AMF e o PLMN 208/95 que o gNB anuncia ao core",
+            "O IP do nearRT-RIC (near_ric_ip_addr) e o diretório dos service models (sm_dir)",
+            "O S-NSSAI SST 222 e SD 123 que o xApp KPM usa como filtro da subscription",
+            "A lista de xApps autorizados a subscrever as RAN functions expostas por esse gNB"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "São duas chaves: near_ric_ip_addr diz ao agente E2 onde está o RIC (127.0.0.1 no lab; a porta 36421 é a padrão do nearRT-RIC e não aparece no bloco) e sm_dir diz de onde carregar libkpm_sm.so, librc_sm.so e as demais. Os scripts do lab sobrescrevem o sm_dir com --e2_agent.sm_dir apontando para flexric-lib/. O filtro de slice não mora ali: vem das variáveis KPM_SST e KPM_SD do xApp. O IP da AMF e o PLMN ficam em outras seções do gnb.conf."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o ciclo de vida de um xApp, do desenho à retirada, como ele acontece no lab E2.",
+          "itens": [
+            "Design: escolher o E2SM (KPM ou RC), os KPIs e a latência aceitável",
+            "Develop: implementar a subscription e o tratamento das INDICATIONs, com testes e README",
+            "Onboard: registrar o xApp com metadados e dependências de E2SM (descriptor na OSC, binário versionado no FlexRIC)",
+            "Deploy: RIC e gNB no ar, com o E2 SETUP anunciando as RAN functions",
+            "O xApp conecta ao nearRT-RIC e pede a subscription, por exemplo KPM do slice 222/123",
+            "Operate e Monitor: INDICATIONs chegando, com olho em drift, upgrade ou rollback",
+            "Retire: SUBSCRIPTION DELETE e desligamento seguro do lab"
+          ],
+          "pts": 10,
+          "porque": "As cinco fases vêm do slide 23, e o fluxo E2 dentro delas, do slide 28. Cada passo depende do anterior: não se implementa a subscription sem ter escolhido o E2SM, não há onboard de algo que ainda não existe, e o xApp só consegue subscrever depois que o E2 SETUP registrou as RAN functions no RIC. O erro comum é pôr a subscription antes do Deploy: mesmo no test_e2_rc_attach.sh, que solta o processo do xApp antes do gNB, ela só se confirma depois do E2 SETUP. A retirada fecha com SUBSCRIPTION DELETE, e não só matando o processo."
+        }
+      ]
+    }
+  ]
+}

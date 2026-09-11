@@ -1,0 +1,93 @@
+{
+  "h": "#oran/aula05i2",
+  "rot": "Aula 05 · Intervalo 2",
+  "t": "Workflow IA/ML",
+  "pts": 9,
+  "fonte": "Workflow de IA/ML e segurança na retomada das interfaces O-RAN (aula 01 da cadeira 2, slides 51-58 e 63-68), xApp e rApp na aula 04 da cadeira 2, aula 01 da cadeira 3 (MLRAN_A01, slide 121) e o Projeto final do Lab de IA",
+  "blocos": [
+    {
+      "nome": "Quiz",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Uma xApp de inferência online no Near-RT RIC precisa receber medições da RAN, receber orientação de longo prazo e devolver a decisão. Qual combinação de interfaces faz isso?",
+          "alt": [
+            "Medições e ações pela A1; orientação de longo prazo pela E2, vinda do Non-RT RIC",
+            "Medições pela O1, ações pela O2 e orientação de longo prazo pela A1",
+            "Medições e ações pela E2 (KPM e RC); políticas e enrichment information pela A1",
+            "Tudo pela O1, que é a interface de dados entre o SMO e a RAN"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O slide 51 da aula 01 da cadeira 2 resume: telemetria near-RT sobe pela E2, políticas descem do Non-RT pela A1 e as ações de RRM voltam à RAN pela E2, com E2AP e E2SM (slide 58). A O1 é tentadora porque também traz PM, mas ela alimenta o SMO com granularidade de gestão, não o laço da xApp. A O2 cuida da infraestrutura, e a troca entre A1 e E2 inverte quem fala com quem."
+        },
+        {
+          "q": "Qual afirmação sobre rApp e xApp está correta?",
+          "alt": [
+            "rApp no Non-RT RIC, acima de 1 s, via A1 e O1; xApp no Near-RT, abaixo de 1 s, via E2",
+            "rApp no Near-RT RIC, abaixo de 1 s, via E2; xApp no Non-RT RIC, acima de 1 s, via A1",
+            "Mesma coisa em RICs diferentes: as duas falam E2 direto com a O-DU, só muda o fornecedor",
+            "xApp dentro do gNB, abaixo de 10 ms; rApp no Near-RT RIC, entre 10 ms e 1 s, via E2"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "A rApp roda no Non-RT RIC, consome os serviços da plataforma e do SMO pela R1 e tem efeito pela A1 e pela O1; a xApp roda no Near-RT RIC e fala E2 com o gNB (aula 04 da cadeira 2, conceito xApp e rApp). A inversão das duas é o erro clássico. E nenhuma das duas roda dentro do gNB: abaixo de 10 ms a decisão é do próprio nó."
+        },
+        {
+          "q": "O que a desagregação da O-RAN muda na segurança da rede?",
+          "alt": [
+            "Nada: as interfaces abertas herdam a segurança já especificada pelo 3GPP, sem trabalho extra",
+            "Reduz a superfície: especificação pública elimina as portas escondidas dos fabricantes",
+            "Reduz a superfície: cada unidade desagregada tem menos funções a proteger",
+            "Aumenta a superfície: mais interfaces e apps a autenticar, e o ML traz ataques próprios"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "É o slide 68 da aula 01 da cadeira 2, o preço da abertura: mais interfaces padronizadas são mais pontos a autenticar e auditar, o ML traz ataques próprios como envenenamento e evasão, e Open Fronthaul e PTP têm considerações próprias. Especificação pública ajuda a auditar, mas não diminui a superfície, e unidades menores não compensam as interfaces novas que passam a existir entre elas. O lado bom é que a telemetria aberta também pode alimentar detecção de ataques."
+        }
+      ]
+    },
+    {
+      "nome": "Situações",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "A equipe quer retreinar o modelo continuamente, com a GPU a 100%, no mesmo nó do Near-RT RIC em que a xApp faz inferência por UE. Qual é a decisão de arquitetura correta?",
+          "alt": [
+            "Manter junto: dado mais fresco no treino compensa qualquer atraso que a inferência sofra",
+            "Separar: treino offline no Non-RT/SMO, com validação e catálogo; o Near-RT só infere",
+            "Mover treino e inferência para a O-RU, que fica mais perto dos dados",
+            "Manter no mesmo nó, reservando metade da GPU para o treino e metade para a inferência"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Nas fases do workflow (slides 63-66 da aula 01 da cadeira 2) o treino é quase sempre offline, por custo e estabilidade; o modelo passa por validação e entra num catálogo versionado, e só então é implantado para inferir, respeitando a latência do laço. Treino pesado no mesmo nó disputa CPU e memória com o caminho crítico, e reservar metade da GPU só reduz a disputa: o treino continua ao lado da inferência e fora do fluxo de validação e catálogo. Dado fresco importa, e entra pelo retreino periódico, não pelo treino dentro do laço. É o mesmo critério da Parte 1 do projeto final do Lab de IA: precisão, tamanho e latência do modelo."
+        },
+        {
+          "q": "Depois da troca do fornecedor das O-RUs de um cluster, os KPIs pioram e o modelo de previsão da rApp passa a errar muito mais, embora nada no código tenha mudado. O que fazer?",
+          "alt": [
+            "Nada no modelo: se o código não mudou, o problema está só no hardware das novas O-RUs",
+            "Subir o limiar de alarme do erro de previsão até ele parar de disparar",
+            "Retreinar do zero com os dados das últimas horas e publicar direto em todo o cluster, sem validar",
+            "Tratar como drift: confirmar nos dados, retreinar, validar e implantar aos poucos, com rollback"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "O código é o mesmo, mas o mundo que gerou os dados mudou: é drift, e a fase de operação contínua (slide 66 da aula 01 da cadeira 2; slide 121 da aula 01 da cadeira 3) prevê monitorar, retreinar e ter rollback. Retreinar sem validar é a tentação: poucas horas de dados de um período degradado podem gerar um modelo pior, e a validação contra KPIs-chave (slide 65) existe para barrar isso. Subir o limiar só esconde o sintoma."
+        },
+        {
+          "q": "Um integrador quer instalar uma xApp de terceiro baixada de um repositório público, sem assinatura na imagem, com permissão para assinar qualquer serviço E2 e mandar CONTROL em todas as células. Qual é a postura correta?",
+          "alt": [
+            "Exigir imagem assinada, varredura e sandbox, com acesso só aos serviços E2 e células necessários",
+            "Instalar: se o código é aberto e público, alguém já teria encontrado qualquer problema",
+            "Instalar em produção e acompanhar os KPIs; se piorarem, desinstalar e voltar atrás",
+            "Bloquear só o CONTROL e liberar todas as assinaturas, porque REPORT não altera a rede"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "Apps de terceiros são justamente a superfície nova do slide 68 da aula 01 da cadeira 2: a imagem precisa ter origem verificável, rodar isolada e receber o mínimo de privilégio. Bloquear só o CONTROL parece suficiente, mas o REPORT expõe medições por UE e alimenta decisões, então ler também é privilégio. Código aberto não é código auditado, e testar em produção transforma os usuários em cobaia; além disso, várias xApps mexendo no mesmo objeto já pedem mitigação de conflito (slide 56)."
+        }
+      ]
+    }
+  ]
+}

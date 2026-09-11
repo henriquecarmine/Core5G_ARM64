@@ -1,0 +1,155 @@
+{
+  "h": "#oran/aulaa1",
+  "rot": "Interface A1",
+  "t": "Políticas Non-RT ↔ Near-RT",
+  "pts": 22,
+  "fonte": "Interface A1 da cadeira 1 (sem slides publicados): aula 03 da cadeira 2 — Interface A1, policy type e instance, A1-P, A1-EI, A1-ML e ciclo de vida (aula03-interface_a1_seminarios.pdf); retomada das interfaces na aula 01 da cadeira 2; closed loop A1 da aula 05 da cadeira 4; e o par PMS + A1 Simulator do lab (server/nonrt-ric, p2-test-a1)",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Quais elementos a interface A1 conecta, e para quê?",
+          "alt": [
+            "Near-RT RIC e nós E2 (gNB, O-CU, O-DU), para telemetria e controle",
+            "SMO e elementos da RAN, para configuração, falhas e desempenho",
+            "Non-RT RIC e Near-RT RIC, para políticas e intents de longo prazo",
+            "SMO e O-Cloud, para provisionar a infraestrutura virtualizada"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "A A1 liga o Non-RT RIC, que vive no SMO, ao Near-RT RIC, levando políticas, enrichment information e orientação de longo prazo (slide 57 e tabela do slide 70 da aula 01; slide 27 da aula 03). A confusão mais comum é com a E2, que liga o Near-RT RIC aos nós da RAN; O1 é SMO com os elementos (FCAPS) e O2 é SMO com a O-Cloud. A A1 nunca chega ao gNB: quem transforma a política em ação na RAN é o xApp, pela E2."
+        },
+        {
+          "q": "O que trafega na interface A1?",
+          "alt": [
+            "Políticas, enrichment information e gestão de modelos, em JSON sobre HTTP",
+            "Subscriptions e INDICATIONs com medições KPM, codificadas em ASN.1 sobre SCTP",
+            "Configurações, alarmes e contadores de desempenho dos nós, em NETCONF/YANG",
+            "Mensagens NGAP de registro e sessão do UE, repassadas pelo AMF ao RIC"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O slide 27 da aula 03 lista os três serviços da A1 (policy management, enrichment information e ML model management), com sintaxe em JSON schema e o A1AP sobre REST/HTTP. Subscription, INDICATION e SCTP são da E2 (slide 58 da aula 01), e NETCONF/YANG é a O1. Nenhuma interface do RIC recebe a sinalização NGAP do UE: ela fica na N2, entre gNB e AMF."
+        },
+        {
+          "q": "Uma equipe quer usar a A1 para trocar a prioridade de um UE a cada 50 ms, acompanhando a oscilação do canal. Qual é o problema?",
+          "alt": [
+            "Nenhum: basta o PMS enviar cada política com prioridade máxima na fila HTTP",
+            "A A1 aceita escopo de célula inteira, mas não de um UE específico",
+            "A A1 teria de pedir confirmação ao gNB pela O1 a cada troca de prioridade",
+            "A A1 não é tempo real, com ciclo acima de 1 s; 50 ms é laço de xApp, na E2"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "A A1 não é tempo real: o ciclo é maior que 1 s (slide 27 da aula 03), e o Non-RT RIC trabalha de segundos a horas, enquanto o Near-RT fica entre 10 ms e 1 s. A divisão certa é a do slide 35: a A1 ajusta a regra (por exemplo, priorizar UEs de um slice quando o atraso passa de um limiar) e o xApp a aplica ao longo do tempo pela E2. A alternativa do escopo é tentadora, mas errada: uma política pode, sim, se referir a um UE específico ou a um grupo de UEs."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "A política de priorização de um slice foi aceita pelo PMS sem erro, mas os UEs daquele slice continuam iguais. Qual verificação vai direto ao elo A1?",
+          "alt": [
+            "Refazer o E2 Setup do gNB, porque a política só vale depois de um novo setup",
+            "Conferir se a instância foi ao ric_id certo e se o scope aponta para o slice",
+            "Reenviar a política pela O1, já que priorizar um slice é configuração de FCAPS",
+            "Trocar o transporte da A1 por SCTP, porque o HTTP não garante a entrega"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "Uma policy instance vai para um Near-RT RIC específico (o ric_id da requisição, que o PMS associa aos managedElementIds no application_configuration.json do lab) e carrega um scope: UE, grupo de UEs, slice, célula (slide 28 da aula 03). Se o RIC ou o scope estiverem errados, a política existe e é aceita, mas não atinge os UEs pretendidos. O E2 Setup é entre gNB e Near-RT e não depende da A1, a O1 cuida de FCAPS e não de política, e o HTTP roda sobre TCP, que já entrega com confiabilidade."
+        },
+        {
+          "q": "O rApp publicou a versão 2 de um modelo no catálogo, mas o xApp no Near-RT continua inferindo com a versão 1. Por onde começar?",
+          "alt": [
+            "Reenviar a mesma política A1, porque toda política nova faz o xApp recarregar o modelo",
+            "Mandar o arquivo do modelo ao gNB num RIC CONTROL, para ele o repassar ao xApp",
+            "Encurtar o período das INDICATIONs KPM, para o xApp perceber a troca mais rápido",
+            "Conferir se a versão 2 foi implantada e ativada no Near-RT, não só publicada"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "Publicar no catálogo não é implantar. A aula 01 separa as fases: validação e publicação num catálogo versionado, que evita o modelo fantasma em campo, e depois o deploy como imagem ou artefato (slides 65 e 66). O slide 36 da aula 03 lembra que políticas podem referenciar modelos, que a gestão de modelos pela A1 ainda é área em evolução e que o deploy também pode passar pelo file management da O1. Reenviar a política idêntica não troca artefato nenhum, e o RIC CONTROL vai do RIC para o nó E2, nunca entrega modelo a um xApp."
+        },
+        {
+          "q": "Uma intent pedia reduzir o atraso de um slice. A política aparece como ENFORCED, mas o atraso medido não mudou. O que é correto concluir?",
+          "alt": [
+            "ENFORCED não prova efeito na RAN: veja se a intent virou meta e meça antes e depois",
+            "A política funcionou, pois ENFORCED confirma a mudança no gNB; o KPI é que está atrasado",
+            "A intent foi rejeitada pelo Near-RT e precisa ser recriada pela O1, com a mesma meta",
+            "Subir o priorityLevel da política aos poucos, até o atraso começar a cair"
+          ],
+          "ok": 0,
+          "pts": 2,
+          "porque": "ENFORCED diz que a política percorreu o caminho A1 (PMS, A1 Mediator, consumer) e está em vigor no Near-RT; não prova mutação no gNB (slides 47 e 60 da aula 05 da cadeira 4). A intent é um objetivo de alto nível que o rApp precisa traduzir em policy statements com metas de KPI (slides 28 e 40 da aula 03), e quem a converte em ação é o consumer ou xApp no Near-RT. O efeito só se prova com a KPM de antes e de depois. Subir a prioridade às cegas é agir sem evidência, o risco que a mesma aula aponta no controle."
+        }
+      ]
+    },
+    {
+      "nome": "Fluxo e governança",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "No Non-RT RIC do lab, que componente cuida do ciclo de vida das políticas, do catálogo de RICs e de policy types e do status, para que cada rApp não fale direto com o Near-RT?",
+          "alt": [
+            "O A1 Mediator, que recebe as políticas por HTTP e as repassa pelo RMR",
+            "O ICS (Information Coordinator Service), que coordena os jobs de EI",
+            "O PMS (Policy Management Service), com a API /a1-policy/v2",
+            "O rApp catalogue, que registra e versiona os rApps no SMO"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "É o PMS da O-RAN SC, o mesmo que sobe em server/nonrt-ric e que o p2-test-a1 usa para listar RICs e policy types, registrar o service e criar a política. O slide 62 da aula 05 da cadeira 4 explica o motivo: sem PMS, o rApp falaria direto com o Mediator e misturaria quem decide com quem opera o Near-RT. O A1 Mediator é a terminação A1 do lado Near-RT, e não do Non-RT (slide 49 da mesma aula). O ICS e o rApp catalogue também são do Non-RT RIC da O-RAN SC (slide 26 da aula 03), mas um coordena enrichment information e o outro registra rApps; nenhum gerencia políticas."
+        },
+        {
+          "q": "No p2-test-a1, o policy type 1 é carregado primeiro no simulador A1 e só depois aparece no PMS. Por que essa ordem faz sentido?",
+          "alt": [
+            "Porque o PMS apaga qualquer policy type que não tenha sido criado por um rApp registrado nele",
+            "Porque o type é o contrato que o Near-RT sabe cumprir, e o PMS o descobre por supervisão",
+            "Porque o gNB anuncia os policy types no E2 Setup e o simulador só os repassa",
+            "É só escolha do script: criar o type no PMS e deixá-lo empurrar ao RIC dá no mesmo"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O policy type é o JSON schema que define o que uma política pode conter (slide 28 da aula 03), e ele descreve o que o Near-RT e seus xApps sabem aplicar. No teste, o type entra no a1-sim (lado Near-RT) e o PMS o enxerga pela sincronização periódica, em até cerca de 90 s (passos 3 e 4 do test_a1_flow.sh); a instância criada depois precisa obedecer a um type que o RIC alvo conhece. O gNB não sabe nada de A1: no E2 Setup ele anuncia RAN functions, não policy types."
+        },
+        {
+          "q": "Depois que o ES-rApp pôs uma O-RU em sleep, o SLA das células vizinhas degradou. O que o ciclo de vida da política A1 prevê?",
+          "alt": [
+            "Nada: uma policy instance é imutável e continua valendo até o Near-RT RIC reiniciar",
+            "O gNB rejeita a política pela E2, e ela sai sozinha do Near-RT RIC",
+            "O SMO desfaz o sleep pela O1, e a política A1 continua ativa como está",
+            "O rApp atualiza ou apaga a política no Near-RT, usando o feedback medido"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O slide 33 da aula 03 lista create, update, delete e query, e cita o caso do NGO: o ES-rApp atualiza ou revoga a política A1 se o SLA degradar depois do sleep da O-RU. A alternativa da O1 é a mais tentadora, porque o sleep de fato é comando O1 (slide 34), mas a política que desviou o tráfego para as vizinhas foi decidida sobre uma premissa que falhou; deixá-la intacta mantém o comportamento errado. É o laço do slide 40: rApp, A1, xApp e feedback."
+        }
+      ]
+    },
+    {
+      "nome": "Ordenar o ciclo",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o ciclo de uma política A1, da decisão no Non-RT até a verificação do efeito.",
+          "itens": [
+            "O rApp analisa as KPMs históricas e decide que é preciso agir",
+            "O rApp escreve a policy instance, com scope e objetivos, num type que o RIC alvo suporta",
+            "O PMS registra a política e a envia por HTTP ao Near-RT RIC escolhido",
+            "O A1 Mediator, terminação A1 do Near-RT, repassa a política ao consumer pelo RMR",
+            "O consumer valida o payload contra o policy type e gera um action request",
+            "O actuator executa a ação na RAN, pela E2 ou por emulação no lab",
+            "A nova KPM é comparada à de antes, e o rApp mantém, ajusta ou apaga a política"
+          ],
+          "pts": 10,
+          "porque": "É a cadeia da aula 05 da cadeira 4, em que cada camada tem dono e evidência própria: decision no rApp, policy formalizada e gerida pelo PMS, entrega pela A1 ao Mediator, RMR (tipo 20010) até o consumer, action request, actuation e o effect_report com a KPM de antes e depois. A ordem não admite troca: o consumer não valida o que ainda não recebeu, e o efeito não se mede antes da ação. O último passo fecha o laço do slide 40 da aula 03, com o rApp revendo a política a partir do feedback."
+        }
+      ]
+    }
+  ]
+}

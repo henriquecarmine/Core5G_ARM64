@@ -1,0 +1,232 @@
+{
+  "h": "#oran/aula02",
+  "rot": "Aula 02",
+  "t": "Aventura O-RAN",
+  "pts": 22,
+  "fonte": "Aula 01 da cadeira 1 — Revisão 5G e Telco Cloud: motivação para Open RAN (aula01-motivacao_oran.pdf: vendor lock-in e split CU/DU nos slides 34 a 37, desafios da RAN tradicional e motivação Open RAN nos slides 91 a 97; o slide 100 anuncia os temas da aula 02, que não tem slides publicados); aula 01 da cadeira 2 — Retomada das interfaces O-RAN (aula01-retomada_interfaces_oran-2.pdf: O-RAN Alliance, 3GPP e Working Groups nos slides 40 a 43, SMO, RIC, nós RAN, splits e interfaces nos slides 44 a 50, limitações do lab no slide 88)",
+  "blocos": [
+    {
+      "nome": "Conceitos do ecossistema",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O que é a O-RAN Alliance?",
+          "alt": [
+            "Um grupo de trabalho do 3GPP que publica os Releases de rádio desde o Release 15",
+            "A comunidade de software aberto que mantém implementações de RIC, SMO e simuladores",
+            "Uma associação de operadoras e fornecedores, criada em 2018, que especifica RAN aberta",
+            "Um órgão da ETSI que padroniza a virtualização de funções de rede em máquinas virtuais"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O slide 41 da retomada (aula 01 da cadeira 2) a descreve assim: fundada em 2018 por operadoras e fornecedores (AT&T, China Mobile, Deutsche Telekom, NTT e outros) para especificar uma RAN aberta, interoperável, virtualizada e baseada em interfaces padronizadas. A alternativa mais tentadora é a da comunidade de software: essa é a O-RAN Software Community, que transforma as especificações em código, mas não é quem as escreve. Releases são do 3GPP, e a padronização de NFV em máquinas virtuais é da ETSI, como aparece na aula 01."
+        },
+        {
+          "q": "Como o 3GPP e a O-RAN Alliance dividem o trabalho na RAN?",
+          "alt": [
+            "O 3GPP especifica F1, E1, Xn, N2 e N3; a O-RAN especifica Open Fronthaul, E2, A1, O1 e O2",
+            "A O-RAN especifica F1, E1 e Xn; o 3GPP especifica E2 e A1 e deixa o fronthaul aos fabricantes",
+            "A O-RAN substituiu o 3GPP na RAN a partir do Release 15, e o 3GPP ficou só com o núcleo 5GC",
+            "O 3GPP especifica o núcleo e a interface aérea; a O-RAN especifica a pilha do gNB, de RRC a PHY"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "A tabela do slide 42 da retomada é direta: o 3GPP define NG-RAN e 5GC e especifica E1, F1, Xn, N2 e N3; a O-RAN especifica Open Fronthaul, E2, A1, O1 e O2, e o slide conclui que a O-RAN estende o 3GPP sem conflitar com ele. A troca da segunda alternativa engana porque existe um grupo da O-RAN (WG5) tratando F1, E1 e Xn, mas ele escreve perfis de interoperabilidade dessas interfaces, e a especificação continua sendo do 3GPP. RRC, PDCP, RLC, MAC e PHY também são 3GPP, e nada foi substituído."
+        },
+        {
+          "q": "Pelo resumo dos Working Groups da O-RAN Alliance, qual grupo especifica como a O-DU entrega comandos e amostras de rádio à O-RU?",
+          "alt": [
+            "WG1",
+            "WG2/WG3",
+            "WG5/WG11",
+            "WG4"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "No resumo visual do slide 43 da retomada (aula 01 da cadeira 2), o Open Fronthaul entre RU e DU é o WG4. O WG5/WG11 é o que mais engana, porque também trata de interfaces internas da RAN, mas as do 3GPP (F1, E1 e Xn), que ligam CU a DU e gNB a gNB, e não o enlace até o rádio. O WG2/WG3 cuida dos RICs e das interfaces A1 e E2, e o WG1 da arquitetura, dos casos de uso e do slicing que os outros grupos detalham."
+        }
+      ]
+    },
+    {
+      "nome": "Mapeamento da arquitetura",
+      "tipo": "associar",
+      "qs": [
+        {
+          "q": "Associe cada componente da arquitetura O-RAN à função que ele exerce.",
+          "alvos": [
+            "Conversão do sinal digital em RF, amplificação e antena",
+            "Orquestração, FCAPS e ciclo de vida, pelas interfaces O1 e O2",
+            "SDAP e PDCP do plano de usuário, com o túnel N3 até o UPF",
+            "RLC e MAC, com o escalonamento dos recursos de rádio em tempo real",
+            "xApps que controlam os nós RAN pela E2, entre 10 ms e 1 s",
+            "RRC e PDCP de controle, com a sinalização N2 até o AMF"
+          ],
+          "itens": [
+            {
+              "t": "O-CU-CP",
+              "ok": [
+                5
+              ]
+            },
+            {
+              "t": "O-CU-UP",
+              "ok": [
+                2
+              ]
+            },
+            {
+              "t": "O-DU",
+              "ok": [
+                3
+              ]
+            },
+            {
+              "t": "O-RU",
+              "ok": [
+                0
+              ]
+            },
+            {
+              "t": "SMO",
+              "ok": [
+                1
+              ]
+            },
+            {
+              "t": "Near-RT RIC",
+              "ok": [
+                4
+              ]
+            }
+          ],
+          "pts": 6,
+          "porque": "É o desenho dos slides 44 a 50 da retomada, com o CUPS aplicado dentro da RAN: a CU se divide pela E1 em O-CU-CP, que fica com RRC e o PDCP de controle e fala N2 com o AMF, e O-CU-UP, que fica com SDAP e o PDCP de dados e fala N3 com o UPF. A confusão mais comum é entre O-DU e O-RU: a O-DU fica com RLC, MAC e a parte alta da PHY, e decide o escalonamento em tempo real; a O-RU fica com a parte baixa da PHY e o RF, que levam o sinal até a antena. Near-RT RIC e SMO se separam pelo laço e pela interface: xApps pela E2, entre 10 ms e 1 s, no RIC; O1, O2 e FCAPS no SMO, onde também vive o Non-RT RIC."
+        }
+      ]
+    },
+    {
+      "nome": "Fronthaul e PHY fatiado",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "No split 7.2x, como a camada física fica dividida entre O-DU e O-RU?",
+          "alt": [
+            "A PHY inteira fica na O-DU, e a O-RU só converte as amostras em RF",
+            "A High-PHY fica na O-DU, junto de MAC e RLC, e a Low-PHY fica na O-RU, com o RF",
+            "A PHY inteira fica na O-RU, e a O-DU só começa a partir da camada MAC",
+            "A High-PHY fica na O-CU, e a Low-PHY na O-DU, enquanto a O-RU só amplifica o sinal"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "O 7.2x é um split dentro da PHY: codificação, modulação e mapeamento em camadas e recursos ficam na O-DU, e a parte colada ao sinal, como FFT, prefixo cíclico e formação de feixe, desce para a O-RU junto com o RF. A primeira alternativa descreve o split 8, do CPRI clássico, em que o rádio recebe amostras prontas no domínio do tempo; a terceira seria um split acima da PHY. A CU nunca toca a PHY: ela fica com RRC e PDCP (slide 37 da aula 01, e os splits mais comuns no slide 47 da retomada)."
+        },
+        {
+          "q": "O que o fronthaul do split 7.2x exige, e a F1 entre CU e DU não exige?",
+          "alt": [
+            "Entrega sem perdas da sinalização NGAP que o UE troca com o AMF",
+            "Telemetria E2 da O-RU entregue ao Near-RT RIC em menos de 10 ms",
+            "Um túnel GTP-U por sessão do UE, igual ao da N3 entre gNB e UPF",
+            "Latência abaixo de 1 ms, banda alta e relógio sincronizado com a O-DU"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "Quem corta a PHY herda o relógio dela: cada slot tem de chegar a tempo à O-RU, a banda cresce com o número de antenas e a largura do canal, e rádio e O-DU precisam de tempo e frequência alinhados (PTP, IEEE 1588, e SyncE no plano de sincronismo do fronthaul). A aula 01 da cadeira 2 põe os laços abaixo de 1 ms, os das amostras I/Q, dentro do gNB, enquanto a F1 fica acima do RLC e tolera milissegundos. O GTP-U engana por também levar dados do usuário, mas quem o usa é a F1-U e a N3, não o fronthaul. NGAP é da N2, entre gNB e AMF, e a E2 liga o Near-RT RIC à O-CU e à O-DU, nunca à O-RU, em laços acima de 10 ms. O slide 88 da retomada lista split 7.2x, eCPRI e sincronismo entre o que o lab não cobre."
+        },
+        {
+          "q": "Qual é a vantagem do split 7.2x sobre o split 8, o do CPRI clássico?",
+          "alt": [
+            "Simplifica a O-DU, que deixa de fazer a codificação e a modulação",
+            "Reduz a banda: a O-RU recebe dados em frequência, e não amostras no tempo",
+            "Leva a Low-PHY para a O-DU, o que deixa a O-RU mais simples e barata",
+            "Troca a Ethernet por fibra dedicada ponto a ponto, com atraso mais previsível"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "No split 8 o rádio só converte, então o fronthaul carrega amostras I/Q no domínio do tempo, e a banda cresce com antenas e largura de canal, o que fica caro com MIMO massivo. Ao passar FFT e prefixo cíclico para a O-RU, o 7.2x envia dados no domínio da frequência, compressíveis, sobre eCPRI e Ethernet, no lugar dos enlaces CPRI dedicados, e ainda mantém a O-RU simples o bastante para vir de outro fornecedor. A tentação é achar que o ganho está em aliviar a O-DU, mas codificação e modulação continuam nela, na High-PHY; o que muda de lugar é a Low-PHY, que desce da banda base para a O-RU, e não o contrário."
+        }
+      ]
+    },
+    {
+      "nome": "Comparação de arquiteturas",
+      "tipo": "associar",
+      "qs": [
+        {
+          "q": "Classifique cada característica na arquitetura em que ela vale. Algumas valem em mais de uma, e qualquer uma delas conta.",
+          "alvos": [
+            "RAN tradicional",
+            "vRAN",
+            "O-RAN"
+          ],
+          "itens": [
+            {
+              "t": "Banda base em hardware dedicado, projetado pelo próprio fabricante",
+              "ok": [
+                0
+              ]
+            },
+            {
+              "t": "Pilha de RRC a PHY numa caixa fechada, sem como trocar só uma camada",
+              "ok": [
+                0
+              ]
+            },
+            {
+              "t": "Banda base em software, sobre servidores de uso geral (COTS)",
+              "ok": [
+                1,
+                2
+              ]
+            },
+            {
+              "t": "CU e DU como funções virtualizadas, escaladas cada uma conforme a demanda",
+              "ok": [
+                1,
+                2
+              ]
+            },
+            {
+              "t": "Fronthaul entre rádio e banda base proprietário, de um único fornecedor",
+              "ok": [
+                0,
+                1
+              ]
+            },
+            {
+              "t": "Novos algoritmos de otimização só chegam pelo roadmap do fabricante",
+              "ok": [
+                0,
+                1
+              ]
+            },
+            {
+              "t": "Banda base virtualizada, sem exigir interfaces abertas entre fornecedores",
+              "ok": [
+                1
+              ]
+            },
+            {
+              "t": "Fronthaul aberto (split 7.2x) entre O-RU e O-DU de fornecedores diferentes",
+              "ok": [
+                2
+              ]
+            },
+            {
+              "t": "xApps e rApps de terceiros atuando na RAN pelas interfaces E2 e A1",
+              "ok": [
+                2
+              ]
+            },
+            {
+              "t": "Infraestrutura de nuvem (O-Cloud) orquestrada pelo SMO pela interface O2",
+              "ok": [
+                2
+              ]
+            }
+          ],
+          "pts": 10,
+          "porque": "A régua é a dos slides 91 a 97 da aula 01 e do slide 40 da retomada: a RAN tradicional é caixa fechada, com banda base em hardware do fabricante, pilha monolítica e interfaces proprietárias; a vRAN desagrega e virtualiza, levando CU e DU para software em servidores COTS; a O-RAN também virtualiza, mas além disso abre as interfaces (Open Fronthaul 7.2x, E2, A1, O1 e O2) e põe o RIC no controle. Por isso COTS e CU e DU virtualizadas valem para vRAN e O-RAN. O erro mais comum é achar que virtualizar já abre a rede: uma vRAN pode manter o fronthaul proprietário e a otimização presa a um fornecedor, e por isso esses dois itens valem para a tradicional e para a vRAN, enquanto virtualizar sem exigir interfaces abertas é a marca própria da vRAN. xApps e rApps de terceiros, fronthaul multi-vendor e O-Cloud gerida pelo SMO via O2 só existem com as especificações da O-RAN Alliance (slides 41 e 48 da retomada)."
+        }
+      ]
+    }
+  ]
+}

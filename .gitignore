@@ -38,3 +38,7 @@ server/panel_results/
 # App desktop local de administração da instância AWS (liga/desliga) —
 # ferramenta pessoal do operador, fica fora do repo público por decisão
 admin-local/
+
+# Arquivo local da Plataforma de Atividades do professor (saiu do ar em set/2026):
+# material dele, fica fora do repositório público. Ver docs/estudos-por-cadeira.md.
+external/plataforma-cesar/

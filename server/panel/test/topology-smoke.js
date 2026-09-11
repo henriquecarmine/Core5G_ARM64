@@ -6,7 +6,8 @@
  * headless, stubando o fetch de /api/topology com os JSONs reais de
  * static/ — sem servidor nem login. Valida:
  *   - render sem pageerror;
- *   - bandas: P1=3 (RAN/CP/UP) · P2=5 (+ Non-RT RIC e near-RT O-RAN SC);
+ *   - bandas: P1=3 (RAN/CP/UP) · P2=7 (+ Non-RT RIC, near-RT O-RAN SC, SMO e rede gerenciada por O1);
+ *   - cada contêiner do SMO com o cartão completo (de onde vem, o que faz, para onde vai, imagem);
  *   - rótulos didáticos N1 e N11/Nsmf presentes (links e legenda);
  *   - links paralelos entre os mesmos nós (N1/N2 no P1) com offset;
  *   - os 4 modos de visualização e o tour re-renderizam sem erro.
@@ -78,11 +79,17 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       nodes: document.querySelectorAll('.node').length,
       legend: document.getElementById('legend').textContent,
     }));
-    // P1: 3 bandas (RAN, CP, UP) · P2: 5 (+ Non-RT âmbar e O-RAN SC rosa, v0.53+)
-    const wantBands = proj === 'p2' ? 5 : 3;
+    // P1: 3 bandas (RAN, CP, UP) · P2: 7 (+ Non-RT âmbar e O-RAN SC rosa, v0.53+; SMO e rede O1, v0.91)
+    const wantBands = proj === 'p2' ? 7 : 3;
     assert(d.bands === wantBands, `${proj}: esperava ${wantBands} bandas, veio ${d.bands}`);
     assert(d.bandLabels.some(l => l.includes('PLANO DE CONTROLE')), `${proj}: banda plano de controle`);
     assert(d.bandLabels.some(l => l.includes('PLANO DE USUÁRIO')), `${proj}: banda plano de usuário`);
+    if (proj === 'p2') {
+      assert(d.bandLabels.some(l => l.startsWith('SMO')), 'p2: banda do SMO');
+      assert(d.bandLabels.some(l => l.includes('REDE GERENCIADA POR O1')), 'p2: banda da rede gerenciada por O1');
+      const faltam = ['O1', 'M-plane', 'VES', 'Kafka', 'RESTCONF', 'OAuth'].filter(i => !d.labels.includes(i));
+      assert(!faltam.length, `p2: interfaces do SMO ausentes no desenho: ${faltam.join(', ')}`);
+    }
     assert(d.labels.includes('N1'), `${proj}: rótulo N1 presente`);
     assert(d.labels.includes('N11/Nsmf'), `${proj}: rótulo N11/Nsmf presente`);
     assert(d.legend.includes('N11/Nsmf'), `${proj}: legenda com N11/Nsmf`);
@@ -103,16 +110,43 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     console.log(`PASS ${proj} · 4 modos re-renderizam sem erro`);
 
     await page.click('#tour-btn');
-    for (let i = 0; i < 5; i++) await page.click('#tour-next');
+    const ttotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
+    const tEsperado = proj === 'p2' ? 9 : 5;   // P2: + SMO e rede gerenciada por O1 (v0.91)
+    assert(ttotal === tEsperado, `${proj}: tour esperava ${tEsperado} camadas, veio ${ttotal}`);
+    const tourSemTexto = [];
+    for (let i = 0; i < ttotal; i++) {
+      const cap = await page.evaluate(() => document.getElementById('tour-caption').textContent);
+      if (cap.length < 80 || cap.startsWith('topo.')) tourSemTexto.push(i + 1);
+      await page.click('#tour-next');
+    }
+    assert(!tourSemTexto.length, `${proj}: camadas do tour sem legenda: ${tourSemTexto.join(', ')}`);
     assert(errors.length === 0, `${proj}: pageerror no tour: ${errors.join(' | ')}`);
     await page.click('#tour-exit');
-    console.log(`PASS ${proj} · tour (5 camadas) sem erro`);
+    console.log(`PASS ${proj} · tour (${ttotal} camadas, todas com legenda) sem erro`);
 
-    // Jornada do UE (só P2): percorre as 15 etapas seguindo o pacote, sem erro
+    if (proj === 'p2') {
+      // Cada contêiner do SMO tem a explicação completa no cartão, igual aos
+      // outros nós: de onde vem, o que faz, para onde vai, imagem e conexões.
+      const cartoes = await page.evaluate(() => TOPO.nodes.filter(n => /^(smo|sim)-/.test(n.id)).map(n => {
+        openNode(n.id);
+        const t = id => document.getElementById(id).textContent;
+        const r = { id: n.id, from: t('nm-from'), does: t('nm-does'), to: t('nm-to'), tech: t('nm-tech') };
+        document.getElementById('node-overlay').classList.remove('open');
+        return r;
+      }));
+      assert(cartoes.length === 10, `p2: esperava 10 contêineres do SMO na topologia, veio ${cartoes.length}`);
+      const rasos = cartoes.filter(c => [c.from, c.does, c.to].some(v => v.length < 25)
+                                     || !c.tech.includes('Imagem') || !c.tech.includes('Conexões'));
+      assert(!rasos.length, `p2: cartão sem explicação completa: ${rasos.map(c => c.id).join(', ')}`);
+      assert(errors.length === 0, `p2: pageerror nos cartões do SMO: ${errors.join(' | ')}`);
+      console.log(`PASS p2 · ${cartoes.length} contêineres do SMO com cartão completo (de onde vem · o que faz · para onde vai · imagem · conexões)`);
+    }
+
+    // Jornada do UE (só P2): percorre as 19 etapas seguindo o pacote, sem erro
     if (proj === 'p2') {
       await page.click('#journey-btn');
       const jtotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
-      assert(jtotal === 17, `p2: jornada esperava 17 etapas (16 + a1real v0.56), veio ${jtotal}`);
+      assert(jtotal === 19, `p2: jornada esperava 19 etapas (17 + gestão O1 e eventos VES do SMO, v0.91), veio ${jtotal}`);
       // Glossário: a legenda de CADA etapa tem de sair marcada, e todo termo
       // marcado precisa ter balão com conteúdo. Um termo sublinhado cujo balão
       // abre vazio é falha calada — o teste percorre as 17 etapas conferindo.
@@ -139,7 +173,7 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       assert(glos.vazios.length === 0, `p2: termo marcado sem explicação: ${[...new Set(glos.vazios)].join(', ')}`);
       assert(glos.etapasSemTermo.length === 0, `p2: etapas sem nenhuma sigla marcada: ${glos.etapasSemTermo.join(', ')}`);
       assert(glos.expandidos >= 60, `p2: poucos nomes por extenso na jornada (${glos.expandidos})`);
-      console.log(`PASS p2 · glossário nas 17 etapas (${glos.marcados} termos marcados, ${glos.expandidos} nomes por extenso)`);
+      console.log(`PASS p2 · glossário nas ${jtotal} etapas (${glos.marcados} termos marcados, ${glos.expandidos} nomes por extenso)`);
 
       // Os rótulos do DESENHO também explicam. Aqui a marca não é um <span>
       // (não existe em SVG): é o próprio <text> que ganha a classe. Se alguém
@@ -235,6 +269,8 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     assert(fr.hint.includes('Vue technique'), `${proj}/fr: hint = "${fr.hint}"`);
     assert(fr.legend.includes('Couches'), `${proj}/fr: legenda sem "Couches"`);
     assert(fr.roles.some(r => r === 'Mobilité'), `${proj}/fr: papel do AMF não traduzido (${fr.roles.join(',')})`);
+    if (proj === 'p2') assert(fr.roles.includes('Identité') && fr.roles.includes('Événements'),
+      `p2/fr: papéis do SMO não traduzidos (${fr.roles.join(',')})`);
     assert(fr.title.includes(proj === 'p1' ? 'Projet 1' : 'Projet 2'), `${proj}/fr: título = "${fr.title}"`);
     await page.click('#tour-btn');
     const tourT = await page.evaluate(() => document.getElementById('tour-title').textContent);

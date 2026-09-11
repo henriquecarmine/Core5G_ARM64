@@ -25,6 +25,8 @@
     --c-core:var(--cat-6);      /* core                — laranja, como era */
     --c-core-up:var(--cat-6);   /* core plano de usuário: mesmo domínio */
     --c-oransc:var(--cat-8);    /* O-RAN SC            — magenta, como era */
+    --c-smo:var(--cat-1);       /* SMO: é gestão da rede — o mesmo violeta de admin/gestão */
+    --c-o1net:var(--cat-4);     /* rede gerenciada por O1: elementos de RAN (simulados) — verde */
     /* A MESMA identidade, no degrau de escrever. O rótulo da banda estava
        saindo na cor de PREENCHER e media 3,0:1 sobre o véu no tema claro —
        ilegível. Cor de sólido e cor de texto são papéis diferentes. */
@@ -32,6 +34,7 @@
     --c-core-cp-txt:var(--cat-3-txt);   --c-ran-txt:var(--cat-4-txt);
     --c-nonrt-txt:var(--cat-5-txt);     --c-core-txt:var(--cat-6-txt);
     --c-core-up-txt:var(--cat-6-txt);   --c-oransc-txt:var(--cat-8-txt);
+    --c-smo-txt:var(--cat-1-txt);       --c-o1net-txt:var(--cat-4-txt);
     --btn-bg:var(--n-3); --btn-hover:var(--n-5);
     --grid-dot:var(--n-4); --planned:var(--line-2); --plan-fg:var(--ink-3);
     --panel-glass:color-mix(in srgb, var(--surface-2) 88%, transparent);
@@ -299,8 +302,8 @@ const svg = document.getElementById("diagram");
 // i18n: tradução com fallback no texto pt do JSON (pt = canônico; nós nunca usam o dict em pt)
 const trf = (k, fb) => { if (I18N.lang === "pt") return fb; const v = I18N.t(k); return v === k ? fb : v; };
 const sanit = x => x.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-const FLOW_IFACES = new Set(["RF","N1","N2","N11/Nsmf","E2","E42","N3","N4","N6","A1","SDL"]);
-const SECONDARY = new Set(["SBI","Nausf","Nudm","Nudr","SQL","Telemetria"]); // N11/Nsmf fica visível: didático (sessão PDU)
+const FLOW_IFACES = new Set(["RF","N1","N2","N11/Nsmf","E2","E42","N3","N4","N6","A1","SDL","O1","M-plane","VES","Kafka"]);
+const SECONDARY = new Set(["SBI","Nausf","Nudm","Nudr","SQL","Telemetria","OAuth"]); // N11/Nsmf fica visível: didático (sessão PDU)
 const MODE_HINT_KEYS = { simplificado: "topo.hint_simple", tecnico: "topo.hint_tech", fluxo: "topo.hint_flow", troubleshooting: "topo.hint_ts" };
 
 function el(t,a,p){ const n=document.createElementNS(SVGNS,t); for(const k in a)n.setAttribute(k,a[k]); if(p)p.appendChild(n); return n; }
@@ -555,7 +558,7 @@ applyThemeIcon();
 // ---- #2 tour guiado pelas camadas (por projeto; textos nos dicionários i18n) ----
 const TOUR_LAYERS = PROJ==="p1"
   ? ["external","admin","ran","core-cp","core-up"]
-  : ["external","admin","ran","nonrt","oransc","core-cp","core-up"];
+  : ["external","admin","ran","nonrt","oransc","core-cp","core-up","smo","o1net"];
 const TOUR = TOUR_LAYERS.map(layer => ({ layer }));
 let tourIdx=0;
 // As legendas são densas de sigla. O glossário marca os termos NO TEXTO que já
@@ -622,6 +625,9 @@ const JOURNEY_P2 = [
   { id:"act", num:"5.1",      badge:"opt", nodes:["gnb","ric","xapps"],             flow:[["xapps","ric"],["ric","gnb"]] },
   { id:"nonrt", num:"6",    badge:"opt", nodes:["nonrt-pms","a1sim","ric"],        flow:[["nonrt-pms","a1sim"],["nonrt-pms","ric"]] },
   { id:"a1real", num:"6.1",  badge:"opt", nodes:["nonrt-pms","a1mediator","dbaas"],  flow:[["a1mediator","dbaas"]] },
+  // gestão pelo SMO (server/smo): fora do caminho do UE, mas é a outra metade da O-RAN
+  { id:"o1", num:"7",       badge:"opt", nodes:["smo-controller","sim-odu","sim-oru-hybrid","sim-oru-hier"], flow:[["smo-controller","sim-odu"],["smo-controller","sim-oru-hybrid"],["sim-odu","sim-oru-hier"]] },
+  { id:"ves", num:"7.1",      badge:"opt", nodes:["sim-odu","smo-controller","smo-ves","smo-kafka"], flow:[["sim-odu","smo-ves"],["smo-controller","smo-ves"],["smo-ves","smo-kafka"]] },
   { id:"summary",  badge:"",    nodes:[],                                 flow:[], full:true },
 ];
 const JOURNEY_P1 = [

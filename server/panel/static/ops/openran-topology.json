@@ -1,8 +1,8 @@
 {
   "_comment": "Topologia REAL do servidor Core5G_ARM64 (Projeto 2: OAI 5GC + gNB RFSIM + E2 + FlexRIC). Inventário de docker ps / docker network / ps aux / ss / systemd. NÃO é uma Open RAN genérica. CUPS: o core é dividido em core-cp (plano de controle, azul) e core-up (plano de usuário, laranja).",
-  "_como_atualizar": "Para adicionar um componente: crie um objeto em 'nodes' com id único, layer (external|admin|ran|core-cp|core-up), kind (container|native|systemd|external), role (1 palavra), statusKey (container=nome; native=proc:<padrão>; systemd=svc:<unit>), e os campos from/does/to. Posicione com x,y (canvas 1300x900; card 184x66). Adicione links em 'links' com iface (nome curto). planned:true deixa cinza. Layers com band:true ganham um retângulo de fundo englobando seus nós (não deixe bandas se sobrepor). Padronize ports como 'IFACE: porta/PROTO · ...'. Valide com o verificador geométrico (nenhum link pode atravessar card de terceiro). O endpoint /api/topology sobrepõe status ao vivo.",
+  "_como_atualizar": "Para adicionar um componente: crie um objeto em 'nodes' com id único, layer (external|admin|ran|nonrt|oransc|smo|o1net|core-cp|core-up), kind (container|native|systemd|external), role (1 palavra), statusKey (container=nome; native=proc:<padrão>; systemd=svc:<unit>), e os campos from/does/to. Posicione com x,y (canvas 1300x900; card 184x66). Adicione links em 'links' com iface (nome curto). planned:true deixa cinza. Layers com band:true ganham um retângulo de fundo englobando seus nós (não deixe bandas se sobrepor). Padronize ports como 'IFACE: porta/PROTO · ...'. Valide com o verificador geométrico (nenhum link pode atravessar card de terceiro). O endpoint /api/topology sobrepõe status ao vivo.",
   "canvas": {
-    "w": 1300,
+    "w": 1800,
     "h": 900
   },
   "layers": {
@@ -37,6 +37,16 @@
     "core-up": {
       "label": "Core 5G — Plano de Usuário",
       "color": "#e8590c",
+      "band": true
+    },
+    "smo": {
+      "label": "SMO — O-RAN SC OAM (O1 · VES) · ARM64 nativo",
+      "color": "#b197fc",
+      "band": true
+    },
+    "o1net": {
+      "label": "Rede gerenciada por O1 — O-DU e O-RU simulados",
+      "color": "#2f9e44",
       "band": true
     }
   },
@@ -404,6 +414,196 @@
       "from": "Northbound: recebe políticas via REST /A1-P/v2 (a porta que o FlexRIC não tem).",
       "does": "A terminação A1 DE VERDADE do near-RT O-RAN SC — primeiro pedaço da Fase 2, compilado da fonte em ARM64 (RMR com patch immintrin→atomic_fence). Valida policy types (schema), aceita instâncias e as distribui via RMR aos xApps.",
       "to": "Persiste via SDL no ric_dbaas; na Fase 2 completa, e2term/e2mgr/submgr entram nesta banda e o gNB conecta na :36422."
+    },
+    {
+      "id": "smo-identity",
+      "label": "identity (Keycloak)",
+      "role": "Identidade",
+      "sublabel": "usuários e papéis (OIDC)",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1350,
+      "y": 90,
+      "image": "bitnamilegacy/keycloak:26.1.2 + PostgreSQL 13 (imagens oficiais multi-arch)",
+      "from": "Recebe logins e validações de token do ODLUX, do controlador e do kafka-ui, sempre pelo gateway.",
+      "does": "Guarda os usuários do SMO e os papéis de cada um (administration, provision, supervision) no realm onap e emite os tokens OAuth.",
+      "to": "Devolve o token assinado; quem o recebe (o controlador) decide o que aquele usuário pode fazer na O1.",
+      "ports": "HTTP: 8080/TCP (interno)",
+      "network": "dmz",
+      "ip": "—",
+      "statusKey": "identity",
+      "planned": false
+    },
+    {
+      "id": "smo-topology",
+      "label": "topology (NTSim-NG)",
+      "role": "Topologia",
+      "sublabel": "inventário TAPI",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1580,
+      "y": 90,
+      "image": "core5g/smo-nts-ng-topology-server:1.5.2-arm64 (compilado da fonte)",
+      "from": "Carrega o modelo de topologia (TAPI) dos arquivos de dados ao subir.",
+      "does": "Serve o inventário e a topologia da rede gerenciada num OpenDaylight próprio — o mapa de quem se liga a quem que o SMO consulta.",
+      "to": "Responde consultas RESTCONF pelo gateway (topology.<domínio>).",
+      "ports": "RESTCONF: 8181/TCP",
+      "network": "dmz · smo",
+      "ip": "—",
+      "statusKey": "topology",
+      "planned": false
+    },
+    {
+      "id": "smo-gateway",
+      "label": "gateway (Traefik)",
+      "role": "Entrada",
+      "sublabel": "proxy HTTPS + call home",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1350,
+      "y": 220,
+      "image": "traefik:v3.6.25 (o v3.3.6 do upstream não fala com o Docker 29)",
+      "from": "Recebe o operador (HTTPS pelo túnel SSH em 127.0.0.1:8443) e o NETCONF call home dos elementos gerenciados.",
+      "does": "A porta única do SMO: termina o TLS e roteia pelo nome do serviço (identity, odlux, controller, ves-collector, topology). Não publica 80/443 no host — são do Caddy do painel.",
+      "to": "Encaminha a cada serviço pela rede interna; simuladores e controlador o alcançam pelo IP fixo 10.250.50.10 (rede dcn).",
+      "ports": "HTTPS: 443/TCP · no host: 127.0.0.1:8443 · call home: 4334-4335/TCP",
+      "network": "dmz · dcn",
+      "ip": "10.250.50.10",
+      "statusKey": "gateway",
+      "planned": false
+    },
+    {
+      "id": "smo-odlux",
+      "label": "odlux",
+      "role": "Console",
+      "sublabel": "web do operador (O1)",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1580,
+      "y": 220,
+      "image": "core5g/oam-sdnr-web:13.0.1-arm64 (troca de base)",
+      "from": "Recebe o operador pelo gateway (odlux.oam.<domínio>), já autenticado no Keycloak.",
+      "does": "A tela do SMO: lista os elementos conectados, abre a configuração YANG de cada um e mostra alarmes e medidas.",
+      "to": "Chama o controlador por RESTCONF (controller:8181).",
+      "ports": "HTTP: 8080/TCP",
+      "network": "dmz · smo",
+      "ip": "—",
+      "statusKey": "odlux",
+      "planned": false
+    },
+    {
+      "id": "smo-kafka",
+      "label": "kafka",
+      "role": "Barramento",
+      "sublabel": "tópicos de eventos",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1350,
+      "y": 350,
+      "image": "quay.io/strimzi/kafka:0.35.0 + zookeeper (imagens oficiais multi-arch)",
+      "from": "Recebe os eventos publicados pelo coletor VES.",
+      "does": "O barramento de mensagens do SMO: guarda os eventos em tópicos por domínio, na ordem em que chegaram.",
+      "to": "Entrega a quem assina — análise, rApps, o kafka-ui. É por aqui que alarme e medida chegariam ao Non-RT RIC (hoje as duas pilhas não conversam).",
+      "ports": "Kafka: 9092/TCP (interno)",
+      "network": "smo",
+      "ip": "—",
+      "statusKey": "kafka",
+      "planned": false
+    },
+    {
+      "id": "smo-controller",
+      "label": "controller (SDN-R)",
+      "role": "O1",
+      "sublabel": "OpenDaylight · NETCONF",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1580,
+      "y": 350,
+      "image": "core5g/oam-sdnr:13.0.1-arm64 (troca de base, JDK 21)",
+      "from": "Recebe o call home NETCONF dos elementos (O-DU, O-RU) e os pedidos RESTCONF do ODLUX.",
+      "does": "O cliente NETCONF do SMO: monta cada elemento pelas capacidades YANG que ele anuncia (154 na O-DU), lê e grava configuração e recebe notificações — é a O1 do lab.",
+      "to": "Configura os elementos (O1 e M-plane), valida o login no Keycloak (OAuth) e reporta os próprios eventos ao VES. O gNB do OAI não tem O1: por isso a gerência é demonstrada com simuladores.",
+      "ports": "RESTCONF: 8181/TCP · NETCONF call home: 4334/4335",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "controller",
+      "planned": false
+    },
+    {
+      "id": "smo-ves",
+      "label": "ves-collector",
+      "role": "Eventos",
+      "sublabel": "falhas e medidas (VES 7)",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1350,
+      "y": 480,
+      "image": "core5g/ves-collector:1.12.5-arm64 (troca de base, JDK 11)",
+      "from": "Recebe eventos VES por HTTPS: o registro (pnfRegistration) e os avisos de medida pronta da O-DU, e os eventos do controlador.",
+      "does": "Valida cada evento contra o esquema VES 7.2.1 e o separa por domínio (heartbeat, pnfRegistration, fault, stndDefined).",
+      "to": "Publica cada domínio num tópico do Kafka (ex.: unauthenticated.VES_PNFREG_OUTPUT).",
+      "ports": "VES: 8080/TCP · caminho /eventListener/v7",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "ves-collector",
+      "planned": false
+    },
+    {
+      "id": "sim-odu",
+      "label": "pynts-o-du-o1",
+      "role": "O-DU (sim)",
+      "sublabel": "NETCONF + VES",
+      "layer": "o1net",
+      "kind": "container",
+      "x": 1350,
+      "y": 700,
+      "image": "core5g/pynts-o-du-o1:1212417-arm64 (compilado da fonte: netopeer2, sysrepo)",
+      "from": "Ao subir, liga para o SMO (NETCONF call home sobre TLS).",
+      "does": "Simula uma O-DU gerenciável: um servidor NETCONF (netopeer2) com os modelos YANG da O-RAN, que anuncia 154 capacidades e gera medidas.",
+      "to": "Aceita configuração do controlador (O1), se anuncia e manda medidas ao VES, e gerencia o O-RU hierárquico (M-plane).",
+      "ports": "NETCONF/TLS: 6513/TCP",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "pynts-o-du-o1",
+      "planned": false
+    },
+    {
+      "id": "sim-oru-hybrid",
+      "label": "pynts-o-ru-hybrid",
+      "role": "O-RU (sim)",
+      "sublabel": "M-plane · modelo híbrido",
+      "layer": "o1net",
+      "kind": "container",
+      "x": 1580,
+      "y": 700,
+      "image": "core5g/pynts-o-ru-mplane:1212417-arm64 (compilado da fonte)",
+      "from": "Ao subir, liga para o SMO (NETCONF call home).",
+      "does": "Simula um O-RU do Open Fronthaul no modelo HÍBRIDO: o M-plane dele é gerenciado direto pelo SMO (114 capacidades YANG).",
+      "to": "Aceita configuração do controlador pelo M-plane.",
+      "ports": "NETCONF: 830/TCP",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "pynts-o-ru-hybrid",
+      "planned": false
+    },
+    {
+      "id": "sim-oru-hier",
+      "label": "pynts-o-ru-hierarchical",
+      "role": "O-RU (sim)",
+      "sublabel": "M-plane · modelo hierárquico",
+      "layer": "o1net",
+      "kind": "container",
+      "x": 1350,
+      "y": 830,
+      "image": "core5g/pynts-o-ru-mplane:1212417-arm64 (compilado da fonte)",
+      "from": "Espera a O-DU que o gerencia.",
+      "does": "Simula um O-RU no modelo HIERÁRQUICO: quem o gerencia é a O-DU, não o SMO — por isso ele não aparece no controlador.",
+      "to": "Responde ao M-plane da O-DU.",
+      "ports": "NETCONF: 830/TCP",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "pynts-o-ru-hierarchical",
+      "planned": false
     }
   ],
   "links": [
@@ -562,6 +762,78 @@
       "planned": true,
       "dashed": true,
       "detail": "Próximo passo: perfil oran do docente (application_configuration.oran.json) liga o PMS ao Mediator real — atenção à versão A1AP (/A1-P/v2)."
+    },
+    {
+      "from": "user",
+      "to": "smo-gateway",
+      "iface": "HTTPS",
+      "detail": "Operador → SMO pelo túnel SSH (127.0.0.1:8443): nada do SMO fica exposto na internet."
+    },
+    {
+      "from": "smo-gateway",
+      "to": "smo-identity",
+      "iface": "Proxy",
+      "detail": "O Traefik roteia identity.<domínio> para o Keycloak (8080)."
+    },
+    {
+      "from": "smo-gateway",
+      "to": "smo-topology",
+      "iface": "Proxy",
+      "detail": "O Traefik roteia topology.<domínio> para o RESTCONF da topologia."
+    },
+    {
+      "from": "smo-gateway",
+      "to": "smo-odlux",
+      "iface": "Proxy",
+      "detail": "O Traefik roteia odlux.oam.<domínio> para a web do operador."
+    },
+    {
+      "from": "smo-odlux",
+      "to": "smo-controller",
+      "iface": "RESTCONF",
+      "detail": "A web lê e grava a configuração dos elementos no controlador (HTTP :8181)."
+    },
+    {
+      "from": "smo-controller",
+      "to": "smo-gateway",
+      "iface": "OAuth",
+      "detail": "O controlador valida o token do usuário no Keycloak — pelo gateway, no IP fixo da rede dcn."
+    },
+    {
+      "from": "smo-controller",
+      "to": "sim-odu",
+      "iface": "O1",
+      "detail": "NETCONF sobre TLS (:6513), aberto pela própria O-DU (call home): configuração, estado e notificações pelos modelos YANG."
+    },
+    {
+      "from": "smo-controller",
+      "to": "sim-oru-hybrid",
+      "iface": "M-plane",
+      "detail": "NETCONF do Open Fronthaul, modelo híbrido: o SMO gerencia o O-RU direto."
+    },
+    {
+      "from": "sim-odu",
+      "to": "sim-oru-hier",
+      "iface": "M-plane",
+      "detail": "Modelo hierárquico: a O-DU gerencia o O-RU; o SMO só o enxerga através dela."
+    },
+    {
+      "from": "sim-odu",
+      "to": "smo-ves",
+      "iface": "VES",
+      "detail": "Eventos VES por HTTPS: pnfRegistration ao subir e o aviso de arquivo de medida 3GPP pronto."
+    },
+    {
+      "from": "smo-controller",
+      "to": "smo-ves",
+      "iface": "VES",
+      "detail": "O controlador também reporta os próprios eventos ao coletor."
+    },
+    {
+      "from": "smo-ves",
+      "to": "smo-kafka",
+      "iface": "Kafka",
+      "detail": "Cada domínio VES vira um tópico (SEC_HEARTBEAT_OUTPUT, VES_PNFREG_OUTPUT, SEC_3GPP_PERFORMANCEASSURANCE_OUTPUT…)."
     }
   ],
   "interfaces_legend": [
@@ -635,7 +907,27 @@
     },
     {
       "iface": "O1",
-      "desc": "Gerência SMO (config/PM/FM) — ainda não implementada neste lab; os dados de PM hoje saem via E2/KPM para arquivo."
+      "desc": "Gerência O-RAN pelo SMO: NETCONF/YANG (configuração, estado, falhas). No lab: SDN-R ↔ O-DU simulada — o gNB do OAI não tem O1."
+    },
+    {
+      "iface": "M-plane",
+      "desc": "Gerência do O-RU no Open Fronthaul (NETCONF): direto do SMO (modelo híbrido) ou através da O-DU (hierárquico)."
+    },
+    {
+      "iface": "VES",
+      "desc": "Envelope padrão de eventos (falhas, medidas, registro) dos elementos até o coletor do SMO."
+    },
+    {
+      "iface": "Kafka",
+      "desc": "Barramento de eventos do SMO: um tópico por domínio VES."
+    },
+    {
+      "iface": "RESTCONF",
+      "desc": "YANG por HTTP: a web do operador falando com o controlador."
+    },
+    {
+      "iface": "OAuth",
+      "desc": "Token de login emitido pelo Keycloak e validado pelo controlador."
     }
   ]
 }

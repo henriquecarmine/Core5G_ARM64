@@ -276,6 +276,11 @@ def container_status(state: str, health: str) -> str:
     return "down"
 
 
+SMO_CONTAINERS = frozenset({
+    "gateway", "identity", "identitydb", "persistence", "zookeeper", "kafka",
+    "kafka-bridge", "kafka-ui", "topology", "controller", "odlux", "ves-collector",
+})
+
 # A que CONJUNTO cada container pertence. Sem isto o painel só sabe dizer
 # "está parado", e não sabe se isso é incidente ou se o conjunto inteiro
 # simplesmente não foi levantado — que é uma diferença enorme para quem lê.
@@ -289,6 +294,10 @@ CONJUNTOS = (
     # no ar — alarme falso nascido de agrupamento chutado.
     ("p2-nonrt", lambda n: n.startswith("nonrt") or n.lower().startswith("a1-sim")),
     ("p2-oransc", lambda n: n.startswith("ric_")),
+    # SMO do O-RAN SC (server/smo): o compose do upstream nomeia os containers
+    # sem prefixo, então a lista é explícita — mesmos nomes da banda "smo" e dos
+    # simuladores da banda "o1net" na topologia.
+    ("p2-smo", lambda n: n in SMO_CONTAINERS or n.startswith("pynts-")),
 )
 
 
@@ -582,6 +591,10 @@ def topology_logs(proj: str = "p2") -> JSONResponse:
             {"title": "A1 Simulator (OSC)", "comp": "a1sim", "lines": _docker_logs("a1-sim-OSC", 6)},
             {"title": "A1 Mediator (O-RAN SC · A1 real)", "comp": "a1mediator", "lines": _docker_logs("ric_a1mediator", 8)},
             {"title": "dbaas (Redis · SDL)", "comp": "dbaas", "lines": _docker_logs("ric_dbaas", 5)},
+            {"title": "SMO · controller (SDN-R · O1)", "comp": "smo-controller", "lines": _docker_logs("controller", 8)},
+            {"title": "SMO · ves-collector (VES)", "comp": "smo-ves", "lines": _docker_logs("ves-collector", 6)},
+            {"title": "SMO · gateway (Traefik)", "comp": "smo-gateway", "lines": _docker_logs("gateway", 5)},
+            {"title": "O-DU simulada (pynts · O1)", "comp": "sim-odu", "lines": _docker_logs("pynts-o-du-o1", 6)},
             {"title": "AMF (Mobilidade)", "comp": "amf", "lines": _docker_logs("oai-amf", 10)},
             {"title": "SMF (Sessão)", "comp": "smf", "lines": _docker_logs("oai-smf", 8)},
             {"title": "AUSF (Autenticação)", "comp": "ausf", "lines": _docker_logs("oai-ausf", 8)},

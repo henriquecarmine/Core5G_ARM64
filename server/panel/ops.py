@@ -985,6 +985,33 @@ async def labdata_upload(request: Request) -> JSONResponse:
 KPM_DIR = SERVER_DIR / "panel_uploads" / "labdata" / "kpm"
 KPM_CUSTOM = KPM_DIR / "kpm_custom.txt"
 KPM_SAMPLE = SERVER_DIR / "oai-cn-gnb-e2" / "scripts" / "temas" / "samples" / "kpm_ue_tp_sample.jsonl"
+# Cenário SUGERIDO PELO SERVIDOR: 1/2/5/10 celulares × distância × interferência,
+# gerado por temas/cenarios_kpm.py (dados sintéticos, marcados em cada linha).
+KPM_SUGERIDO = KPM_DIR / "kpm_sugerido.jsonl"
+_TEMAS_DIR = SERVER_DIR / "oai-cn-gnb-e2" / "scripts" / "temas"
+
+
+def _cenarios():
+    """O gerador vive junto dos temas (uma fonte só para as opções e o modelo)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("cenarios_kpm", _TEMAS_DIR / "cenarios_kpm.py")
+    if spec is None or spec.loader is None:
+        raise HTTPException(500, "gerador de cenários ausente no servidor")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _kpm_em_uso():
+    """(caminho, origem) do dado que os testes vão ler agora."""
+    st = _labdata_state()
+    if st.get("kpm") == "custom" and KPM_CUSTOM.exists():
+        return KPM_CUSTOM, "arquivo que você enviou/colou no painel"
+    if st.get("kpm") == "suggested" and KPM_SUGERIDO.exists():
+        c = st.get("kpm_cenario") or {}
+        return KPM_SUGERIDO, (f"cenário sugerido pelo servidor — {c.get('ues')} celular(es), "
+                              f"distância {c.get('distancia')}, interferência {c.get('interferencia')} (DADOS SINTÉTICOS)")
+    return KPM_SAMPLE, "amostra oficial do professor (kpm-ue-tp-sample)"
 _KPM_ALIASES = {"thp": ("thp_ul", "drb.uethpul", "throughput", "thp", "vazao"),
                 "delay": ("delay_dl", "drb.rlcsdudelaydl", "delay", "atraso", "latency"),
                 "prb": ("prb_ul", "rru.prbtotul", "prb", "prbtotul")}
@@ -1023,8 +1050,14 @@ def _kpm_validate(text: str) -> int:
 @router.get("/api/lab-data/kpm")
 def kpmdata_status() -> JSONResponse:
     st = _labdata_state()
+    try:
+        cen = _cenarios()
+        opcoes = {"ues": list(cen.N_UES), "distancia": list(cen.DISTANCIAS) + ["mista"], "interferencia": list(cen.CIR_DB)}
+    except Exception:  # noqa: BLE001 — sem o gerador, o cartão só não oferece a opção
+        opcoes = None
     return JSONResponse({"source": st.get("kpm", "default"), "has_custom": KPM_CUSTOM.exists(),
-                         "rows": st.get("kpm_rows")})
+                         "has_suggested": KPM_SUGERIDO.exists(), "cenario": st.get("kpm_cenario"),
+                         "opcoes": opcoes, "rows": st.get("kpm_rows")})
 
 
 @router.get("/api/lab-data/kpm/preview")
@@ -1036,11 +1069,7 @@ def kpmdata_preview() -> JSONResponse:
     fases e as primeiras medições), não um exemplo decorativo. Serve tanto para
     a amostra do professor quanto para o arquivo enviado/colado no painel.
     """
-    st = _labdata_state()
-    usa_custom = st.get("kpm") == "custom" and KPM_CUSTOM.exists()
-    path = KPM_CUSTOM if usa_custom else KPM_SAMPLE
-    origem = ("arquivo que você enviou/colou no painel" if usa_custom
-              else "amostra oficial do professor (kpm-ue-tp-sample)")
+    path, origem = _kpm_em_uso()
     linhas: list[dict] = []
     fases: dict[str, int] = {}
     total = 0
@@ -1058,7 +1087,7 @@ def kpmdata_preview() -> JSONResponse:
                         continue
                     m = o.get("metrics", o)
                     fase = str(o.get("phase") or "-")
-                    reg = {"i": o.get("sample_index", i), "fase": fase,
+                    reg = {"i": o.get("sample_index", i), "fase": fase, "ue": o.get("ue"),
                            "thp": m.get("DRB.UEThpUl"), "delay": m.get("DRB.RlcSduDelayDl"),
                            "prb": m.get("RRU.PrbTotUl")}
                 else:  # CSV: devolve a linha crua; a tela mostra como texto
@@ -1111,12 +1140,45 @@ def kpmdata_example() -> PlainTextResponse:
 def kpmdata_source(payload: dict, request: Request) -> JSONResponse:
     _only_professor(request)
     source = payload.get("source")
-    if source not in ("default", "custom"):
-        raise HTTPException(400, "source deve ser default|custom")
+    if source not in ("default", "custom", "suggested"):
+        raise HTTPException(400, "source deve ser default|suggested|custom")
     if source == "custom" and not KPM_CUSTOM.exists():
         raise HTTPException(400, "nenhum dado enviado ainda")
+    if source == "suggested" and not KPM_SUGERIDO.exists():
+        raise HTTPException(400, "nenhum cenário gerado ainda")
     st = _labdata_state(); st["kpm"] = source; _labdata_save(st)
     return JSONResponse({"ok": True, "source": source})
+
+
+@router.post("/api/lab-data/kpm/suggest")
+def kpmdata_suggest(payload: dict, request: Request) -> JSONResponse:
+    """Gera o cenário sugerido pelo servidor e passa a usá-lo nos testes.
+
+    Os mesmos 100 instantes da amostra do professor (baseline, stress,
+    recovery), agora com N celulares, distância e interferência escolhidas. O
+    modelo e as fórmulas estão em temas/cenarios_kpm.py e cada teste imprime a
+    explicação antes dos resultados. Só o Professor troca a fonte.
+    """
+    _only_professor(request)
+    cen = _cenarios()
+    try:
+        ues = int(payload.get("ues", 1))
+        distancia = str(payload.get("distancia", "100m"))
+        interferencia = str(payload.get("interferencia", "none"))
+        cen.validar(ues, distancia, interferencia)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(400, str(exc))
+    registros = cen.gerar(ues, distancia, interferencia)
+    KPM_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = KPM_SUGERIDO.with_suffix(".tmp")
+    cen.escrever(tmp, registros)
+    tmp.replace(KPM_SUGERIDO)
+    st = _labdata_state()
+    st["kpm"] = "suggested"
+    st["kpm_cenario"] = {"ues": ues, "distancia": distancia, "interferencia": interferencia}
+    st["kpm_rows"] = len(registros)
+    _labdata_save(st)
+    return JSONResponse({"ok": True, "source": "suggested", "rows": len(registros), "cenario": st["kpm_cenario"]})
 
 
 @router.post("/api/lab-data/kpm/upload")
@@ -1150,9 +1212,11 @@ def run_command(command: str, request: Request) -> StreamingResponse:
     if command.startswith("p2-ml-") and _labdata_state().get("sutd") == "custom":
         env = os.environ.copy()
         env["SUTD_DIR"] = str(LABDATA_DIR)
-    if (command.startswith("p2-tema-") or command in ("p2-kpi-qoe", "p2-closed-loop")) and _labdata_state().get("kpm") == "custom" and KPM_CUSTOM.exists():
-        env = env or os.environ.copy()
-        env["KPM_FILE"] = str(KPM_CUSTOM)
+    if command.startswith("p2-tema-") or command in ("p2-kpi-qoe", "p2-closed-loop"):
+        kpm_path, _ = _kpm_em_uso()
+        if kpm_path != KPM_SAMPLE:
+            env = env or os.environ.copy()
+            env["KPM_FILE"] = str(kpm_path)
     return StreamingResponse(
         tee_to_live(stream_command(spec["cmd"], spec["cwd"], env=env, lang=lang), command, by, cmd=command),
         media_type="text/plain",

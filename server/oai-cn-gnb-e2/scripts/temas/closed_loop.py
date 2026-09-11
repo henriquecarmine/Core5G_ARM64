@@ -212,7 +212,8 @@ def main():
     a = ap.parse_args()
 
     rows, phases, fmt, inferred = load(a.file)
-    d = Data(rows, phases)
+    d_ue = Data(rows, phases)
+    d = d_ue.celula() if d_ue.multi else d_ue
     run_id = datetime.now().strftime("%Y%m%dT%H%M%S")
     base, carga, depois = fases(phases)
     eventos, artefatos = [], {}
@@ -226,6 +227,8 @@ def main():
     kv("slides", "aula05-closed-loop-a1-open-ran.pdf (27/08) · aula06-consolidacao_projetos.pdf (03/09)")
     kv("modo", f"{B}OFFLINE{RST}: nada e aplicado na RAN; cada passo diz o que aconteceria ao vivo")
     kv("run_id", run_id)
+    from cenarios_kpm import explicar
+    explicar(d_ue, d, "closed")
 
     # 1 -----------------------------------------------------------------------
     section("1. Pre-checagem")
@@ -366,8 +369,11 @@ def main():
     kv("H  Hipotese", "capacidade: PRB e vazao sobem juntos; interferencia descartada por falta de KPI espectral"
                       if sobem_juntos else "a hipotese de capacidade nao fecha (PRB e vazao nao sobem juntos): investigar canal/RF")
     kv("A  Acao", f"policy {pol['policy_id']} (priorityLevel 10) + rate_limit {CFG['rate_kbit']} kbit na {CFG['iface']}, em dry-run")
-    kv("L  Limitacao", "offline: nada foi aplicado e o 'depois' e outra fase; RFSIM, 1 UE; unidade do atraso "
-                       "em disputa no curso (us no log da aula 01, ms nas aulas 04-06)")
+    sint = bool(rows and rows[0].get("cenario"))
+    kv("L  Limitacao", "offline: nada foi aplicado e o 'depois' e outra fase; "
+                       + (f"DADOS SINTETICOS ({d.n_ue} celular(es), cenario sugerido pelo servidor); " if sint
+                          else ("RFSIM, 1 UE; " if d.n_ue == 1 else f"RFSIM, {d.n_ue} UEs; "))
+                       + "unidade do atraso em disputa no curso (us no log da aula 01, ms nas aulas 04-06)")
 
     _grava(a.out, artefatos, eventos)
     print(f"\nVeredito: cadeia completa em dry-run - decision apply ({aval['apply_votes']}/{aval['window_size']}), "

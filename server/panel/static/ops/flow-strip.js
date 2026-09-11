@@ -244,11 +244,19 @@
       viz: { q: 'O resultado visível: a forma do tráfego no tempo.', o: '<b>logs/kpm_timeseries.csv</b> + sparkline ASCII no console', d: 'O CSV final — o mesmo insumo que alimentaria um UE-TP-rApp de verdade.' },
     },
     kpiqoe: {
-      med: { dataKey: 'kpm', q: 'A medida crua do E2SM-KPM — o que a rede REPORTA, antes de virar indicador. KPM ≠ KPI (slide 17 da aula 04).', o: 'servidor: <b>oai-cn-gnb-e2/scripts/temas/samples/</b> (ou o arquivo que você enviou no cartão 💾)', d: 'RRU.PrbTotUl (%), DRB.UEThpUl (kbps), DRB.RlcSduDelayDl (µs) por amostra, com a fase (baseline · stress · recovery). Sem RSRP/SINR/CQI: canal do UE não está no artefato.' },
+      med: { dataKey: 'kpm', q: 'A medida crua do E2SM-KPM — o que a rede REPORTA, antes de virar indicador. KPM ≠ KPI (slide 17 da aula 04).', o: 'servidor: <b>oai-cn-gnb-e2/scripts/temas/samples/</b> (ou o cenário sugerido pelo servidor / o arquivo enviado no cartão 💾)', d: 'RRU.PrbTotUl (%), DRB.UEThpUl (kbps), DRB.RlcSduDelayDl (µs) por amostra, com a fase (baseline · stress · recovery). Sem RSRP/SINR/CQI: canal do UE não está no artefato.' },
       kpi: { q: 'O KPI: desempenho da REDE. Média e p95 de PRB, mediana e p95 de vazão e de atraso, por fase.', o: 'GROUP BY fase em <b>scripts/temas/aula04_indicadores.py</b> (só biblioteca padrão)', d: 'A fórmula do slide sai impressa antes do número, e a escolha da agregação (mediana × média × p95) é justificada — o deck cobra isso no CP2.' },
       kqi: { q: 'O KQI: qualidade do SERVIÇO. A fração do tempo com atraso acima do limiar L — a série vira indicador de qualidade.', o: 'n(delay > L) / n por fase; L ajustável por <b>A04_DELAY_L</b>', d: 'L é limiar de MUDANÇA DE REGIME calibrado no baseline (slide 44: sem limiar justificado não há KQI formal), não requisito de aplicação.' },
       qos: { q: 'QoS: o KQI confrontado com o contrato. 4 cláusulas didáticas (latência, vazão, capacidade, qualidade) por fase.', o: 'alvos calibrados no baseline (p95 × folga) ou na referência do slide 35 (PRB > 80% = ruim)', d: 'Cláusula violada só na fase de carga = evidência; violada também no baseline = o limiar está errado, não a rede. Não há 5QI nem QoS Flow no artefato.' },
       cp2: { q: 'QoE é só PROXY aqui (não existe MOS no lab) — e a saída termina na anatomia de cada indicador, que é o entregável do Checkpoint 2.', o: 'nome · fórmula · unidade · granularidade · fonte · alvo/limiar · interpretação · papel · limite de validade', d: 'Também mostra o diagnóstico capacidade × canal/jammer e quais das 6 famílias de KPI o artefato NÃO permite medir.' },
+    },
+    closedloop: {
+      kpm: { dataKey: 'kpm', q: 'A telemetria que entra no laço: as 3 KPMs por amostra, com a fase. É a mesma dos 7 temas.', o: 'servidor: <b>oai-cn-gnb-e2/scripts/temas/samples/</b> (ou o cenário sugerido pelo servidor / o arquivo enviado no cartão 💾)', d: 'DRB.UEThpUl (kbps), DRB.RlcSduDelayDl (µs), RRU.PrbTotUl (%) + fase (baseline · stress · recovery) e, nos cenários gerados, o celular e o rádio de cada um.' },
+      mad: { q: 'O treino: mediana e desvio absoluto mediano de cada métrica, SÓ no baseline calmo.', o: '<b>logs/closed_loop_offline/model.json</b>', d: 'O que é "normal". Treinar com carga faria a anomalia virar referência (aula 06, passo 2 do roteiro).' },
+      dec: { q: 'A decisão: as últimas 5 amostras da carga votam; apply se a maioria sai do normal.', o: '<b>decision.json</b> (regra do ai_policy_pipeline.py do professor)', d: 'Decision é "precisamos agir" — ainda não é política nem ação (slide 22 da aula 06).' },
+      pol: { q: 'A intenção formal que desceria pelo A1: policy type, escopo e objetivo.', o: '<b>policy.json</b> — em dry-run, nada vai ao PMS', d: 'Ao vivo: PMS → A1 Mediator → RMR 20010 → consumer → 20011 → ENFORCED. ENFORCED não prova mutação no gNB.' },
+      act: { q: 'A tradução concreta: rate_limit de 8 Mbit/s na subida da oaitun_ue1.', o: '<b>action_request.json</b> — o comando tc é só impresso', d: 'decision_id, policy_id e action_id amarram a cadeia para auditoria.' },
+      rep: { q: 'A evidência: antes × depois, relativo e em pontos percentuais, com média e mediana.', o: '<b>effect_report.json</b> ("causal": false no modo offline)', d: 'Offline o "depois" é outra fase do mesmo experimento: não é efeito da atuação (slide 73 da aula 05).' },
     },
     tema: {
       raw: { dataKey: 'kpm', q: 'A telemetria KPM do lab do professor (kpm-ue-tp-sample): 100 medições em 3 fases (baseline 20 · stress 60 · recovery 20). Os MESMOS dados para os 7 grupos — muda a pergunta.', o: 'servidor: <b>oai-cn-gnb-e2/scripts/temas/samples/</b> · original: submódulo cesar-school-repo/data/code/datasets/kpm-ue-tp-sample/', d: '1 linha = 1 medição: DRB.UEThpUl (vazão UL, kbps), DRB.RlcSduDelayDl (atraso DL, µs), RRU.PrbTotUl (% de PRB) + fase, run_id, sample_index.' },
@@ -451,7 +459,7 @@
             foot: '4 cenários no servidor · disciplina do Prof. Julio C. C. Tesolin' },
     kpm:  { def: 'a amostra oficial do professor (kpm-ue-tp-sample): 100 medições em 3 fases — a mesma dos 7 grupos.',
             cus: 'JSONL (formato do professor) ou CSV com thp_ul, delay_dl, prb_ul e, se tiver, phase. Sem fase, as primeiras 20% viram baseline.',
-            accept: '.csv,.jsonl,.json,.txt', paste: true,
+            accept: '.csv,.jsonl,.json,.txt', paste: true, gerador: true,
             foot: 'amostra do professor · disciplina Análise de Dados (Prof. Jonas A. Kunzler)' },
   };
   function srcHtml(key) {
@@ -465,8 +473,9 @@
       +   '<a href="#" class="see act">👁 ver amostra</a></label>'
       + '<div class="exp">' + s.def + '</div>'
       + '<div class="smp" style="display:none;margin:5px 0 4px 20px;max-width:345px;overflow-x:auto;border:1px solid var(--line);border-radius:6px"></div>'
+      + (s.gerador ? geradorHtml() : '')
       + '<label class="opt"><input type="radio" name="fsrc" value="custom">'
-      +   '<span class="lbl">2. Meus dados</span><span class="st act"></span></label>'
+      +   '<span class="lbl">' + (s.gerador ? '3' : '2') + '. Meus dados</span><span class="st act"></span></label>'
       + '<div class="exp">' + s.cus + ' '
       + '<a href="/api/lab-data/' + key + '/example" download>⬇ baixe o exemplo aqui</a></div>'
       + '<div class="how"><span class="hk">arquivo</span><input type="file" accept="' + s.accept + '"></div>'
@@ -477,17 +486,63 @@
           : '')
       + '</div>';
   }
+  // Cenário sugerido pelo servidor (só KPM): N celulares × distância ×
+  // interferência. O servidor gera com a física do Lab do UE e cada teste
+  // explica o cenário antes do resultado. As opções vêm da API (uma fonte só).
+  var ROT_DIST = { '100m': '100 m', '500m': '500 m', '1km': '1 km', '3km': '3 km (borda)', mista: 'misturadas' };
+  var ROT_INTERF = { none: 'nenhuma', fraca: 'fraca (C/I 20 dB)', media: 'média (C/I 15 dB)', alta: 'alta (C/I 5 dB)' };
+  var SEL = 'font:inherit;font-size:10.5px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:2px 4px';
+  function geradorHtml() {
+    return '<label class="opt"><input type="radio" name="fsrc" value="suggested">'
+      +   '<span class="lbl">2. Cenário gerado pelo servidor</span><span class="stg act"></span></label>'
+      + '<div class="exp">Mesmos 100 instantes da amostra, agora com vários celulares, distância e interferência, '
+      +   'com a física do Lab do UE (perda de percurso 3GPP, SINR, Shannon). <b>Dados sintéticos</b>: '
+      +   'cada teste explica o cenário e compara o esperado com o observado.</div>'
+      + '<div class="how" style="flex-wrap:wrap;gap:5px 8px">'
+      +   '<span class="hk" style="width:auto">celulares</span><select class="g-ues" style="' + SEL + '"></select>'
+      +   '<span class="hk" style="width:auto">distância</span><select class="g-dist" style="' + SEL + '"></select>'
+      +   '<span class="hk" style="width:auto">interferência</span><select class="g-interf" style="' + SEL + '"></select>'
+      +   '<button type="button" class="genbtn">⚙ Gerar e usar</button></div>';
+  }
   function wireSrc(card, key) {
     var radios = card.querySelectorAll('input[name=fsrc]');
     var file = card.querySelector('input[type=file]');
-    var st = card.querySelector('.st');
+    var st = card.querySelector('.st'), stg = card.querySelector('.stg');
+    var gUes = card.querySelector('.g-ues'), gDist = card.querySelector('.g-dist'), gInt = card.querySelector('.g-interf');
+    function opts(sel, vals, rot, atual) {
+      if (!sel || sel.options.length) return;
+      sel.innerHTML = vals.map(function (v) {
+        return '<option value="' + v + '"' + (String(v) === String(atual) ? ' selected' : '') + '>' + (rot ? (rot[v] || v) : v) + '</option>';
+      }).join('');
+    }
     function refresh() {
       fetch('/api/lab-data/' + key).then(function (r) { return r.json(); }).then(function (d) {
-        radios.forEach(function (r) { r.checked = (r.value === d.source); });
-        radios[1].disabled = !d.has_custom;
+        radios.forEach(function (r) {
+          r.checked = (r.value === d.source);
+          if (r.value === 'custom') r.disabled = !d.has_custom;
+          if (r.value === 'suggested') r.disabled = !d.has_suggested;
+        });
         st.textContent = d.has_custom ? (d.source === 'custom' ? '● em uso' : '(enviado)') : '';
+        if (d.opcoes && gUes) {
+          var c = d.cenario || {};
+          opts(gUes, d.opcoes.ues, null, c.ues || 1);
+          opts(gDist, d.opcoes.distancia, ROT_DIST, c.distancia || '100m');
+          opts(gInt, d.opcoes.interferencia, ROT_INTERF, c.interferencia || 'none');
+        }
+        if (stg) stg.textContent = d.has_suggested
+          ? (d.source === 'suggested' ? '● em uso' : '(gerado)') + (d.cenario ? ' · ' + d.cenario.ues + ' cel · '
+              + (ROT_DIST[d.cenario.distancia] || d.cenario.distancia) + ' · ' + (ROT_INTERF[d.cenario.interferencia] || d.cenario.interferencia) : '')
+          : '';
       }).catch(function () {});
     }
+    var gb = card.querySelector('.genbtn');
+    if (gb) gb.onclick = function () {
+      if (stg) stg.textContent = 'gerando…';
+      fetch('/api/lab-data/' + key + '/suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ues: Number(gUes.value), distancia: gDist.value, interferencia: gInt.value }) })
+        .then(function (resp) { if (!resp.ok) return resp.json().then(function (e) { alert(e.detail || 'sem permissão'); }); })
+        .then(refresh);
+    };
     radios.forEach(function (r) {
       r.onchange = function () {
         fetch('/api/lab-data/' + key + '/source', { method: 'POST',
@@ -556,7 +611,7 @@
     back.className = 'fs-back';
     back.onclick = closePop;
     var c = document.createElement('div');
-    c.className = 'fs-pop';
+    c.className = 'fs-pop superficie-escura';
     c.innerHTML = '<span class="x">✕</span><h4>' + node.txt + '</h4>'
       + '<div class="sec">O que é</div><div>' + node.info.q + '</div>'
       + '<div class="sec">Onde vive</div><div><code>' + node.info.o + '</code></div>'

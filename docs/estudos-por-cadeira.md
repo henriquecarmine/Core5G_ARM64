@@ -80,6 +80,72 @@ baseline (o script avisa). Endpoints: `GET /api/lab-data/kpm`,
 professor). O arquivo fica em `panel_uploads/labdata/kpm/kpm_custom.txt` e
 `run_command` injeta `KPM_FILE` nos comandos `p2-tema-*`.
 
+## Cenários sugeridos pelo servidor — 1, 2, 5, 10 celulares × distância × interferência (v0.89.0)
+
+A amostra do professor tem **1 celular, sem distância nem interferência**. O
+cartão 💾 dos testes de dados (os 7 temas, `p2-kpi-qoe`, `p2-closed-loop`)
+ganhou uma segunda opção em "Sugerida pelo servidor": **gerar um cenário**.
+
+| Parâmetro | Opções |
+|---|---|
+| celulares | 1 · 2 · 5 · 10 |
+| distância | 100 m · 500 m · 1 km · 3 km (borda) · misturadas (100 m, 500 m, 1 km, 3 km em rodízio) |
+| interferência | nenhuma · fraca (C/I 20 dB) · média (C/I 15 dB) · alta (C/I 5 dB), ativa nas amostras 20–44 do stress |
+
+`server/oai-cn-gnb-e2/scripts/temas/cenarios_kpm.py` (stdlib, importado pelo
+painel) gera os mesmos 100 instantes da amostra (baseline 20 · stress 60 ·
+recovery 20), um registro por celular, no formato JSONL do professor, com
+`"cenario": {"sintetico": true, …}` e `"radio": {dist_m, sinr_db,
+interferencia_ativa}` em cada linha. **É dado sintético e cada teste diz isso.**
+
+A cadeia do modelo é a mesma física do Lab do UE do P1 (`test_channel.sh`),
+calibrada na amostra real:
+
+1. perda de percurso 3GPP TR 38.901 UMa NLOS a 3,5 GHz (102,6 / 129,9 / 141,7 / 160,3 dB);
+2. RSRP = 58,6 − PL (a calibração do Lab do UE: −44 dBm a 100 m);
+3. SNR = min(30, 0,65·(RSRP + 105)) — mapa didático das faixas de drive test;
+4. com interferência, SINR = 1 / (1/SNR + 1/(C/I)) em linear;
+5. η = min(7,4 ; log2(1 + SINR)) (Shannon, teto ~256QAM);
+6. vazão por celular = (80 023,7 kbps / N) · η / η_ref — os PRB divididos por igual;
+7. atraso RLC = 158,9 · (1 + 0,35·(N − 1)) · √(η_ref/η) µs.
+
+1 celular a 100 m sem interferência **reproduz a amostra real** (testado). A
+janela de interferência deixa o PRB em 99% e derruba a vazão: a assinatura de
+jammer da matriz do slide 26 da aula 05, dentro do mesmo arquivo.
+
+**A explicação na tela.** Antes do resultado, cada teste imprime o bloco
+"Cenário sugerido pelo servidor (DADOS SINTÉTICOS)": as 7 fórmulas, a tabela
+por celular (distância, PL, RSRP, SNR, η, vazão **esperada × observada**, e o
+mesmo com interferência), a célula (PRB, vazão somada e a queda com
+interferência), quanto cada usuário recebe comparado a 1 celular perto, e
+"como ler este teste neste cenário" — texto próprio para T1 a T7, aula 04 e
+closed loop (no closed loop: quantos celulares já estão abaixo dos 8 Mbit/s da
+política, caso em que o rate-limit não cortaria nada). As limitações de cada
+tema passam a dizer que o dado é sintético, em vez de "1 UE em RFSIM".
+
+**Vários celulares nos testes.** Com mais de um celular, as regras que olham o
+tempo (média móvel do T4, janela do MAD, persistência do T7) rodam sobre a
+**célula** — `Data.celula()`: uma linha por instante, vazão e atraso pela média
+dos usuários, PRB da célula, e `thp_soma` para o T5. Na lista crua os usuários
+se intercalariam e a "janela de 5" misturaria 5 celulares do mesmo instante.
+Com a amostra real (1 celular) nada muda: as 10 saídas foram comparadas antes
+e depois da mudança e são idênticas, fora horários e IDs.
+
+API (`ops.py`): `GET /api/lab-data/kpm` devolve `opcoes` (do próprio gerador),
+`cenario` e `has_suggested`; `POST /api/lab-data/kpm/suggest {ues, distancia,
+interferencia}` (só Professor) gera `panel_uploads/labdata/kpm/kpm_sugerido.jsonl`
+e passa a fonte para `suggested`; o `run_command` injeta `KPM_FILE` do arquivo em
+uso; a prévia "os dados" mostra a coluna do celular.
+
+Testes: `test_cenarios.py` (11, em `npm run test:tudo`) — determinismo, limites
+físicos, equivalência com a amostra real, monotonia com N, distância e
+interferência, PRB igual dentro e fora da janela, visão da célula, os três
+scripts em 10 cenários. O cartão foi testado no Chrome com a API simulada.
+
+**Não é possível (ainda) nos testes ao vivo:** o Lab do UE do P1 já aplica
+distância e interferência de verdade (`tc netem` em `uesimtun0`), mas com **1**
+UE; vários celulares ao vivo pedem subir N UEs no UERANSIM e medir a carga do box.
+
 ## Closed loop A1 das aulas 05 e 06 — `p2-closed-loop` (v0.88.0)
 
 As aulas 05 e 06 fecham o laço que o projeto só recomenda: KPM → MAD →

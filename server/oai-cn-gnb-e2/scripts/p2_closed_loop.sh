@@ -30,7 +30,7 @@ if [ -z "$PY" ]; then
     err "python3 nao encontrado"; summary "procurou o interpretador" "python indisponivel" err; exit 1
 fi
 if [ -n "${KPM_FILE:-}" ] && [ -f "$KPM_FILE" ]; then
-    DATA="$KPM_FILE"; ok "fonte: dados enviados pelo professor no painel"
+    DATA="$KPM_FILE"; ok "fonte: arquivo escolhido no painel (enviado pelo professor ou cenario sugerido pelo servidor)"
 else
     DATA="$SAMPLE"; ok "fonte: amostra oficial do professor (kpm-ue-tp-sample, 100 amostras, 3 fases)"
 fi

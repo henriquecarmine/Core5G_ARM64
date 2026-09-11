@@ -33,7 +33,7 @@ if [ -z "$PY" ]; then
     err "python3 não encontrado"; summary "procurou o interpretador" "python indisponível" err; exit 1
 fi
 if [ -n "${KPM_FILE:-}" ] && [ -f "$KPM_FILE" ]; then
-    DATA="$KPM_FILE"; ok "fonte: dados enviados pelo professor no painel"
+    DATA="$KPM_FILE"; ok "fonte: arquivo escolhido no painel (enviado pelo professor ou cenario sugerido pelo servidor)"
 elif [ "${KPM_SOURCE:-}" = "real" ] && [ -f "$REAL" ]; then
     DATA="$REAL"; ok "fonte: última coleta E2 real desta RAN (kpm_analytics)"
 else

@@ -1844,7 +1844,7 @@ const TEST_EXPLAIN = {
     title: 'O que acabou de acontecer — Aula 04: da medida à experiência percebida',
     antes: [
       'Vai percorrer, com os dados de verdade, a cadeia da <b>aula 04</b>: medida → KPI → KQI → QoS → QoE → decisão.',
-      'De onde vem o dado: o mesmo arquivo de medições dos 7 temas (ou o que você enviou no cartão 💾). Nada é coletado agora; é leitura de arquivo.',
+      'De onde vem o dado: o mesmo arquivo de medições dos 7 temas (ou o cenário que o servidor sugeriu ou você enviou no cartão 💾). Nada é coletado agora; é leitura de arquivo.',
       'Na tela, nesta ordem: o que o arquivo tem e o que <b>não</b> tem · os indicadores da rede por fase · a fração do tempo acima do limiar · as 4 cláusulas de contrato · por que aqui só dá para falar em <b>proxy</b> de experiência · e a ficha de cada indicador para o Checkpoint 2.',
       'Não toca na rede e leva uns 2 segundos.',
     ],
@@ -1862,7 +1862,7 @@ const TEST_EXPLAIN = {
     title: 'O que acabou de acontecer — Aulas 05 e 06: o closed loop A1, passo a passo',
     antes: [
       'Vai percorrer os <b>8 passos do roteiro da demo</b> da aula 06 (slide 23) com os dados de verdade: pré-checagem, baseline calmo, stress, decisão, A1, atuação, depois + relatório e rollback.',
-      'De onde vem o dado: o mesmo arquivo de medições dos 7 temas (ou o que você enviou no cartão 💾). <b>Nada é aplicado na rede</b>: o rate-limit e o envio ao PMS são mostrados, não executados.',
+      'De onde vem o dado: o mesmo arquivo de medições dos 7 temas (ou o cenário que o servidor sugeriu ou você enviou no cartão 💾). <b>Nada é aplicado na rede</b>: o rate-limit e o envio ao PMS são mostrados, não executados.',
       'Grava os artefatos no formato do lab do professor: model.json, decision.json, policy.json, action_request.json, effect_report.json e o log de eventos do atuador.',
       'Não toca na rede e leva uns 2 segundos.',
     ],
@@ -2294,8 +2294,9 @@ async function guiaDados(host) {
       + guiaEsc(d.origem) + '</b> — arquivo <code>' + guiaEsc(d.arquivo) + '</code>, <b style="color:var(--ink)">'
       + d.total + '</b> medições. Fases: ' + guiaEsc(fases) + '.</div>';
     if (d.linhas.length && d.linhas[0].thp !== undefined) {
-      h += '<table><tr><th>#</th><th>fase</th><th>vazão UL (kbps)</th><th>atraso DL (µs)</th><th>PRB UL (%)</th></tr>'
-        + d.linhas.map(l => '<tr><td>' + guiaEsc(l.i) + '</td><td>' + guiaEsc(l.fase) + '</td><td>' + guiaEsc(l.thp)
+      const comUe = d.linhas.some(l => l.ue);
+      h += '<table><tr><th>#</th><th>fase</th>' + (comUe ? '<th>celular</th>' : '') + '<th>vazão UL (kbps)</th><th>atraso DL (µs)</th><th>PRB UL (%)</th></tr>'
+        + d.linhas.map(l => '<tr><td>' + guiaEsc(l.i) + '</td><td>' + guiaEsc(l.fase) + '</td>' + (comUe ? '<td>' + guiaEsc(l.ue) + '</td>' : '') + '<td>' + guiaEsc(l.thp)
           + '</td><td>' + guiaEsc(l.delay) + '</td><td>' + guiaEsc(l.prb) + '</td></tr>').join('')
         + '</table><div style="font-size:11px;color:var(--ink-3);margin-top:5px">as ' + d.linhas.length
         + ' primeiras de ' + d.total + ' — o teste lê todas</div>';

@@ -145,7 +145,8 @@ def load(path):
             if thp is None or dl is None or prb is None: continue
             rows.append({"thp": float(thp), "delay": float(dl), "prb": float(prb),
                          "phase": o.get("phase"), "run": o.get("run_id", "-"),
-                         "idx": o.get("sample_index", i), "ue": o.get("ue", o.get("ue_id", "-"))})
+                         "idx": o.get("sample_index", i), "ue": o.get("ue", o.get("ue_id", "-")),
+                         "radio": o.get("radio"), "cenario": o.get("cenario")})
     else:
         rd = list(csv.DictReader(io.StringIO("\n".join(lines))))
         hdr = [h.strip() for h in (rd[0].keys() if rd else [])]
@@ -185,9 +186,29 @@ def load(path):
 
 
 class Data:
-    def __init__(self, rows, phases):
+    def __init__(self, rows, phases, n_ue=None):
         self.rows, self.phases = rows, phases
         self.by = {p: [r for r in rows if r["phase"] == p] for p in phases}
+        self.ues = sorted({str(r["ue"]) for r in rows})
+        self.n_ue = n_ue or len(self.ues)
+        self.multi = n_ue is None and len(self.ues) > 1
+
+    def celula(self):
+        """Uma linha por instante (fase, amostra): vazao e atraso pela MEDIA dos
+        usuarios, PRB da celula. Com varios celulares, as regras que olham o
+        tempo (media movel, janela, persistencia) so fazem sentido nesta visao:
+        na lista crua os usuarios se intercalam e a 'janela de 5' misturaria
+        5 celulares diferentes do mesmo instante."""
+        grupos = OrderedDict()
+        for r in self.rows:
+            grupos.setdefault((r["phase"], r["idx"]), []).append(r)
+        cel = []
+        for (fase, idx), g in grupos.items():
+            cel.append({"thp": mean([r["thp"] for r in g]), "delay": mean([r["delay"] for r in g]),
+                        "prb": mean([r["prb"] for r in g]), "phase": fase, "idx": idx, "run": g[0]["run"],
+                        "ue": "celula", "thp_soma": sum(r["thp"] for r in g), "cenario": g[0].get("cenario"),
+                        "radio": {"interferencia_ativa": any((r.get("radio") or {}).get("interferencia_ativa") for r in g)}})
+        return Data(cel, self.phases, n_ue=len(self.ues))
     def col(self, k, phase=None):
         src = self.by[phase] if phase else self.rows
         return [r[k] for r in src]
@@ -229,6 +250,17 @@ def a1_dryrun(nome, scope, objetivo, motivo):
     step("Politica A1 candidata (DRY-RUN, nada e aplicado na RAN):")
     for l in json.dumps(pol, ensure_ascii=False, indent=2).splitlines():
         print(f"    {DIM}{l}{RST}")
+
+
+def limite(d, real):
+    """Limitacoes do tema. Com a amostra real o texto e o de sempre; com o
+    cenario sugerido pelo servidor, diz que o dado e sintetico e quantos
+    celulares tem, em vez de afirmar '1 UE em RFSIM'."""
+    c = next((r.get("cenario") for r in d.rows[:1] if r.get("cenario")), None)
+    if not c:
+        return real
+    return (f"DADOS SINTETICOS ({c['n_ue']} celular(es), distancia {c['distancia']}, interferencia {c['interferencia']}): "
+            "a leitura vale para o modelo do cenario, nao para a rede do lab; limiares seguem sendo escolha do grupo")
 
 
 def cabecalho_tema(n, titulo, pergunta, onde):
@@ -278,7 +310,7 @@ def t1(d, th):
         ver = "a vazao acompanha o PRB dentro da fase; vazao x atraso ~0 dentro da fase"
         ver_ui = ("A vaz\u00e3o acompanha o r\u00e1dio: quando o PRB sobe, a vaz\u00e3o sobe junto. "
                   "R\u00e1dio cheio entregando \u00e9 capacidade em uso, n\u00e3o usu\u00e1rio mal servido.")
-    kv("limitacoes", "1 run, poucos UEs (RFSIM); unidades por convencao KPM; media do recovery e puxada por picos (use mediana/p95)")
+    kv("limitacoes", limite(d, "1 run, poucos UEs (RFSIM); unidades por convencao KPM; media do recovery e puxada por picos (use mediana/p95)"))
 
     # ---- painel do UE: os mesmos numeros, prontos para desenhar na tela ----
     # O professor pede "headline + 2 cartoes + 1 serie temporal". O calculo ja
@@ -327,9 +359,13 @@ def t1(d, th):
             "porque": (f"a regra disparou em {pct(fr)} das amostras: h\u00e1 usu\u00e1rio mal servido"
                        if fr > 0 else
                        "a vaz\u00e3o acompanha o PRB \u2014 o r\u00e1dio encheu porque o usu\u00e1rio estava usando, e a rede entregou"),
-            "confianca": f"1 execu\u00e7\u00e3o, {len(d.rows)} amostras, 1 UE em simula\u00e7\u00e3o (RFSIM)",
+            "confianca": (f"1 execu\u00e7\u00e3o, {len(d.rows)} amostras, {d.n_ue} celular(es) em DADOS SINT\u00c9TICOS (cen\u00e1rio sugerido pelo servidor)"
+                          if d.rows and d.rows[0].get("cenario") else
+                          (f"1 execu\u00e7\u00e3o, {len(d.rows)} amostras, 1 UE em simula\u00e7\u00e3o (RFSIM)" if d.n_ue == 1 else
+                           f"1 execu\u00e7\u00e3o, {len(d.rows)} amostras, {d.n_ue} UEs em simula\u00e7\u00e3o (RFSIM)")),
         },
-        "limites": ["sem RSRP/SINR/CQI no artefato: nada sobre cobertura",
+        "limites": ([f"DADOS SINT\u00c9TICOS: {d.n_ue} celular(es) de um cen\u00e1rio sugerido pelo servidor, n\u00e3o a rede do lab"]
+                    if d.rows and d.rows[0].get("cenario") else []) + ["sem RSRP/SINR/CQI no artefato: nada sobre cobertura",
                     "sem MOS: nada sobre a experi\u00eancia real do usu\u00e1rio",
                     "1 UE e 1 execu\u00e7\u00e3o: n\u00e3o h\u00e1 estat\u00edstica de c\u00e9lula"],
     }
@@ -383,7 +419,7 @@ def t2(d, th):
     else:
         ok("nenhuma janela inteira anomala: sem decisao (picos isolados nao contam)")
         ver = "sem anomalia sustentada"
-    kv("limitacoes", f"baseline de {d.n(base)} amostras com MAD 0 em varias metricas (piso {LIM['mad_floor']:g}); limiar 3.5 e convencao")
+    kv("limitacoes", limite(d, f"baseline de {d.n(base)} amostras com MAD 0 em varias metricas (piso {LIM['mad_floor']:g}); limiar 3.5 e convencao"))
     return {"I1": "% anomalas por fase", "I2": "score medio/max na carga", "veredito": ver}
 
 
@@ -417,7 +453,7 @@ def t3(d, th):
     else:
         ok("atraso dentro do limiar na maior parte do tempo")
         ver = "atraso dentro do limiar"
-    kv("limitacoes", "o atraso e um PROXY de QoE (nao ha nota MOS); RFSIM, 1 UE; picos isolados no baseline nao sao experiencia ruim")
+    kv("limitacoes", limite(d, "o atraso e um PROXY de QoE (nao ha nota MOS); RFSIM, 1 UE; picos isolados no baseline nao sao experiencia ruim"))
     return {"I1": "mediana/p95 do atraso por fase", "I2": "% acima do limiar", "veredito": ver}
 
 
@@ -452,7 +488,7 @@ def t4(d, th):
     else:
         ok("radio cheio na carga, mas a vazao acompanha: capacidade EM USO, nao em risco (sem alerta)")
         ver = "saturacao sem queda de vazao: sem alerta de capacidade"
-    kv("limitacoes", "1 UE em RFSIM satura os PRB sozinho; em campus real o indice pede varios UEs e mais tempo")
+    kv("limitacoes", limite(d, "1 UE em RFSIM satura os PRB sozinho; em campus real o indice pede varios UEs e mais tempo"))
     return {"I1": "PRB medio/p95 por fase", "I2": f"indice de risco {pct(fr)}", "veredito": ver}
 
 
@@ -466,7 +502,7 @@ def t5(d, th):
     step("Formulas dos 2 indicadores")
     formula("I1  PRB medio da celula por fase", "media(prb_ul) GROUP BY run_id, phase", "% dos PRB")
     formula("I2  Vazao representativa da celula", "media(thp_ul) por fase (e soma = media x n_UE quando ha varios UEs)", "kbps")
-    ues = sorted(set(str(r["ue"]) for r in d.rows)); n_ue = len(ues)
+    n_ue = d.n_ue; ues = d.ues if len(d.ues) == n_ue else [f"ue-{i + 1:02d}" for i in range(n_ue)]
     runs = sorted(set(str(r["run"]) for r in d.rows))
     kv("run_id", ", ".join(runs)); kv("UEs distintos", f"{n_ue} ({', '.join(ues[:5])}{'...' if n_ue > 5 else ''})")
     rows = []
@@ -474,9 +510,10 @@ def t5(d, th):
         pr, t, dl = d.col("prb", p), d.col("thp", p), d.col("delay", p)
         rows.append([p, d.n(p), f1(mean(pr)), f1(max(pr)), f1(mean(t)), f1(mean(t) * n_ue), f1(pctl(t, 95)), f1(mean(dl))])
     table(["fase", "n", "PRB medio", "PRB max", "vazao media", "vazao soma", "vazao p95", "atraso medio"], rows)
-    info("Comparar fase normal x fase com carga e o resumo 'de celula'. Com 1 UE, media = soma: a agregacao e didatica, nao estatistica de campus.")
+    info("Comparar fase normal x fase com carga e o resumo 'de celula'. " + ("Com 1 UE, media = soma: a agregacao e didatica, nao estatistica de campus."
+         if n_ue == 1 else f"Com {n_ue} celulares a soma e a vazao da celula; a media e a vazao tipica de cada usuario."))
     ok(f"indicadores de celula calculados para {len(runs)} run(s) e {len(d.phases)} fase(s)")
-    kv("limitacoes", f"{n_ue} UE(s) em RFSIM: nao ha diversidade de usuarios; capacidade real da celula nao e observavel aqui")
+    kv("limitacoes", limite(d, f"{n_ue} UE(s) em RFSIM: nao ha diversidade de usuarios; capacidade real da celula nao e observavel aqui"))
     return {"I1": "PRB medio da celula por fase", "I2": "vazao media/soma por fase", "veredito": f"resumo por fase pronto; limite: {n_ue} UE(s)"}
 
 
@@ -512,7 +549,7 @@ def t6(d, th):
     else:
         warn("pouca ou nenhuma janela de baixa carga com atraso aceitavel: sem intencao de economia")
         ver = "sem janela segura de baixa carga"
-    kv("limitacoes", "o lab nao controla potencia de RU; 'baixa carga' de 1 UE simulado nao e ociosidade de celula real")
+    kv("limitacoes", limite(d, "o lab nao controla potencia de RU; 'baixa carga' de 1 UE simulado nao e ociosidade de celula real"))
     return {"I1": f"% tempo em baixa carga ({pct(fr)})", "I2": "vazao/atraso nas janelas", "veredito": ver}
 
 
@@ -550,7 +587,7 @@ def t7(d, th):
     else:
         ok("a regra nao dispararia de forma sustentada: sem politica candidata")
         ver = "sem degradacao sustentada"
-    kv("limitacoes", "limiares sao escolha do grupo (justificar no README); nao afirmamos que handover/path mudaram; RFSIM, 1 UE")
+    kv("limitacoes", limite(d, "limiares sao escolha do grupo (justificar no README); nao afirmamos que handover/path mudaram; RFSIM, 1 UE"))
     return {"I1": "% tempo em degradacao", "I2": f"{tot_edges} acionamentos ({tot_sust} sustentados)", "veredito": ver}
 
 
@@ -567,7 +604,8 @@ def main():
 
     section("Fonte dos dados")
     rows, phases, fmt, inferred = load(a.file)
-    d = Data(rows, phases)
+    d_ue = Data(rows, phases)
+    d = d_ue.celula() if d_ue.multi else d_ue
     kv("arquivo", a.file); kv("formato detectado", fmt)
     kv("amostras", f"{len(rows)}  ({', '.join(f'{p}: {d.n(p)}' for p in phases)})")
     kv("metricas", "thp_ul = DRB.UEThpUl [kbps]   delay_dl = DRB.RlcSduDelayDl [us]   prb_ul = RRU.PrbTotUl [%]")
@@ -578,6 +616,10 @@ def main():
     kv("limiares derivados", f"PRB alto > {f1(th['prb_high'])}  vazao baixa < {f1(th['thp_low'])} kbps  "
                              f"baixa carga: PRB <= {f1(th['prb_low'])}% e vazao <= {f1(th['thp_lowload'])}  atraso > {th['delay_max']:g} us")
     ok("dados carregados: 1 linha = 1 medicao KPM (zona silver)")
+    if d_ue.multi:
+        kv("celulares", f"{d_ue.n_ue} ({', '.join(d_ue.ues[:10])}): regras de tempo sobre a celula ({len(d.rows)} instantes)")
+    from cenarios_kpm import explicar
+    explicar(d_ue, d, a.tema)
 
     sel = list(TEMAS) if a.tema == "all" else [a.tema]
     res = OrderedDict()

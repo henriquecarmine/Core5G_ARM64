@@ -321,7 +321,8 @@ def main():
     a = ap.parse_args()
 
     rows, phases, fmt, inferred = load(a.file)
-    d = Data(rows, phases)
+    d_ue = Data(rows, phases)
+    d = d_ue.celula() if d_ue.multi else d_ue
 
     section("Aula 04 - Indicadores e qualidade: da medida a experiencia percebida")
     info("Cadeia do slide 55: medida (KPM) -> metrica -> KPI -> KQI -> QoS (SLA) -> QoE (proxy) -> decisao")
@@ -329,6 +330,8 @@ def main():
     kv("slides", "aula04-kpis_kqis_qualidade.pdf, 25/08/2026")
     kv("dados", f"{a.file} ({len(rows)} amostras, {len(phases)} fases)")
     kv("unidades", "as do E2SM-KPM como o xApp do FlexRIC imprime: kbps, us, %")
+    from cenarios_kpm import explicar
+    explicar(d_ue, d, "aula04")
 
     bloco_medida(d, fmt, inferred)
     ctx = bloco_kpi(d)

@@ -543,7 +543,7 @@ function focoNos(ids){
   if(!autoZoom) return;
   const ns=ids.map(nodeById).filter(Boolean);
   if(!ns.length){ animateVB(fullVB()); return; }
-  const MIN_W=760, PAD=70;
+  const MIN_W=980, PAD=70;
   const x0=Math.min(...ns.map(n=>n.x))-PAD, x1=Math.max(...ns.map(n=>n.x+NODE_W))+PAD;
   const y0=Math.min(...ns.map(n=>n.y))-PAD, y1=Math.max(...ns.map(n=>n.y+NODE_H))+PAD;
   const r=svg.getBoundingClientRect(), tb=document.getElementById("tour-box");

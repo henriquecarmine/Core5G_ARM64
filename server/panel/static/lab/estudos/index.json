@@ -119,15 +119,10 @@
       "id": "e4", "n": 4, "icon": "📊", "bancada": "p2",
       "titulo": "Análise de Dados em Redes de Telecom",
       "prof": "Prof. Dr. Jonas Augusto Kunzler",
-      "periodo": "ago/2026 (em andamento)",
+      "periodo": "ago a set/2026 (concluída)",
       "resumo": "De onde vêm os dados de uma rede (SMO, O1, E2, A1; PM, FM, KPM), como guardá-los (lake, warehouse, as zonas raw/bronze/silver/gold), como explorá-los (EDA, ETL, estatística, visualização) e como transformá-los em indicadores (KPIs/KQIs) e decisões. O projeto integrador (50% da nota) usa a telemetria KPM do nosso lab: todos os grupos partem dos mesmos dados e cada um responde a uma pergunta diferente.",
       "pdfs": "pdfs/03-dados-telecom",
-      "aulas": ["e4a01", "e4a02", "e4a03", "e4a04"],
-      "proximas": [
-        {"n": 4, "data": "25/08", "t": "KPIs/KQIs e Checkpoint 1 (2 indicadores fechados + visualizações)"},
-        {"n": 5, "data": "27/08", "t": "Capacidade e otimização; checkpoint técnico final (recomendação/A1 + limitações)"},
-        {"n": 6, "data": "29/08", "t": "Apresentações e defesa"}
-      ],
+      "aulas": ["e4a01", "e4a02", "e4a03", "e4a04", "e4a05", "e4a06"],
       "exercicios": ["p2-kpm-real", "p2-kpm-analytics"],
       "dados": {
         "fonte": "kpm-ue-tp-sample (trilha offline do professor): 100 medições KPM em 3 fases, baseline (20), stress (60) e recovery (20).",
@@ -203,8 +198,8 @@
           {"rot": "Aula 02", "t": "Lakes e O-Cloud", "d": "Lake vs warehouse, lote/streaming e localidade edge/regional (Wong Cap. 4).", "h": "#data/aula02", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 2}},
           {"rot": "Aula 03", "t": "EDA, ETL e BI", "d": "Loops non/near-RT, data pipeline ML e laboratório SUTD (Wong Cap. 5).", "h": "#data/aula03", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 3, "cmd": "p2-kpm-analytics"}},
           {"rot": "Aula 04", "t": "KPIs e QoE", "d": "Medida → KPI → KQI → QoE, E2SM e slice SLA.", "h": "#data/aula04", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 4, "cmd": "p2-kpi-qoe"}},
-          {"rot": "Aula 05", "t": "Capacidade e otimização", "d": "CPM, CCO, energy saving, RL no RIC e CI/CD.", "h": "#data/aula05", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-tema-t6"}},
-          {"rot": "Aula 06", "t": "Consolidação", "d": "Pipeline completo, reprodutibilidade e temas Wong 8–12.", "h": "#data/aula06", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-tema-all"}},
+          {"rot": "Aula 05", "t": "Capacidade e otimização", "d": "Painel BI, SEHAL, matriz sintoma → alavanca e o closed loop A1: decision ≠ policy ≠ action.", "h": "#data/aula05", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 5, "cmd": "p2-tema-t2"}},
+          {"rot": "Aula 06", "t": "Consolidação", "d": "Pipeline completo, dry-run × closed loop, rúbrica e defesa individual.", "h": "#data/aula06", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 6, "cmd": "p2-tema-all"}},
           {"rot": "Lab OAI · UE-TP / KPM→A1", "t": "Projeto prático M09", "d": "Pipeline KPM→SQLite/JSONL→IA→policy A1 (oai-cn-gnb-nonrt-nearrt).", "h": "#data/lab", "nosso": true, "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-ml-uetp"}}
         ]
       }

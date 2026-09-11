@@ -1,0 +1,141 @@
+{
+  "id": "e4a06",
+  "n": 6,
+  "titulo": "Consolidación: el pipeline completo, dry-run × closed loop y la defensa",
+  "slide": "aula06-consolidacao_projetos.pdf",
+  "resumo": "El encuentro final (3 de septiembre, 5 h) cierra la asignatura en tres partes. De 8:00 a 11:30, las presentaciones de los grupos (20 a 25 min) con defensa individual y feedback, evaluadas con la rúbrica de cinco criterios. De 11:45 a 12:25, la demo completa del lab del profesor: política A1, actuación y caída del throughput UL, con el effect_report before/after. De 12:25 a 13:00, la síntesis: el hilo conductor fuente, ingesta, almacenamiento, calidad, transformación, indicador, análisis, visualización y decisión, mapeado en la arquitectura O-RAN, la diferencia entre el dry-run del proyecto y el closed loop de la demo, y los temas que quedan para después (seguridad, despliegue con OSC y ONAP, pruebas y ecosistema).",
+  "objetivos": [
+    "Integrar el pipeline del proyecto de punta a punta y situar cada etapa en la arquitectura O-RAN (O1, E2, lake, KPI, decisión).",
+    "Verificar la entrega contra el checklist del briefing y la rúbrica de cinco criterios antes de presentar.",
+    "Preparar la defensa individual de 1 a 2 minutos: la fórmula de un KPI, una decisión habilitada por los datos o una limitación.",
+    "Distinguir lo que muestra el dry-run del proyecto de lo que prueba el closed loop de la demo con before/after y rollback.",
+    "Leer el guion de la demo (de la verificación previa al rollback) y explicar por qué ENFORCED no es prueba de cambio en la RAN."
+  ],
+  "conceitos": [
+    {
+      "t": "Una asignatura, dos finales de pipeline",
+      "d": "El hilo conductor de la asignatura es fuente, ingesta, almacenamiento, calidad, transformación, indicador, análisis, visualización y decisión. En el proyecto del alumno, en Open RAN, se escribe E2/KPM, JSONL o SQLite, tratamiento, KPI/KQI, análisis, recomendación y A1 dry-run: termina en una intención. En la demo de la clase continúa después de la decisión: política A1, consumer, actuación, KPM after, effect_report y rollback. Es la misma cadena; la demo solo recorre los últimos eslabones, que exigen infraestructura y autorización."
+    },
+    {
+      "t": "Pipeline × arquitectura O-RAN",
+      "d": "La diapositiva 12 vincula cada etapa a una pieza de la arquitectura. Fuentes: O1 con PM (desempeño), FM (fallas) y trace, E2 con KPM, y ejemplos de core, transporte y terminal. Ingesta y store: recolección por lotes o streaming, el JSONL y el SQLite del lab y la zona bronze conceptual del lake. ETL y EDA: calidad, agregación y features, los Checkpoints 1 y 2. Indicadores: KPI y KQI, SLAs y alarmas. Decisión: recomendación en el proyecto y closed loop en la demo, con política A1, actuación y evidencia."
+    },
+    {
+      "t": "Checklist de la entrega (briefing del proyecto)",
+      "d": "La entrega tiene siete ítems, en el orden de docs/BRIEFING_PROJETO.md: 1, README con origen de los datos, cómo reproducir, ética y licencia; 2, scripts o notebooks de ETL y análisis; 3, al menos 2 KPIs o KQIs con fórmula, granularidad y fuente; 4, visualizaciones con insights accionables; 5, recomendación operacional o política A1 en dry-run; 6, sección de limitaciones (RFSIM, sesgo, privacidad); 7, presentación de 20 a 25 minutos y defensa individual. Los ítems 3, 5 y 6 son exactamente la E, la A y la L del SEHAL de la clase 05."
+    },
+    {
+      "t": "La rúbrica y su peso en la nota",
+      "d": "El proyecto vale de 0 a 10 en cinco criterios de 2,0 puntos cada uno: adquisición, preparación y calidad de los datos; ETL, organización y reproducibilidad; definición e interpretación de KPIs y KQIs; análisis, visualizaciones y recomendación operacional; gobernanza, limitaciones, documentación y presentación o defensa. En la nota de la asignatura el proyecto integrador pesa 50%, la plataforma individual de ejercicios (#data) 30% y la participación y los checkpoints 20%, y la asistencia se controla al inicio, en los intervalos y al cierre. Observe que limitaciones y gobernanza ocupan un criterio entero: omitir lo que el lab no mide cuesta tanto como equivocarse en una fórmula."
+    },
+    {
+      "t": "Presentación del grupo y defensa individual",
+      "d": "El grupo tiene de 20 a 25 minutos para problema, pipeline, KPIs, insight y limitaciones. Después, cada persona tiene de 1 a 2 minutos para defender una de tres cosas: la fórmula de un KPI, una decisión que los datos habilitan o una limitación que sostiene. Dos orientaciones de la diapositiva 16 valen para los dos momentos: enfatizar la decisión que los datos sustentan, no solo los gráficos, y comparar con la demo del lab, diciendo qué hizo el grupo en dry-run y qué prueba el closed loop con before/after."
+    },
+    {
+      "t": "Proyecto en dry-run × demo en closed loop",
+      "d": "La tabla de la diapositiva 20 los compara línea por línea. Analytics: el alumno entrega KPI/KQI e insight; la demo usa MAD y decision.json. Política A1: en el proyecto es candidata, en dry-run; en la demo el commit es opcional, con AI_POLICY_COMMIT=1. Actuación: en el proyecto es una recomendación escrita; en la demo es el closed_loop_actuator, en modo emulado o real. Evidencia: gráficos y umbrales en el proyecto; effect_report.json con before/after en la demo. Nota: el proyecto no exige commit, y la demo es del docente, no un criterio extra. O sea, nadie pierde puntos por no cerrar el loop; pierde quien afirma un efecto que el dry-run no midió."
+    },
+    {
+      "t": "Quién hace qué en el loop, y el límite del ENFORCED",
+      "d": "En la demo cada componente tiene un papel. El rApp, en ai_policy_pipeline.py, entrena el MAD, evalúa y genera decision y policy. El PMS (Policy Management Service) se ocupa del ciclo de vida de la policy hasta ENFORCED. El A1 Mediator recibe HTTP y publica en el RMR (RIC Message Router) con los tipos 20010 y 20011. El xApp consumer valida la policy y genera el action_request. El closed_loop_actuator.py ejecuta la intención por emulación con tc o por E2SM-RC. E2 y KPM dan la telemetría antes y después. El aviso de la diapositiva 21 es la frase para memorizar: ENFORCED prueba aceptación en el camino A1, no prueba mutación nativa del gNB."
+    },
+    {
+      "t": "Decision ≠ policy ≠ action request ≠ actuation",
+      "d": "Las cuatro palabras parecen sinónimas y no lo son. Decision es 'tenemos que actuar', con los valores apply u observe. Policy es la intención formal: rate_limit, alcance de un UE, 8 Mbit/s en el uplink. Action request es la traducción concreta para el actuator, hecha por el consumer. Actuation es la ejecución, en la red o en una emulación controlada. Separar las cuatro es lo que permite decir, en una auditoría, dónde se detuvo la cadena: una decisión sin policy, una policy aceptada y no ejecutada, una ejecución sin efecto medido."
+    },
+    {
+      "t": "El guion de la demo en ocho pasos",
+      "d": "La demo, de unos 40 minutos, sigue docs/ROTEIRO_DEMO_E2_ANALISE_A1.md y docs/FASE3_CLOSED_LOOP.md. 1, verificación previa: Near-RT levantado, PMS respondiendo en /a1-policy/v2/status, xApp en ejecución. 2, baseline tranquilo: entrenamiento del MAD con KPM_TRAFFIC=0. 3, stress: iperf UDP en el uplink y captura del kpm_before. 4, decisión: el MAD genera el decision.json y la política candidata. 5, A1: PMS y Mediator, con el consumer validando. 6, actuación: ACTUATION_MODE=emulate (recomendado) o real. 7, after y report: nuevo KPM y effect_report.json. 8, rollback: quitar el rate-limit y verificar la recuperación. El paso 2 va antes del 3 por un motivo: el baseline tiene que describir lo normal; si no, la anomalía se vuelve referencia."
+    },
+    {
+      "t": "Leer el before/after sin engañarse",
+      "d": "El caso es carga UL alta, anomalía detectada e intención rate_limit en el uplink; el efecto esperado es una caída medible de DRB.UEThpUl, con el PRB acompañando. Antes, con n = 12: throughput medio de 135,8 Mbit/s (mediana 84,1), PRB medio de 91,5% (mediana 99%) y retardo RLC medio de 156 (mediana 149). Después: throughput medio de 39,0 Mbit/s (mediana 8,08), PRB de 18,1% (mediana 19%) e iperf3 a 7,81 Mbit/s frente al objetivo de 8. Los deltas: throughput −71,26% relativo, PRB −80,24% relativo o −73,4 pp absolutos. Tres cuidados en la lectura. La media está arrastrada por la primera muestra de cada serie y la mediana muestra el régimen. Los puntos porcentuales no son porcentaje relativo. Y la unidad del retardo: la diapositiva 24 escribe ms, pero el log de Indication de la diapositiva 66 de la clase 01 imprime ese contador en 'us' (microsegundos); como el archivo no trae unidad, declare la unidad y de dónde salió."
+    },
+    {
+      "t": "Temas finales: seguridad, despliegue, pruebas y ecosistema",
+      "d": "La diapositiva 13 abre lo que viene después de la asignatura. Seguridad: zero trust y amenazas en interfaces abiertas, lo que implica gobernanza de datos y control de acceso a la telemetría. Software y despliegue: OSC (O-RAN Software Community) y ONAP (Open Network Automation Platform), con planificación y arquitectura de red, que dependen de datos de inventario y de configuración; es en ese terreno donde vive el SMO (Service Management and Orchestration). Pruebas e integración: el ciclo de pruebas de la O-RAN Alliance, para validar KPIs antes de pasar a producción. Ecosistema: TIP (Telecom Infra Project), SCF (Small Cell Forum), 3GPP y la Open RAN Policy Coalition."
+    },
+    {
+      "t": "Lo que deja la asignatura",
+      "d": "El cierre resume la asignatura en una frase: un pipeline analítico en Open RAN que va de datos a indicador, de indicador a decisión y de decisión a evidencia, ya sea por dry-run o por closed loop, siempre con las limitaciones escritas. La nota se compone de proyecto integrador y defensa (50%), plataforma #data (30%) y checkpoints (20%), y el feedback del docente llega después de las presentaciones y de la demo. El plan y los briefings quedan en docs/ y la bibliografía en bibliography/referencias.md: Tripathi y Shah (Fundamentals of O-RAN), Wong y otros (Open RAN: The Definitive Guide), Yang y otros (6G Mobile Wireless Networks) y Yanover (Open RAN: Technology and Ecosystem)."
+    }
+  ],
+  "formulas": [
+    {
+      "nome": "Nota de la asignatura",
+      "expr": "N = 0,5 * projeto + 0,3 * plataforma + 0,2 * engajamento",
+      "vars": "cada componente en la misma escala (0 a 10); asistencia controlada aparte",
+      "unidade": "0 a 10",
+      "quando": "Acuerdos didácticos; muestra por qué el proyecto y la defensa deciden la mitad de la nota"
+    },
+    {
+      "nome": "Nota del proyecto según la rúbrica",
+      "expr": "projeto = dados + ETL + KPIs + análise + governança,  cada critério de 0 a 2,0",
+      "vars": "dados = adquisición, preparación y calidad; ETL = organización y reproducibilidad; governança incluye limitaciones, documentación y defensa",
+      "unidade": "0 a 10",
+      "quando": "Verificar la entrega antes de presentar"
+    },
+    {
+      "nome": "Variación relativa (relative_delta)",
+      "expr": "relative_delta = 100 * (mean_after - mean_before) / mean_before",
+      "vars": "throughput: 135,8 → 39,0 Mbit/s da -71,26%; PRB: 91,5 → 18,1% da -80,24%",
+      "unidade": "%",
+      "quando": "Efecto de una actuación en el effect_report"
+    },
+    {
+      "nome": "Variación absoluta en puntos porcentuales",
+      "expr": "delta_pp = mean_after - mean_before",
+      "vars": "PRB: 18,1 - 91,5 ≈ -73,4 pp",
+      "unidade": "pp",
+      "quando": "KPIs que ya son porcentaje; escribir siempre pp o % para no confundir"
+    },
+    {
+      "nome": "Adherencia de la actuación al objetivo",
+      "expr": "aderencia = 100 * vazao_medida / alvo_da_policy",
+      "vars": "iperf3 7,81 Mbit/s frente a un rate_limit de 8 Mbit/s: ≈ 97,6%",
+      "unidade": "%",
+      "quando": "Paso 7 del guion: verificar la acción con una medida independiente del KPM"
+    },
+    {
+      "nome": "Recuperación tras el rollback",
+      "expr": "recuperacao = 100 * (x_pos_rollback - x_after) / (x_before - x_after)",
+      "vars": "x la mediana del KPI en cada ventana; 100% = volvió al nivel de antes de la actuación",
+      "unidade": "%",
+      "quando": "Paso 8 del guion ('verificar la recuperación'); la diapositiva no trae ese número, es una forma de medirlo"
+    },
+    {
+      "nome": "Score robusto del detector",
+      "expr": "score = |x - mediana_baseline| / max(MAD, mad_floor);  anômala se score > 3,5 em >= 2 KPMs",
+      "vars": "mediana y MAD del baseline tranquilo (KPM_TRAFFIC=0); ventana de 5 para decidir apply",
+      "unidade": "adimensional",
+      "quando": "Paso 4 del guion; es el mismo detector del p2-tema-t2"
+    }
+  ],
+  "onde": {
+    "scene": "tema",
+    "texto": "En el panel, el p2-tema-all ejecuta los siete temas lado a lado sobre la misma muestra KPM: es el pipeline del proyecto hasta la política candidata en dry-run, la columna 'Entrega do aluno' (entrega del alumno) de la diapositiva 20. La columna 'Demo' (demostración) existe solo en parte: el p2-kpm-real recolecta KPM de verdad del gNB OAI a través de FlexRIC, el p2-kpm-analytics hace el ETL y el KPI, y el p2-test-a1 lleva una política por el PMS hasta un simulador A1. No hay consumer, actuator ni effect_report automático; el before/after de esta clase es del lab del profesor."
+  },
+  "exercicios": [
+    "p2-tema-all",
+    "p2-kpm-real",
+    "p2-kpm-analytics",
+    "p2-test-a1",
+    "p2-kpi-qoe"
+  ],
+  "quiz": [
+    {
+      "q": "Tiene de 1 a 2 minutos de defensa individual. ¿Qué pide la diapositiva y cómo armar esa intervención?",
+      "a": "Una de tres cosas: la fórmula de un KPI, una decisión habilitada por los datos o una limitación que usted defiende. Elija una y desarróllela entera. Para el KPI: la fórmula, la unidad, la granularidad y la fuente (por ejemplo, media y p95 de DRB.UEThpUl por fase, en kbps, proveniente del E2SM-KPM), y qué permite decidir el número. Para la limitación: qué no mide el RFSIM y qué conclusión impide eso. La diapositiva pide énfasis en la decisión, no en el gráfico."
+    },
+    {
+      "q": "El grupo entregó la política A1 en dry-run y la demo mostró un effect_report. ¿El grupo pierde nota por no haber hecho commit?",
+      "a": "No. La tabla de la diapositiva 20 dice que la entrega del alumno no exige commit y que la demo es del docente, no un criterio extra. La diferencia es de evidencia: el dry-run muestra una intención justificada por KPI y umbral, y el closed loop prueba el efecto con before/after y rollback. Lo que cuesta nota es afirmar en el proyecto un efecto que el dry-run no midió; el criterio de gobernanza y limitaciones exige justamente esa honestidad."
+    },
+    {
+      "q": "En el guion de la demo, ¿por qué se entrena el MAD con KPM_TRAFFIC=0 antes de generar la carga con iperf?",
+      "a": "Porque el baseline tiene que describir el comportamiento normal. La mediana y el MAD calculados en reposo definen qué está 'fuera de lo normal'. Si el entrenamiento incluyera la fase de stress, la mediana subiría y el MAD se ensancharía, el score de las muestras de carga no pasaría de 3,5 y la decisión apply no saldría: la anomalía se volvería referencia. Por el mismo motivo los temas del panel calculan el MAD solo en el baseline."
+    }
+  ],
+  "fontes": "pp. 3-9 (cierre, bloque 1, fecha y duración, calendario, acuerdos didácticos, cronograma, objetivos), 10-12 (hilo conductor del proyecto y de la demo, pipeline × arquitectura O-RAN), 13 (seguridad, despliegue, pruebas y ecosistema), 14-16 (checklist del briefing, rúbrica, presentación y defensa individual), 18-23 (demo: qué se demuestra, proyecto × demo, papeles en el loop, decision ≠ policy ≠ action ≠ actuation, guion de 8 pasos), 24-28 (before/after, gráficos y effect_report), 29-31 (cierre académico, ejercicios, asignatura concluida), 32 (referencias); diapositiva 66 de la clase 01 (unidad del retardo en el log de Indication)"
+}

@@ -10,7 +10,7 @@ Open RAN da CESAR School, no mesmo lugar onde o aluno já trabalha:
 | 1 | Interfaces e Protocolos O-RAN | Prof. Jonas A. Kunzler | P1 | 1 (só a aula 01 foi compartilhada) | status, NG Setup, registro, coerência, E2E, throughput, failover |
 | 2 | RAN Intelligent Controller (RIC) | Prof. Jonas A. Kunzler | P2 | 6 | E2 SM, E2SM-KPM (com/sem tráfego), E2SM-RC, coleta KPM real, ciclo A1 |
 | 3 | Aplicações de IA e ML em RIC | Prof. Julio C. C. Tesolin | P2 | 9 (as páginas do Lab de IA) | UE-TP, Localização, Manutenção preditiva |
-| 4 | Análise de Dados em Redes de Telecom | Prof. Jonas A. Kunzler | P2 / arquivo | 3 (+3 a caminho) | análise KPM (ETL/KPI) e **os 7 temas do projeto integrador** |
+| 4 | Análise de Dados em Redes de Telecom | Prof. Jonas A. Kunzler | P2 / arquivo | 6 | análise KPM (ETL/KPI) e **os 7 temas do projeto integrador** |
 
 ## Onde aparece
 

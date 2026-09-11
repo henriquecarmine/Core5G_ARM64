@@ -1,0 +1,156 @@
+{
+  "h": "#data/aula05",
+  "rot": "Aula 05",
+  "t": "Capacidade e otimização",
+  "pts": 22,
+  "fonte": "Aula 05 da cadeira 4 — Decisões orientadas por dados: painel BI, SEHAL e closed loop A1",
+  "blocos": [
+    {
+      "nome": "Conceitos",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O que significa cada letra do SEHAL, o molde da recomendação do checkpoint técnico?",
+          "alt": [
+            "Sinal, Espectro, Handover, Atraso, Latência",
+            "Situação, Evidência, Hipótese, Ação, Limitação",
+            "Série, Escala, Histograma, Agregação, Legenda",
+            "Situação, Estratégia, Hierarquia, Alarme, Log"
+          ],
+          "ok": 1,
+          "pts": 1,
+          "porque": "É a ordem de uma recomendação que se defende: o que mudou (Situação), com que números (Evidência: 2 KPIs e 1 gráfico com unidade e janela), qual narrativa principal explica (Hipótese), o que fazer citando KPI e limiar (Ação) e o que o dado não permite afirmar (Limitação). Sem o L, a recomendação promete mais do que o RFSIM e o dry-run sustentam."
+        },
+        {
+          "q": "O que é uma política A1?",
+          "alt": [
+            "Um comando que o Non-RT RIC manda direto ao gNB",
+            "A execução da mudança na rede",
+            "A intenção formal, com escopo e objetivo, que o Non-RT RIC entrega ao Near-RT RIC, onde um consumer a traduz em ação",
+            "O registro de uma anomalia encontrada pelo detector MAD"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "A1 transporta intenção, não comando. A aula insiste nisso duas vezes (slides 27 e 47): a policy diz o que deve ser cumprido, e quem a transforma em ação concreta é o consumer ou xApp no Near-RT. A anomalia é a decision, e a execução é a actuation, camadas diferentes."
+        },
+        {
+          "q": "Qual é a diferença entre open loop e closed loop?",
+          "alt": [
+            "No closed loop a análise vira decisão e ação, e a nova KPM volta para verificar o efeito; no open loop a cadeia termina numa recomendação para o operador",
+            "Open loop usa A1 e closed loop usa E2",
+            "Closed loop é o que tem modelo de machine learning",
+            "Open loop roda em tempo real e closed loop roda offline"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O que fecha o laço é a volta da medida: KPM, análise, decisão, ação e, de novo, KPM. Sem essa volta não há como saber se a ação funcionou. Não depende de ML (o detector do lab é mediana e MAD) nem de uma interface específica."
+        }
+      ]
+    },
+    {
+      "nome": "Cenários",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "O painel mostra PRB estável, vazão caindo e o indicador espectral S_t subindo. Qual a leitura e a alavanca?",
+          "alt": [
+            "Congestionamento: aumentar a capacidade da célula",
+            "Interferência (jammer): investigação de RF, e não 'mais PRB'",
+            "Overprovisioning: ativar energy saving",
+            "Saturação com má eficiência: priorização e load balance"
+          ],
+          "ok": 1,
+          "pts": 2,
+          "porque": "É a terceira linha da matriz do slide 26. Se fosse capacidade, o PRB subiria junto com a carga. Vazão caindo com PRB parado e S_t subindo aponta para o canal, não para a falta de recurso. O erro de decisão que a aula nomeia é tratar jammer como falta de capacidade e investir em espectro ou em célula nova sem atacar a RF. O KPI de sucesso é S_t caindo e a vazão recuperando."
+        },
+        {
+          "q": "O status da política chegou a ENFORCED. O que isso prova?",
+          "alt": [
+            "Que o gNB mudou o escalonamento do UE",
+            "Que a vazão do UE caiu",
+            "Que a política foi aceita no caminho A1 (PMS, Mediator e consumer); efeito na rede só se prova com a nova KPM e o effect_report",
+            "Que o rollback deixou de ser necessário"
+          ],
+          "ok": 2,
+          "pts": 2,
+          "porque": "ENFORCED fecha a parte de entrega: o consumer recebeu pelo RMR 20010, validou e respondeu pelo 20011. Isso não diz nada sobre o rádio. No run da aula, inclusive, e2sm_rc_sent é false: quem limitou a vazão foi um rate-limit emulado. A prova do efeito é o before/after, e o rollback continua sendo parte do contrato."
+        },
+        {
+          "q": "O PRB UL médio foi de 91,5% para 18,1%. Qual frase está correta?",
+          "alt": [
+            "Caiu 80,2%, ou seja, 80,2 pontos percentuais",
+            "Caiu 73,4%",
+            "Caiu 18,1 pontos percentuais",
+            "Caiu 73,4 pontos percentuais, uma queda relativa de cerca de 80%"
+          ],
+          "ok": 3,
+          "pts": 2,
+          "porque": "Quando o KPI já é porcentagem, há duas contas. A absoluta: 18,1 − 91,5 = −73,4 pp. A relativa: (18,1 − 91,5) / 91,5 ≈ −80,2%, que é o −80,24% do effect_report. Misturar os dois, como em 'caiu 73%' ou '80 pontos', é exatamente o erro que o slide 71 manda não cometer."
+        }
+      ]
+    },
+    {
+      "nome": "Profundidade",
+      "tipo": "escolha",
+      "qs": [
+        {
+          "q": "Por que o laboratório usa mediana e MAD como detector de anomalia?",
+          "alt": [
+            "Porque é o estado da arte de machine learning para RAN",
+            "Porque dispensa um período de baseline",
+            "Porque é robusto a outliers, barato e auditável, e o foco da aula é a cadeia até a evidência e o rollback, não o modelo",
+            "Porque o E2SM-KPM já entrega o score calculado"
+          ],
+          "ok": 2,
+          "pts": 1,
+          "porque": "O slide 54 diz com todas as letras que não é estado da arte. Mediana e MAD não se deixam puxar por um pico, custam quase nada e qualquer pessoa confere o cálculo. E dependem sim de baseline: o score mede a distância à mediana do período calmo."
+        },
+        {
+          "q": "No RMR, o que carregam as mensagens de tipo 20010 e 20011?",
+          "alt": [
+            "20010 leva a requisição de política do A1 Mediator ao consumer; 20011 traz a resposta do consumer ao Mediator",
+            "São as portas HTTP do PMS",
+            "20010 é a KPM de antes e 20011 a de depois",
+            "São os identificadores do policy type do rate_limit"
+          ],
+          "ok": 0,
+          "pts": 1,
+          "porque": "O RMR (RIC Message Router) é o transporte interno do RIC, e esses números são tipos de mensagem, não portas. O Mediator recebe a política por HTTP e a publica como 20010; o consumer responde com 20011, e é essa resposta que leva ao enforceStatus. O policy type da demo é outro número, 22008."
+        },
+        {
+          "q": "O summary.json do run registra e2sm_rc_sent: false. O que isso significa?",
+          "alt": [
+            "Que o experimento falhou",
+            "Que a KPM não chegou ao RIC",
+            "Que o PMS rejeitou a política",
+            "Que a atuação não passou pelo E2SM-RC: foi um rate-limit emulado na interface do UE"
+          ],
+          "ok": 3,
+          "pts": 1,
+          "porque": "O mesmo arquivo diz action verified e rollback verified, então o experimento funcionou. O action_request pede mode emulate na interface oaitun_ue1, e a tabela de interfaces lembra que o E2SM-RC ainda está incompleto no OAI do lab. É uma limitação honesta: o loop fechou, mas a mão que atuou foi o Linux, não o gNB."
+        }
+      ]
+    },
+    {
+      "nome": "Sequência",
+      "tipo": "ordem",
+      "qs": [
+        {
+          "q": "Ponha em ordem o closed loop A1-driven demonstrado na aula.",
+          "itens": [
+            "A KPM do E2 é capturada e persistida no store (SQLite ou JSONL)",
+            "O MAD compara com o baseline e gera o decision.json",
+            "A decisão vira policy A1 e é gerenciada pelo PMS",
+            "O A1 Mediator entrega a política ao consumer pelo RMR (20010)",
+            "O consumer valida e emite o action_request",
+            "O actuator aplica o rate_limit no uplink",
+            "Nova KPM e effect_report com o before/after",
+            "Rollback: o limite sai e a recuperação é verificada"
+          ],
+          "pts": 10,
+          "porque": "É a mensagem de fechamento do slide 78. Cada elo tem um dono diferente: store e MAD são analytics, a policy e o PMS são Non-RT, Mediator e consumer são Near-RT, o actuator executa. O effect_report só existe porque o store guardou o antes; o rollback só é confiável porque a nova KPM mostra a recuperação. Tirar qualquer elo transforma o closed loop em recomendação."
+        }
+      ]
+    }
+  ]
+}

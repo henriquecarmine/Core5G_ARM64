@@ -1,0 +1,184 @@
+{
+  "id": "e4a05",
+  "n": 5,
+  "titulo": "Decisiones basadas en datos: panel de BI, SEHAL y closed loop A1",
+  "slide": "aula05-closed-loop-a1-open-ran.pdf",
+  "resumo": "La clase lleva el indicador hasta la decisión en tres bloques. En el primero, el panel de BI: quién lee qué, la jerarquía de una página (headline, tarjetas, serie, insight, limitaciones), la matriz que une síntoma, hipótesis y palanca de optimización, y la diferencia entre recomendación, automatización y actuación. En el segundo, el taller SEHAL (Situação, Evidência, Hipótese, Ação, Limitação: situación, evidencia, hipótesis, acción, limitación), el molde de una página del checkpoint técnico, con la política A1 en dry-run. En el tercero, el closed loop del lab del profesor: KPM, detector MAD, decision, policy A1 por el PMS y por el A1 Mediator, consumer near-RT, action_request, actuator, nueva KPM, effect_report y rollback, con el experimento before/after y lo que prueba y no prueba.",
+  "objetivos": [
+    "Armar un panel de decisión con headline, 3 a 5 tarjetas de KPI con umbral escrito, una serie temporal y el enlace a la acción, ajustado a quien lo va a leer (analista, NOC o gestión).",
+    "Usar la matriz síntoma, hipótesis, palanca y KPI de éxito para separar capacidad, interferencia y overprovisioning antes de recomendar.",
+    "Escribir la recomendación del grupo en el molde SEHAL y registrar la política A1 candidata en dry-run (policy_id, alcance, intención) sin afirmar que la red cambió.",
+    "Explicar el closed loop A1-driven y el papel de cada componente (rApp, PMS, A1 Mediator, RMR, consumer, actuator), manteniendo separados decision, policy, action request y actuation.",
+    "Leer un effect_report: variación relativa × puntos porcentuales, media × mediana con pocas muestras, y por qué ENFORCED no prueba una mutación en el gNB."
+  ],
+  "conceitos": [
+    {
+      "t": "Jerarquía de análisis del proyecto integrador",
+      "d": "El proyecto sube un escalón solo cuando el anterior no basta. Primero viene el umbral o la regla (si el PRB pasa de X o el retardo pasa de Y, alerta). Después la estadística: media móvil, baseline, estacionalidad simple. Solo entonces un modelo básico, como una regresión o un detector simple, y únicamente si hay justificación. El aprendizaje por refuerzo y el ML sofisticado no se exigen: el capítulo 5 de Wong es contexto, no obligación. La síntesis de la clase dice lo mismo de otra forma: prefiera una regla clara y auditable a un modelo opaco que no aporta ganancia."
+    },
+    {
+      "t": "Del contador al tomador de decisiones",
+      "d": "El mismo KPI sirve a tres públicos con preguntas distintas. El analista o ingeniero quiere fórmula, granularidad, linaje, outliers y el notebook. La operación, el NOC (Network Operations Center), quiere estado, tendencia, alarma y 'qué hacer ahora'. La gestión, que mira el CapEx (inversión), quiere riesgo de QoE, cuello de botella regional y el costo de no actuar comparado con el de invertir. De ahí las vistas del mismo datastore: ejecutiva ('¿tengo que actuar?'), operacional ('¿dónde y desde cuándo?'), analítica ('¿por qué?') y de RF ('¿es carga o jammer?'). Sin esas capas el panel se vuelve una muralla de gráficos; en el proyecto basta una página que combine la vista ejecutiva con un drill-down analítico."
+    },
+    {
+      "t": "Jerarquía de un panel y la tarjeta de KPI",
+      "d": "Una página de BI tiene cinco capas, en este orden: headline (lo que está pasando, por ejemplo 'Celda bajo presión UL, riesgo de QoE'), 3 a 5 tarjetas de KPI (valor actual, comparación con el baseline y semáforo OK, atención o crítico), una única serie temporal (el indicador que justifica la decisión, no doce gráficos), insight con acción ('porque X, recomendar Y') y limitaciones. La tarjeta tiene que leerse en 5 segundos: nombre legible ('Utilización PRB UL', no RRU.PrbTotUl crudo en el título), valor con unidad y ventana (78%, ventana de 5 min), comparativo (+32 pp vs fase idle), umbral escrito (atención por encima de 70%, crítico por encima de 85%) y el enlace a la acción. El color sin regla escrita y el gráfico huérfano son los errores a evitar."
+    },
+    {
+      "t": "Storytelling antes del gráfico",
+      "d": "La historia del panel tiene cuatro pasos. Situación: 'en la fase de carga, el PRB UL sube de 20% a 80%'. Evidencia: la tarjeta y la serie, y el S_t espectral si lo hay. Hipótesis: capacidad saturada o interferencia de jammer, sin mezclar las dos. Decisión: la recomendación o la política A1 candidata, con la confianza y la limitación. La prueba es simple: si el decisor no logra repetir la historia en 30 segundos, el BI falló."
+    },
+    {
+      "t": "Capacidad × interferencia: no confundir la palanca",
+      "d": "Dos casos producen throughput malo con patrones distintos. En el caso de capacidad (el UE-TP del proyecto), PRB y tráfico suben juntos y el retardo crece; la optimización típica es alivio de carga o política A1. En el caso de jammer, visto en las clases 03 y 04 con IQ, aparece una mancha espectral y el S_t sube, el throughput cae y el PRB queda estable o sin saturación clásica. El error de decisión es tratar el jammer como falta de capacidad e invertir en espectro o en una celda nueva sin atacar la RF. Regla para el BI: si hay KPI espectral, muéstrelo junto al throughput y al PRB; si no lo hay, declare que la hipótesis de interferencia se descartó por falta de datos."
+    },
+    {
+      "t": "Optimización a partir de KPIs y la matriz síntoma, hipótesis, palanca",
+      "d": "La lógica tiene cinco pasos: observar (KPI fuera del umbral, con serie o fase como evidencia), diagnosticar (capacidad, cobertura, interferencia o transporte y core), elegir la palanca, simular la política en A1 dry-run antes de cualquier commit, y medir el efecto con un KPI de éxito y un KPI de riesgo, para no optimizar uno y destruir otro. La matriz de la diapositiva 26 lo resume: PRB alto, throughput subiendo y retardo subiendo indica congestión (alivio UL, steering, CCO; éxito = el retardo cae sin que el throughput colapse); PRB alto con throughput cayendo indica saturación con mala eficiencia (priorización, load balance; éxito = el throughput de borde sube y las caídas bajan); PRB estable, throughput cayendo y S_t subiendo indica jammer (investigación de RF; éxito = el S_t cae y el throughput se recupera); carga baja con energía alta indica overprovisioning (energy saving; éxito = los kWh bajan con el SLA mantenido). CCO es Cell Coverage Optimization, la optimización de la cobertura de la celda."
+    },
+    {
+      "t": "Recomendación × automatización × actuación",
+      "d": "La recomendación es el insight entregado al operador, y un humano decide: es lo que debe producir el BI del proyecto. La automatización es cuando una regla o un modelo dispara un flujo asistido. La actuación es el cambio efectivo en la red (commit vía O1, E2 o A1) y queda fuera del estándar del proyecto. En el lab, la política A1 es candidata y corre en dry-run; commit solo con AI_POLICY_COMMIT=1 y autorización. Y A1 no es un comando directo al gNB: es una política que el Non-RT RIC entrega al Near-RT RIC. El panel también necesita rotular la fuente (KPM del lab, IQ del jammer, dato externo), porque los datos de RFSIM, operacionales y sintéticos tienen límites distintos y no pueden mezclarse en una misma decisión."
+    },
+    {
+      "t": "SEHAL: el molde de una página del checkpoint técnico",
+      "d": "SEHAL es la plantilla del taller, una página o una diapositiva por tema. S, Situação (situación): qué cambió (fase de stress, PRB de X a Y, retardo por encima de L). E, Evidência (evidencia): 2 KPIs y 1 gráfico o tarjeta, con unidad y ventana. H, Hipótese (hipótesis): capacidad, QoS o anomalía, una narrativa principal. A, Ação (acción): recomendación operacional o política A1 en dry-run, citando el KPI y el umbral. L, Limitação (limitación): RFSIM, tamaño de la muestra, proxy de QoE, y el hecho de que dry-run no es efecto en la red. El producto del taller une el SEHAL a un panel mínimo (headline, 2 tarjetas y 1 serie) y a una recomendación de 3 a 5 líneas con indicador, umbral y confianza. La pregunta de verificación: ¿la recomendación cita KPI, umbral, hipótesis y limitación?"
+    },
+    {
+      "t": "A1 dry-run: qué registrar y qué no afirmar",
+      "d": "En la demo del decision.json (artefacto del kpm-ue-tp-sample), la cadena queda así: headline 'Anomalía sostenida UL, recomendar alivio de carga'; tarjetas PRB 99%, retardo 155 y throughput UL con score MAD por encima del umbral; decisión evaluation.decision = apply, con 5 votos en la ventana; acción en dry-run como política A1 con qosObjectives.priorityLevel, sin commit en la RAN. Al registrar la política, anote policy_id, alcance (ueId o qosId) e intención (priorityLevel, steering). No afirme que 'la red cambió': el estándar del proyecto es la simulación. Commit real solo en la demo docente, con AI_POLICY_COMMIT=1 y la Fase 2 saludable. La pregunta de cierre: ¿automatizar esa acción sería seguro, y el panel mostraría el riesgo?"
+    },
+    {
+      "t": "Observabilidad × control, open loop × closed loop",
+      "d": "La observabilidad responde '¿qué está pasando?' con KPM, KPI, panel y alerta; el éxito es un diagnóstico claro y el riesgo es el insight sin acción. El control responde '¿qué debemos cambiar?' con policy, action y actuator; el éxito es un efecto medible y reversible y el riesgo es la acción sin evidencia o sin rollback. La analytics recorre descriptiva (qué pasó), diagnóstica (por qué), predictiva (qué puede ocurrir, opcional en el lab) y prescriptiva (qué hacer, que se convierte en recomendación, policy y actuación). En el open loop la cadena termina en KPM, análisis, recomendación y operador. En el closed loop sigue en decisión y acción, y la nueva KPM vuelve a la entrada; es esa vuelta la que permite verificar el efecto."
+    },
+    {
+      "t": "Quién hace qué: Non-RT, Near-RT, RAN, SMO y las interfaces A1 y E2",
+      "d": "El Non-RT RIC se ocupa del histórico, la analytics, el modelo y la formalización de la policy, en escala de minutos o más. El Near-RT RIC interpreta la policy, coordina y hace el control rápido, de sub-segundo a segundos. La RAN, el E2 Node (gNB), genera la telemetría KPM y eventualmente cambia de estado. El SMO (Service Management and Orchestration) y el OAM hacen gestión, inventario y ciclo de vida, y el lab simplifica esa parte. A1 transporta policy e intención entre Non-RT y Near-RT: es un contrato (alcance, objetivos), y quien lo traduce en acción concreta es el consumer o xApp en el Near-RT. E2 conecta el Near-RT con la RAN para telemetría y control: E2SM-KPM son las mediciones de desempeño y E2SM-RC es el control de la RAN, todavía incompleto en el OAI de este lab. Regla de la clase: quien decide no es quien entrega la policy, que a su vez no es quien actúa en la RAN."
+    },
+    {
+      "t": "rApp, PMS, A1 Mediator, consumer y actuator",
+      "d": "El rApp (producer) decide y expresa la intención: analytics, decision y policy candidata; en el lab es el ai_policy_pipeline.py, que lee el store del kpm_store.py (SQLite o JSONL) y produce el model.json con el baseline MAD. El PMS (Policy Management Service) gestiona las policies: ciclo de vida, catálogo de RICs y de policy types, estado; sin PMS el rApp hablaría directo con el Mediator y mezclaría a quien decide con quien opera el Near-RT. El A1 Mediator implementa el A1-P en el Near-RT, recibiendo HTTP y publicando en el RMR. El consumer near-RT (A1RmrAdapter y PolicyConsumer) valida el payload y el policy type, garantiza idempotencia frente a duplicados, correlaciona run_id, decision_id y policy_id y traduce la policy en action_request. El actuator ejecuta la intención. Sin el store no hay before/after auditable."
+    },
+    {
+      "t": "Por qué MAD, y el contrato del detector",
+      "d": "El detector usa mediana y MAD (Median Absolute Deviation): un score robusto a outliers y de bajo costo. El contrato del lab es score_threshold = 3.5, min_anomalous_features = 2 y window = 5, sobre las tres KPMs (DRB.UEThpUl, DRB.RlcSduDelayDl, RRU.PrbTotUl), que combinan el nivel del UE (throughput y retardo) y el de la celda (PRB). La diapositiva es explícita: no es el estado del arte en ML, es un detector simple, auditable y adecuado para discutir la integración entre analytics y automatización. El objetivo arquitectónico de la clase no es el modelo, es la cadena hasta la evidencia y el rollback."
+    },
+    {
+      "t": "Decision ≠ policy ≠ action request ≠ actuation",
+      "d": "Cada capa tiene dueño, contrato y evidencia propios. Decision es 'tenemos que actuar' (apply u observe). Policy es 'esta es la intención a cumplir': en el run 20260827T1207Z, policytype_id 22008, rate_limit en el uplink a 8 Mbit/s. Action request es 'esta es la acción concreta del consumer': un JSON con action rate_limit, mode emulate, parameters.rate_kbit 8000, target con la interfaz oaitun_ue1 y la dirección uplink, más policy_id y decision_id para correlación. Actuation es 'esta es la ejecución': el closed_loop_actuator.py aplica la intención por emulación (tc en Linux) o por E2SM-RC. Los tres identificadores del run (decision_id 9c1562d5…, policy_id cl-ue-tp-fcfb135a…, action_id e418623a…) son lo que hace auditable la cadena."
+    },
+    {
+      "t": "Madurez del lab, RMR y el límite del ENFORCED",
+      "d": "El lab evolucionó en seis escalones, y cada uno añade contrato y evidencia, no solo scripts: 1, policy candidata (artefacto en dry-run); 2, consumer local sin Mediator; 3, RMR simulado; 4, A1 Mediator real (HTTP a RMR); 5, PMS real (ciclo de vida y catálogo); 6, actuación observable con KPM before/after y rollback. El RMR (RIC Message Router) transporta mensajes entre componentes del RIC: el tipo 20010 es la solicitud de policy del Mediator al consumer y el 20011 es la respuesta del consumer al Mediator. La evidencia de runtime en los runs validados: HTTP policy CREATE ok, RMR 20010 recibido, policy validada, action requested, RMR 20011 enviado y enforceStatus ENFORCED. ENFORCED prueba la aceptación en el camino A1; no prueba una mutación nativa del gNB."
+    },
+    {
+      "t": "El experimento before/after y cómo leer el effect_report",
+      "d": "Con n = 12 muestras KPM de cada lado: antes, bajo carga, throughput UL medio de 135,8 Mbit/s (mediana 84,1), PRB UL medio de 91,5% (mediana 99%) y retardo RLC medio de 156 (mediana 149); después del rate-limit, throughput medio de 39,0 Mbit/s (mediana 8,08), PRB medio de 18,1% (mediana 19%) e iperf3 en el emisor a 7,81 Mbit/s frente al objetivo de 8. El summary.json registra effect_observed true, action verified, rollback verified y e2sm_rc_sent false, es decir, la actuación fue emulada. El relative_delta es de −71,26% en el throughput y −80,24% en el PRB, y la variación absoluta del PRB es de −73,42 puntos porcentuales: pp y % relativo no son lo mismo. En las dos series la primera muestra es un transitorio (705 y cerca de 380 Mbit/s en el gráfico) que tira de la media, por eso la mediana cuenta mejor el régimen. El throughput sale del artefacto en kbps (135,8 Mbit/s = 135 800 kbps). En cambio, la unidad del retardo pide cuidado: la diapositiva 67 escribe ms, pero el log de Indication de la diapositiva 66 de la clase 01 imprime ese contador en 'us' (microsegundos), que es como el panel lo trata desde la clase 04. El JSONL no trae unidad, así que declare la unidad y su fuente antes de poner un umbral de retardo. Y la discusión de la diapositiva 73 sigue en pie: una KPM nueva y distinta, por sí sola, no prueba causalidad."
+    },
+    {
+      "t": "Lo que la clase enseña sobre datos, la pregunta final y las limitaciones",
+      "d": "La cadena datos, contexto, decisión, acción y evidencia resume cinco lecciones: un KPI aislado no es una decisión; la decisión necesita contexto y contrato; la automatización necesita observabilidad del efecto; la causalidad exige before/after con correlación; los sistemas autónomos necesitan rollback. La pregunta para la discusión es hasta dónde dejar que la analytics decida sola sobre una red: qué nivel de confianza, quién define políticas y SLA, cómo tratar un falso positivo, cuál es el papel del operador, cuándo el rollback debe ser automático y cómo separar recomendación de control. Las limitaciones del RFSIM entran en cualquier conclusión: sin RF real ni propagación, una celda y pocos UEs, sin movilidad y sin interferencia radioeléctrica real. El checkpoint técnico final pide cinco cosas: análisis (umbral, regla o modelo simple), vista de BI (headline, tarjetas y 1 serie), recomendación en SEHAL, política A1 candidata en dry-run o recomendación operacional, y limitaciones."
+    }
+  ],
+  "formulas": [
+    {
+      "nome": "Score robusto (mediana y MAD)",
+      "expr": "score_i = |x_i - mediana_baseline| / max(MAD, mad_floor);  MAD = mediana(|x - mediana(x)|)",
+      "vars": "x_i la muestra de la KPM; mediana y MAD calculados solo sobre el baseline tranquilo; mad_floor evita la división por casi cero",
+      "unidade": "adimensional",
+      "quando": "Detector del lab (robust-baseline-mad); el mismo cálculo del p2-tema-t2"
+    },
+    {
+      "nome": "Regla de anomalía y de decisión del contrato",
+      "expr": "anômala = n(features com score > 3.5) >= 2;  decision = apply se a janela de 5 amostras vota anômala",
+      "vars": "score_threshold = 3.5, min_anomalous_features = 2, window = 5",
+      "unidade": "-",
+      "quando": "Pasa de 'un punto raro' a 'anomalía sostenida'; es lo que se convierte en evaluation.decision en el decision.json"
+    },
+    {
+      "nome": "Semáforo de la tarjeta de KPI",
+      "expr": "estado = crítico se x > 85%;  atenção se x > 70%;  OK caso contrário",
+      "vars": "x el valor del KPI en la ventana (ejemplo de la diapositiva: utilización de PRB UL)",
+      "unidade": "% (los umbrales son del ejemplo y deben justificarse por tema)",
+      "quando": "Toda tarjeta con color; el color sin regla escrita es el error a evitar"
+    },
+    {
+      "nome": "Comparativo frente al baseline",
+      "expr": "delta = x_atual - x_baseline",
+      "vars": "x_baseline el valor de la fase idle o de referencia",
+      "unidade": "pp cuando x es %; la unidad del KPI en los demás casos",
+      "quando": "Segunda línea de la tarjeta (ej.: +32 pp vs fase idle): el valor absoluto solo no dice si es normal"
+    },
+    {
+      "nome": "Fracción del tiempo fuera del umbral",
+      "expr": "fora% = 100 * n(x > L) / n",
+      "vars": "L el umbral; n el número de muestras en la ventana o en la fase",
+      "unidade": "%",
+      "quando": "Marcar la ventana anómala en el BI; base de alertas de anomalía y de KQI"
+    },
+    {
+      "nome": "Variación relativa (relative_delta del effect_report)",
+      "expr": "relative_delta = 100 * (mean_after - mean_before) / mean_before",
+      "vars": "medias de la KPM antes y después de la actuación; throughput: 100 * (39,0 - 135,8) / 135,8 ≈ -71,3% (el artefacto da -71,26 con las medias sin redondear)",
+      "unidade": "%",
+      "quando": "Efecto relativo de una acción; el PRB dio -80,24%"
+    },
+    {
+      "nome": "Variación absoluta en puntos porcentuales",
+      "expr": "delta_pp = mean_after - mean_before",
+      "vars": "PRB: 18,1 - 91,5 ≈ -73,4 pp",
+      "unidade": "pp",
+      "quando": "Siempre que el KPI ya es un porcentaje; no confundir con el -80,24% relativo"
+    },
+    {
+      "nome": "Media con un transitorio en pocas muestras",
+      "expr": "media = (x_1 + (n - 1) * x_estavel) / n",
+      "vars": "before: (705 + 11 * 84,1) / 12 ≈ 135,8 Mbit/s; after: (~378 + 11 * 8,08) / 12 ≈ 39 Mbit/s (x_1 leído en el gráfico)",
+      "unidade": "la del KPI",
+      "quando": "Explicar por qué la mediana (84,1 y 8,08) describe el régimen y la media no, con n = 12"
+    },
+    {
+      "nome": "Adherencia al objetivo del rate-limit",
+      "expr": "aderencia = 100 * vazao_medida / alvo",
+      "vars": "iperf3 en el emisor 7,81 Mbit/s; objetivo 8 Mbit/s: 100 * 7,81 / 8 ≈ 97,6%",
+      "unidade": "%",
+      "quando": "Verificar si la actuación hizo lo que pidió la policy, con una medida independiente de la KPM"
+    },
+    {
+      "nome": "Conversión de throughput",
+      "expr": "Mbit/s = kbps / 1000",
+      "vars": "el artefacto guarda DRB.UEThpUl en kbps: 135 800 kbps = 135,8 Mbit/s",
+      "unidade": "Mbit/s",
+      "quando": "Leer el effect_report y las diapositivas en la misma escala; la policy habla de rate_kbit 8000 = 8 Mbit/s"
+    }
+  ],
+  "onde": {
+    "scene": "a1",
+    "texto": "En el P2 el Non-RT RIC corre el PMS de la O-RAN SC, y el p2-test-a1 prueba el camino PMS → A1 → near-RT: carga el policy type, crea la política por el PMS, comprueba que llegó y la borra. Del otro lado del A1 hay un simulador (a1-sim), no el A1 Mediator con RMR, consumer y actuator, así que el effect_report de la clase no se reproduce aquí: tenemos el PMS real del escalón 5, pero no el escalón 6. La parte analítica está en los temas: p2-tema-t2 (el mismo detector MAD), p2-tema-t4 (riesgo de congestión), p2-tema-t6 (energía) y p2-tema-t7 (regla de QoS), todos terminando en política candidata en dry-run, y el p2-tema-t1 dibuja en la consola el panel mínimo de la diapositiva 19: headline, tarjetas, serie y acción."
+  },
+  "exercicios": [
+    "p2-tema-t1",
+    "p2-tema-t2",
+    "p2-tema-t4",
+    "p2-tema-t6",
+    "p2-tema-t7",
+    "p2-test-a1",
+    "p2-kpi-qoe"
+  ],
+  "quiz": [
+    {
+      "q": "La política A1 llegó a ENFORCED. ¿Puedo decir en la presentación que la red cambió por ella?",
+      "a": "No con ese dato. ENFORCED prueba que la política fue aceptada en el camino A1: PMS, A1 Mediator, RMR 20010, el consumer validando y respondiendo por el 20011. No prueba una mutación nativa del gNB. Lo que prueba el efecto es la nueva KPM comparada con la de antes (effect_report), con la acción verificada por una medida independiente (iperf a 7,81 Mbit/s frente al objetivo de 8) y el rollback verificado. Y en el run de la clase e2sm_rc_sent es false: quien limitó el throughput fue un rate-limit emulado en la interfaz del UE, no el gNB."
+    },
+    {
+      "q": "El PRB UL medio pasó de 91,5% a 18,1%. Escriba el efecto de las dos formas correctas.",
+      "a": "Variación absoluta: 18,1 − 91,5 = −73,4 puntos porcentuales. Variación relativa: 100 × (18,1 − 91,5) / 91,5 ≈ −80,2% (el artefacto da −80,24%). Decir 'cayó 80 puntos porcentuales' o 'cayó 73%' es incorrecto; como el KPI ya es un porcentaje, los dos números tienen que ir con la unidad escrita (pp o %)."
+    },
+    {
+      "q": "Después del rate-limit de 8 Mbit/s, el throughput UL medio quedó en 39,0 Mbit/s. ¿Falló el límite?",
+      "a": "No. La mediana después es 8,08 Mbit/s y el iperf3 en el emisor midió 7,81 Mbit/s, así que el régimen está en el objetivo. La media de 12 muestras la arrastra la primera, un transitorio de cerca de 380 Mbit/s en el gráfico: (378 + 11 × 8,08) / 12 ≈ 39. Lo mismo ocurre antes (705 en la primera muestra, mediana 84,1 y media 135,8). Con pocas muestras, reporte media y mediana lado a lado, como pide la clase 04, y diga cuál sostiene la conclusión; por la mediana la caída relativa del throughput es de cerca de −90%."
+    }
+  ],
+  "fontes": "pp. 3-10 (clase, calendario, acuerdos, jerarquía de análisis, cronograma, objetivos), 11-17 (repaso A01-A04, cadena KPI/KQI/QoS/QoE, anatomía del indicador, KPMs del lab, capacidad × interferencia, QoS/QoE, puente A04-A05), 18-31 (BI: del contador al decisor, jerarquía del panel, tarjetas, audiencias × vistas, storytelling, capacidad, anomalías, optimización, matriz síntoma-palanca, recomendación × automatización × actuación, datos reales × simulados × sintéticos, jammer × capacidad, panel por tema), 32-36 (taller: decision.json, SEHAL, trabajo en grupo, A1 dry-run), 37-49 (closed loop: hito del lab, observabilidad × control, analytics prescriptiva, open × closed loop, Non-RT × Near-RT, A1, E2, PMS/Mediator/xApp), 50-54 (origen de los datos, KPMs, del KPM al modelo, MAD), 55-65 (decision ≠ policy ≠ action, madurez, RMR, evidencia A1, PMS, consumer, action_request), 66-73 (experimento before/after, policy aplicada, gráficos, effect_report), 74-81 (evolución, lecciones, pregunta final, cierre, limitaciones del RFSIM, checkpoint final, síntesis), 82-83 (ejercicios y referencias: Wong caps. 2 y 5); diapositiva 66 de la clase 01 (unidad del retardo en el log de Indication)"
+}

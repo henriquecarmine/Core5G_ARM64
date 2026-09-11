@@ -23,8 +23,8 @@ indicador → análise → visualização → decisão
 | 02 | 06/08/2026 | 3h30 | Lakes/warehouses + definição preliminar do caso | `aula02-data_lakes_big_data.pdf` |
 | 03 | 08/08/2026 | 5h | EDA/ETL + **Checkpoint 1** | `aula03-eda_etl_visualizacao.pdf` |
 | 04 | 25/08/2026 | 3h30 | KPIs/KQIs + **Checkpoint 2** | `aula04-kpis_kqis_qualidade.pdf` |
-| 05 | 27/08/2026 | 3h30 | Capacidade/otimização + checkpoint técnico final | — |
-| 06 | 29/08/2026 | 5h | Apresentações e **defesa** | — |
+| 05 | 27/08/2026 | 3h30 | BI · oficina SEHAL · closed loop A1 + checkpoint técnico final | `aula05-closed-loop-a1-open-ran.pdf` |
+| 06 | 03/09/2026 | 5h | Apresentações e **defesa** · demo do closed loop · síntese | `aula06-consolidacao_projetos.pdf` |
 
 Há também um **resumo oficial das aulas 01–02**
 (`resumo-aula01_02-analise_dados_teleco.pdf`, 10 págs.: DIKW, fontes por camada,
@@ -89,8 +89,8 @@ Vazão do usuário; ver [`projeto/`](projeto/)).
 ## No painel (Estudo 4)
 
 A disciplina vive no painel como **Estudo 4** (rail do console, dropdown
-*Análise de Dados em Redes de Telecom*): as aulas 01–03 renderizadas dos slides
-(`/lab/estudo/4/aula/{1,2,3}`: objetivos, conceitos, fórmulas, "onde roda" no
+*Análise de Dados em Redes de Telecom*): as seis aulas renderizadas dos slides
+(`/lab/estudo/4/aula/{1..6}`: objetivos, conceitos, fórmulas, "onde roda" no
 mini-mapa, exercícios, quiz), o teste **`p2-kpi-qoe`** com a cadeia da aula 04
 (medida → KPI → KQI → QoS → QoE proxy → anatomia dos indicadores do CP2) e
 **os 7 temas do projeto integrador** como

@@ -10,16 +10,16 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "Quais são os quatro elementos obrigatórios na anatomia de um KPI?",
+          "q": "O slide 18 diz que um KPI só existe com definição formal. Qual lista está completa?",
           "alt": [
+            "Fórmula e unidade",
             "Nome, cor, eixo e legenda",
-            "Fórmula, unidade, granularidade e fonte",
-            "Mínimo, máximo, média e desvio",
-            "Alvo, limiar, alarme e política"
+            "Nome, fórmula, unidade, granularidade, fonte, alvo/limiar e janela temporal",
+            "Mínimo, máximo, média e desvio"
           ],
-          "ok": 1,
+          "ok": 2,
           "pts": 1,
-          "porque": "Sem os quatro, o número não se defende. A fórmula diz como se calcula, a unidade dá sentido à grandeza, a granularidade diz de que recorte ele fala (por UE? por célula? por fase?) e a fonte diz de qual coluna de qual camada ele saiu. Faltando um, dois analistas chegam a números diferentes com o mesmo nome."
+          "porque": "São sete campos, e cada um fecha uma porta para a ambiguidade. A fórmula diz como se calcula e a unidade dá sentido à grandeza; a granularidade diz de que recorte o número fala (por UE, por célula, por fase) e a fonte diz de qual coluna de qual arquivo ele saiu. O alvo ou limiar diz quando o número vira problema, e a janela temporal diz sobre que período ele vale. A anatomia do slide 22 ainda acrescenta a interpretação. Faltando um campo, dois analistas chegam a números diferentes com o mesmo nome."
         },
         {
           "q": "Qual é a diferença entre QoS e QoE?",
@@ -34,16 +34,16 @@
           "porque": "QoS é contrato dentro da rede: prioridade, banda garantida, tratamento do bearer. QoE é a experiência de quem usa — o vídeo travou ou não travou. Dá para ter QoS impecável e QoE ruim, e é justamente essa distância que a aula existe para nomear."
         },
         {
-          "q": "SLI, SLO e SLA: o que é cada um?",
+          "q": "Na cadeia do slide 55, qual é a diferença entre KPI e KQI?",
           "alt": [
-            "Três nomes para a mesma promessa, em níveis de formalidade",
-            "SLI é o indicador medido, SLO é a meta interna sobre ele, SLA é o compromisso contratual com consequência",
-            "SLI é do cliente, SLO do fornecedor, SLA do regulador",
-            "SLI mede latência, SLO mede vazão e SLA mede disponibilidade"
+            "São o mesmo indicador, com nomes diferentes no rádio e no core",
+            "KPI olha o recurso e a rede ('a célula está saturada?', como o PRB médio); KQI olha a qualidade do serviço ('o atraso prejudica?', como a % do tempo com atraso acima de um limiar L)",
+            "KQI é um KPI calculado com mais amostras",
+            "KPI é contratual e KQI é interno"
           ],
           "ok": 1,
           "pts": 1,
-          "porque": "É uma escada. O SLI é o número (p95 do atraso). O SLO é a meta que a equipe persegue sobre esse número. O SLA é o que está no contrato e tem multa. Confundir SLO com SLA é prometer para fora o que era meta interna."
+          "porque": "O KPI responde se a infraestrutura está saudável; o KQI responde se o serviço está bom para quem usa. O mesmo contador pode alimentar os dois: a média do atraso RLC é KPI, a fração do tempo com atraso acima de L já é KQI, porque traz a pergunta do serviço. Contrato é o degrau seguinte, a QoS, quando o KQI é confrontado com o SLA."
         }
       ]
     },
@@ -52,16 +52,16 @@
       "tipo": "escolha",
       "qs": [
         {
-          "q": "O `DRB.RlcSduDelayDl` marcou 158 na fase de carga. Isso é um problema de QoE?",
+          "q": "O DRB.RlcSduDelayDl marcou 158 na fase de carga. Isso é um problema de QoE?",
           "alt": [
-            "Sim: 158 ms é muito para vídeo",
-            "Não dá para dizer. A unidade é microssegundo, e mesmo em µs o atraso é proxy — sem MOS ou nota de aplicação não se afirma nada sobre experiência",
-            "Sim, porque passou do limiar de 100",
-            "Não: atraso não afeta experiência"
+            "Sim: 158 ms passa do limiar de 150 ms, então a experiência caiu",
+            "Não dá para afirmar. Primeiro confirme a unidade na fonte, e mesmo confirmada, atraso é proxy: sem nota MOS ou KQI de aplicação não se conclui nada sobre a experiência",
+            "Sim, porque qualquer atraso acima de 100 derruba a QoE",
+            "Não: atraso não tem relação com experiência"
           ],
           "ok": 1,
           "pts": 2,
-          "porque": "Duas armadilhas numa pergunta só. A primeira é a unidade: 158 µs e 158 ms contam histórias separadas por um fator de mil. A segunda é o salto de proxy para experiência — atraso indica risco, não satisfação. Dizer 'é risco para a experiência' é honesto; dizer 'a QoE caiu' afirma mais do que o dado sustenta."
+          "porque": "Duas armadilhas numa pergunta só. A primeira é a unidade: o JSONL não a carrega, os slides 43 e 48 escrevem ms, e o log de Indication do slide 66 da aula 01 imprime esse mesmo contador em 'us' (microssegundos); 158 ms e 158 µs estão separados por um fator de mil. A segunda é o salto de proxy para experiência: o slide 55 manda declarar quando a QoE é só proxy. Dizer 'é risco para a experiência' é honesto; dizer 'a QoE caiu' afirma mais do que o dado sustenta."
         },
         {
           "q": "Um SLA promete 'vazão média de 50 Mbps'. Por que isso protege pouco o cliente?",
@@ -138,15 +138,15 @@
         {
           "q": "Ponha em ordem a cadeia que vai da medida à decisão.",
           "itens": [
-            "Contador: o nó mede e reporta (por exemplo DRB.UEThpUl)",
-            "KPI: a medida vira indicador com fórmula, unidade, granularidade e fonte",
-            "KQI: o indicador é relido do ponto de vista do serviço",
-            "QoE: a experiência que se quer proteger, estimada por proxy ou por nota",
-            "SLO/SLA: a meta ou o compromisso escrito sobre o indicador",
-            "Decisão: limiar e persistência atendidos, a política desce (no lab, em dry-run)"
+            "Medida: o nó mede e reporta o contador (por exemplo DRB.UEThpUl)",
+            "KPI: a medida vira indicador de recurso ou rede, com fórmula, unidade, granularidade e fonte",
+            "KQI: o indicador é relido do ponto de vista do serviço (% do tempo com atraso acima de L)",
+            "QoS: o KQI é confrontado com o contrato (SLA, 5QI, slice)",
+            "QoE: o que o usuário sente, declarado como proxy quando não há nota",
+            "Decisão: limiar atendido, a política desce (no lab, em dry-run)"
           ],
           "pts": 10,
-          "porque": "É o fio da aula inteira. Cada degrau acrescenta contexto e perde neutralidade: o contador é fato, o KPI é escolha de fórmula, o KQI é escolha de ponto de vista, a QoE é inferência. Quem pula degraus acaba afirmando sobre experiência com dado de contador — o erro mais comum da disciplina."
+          "porque": "É a cadeia do slide 55: medida, KPI, KQI, QoS (SLA), QoE e decisão. Cada degrau acrescenta contexto e perde neutralidade: o contador é fato, o KPI é escolha de fórmula, o KQI é escolha de ponto de vista, a QoS é comparação com uma promessa e a QoE é inferência. Quem pula degraus acaba afirmando sobre experiência com dado de contador, o erro mais comum da disciplina."
         }
       ]
     }

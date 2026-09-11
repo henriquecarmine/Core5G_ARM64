@@ -2,172 +2,188 @@
   "id": "e4a04",
   "n": 4,
   "titulo": "KPI, KQI, QoS et QoE : de la mesure à l'expérience",
-  "slide": null,
-  "previa": true,
-  "nota": "Les diapositives du cours 04 (25/08) n'ont pas encore été publiées. Ce cours a été monté à partir du plan d'enseignement, du briefing du projet et des spécifications 3GPP TS 28.552/28.554 et O-RAN E2SM-KPM. Il sera révisé dès que le matériel du professeur sortira.",
-  "resumo": "Le cours ferme la chaîne mesure, KPI, KQI, QoE : ce que le réseau mesure (compteurs et KPM), comment cela devient un indicateur avec formule, unité et granularité déclarées, et pourquoi un indicateur technique n'est pas l'expérience de l'utilisateur. Entrent en jeu les SLA (et la différence entre SLI, SLO et SLA), la table de QoS de la 5G (5QI) et des exemples d'indicateurs de transport et de QoE de terminal et d'application. C'est la base du Checkpoint 2 : valider les 2 indicateurs du groupe et les visualisations.",
+  "slide": "aula04-kpis_kqis_qualidade.pdf",
+  "resumo": "Le cours ferme la chaîne mesure, métrique, KPI, KQI, QoS (SLA), QoE et décision. Il commence par les sources (E2SM-KPM near-RT et O1 PM de gestion) et par l'anatomie d'un indicateur : nom, formule, unité, granularité, source, seuil, fenêtre et interprétation. Il parcourt ensuite les familles de KPI des télécoms et les indicateurs de canal de l'UE (RSRP, RSSI, RSRQ, SINR, CQI, MCS), montre comment calculer accessibilité, coupure, disponibilité, utilisation des PRB, débit et délai, et écrit les formules du projet sur les trois KPM du lab, dont le KQI comme fraction au-dessus du seuil, l'indice de risque et le taux d'anomalie. Puis il sépare QoS et QoE, situe SLA, 5QI, QoS Flow et slice, et reprend le cas jammer avec le watchdog IQ et un KPI spectral pour distinguer le manque de capacité de l'interférence. Tout converge vers le Checkpoint 2 : au moins deux indicateurs du groupe définis et classés comme KPI, KQI, clause de QoS ou proxy de QoE.",
   "objetivos": [
-    "Distinguer mesure, KPI, KQI et QoE et situer chacun dans la chaîne de la donnée brute à l'expérience.",
-    "Écrire un KPI avec formule, unité, granularité et source, comme le demande le briefing du projet.",
-    "Expliquer QoS (ce que le réseau promet, 5QI) versus QoE (ce que l'utilisateur perçoit, MOS) et pourquoi l'un ne garantit pas l'autre.",
-    "Lire un SLA en termes de SLI, SLO et percentiles, et comprendre pourquoi p95 et p99 valent plus que la moyenne.",
-    "Valider les 2 indicateurs du groupe au Checkpoint 2 : bonne unité, granularité cohérente et graphique auditable."
+    "Parcourir la chaîne mesure, métrique, KPI, KQI, QoS (SLA), QoE et décision, en sachant qu'un KPM n'est pas un KPI.",
+    "Écrire un indicateur complet : nom, formule, unité, granularité, source, cible ou seuil, fenêtre et interprétation.",
+    "Lire les indicateurs de canal (RSRP, RSSI, RSRQ, SINR, CQI, MCS) et les familles de KPI (accessibilité, maintien, intégrité, disponibilité, utilisation, mobilité) pour construire des hypothèses testables.",
+    "Calculer les KPI du projet par phase sur RRU.PrbTotUl, DRB.UEThpUl et DRB.RlcSduDelayDl, et transformer le délai en KQI avec un seuil justifié.",
+    "Séparer QoS et QoE, utiliser SLA et 5QI comme référence et distinguer congestion et interférence (jammer) en croisant KPM et KPI spectral, afin de livrer le Checkpoint 2."
   ],
   "conceitos": [
     {
-      "t": "La chaîne mesure, KPI, KQI, QoE",
-      "d": "La mesure (measurement) est ce que l'équipement compte ou mesure, comme DRB.UEThpUl dans une RIC Indication. Le KPI (Key Performance Indicator) est une formule sur des mesures, avec unité et granularité, qui résume la performance technique (débit moyen par UE sur 30 s). Le KQI (Key Quality Indicator) regarde le service du côté de celui qui l'utilise : temps de chargement de page, taux de blocage vidéo, délai de voix. La QoE (Quality of Experience) est la perception de l'utilisateur, mesurée par enquête (MOS) ou estimée par un modèle à partir des KQI. La règle didactique : plus on est proche de l'utilisateur, plus c'est difficile à mesurer et plus il est facile de se tromper."
+      "t": "Sources de l'indicateur : E2SM-KPM, E2SM-RC et O1 PM",
+      "d": "L'E2SM-KPM (E2 Service Model for Key Performance Measurement) fournit des mesures normalisées O-RAN par UE et par cellule, remontées par l'E2 node, avec une granularité typique de la sous-seconde à quelques secondes ; il alimente les KPI near-RT dans les xApps et, une fois agrégé, l'analytics non-RT dans les rApps. L'E2SM-RC (RAN Control) ferme la boucle mesure et action sur le RRM (Radio Resource Management), et les services E2 (REPORT, INSERT, CONTROL, POLICY) ont une granularité et un délai différents. L'O1 PM (Performance Management) sert la gestion et l'assurance dans le SMO (Service Management and Orchestration) : historique, tendances, NOC (Network Operations Center), data warehouse, avec une granularité agrégée en minutes. Les deux ne sont pas des canaux interchangeables : le KPM a une rétention courte à l'edge et ne doit pas être déversé en entier dans la BI. Tout cas d'usage exige un KPI cible explicite avant toute recommandation ou politique A1."
     },
     {
-      "t": "Anatomie d'un KPI : formule, unité, granularité, source",
-      "d": "Un KPI n'existe que s'il a quatre choses écrites : la formule (moyenne, percentile, ratio, comptage), l'unité (kbps, µs, %), la granularité (par UE, par cellule, par phase, par 15 min) et la source (E2SM-KPM, PM O1, log d'application). Sans l'une d'elles, le nombre n'est ni comparable ni reproductible. Dans notre projet, les deux indicateurs du groupe suivent ce contrat, par exemple débit UL moyen et p95 par phase, en kbps, source DRB.UEThpUl. C'est pourquoi le Checkpoint 2 demande formule et unité explicites."
+      "t": "La chaîne mesure, métrique, KPI, KQI, décision",
+      "d": "La mesure ou le compteur (KPM, PM) est la valeur brute remontée : PRB utilisés, octets, délai RLC. La métrique est cette valeur avec unité et agrégation explicites (moyenne, p95). Le KPI (Key Performance Indicator) est l'indicateur de performance du réseau, de l'infrastructure et de l'exploitation ; le KQI (Key Quality Indicator) est l'indicateur de qualité du service, vu du côté du service et de l'utilisateur ; la décision est une recommandation opérationnelle ou une politique A1, simulée dans le cours. La règle du cours est qu'un KPM n'est pas un KPI : le KPM est la mesure normalisée, le KPI est un indicateur dérivé avec formule, cible et interprétation. Dans sa version complète, la chaîne se poursuit par la QoS (le KQI confronté au contrat) et la QoE (ce que ressent l'utilisateur), avant la décision."
     },
     {
-      "t": "Les unités réelles des trois KPM du lab",
-      "d": "Le JSONL du professeur ne porte pas d'unité, mais le xApp KPM du FlexRIC l'imprime et la diapositive 66 du cours 01 le montre : DRB.UEThpUl en kbps (débit montant de l'UE), RRU.PrbTotUl en % (fraction des Physical Resource Blocks montants en usage) et DRB.RlcSduDelayDl en µs (délai moyen des SDU dans le RLC descendant). Se tromper d'unité change la lecture : 150 µs de délai RLC est imperceptible pour l'utilisateur ; 150 ms serait un problème sérieux de QoE. Les définitions viennent de la 3GPP TS 28.552 (5G performance measurements)."
+      "t": "KPI et KQI : réseau contre service",
+      "d": "Le KPI mesure la performance du réseau par rapport à un objectif opérationnel ou contractuel et répond à la question de savoir si le réseau est sain, capable et disponible ; des exemples RAN sont l'utilisation des PRB, le débit UL et DL, la disponibilité de cellule, le taux de succès d'accès et le drop rate. Le KQI mesure la qualité du service livré et répond à la question de savoir si le service est assez bon pour l'utilisateur ou pour le SLA ; il est souvent composé de KPI ou dérivé d'eux, comme la fraction du temps avec un délai au-dessus d'un seuil. Dans le lab, l'utilisation moyenne des PRB UL est un KPI et le pourcentage du temps avec un delay au-dessus du seuil est un KQI. Les KPI viennent typiquement d'O1 PM et d'E2 KPM agrégés et servent la capacité, l'energy saving et le RRM ; les KQI combinent KPI, seuils, application et sondes et servent le SLA, la priorisation et la QoE. Un bon KPI ne garantit pas un bon KQI : avec peu de PRB il peut encore y avoir du délai dû à une mauvaise radio, au backhaul ou à une congestion du cœur."
     },
     {
-      "t": "KPI radio les plus utilisés (TS 28.554 et O-RAN)",
-      "d": "La 3GPP TS 28.554 définit des KPI de bout en bout à partir des mesures de la TS 28.552. Ceux qui apparaissent dans presque tout tableau de bord de RAN : débit DL/UL par UE et par cellule (kbps), utilisation des PRB (%), délai de paquet dans la RAN (ms, mesuré en PDCP ou RLC), taux de succès d'accès (RRC Setup Success Rate, %), taux de coupure d'appels ou de sessions (Drop Rate, %), disponibilité de la cellule (%) et taux de succès de handover (%). Dans le lab RFSIM, nous n'observons que les trois premiers, et c'est pourquoi le projet déclare ce qu'il ne peut pas mesurer."
+      "t": "Anatomie d'un indicateur",
+      "d": "Un indicateur n'existe qu'avec une définition formelle écrite : nom, formule, unité, granularité, source, cible ou seuil, fenêtre temporelle et interprétation. L'exemple du cours est l'utilisation moyenne des PRB UL : formule mean(RRU.PrbTotUl) par phase, unité en % de PRB (ou le comptage remonté par le KPM), granularité d'échantillon KPM agrégée par phase, source kpm.sqlite ou JSONL dans la colonne RRU.PrbTotUl, alerte si la moyenne dépasse 80 et interprétation comme pression de capacité UL sur la cellule. Sans l'un de ces champs, le nombre n'est ni comparable ni reproductible, et deux analystes obtiennent des valeurs différentes sous le même nom. C'est exactement ce contrat que le Checkpoint 2 exige pour chaque indicateur du groupe."
     },
     {
-      "t": "L'agrégation change le sens : moyenne, médiane, percentile",
-      "d": "Le même KPI raconte des histoires différentes selon l'agrégation. La moyenne de débit en recovery (8 619 kbps) est tirée par un pic résiduel tandis que la médiane (3,7 kbps) montre que l'utilisateur est déjà revenu au repos. Pour le délai et la perte, ce qui compte est la queue : p95 et p99 disent ce que vit le mauvais utilisateur, la moyenne le cache. Règle pratique du projet : rapportez moyenne, médiane et p95 côte à côte et dites laquelle vous avez utilisée dans la conclusion."
+      "t": "Familles de KPI et couches de l'histoire",
+      "d": "Les familles classiques sont l'accessibilité (succès à établir le service), le maintien ou retainability (coupures après l'établissement de la session), l'intégrité (qualité du flux : débit, BLER, perte, délai), la disponibilité (temps à l'antenne), l'utilisation (usage sur capacité) et la mobilité (handover et resélection). Le cas déclencheur est l'abonné qui, un vendredi à 19 h, se plaint que la vidéo se fige : le symptôme relève de la QoE (buffering, MOS bas, risque de churn), le MOS (Mean Opinion Score) étant la note moyenne de 1 à 5 donnée par des utilisateurs, et la question opérationnelle est de savoir si la cause est la couverture, l'interférence, la capacité, le cœur ou le transport. Pour y répondre, le cours organise les KPI en couches : couverture et canal (RSRP, RSRQ, SINR, CQI, MCS), capacité et charge (utilisation des PRB, UE actifs), intégrité (débit, latence, perte) et accès, maintien et mobilité (CSSR, DCR, HOSR). Les références du cours sont CSSR (Call/Session Setup Success Rate) bon au-dessus de 98% et mauvais en dessous de 95%, DCR (Drop Call Rate) bon en dessous de 1% et mauvais au-dessus de 2%, HOSR (Handover Success Rate) au-dessus de 98% et en dessous de 95%, perte en dessous de 1% et au-dessus de 2%, latence en dessous de 50 ms et au-dessus de 100 ms, et utilisation des PRB en dessous de 60% et au-dessus de 80%. Sans indicateurs bien définis, l'équipe tire la cause au sort ; avec eux, l'hypothèse devient testable."
     },
     {
-      "t": "QoS : ce que le réseau promet (5QI, GBR, bearers)",
-      "d": "La QoS (Quality of Service) est le contrat technique du réseau pour un flux. En 5G, chaque QoS Flow a un 5QI (5G QoS Identifier, TS 23.501) qui fixe la priorité, le budget de délai (PDB, Packet Delay Budget) et le taux d'erreur de paquet (PER). Exemples : 5QI 1 (voix, GBR, PDB 100 ms, PER 10^-2), 5QI 7 (vidéo interactive, non-GBR, 100 ms, 10^-3) et 5QI 9 (internet standard, non-GBR, 300 ms, 10^-6). GBR (Guaranteed Bit Rate) réserve du débit ; non-GBR se dispute ce qui reste. Le slice de notre lab (SST 222 / SD 123) et la politique A1 avec priorityLevel sont des façons d'exprimer la QoS."
+      "t": "Indicateurs de canal de l'UE : RSRP, RSSI, RSRQ, SINR, CQI et MCS",
+      "d": "Le RSRP (Reference Signal Received Power) est la puissance moyenne des resource elements du signal de référence, en dBm ; il indique si l'UE est couvert (bon au-dessus de -95 dBm, mauvais en dessous de -110 dBm) et ne suffit pas à lui seul pour la QoE. Le RSSI (Received Signal Strength Indicator) est la puissance totale reçue, interférence et bruit compris (bon au-dessus de -100 dBm, mauvais en dessous de -110 dBm), et le RSRQ (Reference Signal Received Quality) relie les deux sur N blocs de ressources (bon au-dessus de -10 dB, mauvais en dessous de -15 dB) et baisse quand la cellule est chargée ou l'interférence forte. Le SINR (Signal-to-Interference-plus-Noise Ratio) est un fort prédicteur du débit et du MCS (bon au-dessus de 20 dB, mauvais en dessous de 13 dB) ; un RSRP élevé avec un SINR bas indique de l'interférence ou une pollution de pilotes. L'UE résume le canal dans le CQI (Channel Quality Indicator, 0 à 15 en LTE), et le réseau choisit le MCS (Modulation and Coding Scheme, de QPSK à 256-QAM avec des taux de codage différents) : un bon CQI et un bon SINR permettent plus de bits par symbole, un mauvais canal impose un MCS prudent pour se protéger du BLER. La chaîne est canal, CQI, MCS et PRB, débit et latence, puis seulement CSSR, DCR et HOSR et la QoE ; c'est pourquoi l'utilisateur dans l'ascenseur voit sa vidéo se dégrader avant que le KPI de PRB ne signale quoi que ce soit, et beaucoup de PRB avec un MCS bas ne signifient pas une bonne expérience."
     },
     {
-      "t": "QoE : ce que l'utilisateur perçoit (MOS et modèles)",
-      "d": "La QoE (Quality of Experience) est la satisfaction de celui qui utilise le service. La façon classique de la mesurer est le MOS (Mean Opinion Score, ITU-T P.800), note de 1 à 5 donnée par des personnes ; pour ne pas dépendre d'enquêtes, on utilise des modèles qui estiment le MOS à partir des KQI, comme l'E-model (ITU-T G.107) pour la voix ou des modèles vidéo qui combinent résolution, bitrate, temps de démarrage et blocages. La QoE n'est pas linéaire avec la QoS : doubler le débit de 50 à 100 Mbps ne double pas la satisfaction, mais 2 s de blocage dans une vidéo fait chuter la note."
+      "t": "Ce que le lab mesure vraiment, et dans quelle unité",
+      "d": "L'artefact KPM du lab UE-TP contient trois mesures : RRU.PrbTotUl (occupation des PRB UL, couche capacité, KPI d'utilisation et de risque), DRB.UEThpUl (débit UL de l'UE, couche intégrité, KPI de débit) et DRB.RlcSduDelayDl (délai RLC en downlink, intégrité et latence, KPI ou KQI proxy). RSRP, RSRQ, CQI et MCS ne sont pas dans l'artefact et n'interviennent que comme contexte d'hypothèse. La règle de lecture du cours est : si le débit baisse avec des PRB élevés, l'hypothèse est la capacité ; s'il baisse avec des PRB bas, pensez au canal (SINR, MCS) ou au cœur et au transport. Pour les unités, la diapositive 22 donne RRU.PrbTotUl en % de PRB ou en comptage, la diapositive 40 indique qu'il arrive déjà comme une utilisation d'environ 0 à 100 et la diapositive 47 donne DRB.UEThpUl dans l'unité de l'artefact, en général kbps, à convertir si le rapport est en Mbps. Pour le délai, les diapositives 43 et 48 utilisent ms et la 44 prend l'exemple d'un delay au-dessus de 150 ms, alors que le xApp KPM de FlexRIC affiche DRB.RlcSduDelayDl en µs (tout comme la diapositive 66 du cours 01). L'écart est un facteur mille et change le seuil d'un KQI : l'unité retenue doit donc être déclarée dans le README et vérifiée contre le log du xApp."
     },
     {
-      "t": "KQI de terminal et d'application",
-      "d": "Exemples de KQI qui vivent dans le terminal ou dans l'application, pas dans la RAN : temps de chargement de page (page load time, s), temps jusqu'à la première image de la vidéo (s), ratio de blocage (stall ratio, %), taux de rebuffering (événements par minute), délai aller-retour de la voix (ms) et échecs d'appel perçus. Ce sont le pont entre le KPI radio et la QoE, et ils exigent une autre source de données (MDT, agent dans l'app, SDK du player). Dans le lab, nous n'avons pas cette source, donc DRB.RlcSduDelayDl n'est qu'un proxy, et le cours demande que cela soit écrit dans les limites."
+      "t": "Calculer les KPI et choisir l'agrégation",
+      "d": "L'accessibilité est le nombre de succès sur les tentatives d'établissement dans la même fenêtre, avec une cible proche de 100% ; le drop rate est le nombre de sessions terminées anormalement sur les sessions établies, à ne pas confondre avec l'accessibilité puisque le service avait déjà commencé ; la disponibilité est le temps à l'antenne (sans outage ni état locked) sur la fenêtre, base des contrats et de l'alarme d'outage au NOC. Les compteurs de setup ne sont pas dans l'artefact UE-TP, ces trois indicateurs restent donc des références conceptuelles. L'utilisation des PRB est le nombre de PRB utilisés sur les PRB disponibles, et une utilisation élevée avec un débit en baisse suggère une congestion ; le débit est le nombre de bits transférés sur la durée de la fenêtre, et le p95 lit la valeur sous laquelle se trouvent 95% des échantillons ; le délai se résume par la moyenne, la médiane ou le p95 et, avec un seuil, devient un proxy de KQI et de QoE. L'agrégation change le sens : la moyenne est sensible aux outliers, la médiane est robuste aux pics (utile avec RFSIM), p95 et p99 montrent la queue que ressent le pire utilisateur, et le maximum sert pour les pics de capacité mais est mauvais seul comme SLA. Le contraste par phase baseline, stress et recovery est obligatoire au CP2, et le README doit dire quelle agrégation a été utilisée et pourquoi."
     },
     {
-      "t": "SLA, SLO et SLI : comment on écrit une promesse",
-      "d": "Le SLI (Service Level Indicator) est l'indicateur mesuré, par exemple le p95 du délai de paquet. Le SLO (Service Level Objective) est l'objectif interne, par exemple p95 en dessous de 50 ms dans 99 % des intervalles de 15 min. Le SLA (Service Level Agreement) est le contrat avec le client, avec pénalité, écrit sur un ou plusieurs SLO. Un SLA bien écrit dit l'indicateur, l'agrégation, la fenêtre et le pourcentage du temps pendant lequel l'objectif vaut. Sans fenêtre ni percentile, un SLA de débit moyen ne protège personne."
+      "t": "Du seuil au KQI : les formules du projet",
+      "d": "Le KQI formel naît d'une série et d'un seuil L : la fraction des échantillons de la phase ou de la fenêtre dont la valeur dépasse L, par exemple le pourcentage du temps avec un delay au-dessus du seuil. L doit être justifié par une statistique du baseline ou par une exigence de service, et sans L documenté il n'y a pas de KQI. Les KPI du projet sont calculés par phase : moyenne (ou p95) de RRU.PrbTotUl, en attendant un stress très au-dessus du baseline ; médiane de DRB.UEThpUl, qui résiste aux outliers du RFSIM, avec p95 optionnel et le rapport médiane(stress)/médiane(baseline) déclaré dans le README ; et p95 de DRB.RlcSduDelayDl, qui utilise la queue du délai pour approcher l'impact sur le service et se combine avec la fraction au-dessus de L. L'indice de risque est composite : il marque 1 l'échantillon dont les PRB dépassent Y et le débit est inférieur à Z, avec Y et Z justifiés par le baseline ou des percentiles, et il s'agrège en moyenne ou en pourcentage par phase. Le taux d'anomalie est le pourcentage d'échantillons anormaux par phase ; le pipeline MAD du lab est un point de départ, et les faux positifs dépendent du seuil du score et du nombre minimal de features anormales."
     },
     {
-      "t": "Indicateurs de transport (fronthaul, midhaul, backhaul)",
-      "d": "Le plan d'enseignement demande des exemples hors de la RAN. Dans le transport, les indicateurs sont la latence aller-retour (ms), la gigue (variation du délai, ms), la perte de paquets (%) et l'utilisation du lien (%). Dans le fronthaul eCPRI de l'Open RAN, l'exigence est dure : latence aller en dessous de ~100 µs et synchronisme (PTP) avec une erreur de temps de l'ordre des nanosecondes, parce que l'O-RU et l'O-DU se partagent la couche physique. Une chute de KPI radio peut être le symptôme d'une file d'attente dans le transport, et c'est pourquoi on corrèle les deux sources avant d'accuser la cellule."
+      "t": "QoS et QoE, et la chaîne complète",
+      "d": "La QoS (Quality of Service) est la qualité du service livré par le réseau : objective, mesurable et contractualisable dans un SLA, comme une latence inférieure à 50 ms, une perte inférieure à 0,1% ou un débit minimal. La QoE (Quality of Experience) est la qualité perçue par l'utilisateur : subjective ou estimée, dépendante de l'application et du contexte, exprimée par le MOS voix ou vidéo, par la plainte que ça a figé ou par le churn. La chaîne complète est mesure, KPI (ressource et réseau), KQI (qualité du service), QoS (le KQI confronté au SLA, au 5QI ou au slice), QoE et décision. Dans le lab, DRB.RlcSduDelayDl avec un seuil L est un KQI et, si L est le SLA, une vérification de QoS ; mais ce n'est ni un MOS ni une note d'application, c'est un proxy de risque pour l'expérience, et le projet doit déclarer quand la QoE n'est qu'un proxy. La relation n'est pas linéaire : avec un jammer, la QoS radio se dégrade (SINR et débit baissent) et la QoE chute même avec des PRB en abondance. Au CP2, chaque indicateur doit être classé comme KPI, KQI, clause de QoS ou proxy de QoE."
     },
     {
-      "t": "Validation d'un indicateur (Checkpoint 2)",
-      "d": "Valider un KPI, c'est répondre à cinq questions : la formule est-elle écrite et correspond-elle au code ? l'unité est-elle la bonne (kbps, µs, %) ? la granularité est-elle cohérente avec la question (par phase, par UE) ? la valeur a-t-elle un sens physique (PRB entre 0 et 100 %, débit non négatif) ? le graphique est-il auditable (titre, axes avec unité, fenêtre, source) ? Dans le projet, les 7 thèmes tournent dans le panneau avec la formule imprimée avant le nombre, justement pour cette vérification."
+      "t": "SLA, 5QI, QoS Flow et slice",
+      "d": "Le SLA (Service Level Agreement) est l'accord de niveau de service, avec des objectifs de disponibilité, de latence, de débit et autres ; un SLA utile précise l'indicateur, l'agrégation, la fenêtre et la fraction du temps pendant laquelle l'objectif s'applique. Le 5QI (5G QoS Identifier) définit la classe de traitement : GBR (Guaranteed Bit Rate) ou non-GBR, priorité et budget de délai (PDB, Packet Delay Budget) ; selon la 3GPP TS 23.501, le 5QI 1 est la voix GBR avec un PDB de 100 ms et le 5QI 9 le trafic par défaut non-GBR avec 300 ms. Le QoS Flow est l'unité de QoS dans le 5GC et la RAN, qui regroupe les paquets ayant le même traitement : la session PDU filtre les paquets, marque le QFI (QoS Flow Identifier) et le gNB les multiplexe dans des DRB (Data Radio Bearers). Le slice est une isolation logique avec ses propres KPI, KQI et SLA ; dans le slice SLA assurance, le Near-RT RIC optimise les actions E2 pour tenir les cibles, et le SMO corrèle PM O1, politiques A1 et événements O2 par NSSI (Network Slice Subnet Instance). L'artefact KPM du lab n'a pas de 5QI réel : les seuils entrent donc comme clauses didactiques de SLA, et le seuil d'alarme doit préciser s'il est statistique ou contractuel et quel est le délai de détection."
     },
     {
-      "t": "De l'indicateur à la décision : seuil, persistance et politique A1",
-      "d": "Un indicateur ne devient action qu'avec un seuil justifié et une règle de persistance (combien d'échantillons consécutifs), sinon le système réagit à un pic isolé. C'est ce que font les thèmes 2 et 7 : fenêtre de 5 échantillons dans le détecteur MAD et 3 échantillons consécutifs dans la règle de QoS. La sortie est une politique A1 candidate, en dry-run, avec une portée (UE, slice, cellule) et un objectif (priorityLevel), qu'un humain valide avant d'automatiser. Le cours 05 continue à partir d'ici avec capacité et optimisation."
+      "t": "Classes de service et indicateurs multi-domaines",
+      "d": "Chaque classe de service est sensible à une QoS différente : l'eMBB et le téléchargement dépendent du débit (symptôme : lenteur, téléchargement interminable ; proxy au lab : débit de l'UE), le streaming vidéo dépend d'un débit stable et du jitter (buffering et baisse de résolution ; proxy : p95 du delay et fraction au-dessus de L), la voix et la conférence dépendent de la latence et de la perte (écho, coupures, MOS bas ; le delay est un proxy faible), et l'URLLC dépend d'une latence extrême et de la fiabilité, hors du périmètre du RFSIM. Les métriques mènent à des décisions typiques : débit (RAN KPM, cœur, app) vers capacité et steering ; latence et jitter (RLC, x-haul, UDP/TCP) vers priorisation et mise à niveau du fronthaul ; perte (lien, file, radio) vers retransmission et couverture ; disponibilité et utilisation (cellule, lien) vers maintenance et energy saving. Les indicateurs vivent aussi dans des domaines différents : RAN (PRB, delay RLC, débit de l'UE), cœur (succès de session, drop rate), transport (latence et perte du fronthaul, utilisation de lien, QoS de chemin) et terminal ou application (RSRP de l'UE, MOS, stalls vidéo, avec précaution éthique). La QoE d'une application combine généralement plusieurs de ces métriques, et une baisse de KPI radio peut être le symptôme d'une file d'attente dans le transport ou dans le cœur."
+    },
+    {
+      "t": "Watchdog IQ, KPI spectral et le cas jammer",
+      "d": "Le watchdog IQ est une source de plus, du domaine RF, à côté de l'E2 KPM : il voit l'énergie dans l'air en temps et en fréquence, indique s'il y a interférence et voit souvent la cause dans le PHY en premier, tandis que KPM et PM voient l'effet sur le service ensuite. Dans les captures du lab (fs = 200e6, fc = 3,75e9, 20 s), le trafic OFDM apparaît comme des blocs horizontaux d'environ 100 MHz, et le jammer sur le SSB (Synchronization Signal Block) comme une tache étroite continue ; les spectrogrammes .npy et la PSD sont bronze, les alertes sont gold. Le pipeline est IQ, FFT par fenêtres, PSD et spectrogramme (silver), seuil, score ou ML jusqu'au KPI spectral (gold), puis jointure temporelle en UTC avec le débit, les PRB et le delay du KPM. KPI spectraux possibles : occupation anormale (% de bins dont la PSD dépasse le baseline plus k fois le MAD), énergie dans la région SSB, score d'interférence, duty d'anomalie (fraction du temps avec un score au-dessus de L, un KQI) et classe jammer. L'hypothèse didactique : la charge fait monter PRB et débit ensemble (capacité), alors qu'avec un jammer le score spectral monte puis le débit chute ou le delay monte sans saturation classique des PRB ; la décision est d'enquêter sur la RF, le WIPS (Wireless Intrusion Prevention System) ou une politique A1 candidate en dry-run, et non de simplement ajouter des PRB. Des compteurs d'accès comme le CSSR ne sortent pas de l'IQ, car l'IQ montre de l'énergie et non des sessions."
+    },
+    {
+      "t": "Checkpoint 2, passerelle vers l'optimisation et synthèse",
+      "d": "Le Checkpoint 2 (20 min) demande au moins deux indicateurs, chacun avec nom, formule, unité, granularité, source (artefact et métrique), interprétation et limite de validité, classés sans mélange comme KPI, KQI, clause de QoS (SLA) ou proxy de QoE, avec un premier graphique par KPI portant titre, axes et fenêtre temporelle, et une discussion sur la décision que l'indicateur rend possible et sur le fait que le seuil soit ou non un SLA didactique. En passerelle vers le cours 05, l'optimisation de la QoE part d'exigences qui varient selon l'application et au fil de la session, estime la QoE à partir de métriques de QoS et du contexte, et agit via les politiques A1 du Non-RT RIC et E2SM-KPM et RC dans le Near-RT RIC ; dans le projet, on optimise le KQI ou le SLA défini par le groupe, sans affirmer de QoE applicative sans preuve. L'étude de cas QoE vidéo en Open RAN demande ce qui va au near-RT et au non-RT, ce qui reste dans le lake et dans le warehouse, comment distinguer une congestion radio d'une congestion à l'UPF et quels sont les risques pour la vie privée quand on estime la QoE par UE. La synthèse : définir l'indicateur avant d'optimiser ou d'automatiser, un KPI n'est pas un KQI, qui n'est pas la QoS, qui n'est pas la QoE, et une politique A1 ne répare pas un indicateur mal défini."
     }
   ],
   "formulas": [
     {
-      "nome": "Débit moyen par UE sur une fenêtre",
-      "expr": "Thp_UE = (1/N) * somme(DRB.UEThpUl(t_i)), i = 1..N",
-      "vars": "N échantillons KPM dans la fenêtre (un par INDICATION, ~1 s) ; t_i l'instant de chacun",
-      "unidade": "kbps",
-      "quando": "KPI de base de débit ; dans le projet, par phase (baseline, stress, recovery)"
+      "nome": "RSRQ et SINR",
+      "expr": "RSRQ = N * RSRP / RSSI (lineares; em dB: RSRQ = 10*log10(N) + RSRP_dBm - RSSI_dBm); SINR = P_signal / (P_interference + P_noise)",
+      "vars": "N nombre de blocs de ressources de la mesure ; RSRP puissance du signal de référence ; RSSI puissance totale reçue avec interférence et bruit ; P_signal, P_interference, P_noise puissances du signal utile, de l'interférence et du bruit",
+      "unidade": "dB (RSRP et RSSI en dBm)",
+      "quando": "Diagnostic de canal : RSRQ bon au-dessus de -10 dB et mauvais en dessous de -15 dB ; SINR bon au-dessus de 20 dB, acceptable entre 13 et 20 dB et mauvais en dessous de 13 dB"
+    },
+    {
+      "nome": "Accessibilité",
+      "expr": "Acc = N_success / N_attempts * 100%",
+      "vars": "N_success tentatives ayant abouti à l'établissement (setup RRC ou session) ; N_attempts total des tentatives dans la même fenêtre",
+      "unidade": "%",
+      "quando": "KPI d'accès avec une cible proche de 100% (CSSR bon au-dessus de 98%) ; les compteurs de setup ne sont pas dans l'artefact UE-TP, c'est un concept de référence"
+    },
+    {
+      "nome": "Drop rate (maintien)",
+      "expr": "Drop = N_drops / N_sessions * 100%",
+      "vars": "N_drops sessions terminées anormalement ; N_sessions sessions établies dans la fenêtre",
+      "unidade": "%",
+      "quando": "Maintien : plus c'est bas, mieux c'est (DCR bon en dessous de 1%, mauvais au-dessus de 2%) ; le service avait déjà commencé, contrairement à l'accessibilité"
+    },
+    {
+      "nome": "Disponibilité de cellule",
+      "expr": "Avail = T_available / T_total * 100%",
+      "vars": "T_available temps à l'antenne, sans outage ni état locked ; T_total durée de la fenêtre d'observation, dans le même fuseau et la même unité",
+      "unidade": "%",
+      "quando": "Contrats de disponibilité et alarme d'outage au NOC ; au lab la cellule est généralement toujours up, c'est donc une référence conceptuelle"
     },
     {
       "nome": "Utilisation des PRB",
-      "expr": "PRB_util = 100 * PRB_utilisés / PRB_disponibles",
-      "vars": "PRB_utilisés = blocs alloués dans la période ; PRB_disponibles = total de la porteuse (ex. : 106 PRB en 40 MHz avec SCS 30 kHz)",
+      "expr": "PRB_utilization = PRB_used / PRB_available * 100%",
+      "vars": "PRB_used blocs alloués sur la période ; PRB_available total de la porteuse (ex. : 106 PRB sur 40 MHz avec un SCS de 30 kHz)",
       "unidade": "%",
-      "quando": "C'est ce que RRU.PrbTotUl livre déjà tout prêt ; indicateur de charge et de risque de congestion"
+      "quando": "Pression de capacité ; RRU.PrbTotUl arrive déjà comme une utilisation (environ 0 à 100) ; une utilisation élevée avec un débit en baisse suggère une congestion"
     },
     {
-      "nome": "Percentiles p95 et p99",
-      "expr": "p95 = valeur en dessous de laquelle se trouvent 95% des échantillons (idem p99)",
-      "vars": "échantillon ordonné du KPI dans la fenêtre",
-      "unidade": "celle du KPI",
-      "quando": "Queue de délai et de perte ; base de SLO et de SLA"
+      "nome": "Débit moyen et p95",
+      "expr": "Thp = soma(bits transferidos) / Δt; Thp_p95 = P95({Thp_1, Thp_2, ..., Thp_N})",
+      "vars": "Δt durée de la fenêtre, le même intervalle que le compteur ; Thp_i débit de chaque échantillon (DRB.UEThpUl est déjà un débit par échantillon) ; N échantillons",
+      "unidade": "Mbps en exploitation ; kbps dans l'artefact KPM",
+      "quando": "Moyenne ou médiane pour le cas typique ; p95 pour le quasi pire cas, le SLA du mauvais utilisateur et le contraste baseline x stress"
     },
     {
-      "nome": "Taux de succès d'accès (RRC Setup Success Rate)",
-      "expr": "RRC_SSR = 100 * RRC.ConnEstabSucc / RRC.ConnEstabAtt",
-      "vars": "compteurs de la TS 28.552 : tentatives et succès d'établissement RRC",
+      "nome": "Latence ou délai agrégé",
+      "expr": "Delay_KPI ∈ { média, mediana, P95({d_1, ..., d_N}) }",
+      "vars": "d_i délai de l'échantillon i (au lab, DRB.RlcSduDelayDl, délai RLC en downlink) ; N échantillons dans la fenêtre",
+      "unidade": "celle de l'artefact : la diapositive utilise ms, le xApp de FlexRIC affiche µs",
+      "quando": "KPI d'intégrité ; la médiane est robuste, le p95 met l'accent sur la queue ; avec un seuil, il devient un proxy de KQI et de QoE"
+    },
+    {
+      "nome": "Fraction au-dessus du seuil (KQI)",
+      "expr": "KQI_L = #{i : d_i > L} / N * 100%",
+      "vars": "d_i échantillons de la série (delay ou autre métrique) ; L seuil justifié par une statistique du baseline ou une exigence de service ; N échantillons dans la phase ou la fenêtre",
+      "unidade": "% du temps ou des échantillons",
+      "quando": "Transformer une série en indicateur de qualité du service ; sans L documenté il n'y a pas de KQI formel ; si L est le SLA, c'est une vérification de QoS"
+    },
+    {
+      "nome": "KPI du projet par phase",
+      "expr": "KPI_PRB(p) = mean(RRU.PrbTotUl | phase = p); KPI_Thp(p) = median(DRB.UEThpUl | phase = p); KPI_Delay(p) = P95(DRB.RlcSduDelayDl | phase = p); razao = median(Thp | stress) / median(Thp | baseline)",
+      "vars": "p ∈ {baseline, stress, recovery} ; optionnels : P95 à la place de la moyenne des PRB et P95 du débit",
+      "unidade": "PRB en % ; débit dans l'unité de l'artefact (en général kbps) ; delay dans l'unité déclarée (diapositive 48 : ms ; log du xApp : µs) ; rapport sans dimension",
+      "quando": "Checkpoint 2 : un stress très au-dessus du baseline en PRB est le contraste attendu dans l'UE-TP ; déclarer le rapport et les unités dans le README"
+    },
+    {
+      "nome": "Indice de risque",
+      "expr": "Risco_i = 1 se PRB_i > Y e Thp_i < Z; 0 caso contrário; KPI = média(Risco) ou % de amostras com Risco = 1, por fase",
+      "vars": "PRB_i et Thp_i utilisation et débit de l'échantillon i ; Y et Z seuils justifiés par le baseline ou des percentiles",
+      "unidade": "sans dimension (0 ou 1) ; agrégé en fraction ou en %",
+      "quando": "Indicateur composite qui combine pression sur les PRB et dégradation du débit"
+    },
+    {
+      "nome": "Taux d'anomalie",
+      "expr": "Anom = N_anomalas / N_amostras * 100%",
+      "vars": "N_anomalas échantillons classés comme anormaux dans la phase (ex. : pipeline MAD du lab) ; N_amostras échantillons de la phase",
       "unidade": "%",
-      "quando": "KPI d'accessibilité (TS 28.554) ; non observable dans notre KPM, cité comme exemple"
+      "quando": "Par phase (baseline vs stress) ; discuter les faux positifs via le seuil du score et le nombre minimal de features anormales"
     },
     {
-      "nome": "Taux de coupure (Drop Rate)",
-      "expr": "Drop = 100 * libérations_anormales / (libérations_normales + libérations_anormales)",
-      "vars": "libérations de session ou de DRB pour cause anormale versus normale",
-      "unidade": "%",
-      "quando": "KPI de rétention ; exemple d'indicateur de plan de contrôle"
-    },
-    {
-      "nome": "Disponibilité",
-      "expr": "Disp = 100 * (T_total - T_indisponible) / T_total",
-      "vars": "T_indisponible = temps avec la cellule ou le lien hors service dans la fenêtre",
-      "unidade": "%",
-      "quando": "Base de presque tout SLA (99,9 % = 43 min d'indisponibilité par mois)"
-    },
-    {
-      "nome": "Gigue (jitter)",
-      "expr": "jitter = moyenne(|d_i - d_(i-1)|) ou écart-type du délai",
-      "vars": "d_i délai du paquet i",
-      "unidade": "ms (ou µs dans le fronthaul)",
-      "quando": "Indicateur de transport ; la voix et la vidéo souffrent plus de la gigue que d'un délai constant"
-    },
-    {
-      "nome": "Perte de paquets",
-      "expr": "PL = 100 * (envoyés - reçus) / envoyés",
-      "vars": "comptage sur une fenêtre ou un flux",
-      "unidade": "%",
-      "quando": "Transport et plan utilisateur ; le 5QI fixe une PER cible par type de trafic"
-    },
-    {
-      "nome": "Stall ratio vidéo (KQI)",
-      "expr": "stall = 100 * T_bloqué / (T_bloqué + T_lecture)",
-      "vars": "temps mesurés par le player du terminal",
-      "unidade": "%",
-      "quando": "KQI d'application ; a besoin d'une source dans le terminal, n'existe pas dans le KPM"
-    },
-    {
-      "nome": "SLO en percentile",
-      "expr": "SLO: p95(délai) <= X ms dans >= 99% des fenêtres de 15 min",
-      "vars": "X le seuil convenu ; la fenêtre et le pourcentage de conformité font partie de la promesse",
-      "unidade": "-",
-      "quando": "Forme canonique pour écrire un objectif de service"
-    },
-    {
-      "nome": "Variation relative avant et après (effect_report)",
-      "expr": "delta% = 100 * (moyenne_après - moyenne_avant) / moyenne_avant",
-      "vars": "moyennes du KPI avant et après une action (politique, rate-limit)",
-      "unidade": "%",
-      "quando": "Montrer l'effet d'une décision ; c'est ce que l'effect_report du lab calcule"
+      "nome": "Score d'interférence spectrale",
+      "expr": "S_t = (PSD_t^peak - mediana(PSD_t)) / (MAD(PSD_baseline) + ε); KQI_L = #{t : S_t > L} / N * 100%",
+      "vars": "PSD_t^peak pic de la densité spectrale dans la fenêtre t ; mediana(PSD_t) niveau typique de la fenêtre ; MAD(PSD_baseline) dispersion robuste du baseline sans jammer ; ε évite la division par zéro ; L seuil (ex. : 3) ; N fenêtres",
+      "unidade": "S_t sans dimension ; KQI en % du temps (duty d'anomalie)",
+      "quando": "Watchdog IQ : un S_t élevé indique un pic hors du comportement propre ; le croiser dans le temps avec le débit, les PRB et le delay pour séparer jammer et capacité"
     }
   ],
   "onde": {
     "scene": "tema",
-    "texto": "Dans le P2, les trois KPM naissent dans le gNB OAI (E2SM-KPM), passent par le FlexRIC et par le xApp et deviennent un fichier ; les commandes p2-tema-t1 à t7 calculent les KPI de chaque thème avec la formule imprimée avant le nombre, ce qui est exactement la validation que demande le Checkpoint 2."
+    "texto": "Dans le P2, les trois KPM naissent dans le gNB OAI (E2SM-KPM), passent par FlexRIC et le xApp et deviennent un fichier. Le p2-kpi-qoe parcourt la chaîne de ce cours sur cette télémétrie (mesure KPM, KPI, KQI, QoS avec un SLA didactique, QoE comme proxy et décision) et se termine par l'anatomie des indicateurs du Checkpoint 2 ; les p2-tema-t1 à t7 calculent les KPI de chaque thème par phase, avec la formule affichée avant le nombre."
   },
   "exercicios": [
+    "p2-kpi-qoe",
+    "p2-test-e2-kpm",
+    "p2-kpm-analytics",
     "p2-tema-t1",
+    "p2-tema-t2",
     "p2-tema-t3",
     "p2-tema-t4",
     "p2-tema-t7",
     "p2-tema-all",
-    "p2-kpm-analytics",
-    "test-throughput"
+    "p2-test-a1"
   ],
   "quiz": [
     {
-      "q": "DRB.RlcSduDelayDl a donné 158 en stress. Est-ce un problème de QoE ?",
-      "a": "Pas en soi. L'unité est le µs : 158 µs de délai RLC est imperceptible pour l'utilisateur. L'indicateur montre le changement de régime par rapport au baseline (médiane 0), pas l'expérience. Pour parler de QoE, il faudrait un KQI d'application (blocage, temps de chargement) ou une note MOS, que le lab n'a pas."
+      "q": "En phase de stress, le débit de l'UE baisse, RRU.PrbTotUl est proche de 99% et le delay RLC monte. L'artefact n'a ni RSRP ni CQI. Est-ce une violation de QoS ou une saturation de ressource, et comment le formaliser ?",
+      "a": "Selon la règle du cours, un débit qui baisse avec des PRB élevés indique la capacité : c'est une saturation de ressource, observée par des KPI (utilisation moyenne ou p95 des PRB par phase, médiane du débit). Cela ne devient une question de QoS que lorsqu'un KQI est confronté à un seuil contractuel : par exemple KQI_L = pourcentage d'échantillons avec DRB.RlcSduDelayDl au-dessus de L, avec L déclaré comme SLA didactique et dans l'unité vérifiée dans le log du xApp. Sans RSRP, SINR ou CQI on ne peut pas écarter un mauvais canal, et sans MOS on n'affirme rien sur la QoE ; dans un vrai réseau, on demanderait ces données d'UE et de cellule."
     },
     {
-      "q": "Écrivez le KPI 'débit montant par phase' avec les quatre éléments obligatoires.",
-      "a": "Formule : moyenne et p95 de DRB.UEThpUl groupés par phase ; unité : kbps ; granularité : par phase (baseline, stress, recovery) et par UE ; source : E2SM-KPM via le xApp du FlexRIC (fichier kpm.jsonl dans la zone silver)."
+      "q": "Une phase compte 60 échantillons de DRB.RlcSduDelayDl, dont 18 au-dessus du seuil L. Calculez le KQI et dites ce qui manque pour qu'il soit valide au Checkpoint 2.",
+      "a": "KQI_L = 18 / 60 * 100% = 30% des échantillons au-dessus de L. Pour être valable au CP2, il manque : justifier L (statistique du baseline ou exigence de service), déclarer l'unité du delay et du seuil (les diapositives utilisent ms, le xApp de FlexRIC affiche µs, et un facteur mille change tout), préciser la granularité (par phase) et la source (colonne de l'artefact), et classer l'indicateur : c'est un KQI et, si L est traité comme un SLA, une clause de QoS ; jamais une QoE mesurée."
     },
     {
-      "q": "Pourquoi un SLA écrit comme 'débit moyen de 50 Mbps' protège-t-il peu le client ?",
-      "a": "Parce qu'une moyenne sans fenêtre ni percentile cache la queue : le réseau peut livrer 200 Mbps la nuit et 5 Mbps à l'heure de pointe et respecter quand même la moyenne. Un SLA utile fixe l'indicateur, le percentile (p5 du débit ou p95 du délai), la fenêtre (15 min) et la fraction du temps pendant laquelle l'objectif vaut (99 %)."
+      "q": "Le score spectral S_t du watchdog dépasse 3 et, peu après, le débit de l'UE chute avec des PRB stables et sans saturation. Quelle est l'hypothèse privilégiée et quelle décision a du sens ?",
+      "a": "Interférence RF ou jammer, et non manque de capacité : sous charge, PRB et débit montent ensemble ; avec un jammer, l'énergie anormale apparaît d'abord dans le spectre (cause dans le PHY) et l'effet arrive ensuite dans le KPM (le débit chute, le delay monte) sans PRB saturés. On le confirme par une jointure temporelle en UTC entre S_t et le KPM et par le duty d'anomalie. La décision est d'enquêter sur la RF et de déclencher le WIPS ou une politique A1 candidate en dry-run, et non d'ajouter des PRB, ce qui ne traiterait pas la cause."
     }
   ],
-  "fontes": "Plan d'enseignement (Cours 04 : chaîne mesure, KPI, KQI, QoE ; SLA ; exemples de transport et de QoE de terminal/application) ; briefing-projeto.md (2 KPI/KQI avec formule, granularité et source) ; diapositive 66 du cours 01 (unités des KPM) ; 3GPP TS 28.552 et TS 28.554 ; TS 23.501 tableau 5.7.4-1 (5QI) ; ITU-T P.800 et G.107"
+  "fontes": "pp. 3-10 (cours, calendrier, programme, objectifs, rappel des cours 01 à 03), 11-14 (cas jammer et captures du lab), 15-16 (E2SM-KPM, E2SM-RC, O1 PM x E2 KPM), 17-23 (chaîne mesure, métrique, KPI, KQI, décision ; KPI x KQI ; anatomie de l'indicateur ; familles de KPI), 24-36 (symptôme de QoE, couches de l'histoire, RSRP, RSSI, RSRQ, SINR, CQI, MCS, KPI d'accès et de mobilité, ce que mesure le lab), 37-44 (calcul de l'accessibilité, du drop, de la disponibilité, des PRB, du débit, du p95, du delay, de la fraction au-dessus du seuil), 45-51 (KPM du lab vers KPI, formules du projet, risque, anomalie, agrégation), 53-62 (QoS x QoE, chaîne complète, SLA, 5QI, QoS Flow, slice, classes de service, multi-domaines, discussion), 63-72 (watchdog IQ, pipeline spectral, score d'interférence, capacité x jammer), 73-78 (KPM via E2, optimisation de la QoE, cas vidéo en Open RAN, slice SLA assurance, Checkpoint 2, synthèse), 80-81 (préparation du cours 05 et références) ; unités des KPM : diapositive 66 du cours 01 et log du xApp KPM de FlexRIC ; 5QI : 3GPP TS 23.501 tableau 5.7.4-1"
 }

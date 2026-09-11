@@ -30,9 +30,21 @@ Anunciada no Classroom em 10/09/2026.
 ## Laboratório
 
 O SMO do O-RAN SC (OAM) roda no servidor ARM64: [`server/smo/`](../../server/smo/README.md)
-(`build_arm64.sh`, `up_smo.sh`, `test_smo.sh`). O `test_smo.sh` gera as evidências
-de cada item do objeto de estudo que o lab cobre: O1/NETCONF, VES, Keycloak,
-topologia e Kafka.
+(`build_arm64.sh`, `up_smo.sh`, `test_smo.sh`).
+
+A apresentação usa **um teste real do painel por item da avaliação**, na cadeira
+5 do rail — roteiro de 20 minutos, falas e perguntas prováveis em
+[`docs/apresentacao-smo.md`](../../docs/apresentacao-smo.md):
+
+| Item | Teste no painel | Script |
+|---|---|---|
+| 1–3 Arquitetura, serviços, componentes | Arquitetura do SMO | `smo_arquitetura.sh` |
+| 4–5 O1, gerenciamento | O1: ler a configuração da O-DU | `smo_o1_leitura.sh` |
+| 5 Provisionamento | O1: provisionar e desfazer | `smo_o1_provisionamento.sh` |
+| 8 Falhas | Falhas: alarme VES até o Kafka | `smo_falhas.sh` |
+| 8 Telemetria | Telemetria: medidas 3GPP da O-DU | `smo_telemetria.sh` |
+| 7 Ciclo de vida de NFs | Ciclo de vida de uma função de rede | `smo_ciclo_vida.sh` |
+| 4 e 6 O2, O-Cloud | O-Cloud e O2 | `smo_ocloud.sh` |
 
 ## Material que já existe no repositório
 

@@ -89,6 +89,18 @@ COMMANDS: dict[str, dict] = {
     "p2-kpi-qoe": {"cmd": ["./scripts/p2_aula04.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     # Aulas 05-06: o closed loop A1 em dry-run (os 8 passos do roteiro da demo).
     "p2-closed-loop": {"cmd": ["./scripts/p2_closed_loop.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    # Gestão, Orquestração e Automação (Prof. Lucas Borges) — o SMO do O-RAN SC
+    # em server/smo/. Ligar/desligar a pilha e os testes da apresentação, um por
+    # item da avaliação; todos falam com o SMO no ar pelo gateway local.
+    "smo-up": {"cmd": ["./up_smo.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-down": {"cmd": ["./down_smo.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-arquitetura": {"cmd": ["./smo_arquitetura.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-o1-leitura": {"cmd": ["./smo_o1_leitura.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-o1-prov": {"cmd": ["./smo_o1_provisionamento.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-falhas": {"cmd": ["./smo_falhas.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-telemetria": {"cmd": ["./smo_telemetria.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-ciclo-vida": {"cmd": ["./smo_ciclo_vida.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-ocloud": {"cmd": ["./smo_ocloud.sh"], "cwd": SERVER_DIR / "smo"},
     "p2-tema-t1": {"cmd": ["./scripts/p2_temas.sh", "t1"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-tema-t2": {"cmd": ["./scripts/p2_temas.sh", "t2"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-tema-t3": {"cmd": ["./scripts/p2_temas.sh", "t3"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
@@ -329,6 +341,7 @@ def read_group_status(states: dict[str, dict]) -> dict[str, str]:
         "p2-core": group_of(lambda n: n == "oai-amf"),
         "p2-e2lab": "on" if (process_running("nr-softmodem") or process_running("nearRT-RIC")) else "off",
         "p2-nonrt": group_of(lambda n: n == "nonrt-policy-agent"),
+        "smo": group_of(lambda n: n == "controller"),
     }
 
 

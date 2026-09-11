@@ -730,6 +730,9 @@
           <button class="toggle-btn" data-toggle="p2-nonrt" data-up="p2-up-nonrt" data-down="p2-down-nonrt" data-label="Non-RT RIC" title="Non-RT RIC (SMO) — A1 Policy Management Service + 3 A1 Simulators, imagens ARM64 nativas. Leve (cerca de 0,5 GB); sobe junto no 'ativar' do P2">
             <div class="toggle-main"><span>Non-RT</span><span class="toggle-dot"></span></div>
           </button>
+          <button class="toggle-btn" data-toggle="smo" data-up="smo-up" data-down="smo-down" data-label="SMO" data-i18n-title="pc.smo_title" title="SMO do O-RAN SC (OAM) — controlador O1, VES, Keycloak, Kafka e simuladores O-DU/O-RU, imagens ARM64. Pesado (cerca de 5 GB); não sobe junto com o Projeto 2">
+            <div class="toggle-main"><span>SMO</span><span class="toggle-dot"></span></div>
+          </button>
         </div>
       </div>
     </div>
@@ -962,6 +965,21 @@
               <button class="test-any" data-cmd="p2-tema-t6" data-i18n="t.tema_t6">T6 · Economia de energia (intenção)</button>
               <button class="test-any" data-cmd="p2-tema-t7" data-i18n="t.tema_t7">T7 · Política de QoS / steering</button>
               <button class="primary test-any" data-cmd="p2-tema-all" data-i18n="t.tema_all">▶ Os 7 temas lado a lado</button>
+            </div>
+          </div>
+        </details>
+        <details class="estudo" data-estudo="e4" open>
+          <summary><span class="est-n">5</span><span class="est-t" data-i18n="rail.e5">Gestão, Orquestração e Automação (SMO)</span><span class="est-b">SMO</span></summary>
+          <div class="est-body">
+            <div class="est-sub" data-i18n="rail.e5_aval">Avaliação · plataformas de SMO, um teste por item</div>
+            <div class="test-block" data-proj-tests="any">
+              <button class="test-any" data-cmd="smo-arquitetura" data-i18n="t.smo_arquitetura" data-i18n-title="t.smo_arquitetura_title" title="Itens 1 a 3: as 3 camadas e os contêineres em execução, os serviços publicados no gateway e os elementos O-RAN sob gerência — e o que fica fora do OAM (A1, O2)">Arquitetura do SMO (serviços e componentes)</button>
+              <button class="test-any" data-cmd="smo-o1-leitura" data-i18n="t.smo_o1_leitura" data-i18n-title="t.smo_o1_leitura_title" title="Itens 4 e 5: RESTCONF no controlador → NETCONF na O-DU; lê a gNB-DU e a célula NR pelos modelos 3GPP">O1: ler a configuração da O-DU</button>
+              <button class="test-any" data-cmd="smo-o1-prov" data-i18n="t.smo_o1_prov" data-i18n-title="t.smo_o1_prov_title" title="Item 5: muda o nome da gNB-DU pela O1, confere dentro do equipamento e desfaz">O1: provisionar e desfazer</button>
+              <button class="test-any" data-cmd="smo-falhas" data-i18n="t.smo_falhas" data-i18n-title="t.smo_falhas_title" title="Item 8: levanta e limpa um alarme linkDown da O-DU pelo caminho VES → coletor → tópico de falhas">Falhas: alarme VES até o Kafka</button>
+              <button class="test-any" data-cmd="smo-telemetria" data-i18n="t.smo_telemetria" data-i18n-title="t.smo_telemetria_title" title="Item 8: arquivo de PM gravado no elemento, aviso VES FileReady no Kafka e heartbeats">Telemetria: medidas 3GPP da O-DU</button>
+              <button class="test-any" data-cmd="smo-ciclo-vida" data-i18n="t.smo_ciclo_vida" data-i18n-title="t.smo_ciclo_vida_title" title="Item 7: encerra e reinstancia um O-RU; mede a queda, o call home e a nova montagem no controlador">Ciclo de vida de uma função de rede</button>
+              <button class="test-any" data-cmd="smo-ocloud" data-i18n="t.smo_ocloud" data-i18n-title="t.smo_ocloud_title" title="Itens 4 e 6: inventário do O-Cloud do lab e a ausência de O2 no OAM do O-RAN SC">O-Cloud e O2 (o que existe e o que falta)</button>
             </div>
           </div>
         </details>
@@ -1875,6 +1893,112 @@ const TEST_EXPLAIN = {
       '<b>SEHAL</b>: a recomendação no molde da aula 05 — situação, evidência, hipótese, ação e limitação.',
     ],
     concl: '✓ A cadeia decision → policy → action_request → atuação → evidência, sem tocar na rede. Provar o efeito exige a versão ao vivo, com o rate-limit aplicado e o rollback medido.',
+  },
+  // ---- Gestão, Orquestração e Automação: o SMO do O-RAN SC, um teste por item da avaliação ----
+  'smo-arquitetura': {
+    title: 'O que acabou de acontecer — a arquitetura do SMO em execução (itens 1 a 3)',
+    antes: [
+      'Vai ler o SMO do O-RAN SC <b>como ele está rodando agora</b> no servidor: nada é escrito à mão, tudo sai do Docker, das rotas do gateway e do controlador.',
+      'Mostra as <b>3 camadas</b> (plataforma, gerência e elementos gerenciados), os <b>serviços</b> que o gateway publica e os <b>elementos O-RAN</b> sob gerência.',
+      'Precisa do <b>SMO ligado</b> (botão SMO no topo). Só lê; leva uns 5 segundos.',
+    ],
+    items: [
+      '<b>Arquitetura</b>: common (Traefik, Keycloak, MariaDB, Kafka, topologia) · oam (controlador SDN-R, ODLUX, coletor VES) · network (O-DU e O-RU simulados) — todos em imagens arm64.',
+      '<b>Serviços e funções</b>: cada serviço tem um nome e o Traefik roteia por ele — identidade, console, O1, eventos VES, barramento, topologia. O NETCONF call home entra por porta própria.',
+      '<b>Componentes O-RAN suportados</b>: O-DU pela O1 e O-RU pelo M-plane (híbrido), com o número de modelos YANG que cada um anunciou.',
+      '<b>O que não está no OAM</b>: A1 (fica no Non-RT RIC) e O2 (fica no projeto INF do O-RAN SC) — dito na tela, não escondido.',
+    ],
+    concl: '✓ A arquitetura da ferramenta estudada, conferida em execução: camadas, serviços e elementos gerenciados.',
+  },
+  'smo-o1-leitura': {
+    title: 'O que acabou de acontecer — o SMO lendo um elemento pela O1 (itens 4 e 5)',
+    antes: [
+      'Vai perguntar ao controlador do SMO, por <b>RESTCONF</b>, a configuração da O-DU simulada. O controlador busca no elemento por <b>NETCONF</b> — é a interface O1.',
+      'Lê o que a O-DU anuncia em <b>modelos YANG</b> (O-RAN, 3GPP, IETF) e depois a árvore 3GPP: ManagedElement → gNB-DU → célula NR.',
+      'Só lê; leva uns 5 segundos.',
+    ],
+    items: [
+      '<b>Montagem</b>: a O-DU está conectada ao controlador por NETCONF sobre TLS e anunciou os modelos que sabe falar — é por eles que o SMO sabe o que pode ler e mudar.',
+      '<b>gNB-DU</b> (GNBDUFunction): gNBId, gNBDUId e o nome — o mesmo modelo de rede 3GPP que um equipamento comercial expõe.',
+      '<b>Célula NR</b> (NRCellDU): PCI, ARFCN, SSB e as fatias por PLMN.',
+      '<b>O-RU híbrido</b>: também sob gerência, pelo M-plane do Open Fronthaul.',
+    ],
+    concl: '✓ Gerenciamento pela O1 funcionando: o SMO enxerga a configuração real do elemento, pelo modelo padronizado.',
+  },
+  'smo-o1-prov': {
+    title: 'O que acabou de acontecer — provisionamento pela O1, conferido no equipamento (item 5)',
+    antes: [
+      'Vai <b>mudar a configuração</b> da O-DU pela O1: o nome da gNB-DU (gNBDUName), um parâmetro visível e inofensivo do modelo 3GPP.',
+      'Escreve com RESTCONF <b>PATCH</b> (o controlador traduz para NETCONF edit-config), lê de volta pela O1 e confere <b>dentro do elemento</b>, no datastore dele.',
+      'No fim <b>desfaz</b>: o elemento volta ao nome original. Se algo falhar no meio, o teste também desfaz.',
+    ],
+    items: [
+      '<b>Estado atual</b>: o nome antes da mudança, lido pela O1.',
+      '<b>Escrita</b>: o caminho YANG, o corpo JSON e a resposta do controlador (HTTP 200) com o tempo.',
+      '<b>Conferência</b>: o valor novo lido de novo pela O1 E no datastore running da O-DU — a prova de que chegou ao equipamento, não só à tela do SMO.',
+      '<b>Desfazer</b>: a mesma escrita com o valor original, conferida no elemento.',
+    ],
+    concl: '✓ Provisionamento O1 ponta a ponta: SMO → controlador → NETCONF → equipamento, com volta ao estado inicial.',
+  },
+  'smo-falhas': {
+    title: 'O que acabou de acontecer — um alarme pelo caminho de falhas do SMO (item 8)',
+    antes: [
+      'Vai levantar um alarme <b>linkDown</b> (enlace do fronthaul caiu) em nome da O-DU e segui-lo até o barramento do SMO.',
+      'Caminho: evento <b>VES</b> por HTTPS → coletor VES → tópico de falhas no <b>Kafka</b> → quem assina (análise, rApps, kafka-ui). Depois limpa o alarme pelo mesmo caminho.',
+      'A O-DU simulada não traz receita de alarmes, então o teste faz o papel dela, com o formato VES 7.2.1. Leva uns 10 segundos.',
+    ],
+    items: [
+      '<b>Alarme CRITICAL</b>: aceito pelo coletor (HTTP 202) e lido no tópico SEC_FAULT_OUTPUT, com o tempo do envio até estar no barramento.',
+      '<b>O evento como chegou</b>: severidade, condição, interface, problema, origem e o carimbo que o coletor acrescentou.',
+      '<b>Limpeza (NORMAL)</b>: o mesmo alarme encerrado, no mesmo tópico.',
+      '<b>Dois canais de falha</b>: VES vai ao barramento; notificações NETCONF ficam no banco do controlador (alarmes ativos e histórico).',
+    ],
+    concl: '✓ Gerenciamento de falhas funcionando: elemento → VES → coletor → Kafka, ida e volta.',
+  },
+  'smo-telemetria': {
+    title: 'O que acabou de acontecer — medidas de desempenho da O-DU até o SMO (item 8)',
+    antes: [
+      'Vai mostrar a telemetria que a O-DU produz <b>sozinha</b>: a cada minuto ela grava um arquivo de medidas 3GPP (TS 28.532) e avisa o SMO por VES.',
+      'Lê a configuração de PM do elemento, o arquivo mais novo, o aviso <b>FileReady</b> que chegou ao Kafka e os contadores de heartbeat e registro.',
+      'Só lê; leva uns 5 segundos.',
+    ],
+    items: [
+      '<b>Configuração de PM</b>: período de coleta, validade dos dados e os contadores medidos (DRB.MeanActiveUeDl/Ul, DRB.MaxActiveUeDl).',
+      '<b>Arquivo de medidas</b>: lido no próprio elemento — janela, objeto medido (a célula) e os valores de cada contador.',
+      '<b>FileReady</b>: o aviso VES que chegou ao barramento, com o endereço do arquivo — o SMO é avisado, não precisa perguntar.',
+      '<b>Vida dos elementos</b>: quantos avisos de medida, heartbeats e registros de PNF o SMO já recebeu.',
+    ],
+    concl: '✓ Telemetria funcionando: medida no elemento → arquivo 3GPP → VES FileReady → barramento do SMO.',
+  },
+  'smo-ciclo-vida': {
+    title: 'O que acabou de acontecer — o ciclo de vida de uma função de rede (item 7)',
+    antes: [
+      'Vai <b>encerrar e reinstanciar</b> o O-RU híbrido e medir como o SMO percebe cada fase.',
+      'Fases: em operação → encerrar → o controlador registra a queda → instanciar → o elemento liga para o SMO (<b>call home</b>) → montado e conectado de novo.',
+      'Quem encerra e instancia é o Docker — num O-RAN completo, é o O-Cloud pelo O2. O teste nunca deixa o elemento parado. Leva uns 20 segundos.',
+    ],
+    items: [
+      '<b>Encerrar</b>: o contêiner parou e o controlador perdeu o elemento — com o tempo até perceber.',
+      '<b>Instanciar</b>: o contêiner voltou, ligou para o SMO e foi montado de novo, sem ninguém configurar nada no controlador — com o tempo até conectar.',
+      '<b>Registro no SMO</b>: as linhas do connectionlog do controlador (Unmounted → Mounted → Connected), com horário.',
+      '<b>Capacidades de volta</b>: os modelos YANG anunciados de novo pelo elemento.',
+    ],
+    concl: '✓ O ciclo de vida visto pelo SMO: encerrar → perda → instanciar → call home → conectado.',
+  },
+  'smo-ocloud': {
+    title: 'O que acabou de acontecer — O-Cloud e O2: o que existe e o que falta (itens 4 e 6)',
+    antes: [
+      'A resposta honesta a dois itens da avaliação: o OAM do O-RAN SC <b>não implementa O2</b>. No O-RAN SC, o O2 (IMS e DMS) é do projeto INF, sobre StarlingX.',
+      'Mesmo assim, mostra o que um O2 IMS exporia do nosso O-Cloud, lido do próprio servidor: recursos, runtime e as funções implantadas com o consumo de cada uma.',
+      'Só lê; leva uns 10 segundos.',
+    ],
+    items: [
+      '<b>Pool de recursos</b>: arquitetura (ARM64 Neoverse), vCPU, memória, disco e carga — o que o IMS inventariaria.',
+      '<b>Gerenciador de implantação</b>: Docker e as implantações do SMO (common, oam, network) — o papel que o DMS teria.',
+      '<b>Funções implantadas</b>: CPU e memória de cada contêiner, e o total do SMO no O-Cloud.',
+      '<b>O que ficaria com o O2</b>: inventário e alarmes do O-Cloud (IMS) e instanciar/escalar/encerrar NFs pelo SMO (DMS).',
+    ],
+    concl: '⚠ O-Cloud visível e medido; O2 ausente nesta solução — é a lacuna a apontar na apresentação, com onde ele existe no O-RAN SC.',
   },
   'p2-kpm-analytics': {
     title: 'O que acabou de acontecer — Dados na RAN (do KPM ao KPI)',

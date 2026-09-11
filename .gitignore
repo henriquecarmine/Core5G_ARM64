@@ -50,3 +50,7 @@ server/oai-cn-gnb-e2/logs/closed_loop_offline/
 server/smo/src/
 server/smo/run/
 server/smo/*.log
+server/smo/logs/
+
+# Cola da apresentação de SMO: leva os NOMES dos integrantes — nunca no repo público
+pdfs/04-gestao-orquestracao/entrega/

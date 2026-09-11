@@ -87,6 +87,7 @@
   .zoom-ctrl button { width:32px; height:32px; background:var(--panel); border:1px solid var(--border);
                       color:var(--text); border-radius:6px; cursor:pointer; font-size:16px; }
   .zoom-ctrl button:hover { border-color:var(--accent); }
+  .zoom-ctrl button.on { border-color:var(--accent); color:var(--accent-text); }
   .mode-hint { position:absolute; top:12px; left:14px; font-size:12px; color:var(--muted);
                background:var(--panel-glass); padding:7px 13px; border-radius:7px; border:1px solid var(--border); max-width:440px; }
 
@@ -233,7 +234,7 @@
   <div class="mode-hint" id="mode-hint"></div>
   <svg id="diagram" xmlns="http://www.w3.org/2000/svg"></svg>
   <div class="zoom-ctrl">
-    <button id="zin">+</button><button id="zout">−</button><button id="zfit">⤢</button>
+    <button id="zauto" aria-pressed="true">⌖</button><button id="zin">+</button><button id="zout">−</button><button id="zfit">⤢</button>
   </div>
   <div id="tour-box">
     <div class="t" id="tour-title"></div>
@@ -516,18 +517,66 @@ document.getElementById("logs-auto").onchange=e=>{ clearInterval(logsTimer); log
 // ---- pan / zoom ----
 let vb={x:0,y:0,w:1300,h:900};
 function applyVB(){ svg.setAttribute("viewBox",`${vb.x} ${vb.y} ${vb.w} ${vb.h}`); }
-function fit(){ vb={x:-20,y:-20,w:TOPO.canvas.w+40,h:TOPO.canvas.h+40}; applyVB(); }
-svg.addEventListener("wheel",e=>{ e.preventDefault(); const s=e.deltaY>0?1.1:0.9; const r=svg.getBoundingClientRect();
+// Zoom automático (tour e jornada): o mapa aproxima dos nós de cada etapa. Com
+// a rede crescendo (o SMO à direita), o mapa inteiro deixa os cartões pequenos
+// demais para apresentar; a etapa enquadra o que está sendo explicado.
+const AUTOZOOM_KEY="c5g-topo-autozoom";
+let autoZoom=true; try{ autoZoom=localStorage.getItem(AUTOZOOM_KEY)!=="off"; }catch(e){}
+let vbAnim=null;
+function fullVB(){ return {x:-20,y:-20,w:TOPO.canvas.w+40,h:TOPO.canvas.h+40}; }
+function fit(){ cancelAnimationFrame(vbAnim); vb=fullVB(); applyVB(); }
+function animateVB(alvo){
+  cancelAnimationFrame(vbAnim);
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ vb={...alvo}; applyVB(); return; }
+  const de={...vb}, t0=performance.now(), DUR=450;
+  const passo=t=>{
+    const k=Math.min(1,(t-t0)/DUR), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    for(const c of ["x","y","w","h"]) vb[c]=de[c]+(alvo[c]-de[c])*e;
+    applyVB(); if(k<1) vbAnim=requestAnimationFrame(passo);
+  };
+  vbAnim=requestAnimationFrame(passo);
+}
+// Enquadra os nós com folga, na proporção do palco, e nunca mais perto que MIN_W
+// (etapa de um nó só ainda mostra os vizinhos). Com a caixa do tour aberta, o
+// enquadramento usa só a parte do palco que ela não cobre.
+function focoNos(ids){
+  if(!autoZoom) return;
+  const ns=ids.map(nodeById).filter(Boolean);
+  if(!ns.length){ animateVB(fullVB()); return; }
+  const MIN_W=760, PAD=70;
+  const x0=Math.min(...ns.map(n=>n.x))-PAD, x1=Math.max(...ns.map(n=>n.x+NODE_W))+PAD;
+  const y0=Math.min(...ns.map(n=>n.y))-PAD, y1=Math.max(...ns.map(n=>n.y+NODE_H))+PAD;
+  const r=svg.getBoundingClientRect(), tb=document.getElementById("tour-box");
+  const livre=tb.classList.contains("open") ? Math.max(.5, 1-(tb.offsetHeight+36)/r.height) : 1;
+  let w=Math.max(x1-x0, MIN_W), h=(y1-y0)/livre;
+  if(w/h < r.width/r.height) w=h*r.width/r.height; else h=w*r.height/r.width;
+  animateVB({x:(x0+x1)/2-w/2, y:y0-(h*livre-(y1-y0))/2, w, h});
+}
+svg.addEventListener("wheel",e=>{ e.preventDefault(); cancelAnimationFrame(vbAnim); const s=e.deltaY>0?1.1:0.9; const r=svg.getBoundingClientRect();
   const mx=vb.x+(e.clientX-r.left)/r.width*vb.w, my=vb.y+(e.clientY-r.top)/r.height*vb.h;
   vb.x=mx-(mx-vb.x)*s; vb.y=my-(my-vb.y)*s; vb.w*=s; vb.h*=s; applyVB(); },{passive:false});
 let drag=null;
-svg.addEventListener("mousedown",e=>{ drag={x:e.clientX,y:e.clientY}; svg.classList.add("grabbing"); });
+svg.addEventListener("mousedown",e=>{ cancelAnimationFrame(vbAnim); drag={x:e.clientX,y:e.clientY}; svg.classList.add("grabbing"); });
 window.addEventListener("mouseup",()=>{ drag=null; svg.classList.remove("grabbing"); });
 window.addEventListener("mousemove",e=>{ if(!drag)return; const r=svg.getBoundingClientRect();
   vb.x-=(e.clientX-drag.x)/r.width*vb.w; vb.y-=(e.clientY-drag.y)/r.height*vb.h; drag={x:e.clientX,y:e.clientY}; applyVB(); });
 document.getElementById("zin").onclick=()=>{ vb.w*=.85; vb.h*=.85; applyVB(); };
 document.getElementById("zout").onclick=()=>{ vb.w/=.85; vb.h/=.85; applyVB(); };
 document.getElementById("zfit").onclick=fit;
+function applyAutoZoomBtn(){
+  const b=document.getElementById("zauto");
+  b.classList.toggle("on",autoZoom); b.setAttribute("aria-pressed",String(autoZoom));
+  b.title=I18N.t(autoZoom?"topo.autozoom_on":"topo.autozoom_off");
+}
+document.getElementById("zauto").onclick=()=>{
+  autoZoom=!autoZoom;
+  try{ localStorage.setItem(AUTOZOOM_KEY, autoZoom?"on":"off"); }catch(e){}
+  applyAutoZoomBtn();
+  if(!autoZoom) animateVB(fullVB());
+  else if(journeyStep) showJourney(journeyIdx);
+  else if(tourLayer) showTour(tourIdx);
+};
+applyAutoZoomBtn();
 
 document.querySelectorAll(".modes button").forEach(b=>b.onclick=()=>{
   currentMode=b.dataset.mode;
@@ -543,7 +592,7 @@ function applyThemeIcon(){
   b.title=I18N.t(dark?"ui.theme_to_light":"ui.theme_to_dark");
 }
 // troca de idioma: re-renderiza SVG, legenda, título, hint e tour
-I18N.onChange(()=>{ applyThemeIcon(); setProjTitle();
+I18N.onChange(()=>{ applyThemeIcon(); applyAutoZoomBtn(); setProjTitle();
   if(TOPO){ render(); renderLegend(); }
   if(journeyStep) showJourney(journeyIdx); else if(tourLayer) showTour(tourIdx);
 });
@@ -598,9 +647,11 @@ function showTour(i){
   document.getElementById("tour-step").textContent=`${tourIdx+1} / ${TOUR.length}`;
   explicaSiglas();
   render();
+  focoNos(TOPO.nodes.filter(n=>n.layer===s.layer).map(n=>n.id));
 }
 function startTour(){ document.getElementById("tour-box").classList.add("open"); showTour(0); }
-function endTour(){ tourLayer=null; document.getElementById("tour-box").classList.remove("open"); render(); }
+function endTour(){ tourLayer=null; document.getElementById("tour-box").classList.remove("open"); render();
+  if(autoZoom) animateVB(fullVB()); }
 document.getElementById("tour-btn").onclick=()=>{ if(journeyStep) endJourney(); tourLayer?endTour():startTour(); };
 document.getElementById("tour-next").onclick=()=>journeyStep?showJourney(journeyIdx+1):showTour(tourIdx+1);
 document.getElementById("tour-prev").onclick=()=>journeyStep?showJourney(journeyIdx-1):showTour(tourIdx-1);
@@ -664,9 +715,11 @@ function showJourney(i){
   document.getElementById("tour-step").textContent=`${journeyIdx+1} / ${JOURNEY.length}`;
   explicaSiglas();
   render();
+  if(journeyStep.full){ if(autoZoom) animateVB(fullVB()); } else focoNos(journeyStep.nodes);
 }
 function startJourney(){ if(tourLayer) endTour(); document.getElementById("tour-box").classList.add("open"); showJourney(0); }
-function endJourney(){ journeyStep=null; document.getElementById("tour-box").classList.remove("open"); render(); }
+function endJourney(){ journeyStep=null; document.getElementById("tour-box").classList.remove("open"); render();
+  if(autoZoom) animateVB(fullVB()); }
 document.getElementById("journey-btn").onclick=()=>{ journeyStep?endJourney():startJourney(); };
 
 // ---- #3 métrica de RAN ao vivo do gNB ----

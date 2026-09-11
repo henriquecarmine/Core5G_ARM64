@@ -140,6 +140,40 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       assert(!rasos.length, `p2: cartão sem explicação completa: ${rasos.map(c => c.id).join(', ')}`);
       assert(errors.length === 0, `p2: pageerror nos cartões do SMO: ${errors.join(' | ')}`);
       console.log(`PASS p2 · ${cartoes.length} contêineres do SMO com cartão completo (de onde vem · o que faz · para onde vai · imagem · conexões)`);
+
+      // Zoom automático: a etapa da jornada enquadra os nós dela; desligado, o
+      // mapa fica inteiro; ao sair, volta ao mapa inteiro.
+      const espera = () => new Promise(r => setTimeout(r, 700));
+      const vb = () => page.evaluate(() => document.getElementById('diagram').getAttribute('viewBox').split(' ').map(Number));
+      await page.evaluate(() => fit());   // o tour acabou de sair: parte do mapa inteiro, sem animação pendente
+      const cheio = await vb();
+      const enquadra = (ids, v) => page.evaluate((ids, [x, y, w, h]) => ids
+        .every(id => { const n = nodeById(id); return n.x >= x && n.x + 184 <= x + w && n.y >= y && n.y + 66 <= y + h; }), ids, v);
+      // etapa compacta (A1 real, 3 nós num canto): o zoom tem de ser forte
+      await page.evaluate(() => { startJourney(); showJourney(JOURNEY.findIndex(s => s.id === 'a1real')); });
+      await espera();
+      const perto = await vb();
+      assert(perto[2] < cheio[2] * 0.6, `p2: zoom automático não aproximou na etapa A1 real (viewBox ${perto} × ${cheio})`);
+      assert(await enquadra(['nonrt-pms', 'a1mediator', 'dbaas'], perto), 'p2: zoom automático cortou nós da etapa A1 real');
+      // etapa alta (O1: a coluna do SMO até os simuladores): aproxima menos, mas enquadra todos
+      await page.evaluate(() => showJourney(JOURNEY.findIndex(s => s.id === 'o1')));
+      await espera();
+      const o1 = await vb();
+      assert(o1[2] < cheio[2], `p2: zoom automático não aproximou na etapa O1 (${o1})`);
+      assert(await enquadra(['smo-controller', 'sim-odu', 'sim-oru-hybrid', 'sim-oru-hier'], o1), 'p2: zoom automático cortou nós da etapa O1');
+      await page.click('#zauto');
+      await espera();
+      await page.evaluate(() => showJourney(JOURNEY.findIndex(s => s.id === 'ves')));
+      await espera();
+      const desligado = await vb();
+      assert(Math.abs(desligado[2] - cheio[2]) < 1, `p2: com o zoom automático desligado o mapa não ficou inteiro (${desligado})`);
+      await page.click('#zauto');
+      await page.evaluate(() => endJourney());
+      await espera();
+      const saiu = await vb();
+      assert(Math.abs(saiu[2] - cheio[2]) < 1, `p2: ao sair da jornada o mapa não voltou inteiro (${saiu})`);
+      assert(errors.length === 0, `p2: pageerror no zoom automático: ${errors.join(' | ')}`);
+      console.log('PASS p2 · zoom automático: aproxima na etapa, respeita o botão desligado e volta ao mapa inteiro ao sair');
     }
 
     // Jornada do UE (só P2): percorre as 19 etapas seguindo o pacote, sem erro
@@ -278,6 +312,53 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     await page.click('#tour-exit');
     assert(errors.length === 0, `${proj}/fr: pageerror: ${errors.join(' | ')}`);
     console.log(`PASS ${proj} · topologia em francês (chrome + nós + tour)`);
+    await page.close();
+  }
+
+  // Minimapa dos processos (janela do console): quando um teste roda, o mapa
+  // enquadra sozinho os componentes acesos; "mapa todo" volta ao desenho
+  // inteiro, e a cor do resultado sobrevive ao redesenho.
+  {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 900 });
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await page.evaluateOnNewDocument((p1, p2) => {
+      window.fetch = async (url) => new Response(String(url).includes('-p1') ? p1 : p2,
+        { headers: { 'Content-Type': 'application/json' } });
+    }, P1, P2);
+    await page.goto(PAGE + '?proj=p2', { waitUntil: 'domcontentloaded' });
+    await page.addScriptTag({ url: srv.url('/static/ops/mini-map.js') });
+    const espera = () => new Promise(r => setTimeout(r, 400));
+    const mini = () => page.evaluate(() => {
+      const s = document.querySelector('#mm-teste svg');
+      const l = document.querySelector('#mm-teste line.mm-flow');
+      return { vb: s && s.getAttribute('viewBox').split(' ').map(Number), cor: l && l.getAttribute('stroke'),
+               pacotes: document.querySelectorAll('#mm-teste circle').length };
+    });
+    await page.evaluate(() => {
+      const d = document.createElement('div'); d.id = 'mm-teste'; document.body.appendChild(d);
+      MiniMap.attach('console', d); MiniMap.begin('a1');
+    });
+    await espera();
+    const foco = await mini();
+    assert(foco.vb && foco.vb[2] < 1800, `minimapa: não enquadrou os componentes do teste (${foco.vb})`);
+    const dentro = await page.evaluate(([x, y, w, h]) => ['panel', 'nonrt-pms', 'a1sim']
+      .every(id => { const n = nodeById(id); return n.x >= x && n.x + 184 <= x + w && n.y >= y && n.y + 66 <= y + h; }), foco.vb);
+    assert(dentro, 'minimapa: o enquadramento cortou componentes do teste');
+    assert(foco.pacotes > 0, 'minimapa: sem pacote animado durante o teste');
+    await page.evaluate(() => MiniMap.end(true));
+    await page.evaluate(() => document.querySelector('#mm-teste .mm-foco').click());
+    await espera();
+    const todo = await mini();
+    assert(todo.vb[2] === 1800 && todo.vb[3] === 900, `minimapa: "mapa todo" não mostrou o desenho inteiro (${todo.vb})`);
+    assert(todo.cor === 'var(--good)' && todo.pacotes === 0, 'minimapa: o resultado do teste se perdeu ao redesenhar');
+    await page.evaluate(() => document.querySelector('#mm-teste .mm-foco').click());
+    await espera();
+    const volta = await mini();
+    assert(volta.vb[2] < 1800, 'minimapa: "foco" não voltou a enquadrar');
+    assert(errors.length === 0, `minimapa: pageerror: ${errors.join(' | ')}`);
+    console.log('PASS minimapa · zoom automático nos componentes do teste; "mapa todo" alterna e o resultado sobrevive ao redesenho');
     await page.close();
   }
 

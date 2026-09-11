@@ -56,6 +56,11 @@
   }
   function setView(host, v) { view = v; try { localStorage.setItem(VIEW_KEY, v); } catch (e) {} applyView(host); }
 
+  // Zoom automático: o mapa enquadra os componentes do teste (os acesos e a
+  // linhagem do dado). "mapa todo" volta ao desenho inteiro — lembrado no navegador.
+  var FOCO_KEY = 'c5g-minimap-foco', foco = true;
+  try { foco = localStorage.getItem(FOCO_KEY) !== 'off'; } catch (e) {}
+
   // A JANELA do console: aberta/fechada e reduzida/expandida, lembradas no
   // navegador. Fechada por padrao — quem manda na tela e o resultado do teste.
   var WIN_KEY = 'c5g-minimap-win', win = { open: false };
@@ -129,10 +134,39 @@
   function center(n) { return { x: n.x + 92, y: n.y + 33 }; }
   function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 
+  // Retângulo de visão em volta dos nós: folga para os vizinhos, largo como a
+  // janela, nunca mais perto que MIN_W e preso dentro do desenho.
+  function enquadra(ids, byId, W, H) {
+    var ns = ids.map(function (id) { return byId[id]; }).filter(Boolean);
+    if (!ns.length) return null;
+    var PAD = 90, ASP = 1.9, MIN_W = 900;
+    var x0 = Math.min.apply(0, ns.map(function (n) { return n.x; })) - PAD;
+    var y0 = Math.min.apply(0, ns.map(function (n) { return n.y; })) - PAD;
+    var x1 = Math.max.apply(0, ns.map(function (n) { return n.x + 184; })) + PAD;
+    var y1 = Math.max.apply(0, ns.map(function (n) { return n.y + 66; })) + PAD;
+    var w = Math.min(W, Math.max(x1 - x0, MIN_W, (y1 - y0) * ASP));
+    var h = Math.min(H, w / ASP);
+    var x = Math.max(0, Math.min((x0 + x1 - w) / 2, W - w));
+    var y = Math.max(0, Math.min((y0 + y1 - h) / 2, H - h));
+    return [x, y, w, h];
+  }
+
+  // fim do teste: congela o fluxo (sem pacote) na cor do resultado — reaplicado
+  // se o mapa for redesenhado (ex.: alternar foco / mapa todo depois do fim)
+  function pintaFim(h) {
+    var c = h.dataset.fim; if (!c) return;
+    h.querySelectorAll('circle').forEach(function (x) { x.remove(); });
+    h.querySelectorAll('line.mm-flow').forEach(function (l) { l.setAttribute('stroke', c); });
+    h.querySelectorAll('polygon.mm-flow').forEach(function (p) { p.setAttribute('fill', c); });
+  }
+
   function draw(host, mm, topo, live) {
     var W = (topo.canvas && topo.canvas.w) || 1300, H = (topo.canvas && topo.canvas.h) || 900;
     var hi = {}; mm.nodes.forEach(function (id) { hi[id] = 1; });
-    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+    var byId = {}; topo.nodes.forEach(function (n) { byId[n.id] = n; });
+    var focoIds = [].concat.apply(mm.nodes, (mm.ghost || []).map(function (f) { return [f[0], f[1]]; }));
+    var vbox = foco && enquadra(focoIds, byId, W, H);
+    var s = '<svg viewBox="' + (vbox || [0, 0, W, H]).join(' ') + '" xmlns="http://www.w3.org/2000/svg">';
     // bandas: cor da camada bem suave + nome, para o mapa ser reconhecível de longe
     for (var k in (topo.layers || {})) {
       var ly = topo.layers[k]; if (!ly.band) continue;
@@ -145,8 +179,7 @@
       s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" rx="14" fill="' + c + '" fill-opacity=".05" stroke="' + c + '" stroke-opacity=".35"/>';
       s += '<text x="' + (x0 + 14) + '" y="' + (y0 + 20) + '" font-family="-apple-system,sans-serif" font-size="14" font-weight="600" fill="' + c + '" fill-opacity=".75">' + esc(ly.label || k) + '</text>';
     }
-    var byId = {}; topo.nodes.forEach(function (n) { byId[n.id] = n; });
-    var FONT = 'font-family="-apple-system,sans-serif"';
+    var FONT ='font-family="-apple-system,sans-serif"';
     var ghost = mm.ghost || [];
     var flowKey = {}; mm.flows.concat(ghost).forEach(function (f) { flowKey[f[0] + '>' + f[1]] = 1; });
     var isFlow = function (a, b) { return flowKey[a + '>' + b] || flowKey[b + '>' + a]; };
@@ -219,9 +252,18 @@
       + (mm.ghost ? ' · <span style="color:var(--w-8)">⇢ tracejado = de onde o dado veio</span>' : '')
       + (mm.note ? ' · <span style="color:var(--warn-text)">' + mm.note + '</span>' : '');
     host.innerHTML = '<div class="mm-head"><b>◉</b><span class="mm-ct">' + titulo + '</span>'
+      + (focoIds.length ? '<span class="mm-btn mm-foco" title="' + (foco ? 'mostrar o mapa inteiro' : 'aproximar dos componentes do teste')
+          + '">' + (foco ? 'mapa todo' : 'foco') + '</span>' : '')
       + (flutua ? '<span class="mm-btn mm-x" title="fechar">\u2715</span>'
                 : '<span class="mm-btn mm-zoom"></span><span class="mm-btn mm-caret"></span>')
       + '</div><div class="mm-vp">' + s + '</div>';
+    var bf = host.querySelector('.mm-foco');
+    if (bf) bf.onclick = function (ev) {
+      ev.stopPropagation();
+      foco = !foco;
+      try { localStorage.setItem(FOCO_KEY, foco ? 'on' : 'off'); } catch (e) {}
+      draw(host, mm, topo, live);
+    };
     if (flutua) {
       host.querySelector('.mm-x').onclick = function () { winSet(false); };
       winApply();
@@ -235,7 +277,8 @@
       host.style.display = 'block';
     }
     if (host === floatHost) host.dataset.proj = mm.proj;
-    centerOnLit(host, mm, byId, H);
+    if (!vbox) centerOnLit(host, mm, byId, H);   // com foco o enquadramento já é o zoom
+    pintaFim(host);
   }
 
   // Na janela o mapa fica em escala cheia e só uma faixa dele aparece: rolamos
@@ -283,15 +326,14 @@
     // janela sozinha — abrir por cima do log e justamente o que atrapalhava.
     begin: function (sceneName) {
       liveBtn(true);
+      if (floatHost) delete floatHost.dataset.fim;
       show(sceneName, floatHost, true);
     },
     end: function (ok) {
       liveBtn(false);
       var h = floatHost; if (!h || !h.innerHTML) return;
-      var c = ok ? 'var(--good)' : 'var(--bad)';
-      h.querySelectorAll('circle').forEach(function (x) { x.remove(); });   // congela: fim do fluxo
-      h.querySelectorAll('line.mm-flow').forEach(function (l) { l.setAttribute('stroke', c); });
-      h.querySelectorAll('polygon.mm-flow').forEach(function (p) { p.setAttribute('fill', c); });
+      h.dataset.fim = ok ? 'var(--good)' : 'var(--bad)';
+      pintaFim(h);
     },
     // botao do console
     // O botao do menu manda qual projeto mostrar (o rail sabe; este arquivo nao).

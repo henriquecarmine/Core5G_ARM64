@@ -155,9 +155,10 @@
   ],
   "onde": {
     "scene": "a1",
-    "texto": "In P2 the Non-RT RIC runs the O-RAN SC PMS, and p2-test-a1 proves the PMS → A1 → near-RT path: it loads the policy type, creates the policy through the PMS, checks that it arrived and deletes it. On the other side of A1 there is a simulator (a1-sim), not the A1 Mediator with RMR, consumer and actuator, so the lecture's effect_report is not reproduced here: we have the real PMS of step 5, but not step 6. The analytical part is in the themes: p2-tema-t2 (the same MAD detector), p2-tema-t4 (congestion risk), p2-tema-t6 (energy) and p2-tema-t7 (QoS rule), all ending in a candidate policy in dry-run, and p2-tema-t1 draws on the console the minimal dashboard of slide 19: headline, cards, series and action."
+    "texto": "In P2 the Non-RT RIC runs the O-RAN SC PMS, and p2-test-a1 proves the PMS → A1 → near-RT path up to a simulator (a1-sim), with no A1 Mediator, RMR, consumer or actuator. The lecture's whole chain runs in p2-closed-loop, without the RAN: calm baseline and MAD, decision.json, A1 policy, the action_request with the rate limit that would be applied on oaitun_ue1, effect_report and rollback, with the artifacts saved and the relative-change and percentage-point arithmetic. Offline, the 'after' window is the recovery phase of the same experiment, and the test warns that this difference is not an effect of the actuation: proving the effect requires the rate limit applied live. The theme analysis stays in p2-tema-t2, t4, t6 and t7, and the minimal dashboard of slide 19 is in p2-tema-t1 and in the KPI/NOC Dashboard."
   },
   "exercicios": [
+    "p2-closed-loop",
     "p2-tema-t1",
     "p2-tema-t2",
     "p2-tema-t4",

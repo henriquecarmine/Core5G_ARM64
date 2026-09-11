@@ -114,9 +114,10 @@
   ],
   "onde": {
     "scene": "tema",
-    "texto": "Dans le panneau, le p2-tema-all exécute les sept thèmes côte à côte sur le même échantillon KPM : c'est le pipeline du projet jusqu'à la politique candidate en dry-run, la colonne 'Entrega do aluno' (livrable de l'étudiant) de la diapositive 20. La colonne 'Demo' (démo) n'existe qu'en partie : le p2-kpm-real collecte du vrai KPM du gNB OAI via FlexRIC, le p2-kpm-analytics fait l'ETL et le KPI, et le p2-test-a1 fait passer une politique par le PMS jusqu'à un simulateur A1. Il n'y a ni consumer, ni actuator, ni effect_report automatique ; le before/after de ce cours vient du lab du professeur."
+    "texto": "Dans le panneau, p2-tema-all exécute les sept thèmes côte à côte sur le même échantillon KPM : c'est le pipeline du projet jusqu'à la politique candidate en dry-run, la colonne « Entrega do aluno » (livrable de l'étudiant) du slide 20. La colonne « Demo » a désormais son déroulé dans p2-closed-loop : les 8 étapes du slide 23, de la pré-vérification au rollback, sur les mêmes données et en dry-run, avec les artefacts au format du lab du professeur. p2-kpm-real collecte de vrais KPM du gNB OAI et p2-test-a1 fait passer une politique par le PMS jusqu'à un simulateur A1. Ce qui reste hors champ, c'est l'effet mesuré : sans le rate-limit appliqué en direct, l'avant/après du test compare deux phases de la même expérience, et il le dit."
   },
   "exercicios": [
+    "p2-closed-loop",
     "p2-tema-all",
     "p2-kpm-real",
     "p2-kpm-analytics",

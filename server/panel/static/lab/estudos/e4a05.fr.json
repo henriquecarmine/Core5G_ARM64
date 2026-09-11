@@ -155,9 +155,10 @@
   ],
   "onde": {
     "scene": "a1",
-    "texto": "Dans le P2, le Non-RT RIC fait tourner le PMS de l'O-RAN SC, et le p2-test-a1 prouve le chemin PMS → A1 → near-RT : il charge le policy type, crée la politique via le PMS, vérifie qu'elle est arrivée et la supprime. De l'autre côté d'A1 se trouve un simulateur (a1-sim), et non l'A1 Mediator avec RMR, consumer et actuator : l'effect_report du cours ne se reproduit donc pas ici, nous avons le PMS réel de la marche 5, mais pas la marche 6. La partie analytique se trouve dans les thèmes : p2-tema-t2 (le même détecteur MAD), p2-tema-t4 (risque de congestion), p2-tema-t6 (énergie) et p2-tema-t7 (règle de QoS), qui se terminent tous par une politique candidate en dry-run, et le p2-tema-t1 dessine dans la console le tableau de bord minimal de la diapositive 19 : headline, cartes, série et action."
+    "texto": "Dans P2, le Non-RT RIC exécute le PMS d'O-RAN SC, et p2-test-a1 prouve le chemin PMS → A1 → near-RT jusqu'à un simulateur (a1-sim), sans A1 Mediator, RMR, consumer ni actuator. Toute la chaîne du cours tourne dans p2-closed-loop, sans la RAN : baseline calme et MAD, decision.json, politique A1, l'action_request avec le rate-limit qui serait appliqué sur oaitun_ue1, effect_report et rollback, avec les artefacts enregistrés et les calculs de variation relative et de points de pourcentage. Hors ligne, l'« après » est la phase de récupération de la même expérience, et le test prévient que cette différence n'est pas un effet de l'actionnement : prouver l'effet exige le rate-limit appliqué en direct. L'analyse des thèmes reste dans p2-tema-t2, t4, t6 et t7, et le tableau de bord minimal du slide 19 est dans p2-tema-t1 et dans le Dashboard KPI/NOC."
   },
   "exercicios": [
+    "p2-closed-loop",
     "p2-tema-t1",
     "p2-tema-t2",
     "p2-tema-t4",

@@ -129,7 +129,8 @@ def _num(x):
 
 
 def load(path):
-    text = open(path, encoding="utf-8-sig").read()
+    with open(path, encoding="utf-8-sig") as fh:
+        text = fh.read()
     lines = [l for l in text.splitlines() if l.strip()]
     if not lines:
         raise SystemExit("arquivo vazio")

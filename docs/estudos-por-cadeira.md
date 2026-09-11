@@ -80,6 +80,56 @@ baseline (o script avisa). Endpoints: `GET /api/lab-data/kpm`,
 professor). O arquivo fica em `panel_uploads/labdata/kpm/kpm_custom.txt` e
 `run_command` injeta `KPM_FILE` nos comandos `p2-tema-*`.
 
+## Closed loop A1 das aulas 05 e 06 — `p2-closed-loop` (v0.88.0)
+
+As aulas 05 e 06 fecham o laço que o projeto só recomenda: KPM → MAD →
+decision → policy A1 → PMS/Mediator → consumer → action_request → actuator →
+KPM after → effect_report → rollback. O código do lab do professor que faz isso
+(`ai_policy_pipeline.py`, `closed_loop_actuator.py`, `kpm_store.py`,
+`run_closed_loop_lab.sh`) está na cópia local do repositório dele
+(`external/cesar-school-repo/data/code/oai-cn-gnb-nonrt-nearrt/`, MIT).
+
+`server/oai-cn-gnb-e2/scripts/temas/closed_loop.py` (só biblioteca padrão,
+reusa o carregador e o MAD de `temas_projeto.py`) + wrapper
+`scripts/p2_closed_loop.sh` percorrem os **8 passos do roteiro da demo**
+(slide 23 da aula 06) sobre a mesma telemetria dos 7 temas (ou o arquivo
+enviado no cartão 💾, via `KPM_FILE`):
+
+| Passo | O que o teste faz | Ao vivo seria |
+|---|---|---|
+| 1. Pré-checagem | lê o arquivo e define baseline / carga / depois pelas fases | Near-RT, PMS `/a1-policy/v2/status`, xApp, nrUE |
+| 2. Baseline calmo | treina o MAD só no baseline → `model.json` | `KPM_TRAFFIC=0` |
+| 3. Stress | resume a fase de carga | iperf UDP UL + `kpm_before` |
+| 4. Decisão | janela das últimas 5 amostras, `apply` se a maioria é anômala (regra do `ai_policy_pipeline.py`) → `decision.json` | idem |
+| 5. A1 | monta a policy (type 1, priorityLevel) em dry-run → `policy.json` | PMS → Mediator → RMR 20010/20011 |
+| 6. Atuação | `action_request.json` (rate_limit 8 Mbit/s, `oaitun_ue1`, uplink); o `tc tbf` é **impresso** | `sudo tc qdisc add … tbf` |
+| 7. After + report | `effect_report.json` com média, mediana, relativo e pp | nova KPM com o limite ativo |
+| 8. Rollback | o `tc qdisc del` é **impresso**; fórmula de recuperação | remover e medir a volta |
+
+Termina no **SEHAL** e grava os artefatos em
+`server/oai-cn-gnb-e2/logs/closed_loop_offline/` (ignorado pelo git),
+incluindo `actuator_events.jsonl`.
+
+**O que o teste se recusa a afirmar.** O modo offline do professor usa como
+"depois" a fase de recuperação do mesmo experimento (`run_closed_loop_lab.sh
+--offline`: "after ≈ baseline"), e o `effect_report` dele mostra a vazão caindo
+78 mil kbps como se fosse efeito. Não é: nenhum `tc` rodou. O nosso relatório
+sai com `"causal": false` e a tela diz "NÃO É EFEITO DA ATUAÇÃO" — é a pergunta
+do slide 73. Os números da execução **ao vivo** dos slides (135,8 → 39,0
+Mbit/s; PRB −73,4 pp) aparecem como referência, marcados como copiados do slide.
+`closed_loop.py` nem importa `subprocess`, e um teste garante isso.
+
+Testes: `python3 server/oai-cn-gnb-e2/scripts/temas/test_closed_loop.py`
+(também em `npm run test:tudo`): decisão `apply` na amostra, cadeia e artefatos
+completos, relatório nunca causal, `observe` sem carga não gera policy nem
+ação, sem fase "depois" não há relatório, contas da aula batendo com os slides.
+
+**Ainda não feito:** a versão **ao vivo** (`tc tbf` de verdade na `oaitun_ue1`
+sob iperf, KPM real antes/depois, rollback medido). Precisa do servidor ligado,
+de trava de carga (tráfego de subida já saturou o box) e de dizer na tela que o
+nosso lab não tem A1 Mediator nem consumer: a atuação sairia da decisão local.
+A atuação real por E2SM-RC fica de fora (PoC no OAI; a action 6 derruba o gNB).
+
 ## Exercícios das cadeiras — todos no painel (v0.87.0)
 
 Até a v0.86 os exercícios viviam na **Plataforma de Atividades da CESAR School**,

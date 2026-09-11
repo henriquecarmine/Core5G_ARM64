@@ -87,6 +87,8 @@ COMMANDS: dict[str, dict] = {
     # integrador sobre a telemetria KPM (stdlib; amostra do professor ou dado
     # enviado/colado no painel, ver /api/lab-data/kpm). Não precisa da RAN no ar.
     "p2-kpi-qoe": {"cmd": ["./scripts/p2_aula04.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
+    # Aulas 05-06: o closed loop A1 em dry-run (os 8 passos do roteiro da demo).
+    "p2-closed-loop": {"cmd": ["./scripts/p2_closed_loop.sh"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-tema-t1": {"cmd": ["./scripts/p2_temas.sh", "t1"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-tema-t2": {"cmd": ["./scripts/p2_temas.sh", "t2"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-tema-t3": {"cmd": ["./scripts/p2_temas.sh", "t3"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
@@ -1148,7 +1150,7 @@ def run_command(command: str, request: Request) -> StreamingResponse:
     if command.startswith("p2-ml-") and _labdata_state().get("sutd") == "custom":
         env = os.environ.copy()
         env["SUTD_DIR"] = str(LABDATA_DIR)
-    if (command.startswith("p2-tema-") or command == "p2-kpi-qoe") and _labdata_state().get("kpm") == "custom" and KPM_CUSTOM.exists():
+    if (command.startswith("p2-tema-") or command in ("p2-kpi-qoe", "p2-closed-loop")) and _labdata_state().get("kpm") == "custom" and KPM_CUSTOM.exists():
         env = env or os.environ.copy()
         env["KPM_FILE"] = str(KPM_CUSTOM)
     return StreamingResponse(

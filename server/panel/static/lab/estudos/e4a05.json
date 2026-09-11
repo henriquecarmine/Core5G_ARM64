@@ -155,9 +155,10 @@
   ],
   "onde": {
     "scene": "a1",
-    "texto": "No P2 o Non-RT RIC roda o PMS da O-RAN SC, e o p2-test-a1 prova o caminho PMS → A1 → near-RT: carrega o policy type, cria a política pelo PMS, confere que ela chegou e apaga. Do outro lado do A1 está um simulador (a1-sim), não o A1 Mediator com RMR, consumer e actuator, então o effect_report da aula não se reproduz aqui: temos o PMS real do degrau 5, mas não o degrau 6. A parte analítica está nos temas: p2-tema-t2 (o mesmo detector MAD), p2-tema-t4 (risco de congestionamento), p2-tema-t6 (energia) e p2-tema-t7 (regra de QoS), todos terminando em política candidata em dry-run, e o p2-tema-t1 desenha no console o painel mínimo do slide 19: headline, cartões, série e ação."
+    "texto": "No P2 o Non-RT RIC roda o PMS da O-RAN SC, e o p2-test-a1 prova o caminho PMS → A1 → near-RT até um simulador (a1-sim), sem A1 Mediator, RMR, consumer nem actuator. A cadeia inteira da aula roda no p2-closed-loop, sem a RAN: baseline calmo e MAD, decision.json, policy A1, o action_request com o rate-limit que seria aplicado na oaitun_ue1, effect_report e rollback, com os artefatos gravados e as contas de variação relativa e de pontos percentuais. Offline, o 'depois' é a fase de recuperação do mesmo experimento, e o teste avisa que essa diferença não é efeito da atuação: provar o efeito exige o rate-limit aplicado ao vivo. A análise dos temas continua nos p2-tema-t2, t4, t6 e t7, e o painel mínimo do slide 19 está no p2-tema-t1 e no Dashboard KPI/NOC."
   },
   "exercicios": [
+    "p2-closed-loop",
     "p2-tema-t1",
     "p2-tema-t2",
     "p2-tema-t4",

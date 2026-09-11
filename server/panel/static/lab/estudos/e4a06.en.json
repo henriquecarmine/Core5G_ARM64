@@ -114,9 +114,10 @@
   ],
   "onde": {
     "scene": "tema",
-    "texto": "In the panel, p2-tema-all runs the seven topics side by side over the same KPM sample: it is the project pipeline up to the candidate policy in dry-run, the 'Entrega do aluno' (student deliverable) column on slide 20. The 'Demo' column only exists in part: p2-kpm-real collects real KPM from the OAI gNB through FlexRIC, p2-kpm-analytics does the ETL and the KPI, and p2-test-a1 takes a policy through the PMS to an A1 simulator. There is no consumer, actuator or automatic effect_report; this lecture's before/after comes from the professor's lab."
+    "texto": "In the panel, p2-tema-all runs the seven themes side by side on the same KPM sample: it is the project pipeline up to the candidate policy in dry-run, the 'Entrega do aluno' (student deliverable) column of slide 20. The 'Demo' column now has its runbook in p2-closed-loop: the 8 steps of slide 23, from pre-check to rollback, on the same data and in dry-run, with the artifacts in the format of the professor's lab. p2-kpm-real collects real KPM from the OAI gNB and p2-test-a1 takes a policy through the PMS to an A1 simulator. What remains out is the measured effect: without the rate limit applied live, the test's before/after compares two phases of the same experiment, and it says so."
   },
   "exercicios": [
+    "p2-closed-loop",
     "p2-tema-all",
     "p2-kpm-real",
     "p2-kpm-analytics",

@@ -676,9 +676,13 @@ const JOURNEY_P2 = [
   { id:"act", num:"5.1",      badge:"opt", nodes:["gnb","ric","xapps"],             flow:[["xapps","ric"],["ric","gnb"]] },
   { id:"nonrt", num:"6",    badge:"opt", nodes:["nonrt-pms","a1sim","ric"],        flow:[["nonrt-pms","a1sim"],["nonrt-pms","ric"]] },
   { id:"a1real", num:"6.1",  badge:"opt", nodes:["nonrt-pms","a1mediator","dbaas"],  flow:[["a1mediator","dbaas"]] },
-  // gestão pelo SMO (server/smo): fora do caminho do UE, mas é a outra metade da O-RAN
-  { id:"o1", num:"7",       badge:"opt", nodes:["smo-controller","sim-odu","sim-oru-hybrid","sim-oru-hier"], flow:[["smo-controller","sim-odu"],["smo-controller","sim-oru-hybrid"],["sim-odu","sim-oru-hier"]] },
-  { id:"ves", num:"7.1",      badge:"opt", nodes:["sim-odu","smo-controller","smo-ves","smo-kafka"], flow:[["sim-odu","smo-ves"],["smo-controller","smo-ves"],["smo-ves","smo-kafka"]] },
+  // gestão pelo SMO (server/smo): fora do caminho do UE, mas é a outra metade da O-RAN.
+  // A etapa 7 apresenta o SMO — o que é, para que serve e como se liga à nossa
+  // rede — antes de mostrar a gestão acontecendo (7.1 O1, 7.2 VES).
+  { id:"smo", num:"7",      badge:"opt", nodes:["user","smo-gateway","smo-identity","smo-topology","smo-odlux","smo-controller","smo-kafka","smo-ves","sim-odu","sim-oru-hybrid","sim-oru-hier"],
+    flow:[["user","smo-gateway"],["smo-gateway","smo-odlux"],["smo-odlux","smo-controller"],["smo-controller","sim-odu"]] },
+  { id:"o1", num:"7.1",       badge:"opt", nodes:["smo-controller","sim-odu","sim-oru-hybrid","sim-oru-hier"], flow:[["smo-controller","sim-odu"],["smo-controller","sim-oru-hybrid"],["sim-odu","sim-oru-hier"]] },
+  { id:"ves", num:"7.2",      badge:"opt", nodes:["sim-odu","smo-controller","smo-ves","smo-kafka"], flow:[["sim-odu","smo-ves"],["smo-controller","smo-ves"],["smo-ves","smo-kafka"]] },
   { id:"summary",  badge:"",    nodes:[],                                 flow:[], full:true },
 ];
 const JOURNEY_P1 = [

@@ -176,11 +176,19 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       console.log('PASS p2 · zoom automático: aproxima na etapa, respeita o botão desligado e volta ao mapa inteiro ao sair');
     }
 
-    // Jornada do UE (só P2): percorre as 19 etapas seguindo o pacote, sem erro
+    // Jornada do UE (só P2): percorre as 20 etapas seguindo o pacote, sem erro
     if (proj === 'p2') {
       await page.click('#journey-btn');
       const jtotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
-      assert(jtotal === 19, `p2: jornada esperava 19 etapas (17 + gestão O1 e eventos VES do SMO, v0.91), veio ${jtotal}`);
+      assert(jtotal === 20, `p2: jornada esperava 20 etapas (17 + o SMO: o que é e como se liga, gestão O1 e eventos VES), veio ${jtotal}`);
+      // A etapa 7 apresenta o SMO: o que é, para que serve e como se liga à rede do lab.
+      const smo = await page.evaluate(() => {
+        showJourney(JOURNEY.findIndex(s => s.id === 'smo'));
+        return { titulo: document.getElementById('tour-title').textContent, legenda: document.getElementById('tour-caption').textContent };
+      });
+      assert(/SMO/.test(smo.titulo) && /para que serve/.test(smo.titulo), `p2: etapa 7 sem o título do SMO: "${smo.titulo}"`);
+      assert(/gestão e orquestração/.test(smo.legenda) && /mesmo servidor/.test(smo.legenda) && /não tem O1/.test(smo.legenda),
+        'p2: a etapa 7 não explica o que é o SMO e como ele se liga à nossa rede');
       // Glossário: a legenda de CADA etapa tem de sair marcada, e todo termo
       // marcado precisa ter balão com conteúdo. Um termo sublinhado cujo balão
       // abre vazio é falha calada — o teste percorre as 17 etapas conferindo.

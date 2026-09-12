@@ -304,6 +304,8 @@ const svg = document.getElementById("diagram");
 const trf = (k, fb) => { if (I18N.lang === "pt") return fb; const v = I18N.t(k); return v === k ? fb : v; };
 const sanit = x => x.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 const FLOW_IFACES = new Set(["RF","N1","N2","N11/Nsmf","E2","E42","N3","N4","N6","A1","SDL","O1","M-plane","VES","Kafka"]);
+// Os nós do SMO são os mesmos nas duas topologias: um texto só, em topo.smo.*
+const chaveNo = n => (n.layer === "smo" || n.layer === "o1net") ? `topo.smo.${n.id}` : `topo.${PROJ}.${n.id}`;
 const SECONDARY = new Set(["SBI","Nausf","Nudm","Nudr","SQL","Telemetria","OAuth"]); // N11/Nsmf fica visível: didático (sessão PDU)
 const MODE_HINT_KEYS = { simplificado: "topo.hint_simple", tecnico: "topo.hint_tech", fluxo: "topo.hint_flow", troubleshooting: "topo.hint_ts" };
 
@@ -416,9 +418,9 @@ function render(){
     const g=el("g",{class:"node"+(n.planned?" planned":"")+(tourDim?" tour-dim":"")},gN); g.dataset.id=n.id;
     el("rect",{x:n.x,y:n.y,width:NODE_W,height:NODE_H,rx:9,class:"card",stroke:borderColor(n)},g);
     el("rect",{x:n.x,y:n.y,width:4,height:NODE_H,rx:2,fill:layerColor(n),opacity:n.planned?.4:1},g);
-    const tt=el("text",{x:n.x+14,y:n.y+20,class:"title"},g); tt.textContent=trf(`topo.${PROJ}.${n.id}.label`, n.label);
+    const tt=el("text",{x:n.x+14,y:n.y+20,class:"title"},g); tt.textContent=trf(`${chaveNo(n)}.label`, n.label);
     // PALAVRA-FUNÇÃO em destaque (o que o componente faz, em 1 palavra)
-    const rl=el("text",{x:n.x+14,y:n.y+37,class:"role",fill:n.planned?"#5a606b":layerColor(n)},g); rl.textContent=trf(`topo.${PROJ}.${n.id}.role`, n.role||"");
+    const rl=el("text",{x:n.x+14,y:n.y+37,class:"role",fill:n.planned?"#5a606b":layerColor(n)},g); rl.textContent=trf(`${chaveNo(n)}.role`, n.role||"");
     // #3 — métrica de RAN ao vivo no card do gNB (SNR/MCS/PRB do log real)
     if(n.id==="gnb" && gnbStats && gnbStats.up && gnbStats.snr!==undefined){
       const parts=[`SNR ${gnbStats.snr}dB`];
@@ -441,13 +443,13 @@ function render(){
 // ---- modal do nó (de onde vem / o que faz / pra onde vai) ----
 function openNode(id){
   const n=nodeById(id);
-  document.getElementById("nm-title").textContent=trf(`topo.${PROJ}.${n.id}.label`, n.label);
-  const roleEl=document.getElementById("nm-role"); roleEl.textContent=trf(`topo.${PROJ}.${n.id}.role`, n.role||""); roleEl.style.color=layerColor(n);
+  document.getElementById("nm-title").textContent=trf(`${chaveNo(n)}.label`, n.label);
+  const roleEl=document.getElementById("nm-role"); roleEl.textContent=trf(`${chaveNo(n)}.role`, n.role||""); roleEl.style.color=layerColor(n);
   const [bc,btKey]=STATUS_BADGE[statusOf(n)];
   const stEl=document.getElementById("nm-status"); stEl.className="badge "+bc; stEl.textContent=I18N.t(btKey);
-  document.getElementById("nm-from").textContent=trf(`topo.${PROJ}.${n.id}.from`, n.from||"—");
-  document.getElementById("nm-does").textContent=trf(`topo.${PROJ}.${n.id}.does`, n.does||n.fn||"—");
-  document.getElementById("nm-to").textContent=trf(`topo.${PROJ}.${n.id}.to`, n.to||"—");
+  document.getElementById("nm-from").textContent=trf(`${chaveNo(n)}.from`, n.from||"—");
+  document.getElementById("nm-does").textContent=trf(`${chaveNo(n)}.does`, n.does||n.fn||"—");
+  document.getElementById("nm-to").textContent=trf(`${chaveNo(n)}.to`, n.to||"—");
   const tech=document.getElementById("nm-tech");
   const kind=I18N.t({container:"topo.kind_container",native:"topo.kind_native",systemd:"topo.kind_systemd",external:"topo.kind_external"}[n.kind])||n.kind;
   let h=`<dt>${I18N.t("topo.nm_type")}</dt><dd>${kind}</dd>`;
@@ -606,7 +608,7 @@ applyThemeIcon();
 
 // ---- #2 tour guiado pelas camadas (por projeto; textos nos dicionários i18n) ----
 const TOUR_LAYERS = PROJ==="p1"
-  ? ["external","admin","ran","core-cp","core-up"]
+  ? ["external","admin","ran","core-cp","core-up","smo","o1net"]
   : ["external","admin","ran","nonrt","oransc","core-cp","core-up","smo","o1net"];
 const TOUR = TOUR_LAYERS.map(layer => ({ layer }));
 let tourIdx=0;
@@ -698,6 +700,11 @@ const JOURNEY_P1 = [
   { id:"egress", num:"4.1",   badge:"req", nodes:["upf-a","dn"],                     flow:[["upf-a","dn"]] },
   { id:"downlink", num:"4.2", badge:"",    nodes:["dn","upf-a","ueransim"],          flow:[["dn","upf-a"],["upf-a","ueransim"]] },
   { id:"failover", num:"5", badge:"opt", nodes:["smf","upf-a","upf-b","dn"],       flow:[["smf","upf-b"],["upf-b","dn"]] },
+  // gestão pelo SMO: o mesmo SMO do P2, fora do caminho do UE (o 5G do P1 não tem O1)
+  { id:"smo", num:"6",      badge:"opt", nodes:["user","caddy","smo-gateway","smo-identity","smo-topology","smo-odlux","smo-controller","smo-kafka","smo-ves","sim-odu","sim-oru-hybrid","sim-oru-hier"],
+    flow:[["user","caddy"],["caddy","smo-gateway"],["smo-gateway","smo-odlux"],["smo-odlux","smo-controller"],["smo-controller","sim-odu"]] },
+  { id:"o1", num:"6.1",       badge:"opt", nodes:["smo-controller","sim-odu","sim-oru-hybrid","sim-oru-hier"], flow:[["smo-controller","sim-odu"],["smo-controller","sim-oru-hybrid"],["sim-odu","sim-oru-hier"]] },
+  { id:"ves", num:"6.2",      badge:"opt", nodes:["sim-odu","smo-controller","smo-ves","smo-kafka"], flow:[["sim-odu","smo-ves"],["smo-controller","smo-ves"],["smo-ves","smo-kafka"]] },
   { id:"summary",  badge:"",    nodes:[],                                 flow:[], full:true },
 ];
 const JOURNEY = PROJ==="p1" ? JOURNEY_P1 : JOURNEY_P2;

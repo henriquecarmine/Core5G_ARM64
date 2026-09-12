@@ -765,6 +765,9 @@
           <button class="toggle-btn" data-toggle="p1-ran" data-up="up-ran" data-down="down-ran" data-label="RAN" data-i18n-title="pc.p1_ran_title" title="RAN — UERANSIM gNB + UE simulados (N2/N3)">
             <div class="toggle-main"><span>RAN</span><span class="toggle-dot"></span></div>
           </button>
+          <button class="toggle-btn" data-toggle="smo" data-up="smo-up" data-down="smo-down" data-label="SMO" data-i18n-title="pc.smo_title_p1" title="SMO do O-RAN SC (OAM) — controlador O1, VES, Keycloak, Kafka e simuladores O-DU/O-RU, imagens ARM64. Pesado (cerca de 5 GB). O Open5GS e o UERANSIM do Projeto 1 não têm O1: o SMO gerencia os simuladores">
+            <div class="toggle-main"><span>SMO</span><span class="toggle-dot"></span></div>
+          </button>
         </div>
         <div class="svc-set" data-svc="p2">
           <button class="toggle-btn" data-toggle="p2-core" data-up="p2-up-core" data-down="p2-down-core" data-label="Core (OAI)" title="Core OAI 5GC v2 — AMF/SMF/UPF (oai-cn5g-v2)">
@@ -3469,6 +3472,7 @@ function updateProjSelector(groups) {
   // Régua: só os serviços do projeto em foco.
   document.querySelectorAll('.svc-set').forEach(g => g.classList.toggle('on', g.dataset.svc === foco));
   _activeProj = active;
+  MiniMap.projeto(foco);   // as cenas do SMO desenham o mapa do projeto em foco
   // A topologia do menu aponta para o projeto no ar (fora dele, o P2 é o padrão
   // do curso). Antes eram dois links, um dentro de cada conjunto por projeto.
   // Topologia: seguem o projeto no ar — P1 ligado abre a topologia do P1, P2 a

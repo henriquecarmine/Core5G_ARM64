@@ -123,20 +123,20 @@
                  note: 'o KPM nasceu no rádio: gNB → E2 → xApp → arquivo; os 2 indicadores do tema saem aqui no painel (política A1 só em dry-run)' },
     demo:      { proj: 'p1', nodes: ['ueransim','upf-a','dn'], flows: [['ueransim','upf-a'],['upf-a','dn'],['dn','upf-a']] },
     // SMO do O-RAN SC (server/smo): o zoom automático enquadra a coluna do SMO
-    smoarq:    { proj: 'p2', nodes: ['smo-gateway','smo-identity','smo-topology','smo-odlux','smo-controller','smo-ves','smo-kafka'],
+    smoarq:    { proj: 'ativo', nodes: ['smo-gateway','smo-identity','smo-topology','smo-odlux','smo-controller','smo-ves','smo-kafka'],
                  flows: [['smo-gateway','smo-odlux'],['smo-odlux','smo-controller'],['smo-controller','sim-odu']],
                  note: 'o SMO lido em execução: camadas, serviços do gateway e elementos sob gerência' },
-    smoo1:     { proj: 'p2', nodes: ['smo-controller','sim-odu'], flows: [['smo-controller','sim-odu','O1 · NETCONF get']],
+    smoo1:     { proj: 'ativo', nodes: ['smo-controller','sim-odu'], flows: [['smo-controller','sim-odu','O1 · NETCONF get']],
                  ghost: [['smo-gateway','smo-controller','RESTCONF']], note: 'a configuração 3GPP da O-DU lida pela O1' },
-    smoprov:   { proj: 'p2', nodes: ['smo-controller','sim-odu'], flows: [['smo-controller','sim-odu','O1 · edit-config']],
+    smoprov:   { proj: 'ativo', nodes: ['smo-controller','sim-odu'], flows: [['smo-controller','sim-odu','O1 · edit-config']],
                  ghost: [['smo-gateway','smo-controller','RESTCONF PATCH']], note: 'a escrita chega ao datastore da O-DU e é desfeita no fim' },
-    smofm:     { proj: 'p2', nodes: ['sim-odu','smo-ves','smo-kafka'], flows: [['sim-odu','smo-ves','VES fault'],['smo-ves','smo-kafka','SEC_FAULT_OUTPUT']],
+    smofm:     { proj: 'ativo', nodes: ['sim-odu','smo-ves','smo-kafka'], flows: [['sim-odu','smo-ves','VES fault'],['smo-ves','smo-kafka','SEC_FAULT_OUTPUT']],
                  note: 'o alarme segue o caminho de falhas até o barramento, e é limpo pelo mesmo caminho' },
-    smopm:     { proj: 'p2', nodes: ['sim-odu','smo-ves','smo-kafka'], flows: [['sim-odu','smo-ves','VES FileReady'],['smo-ves','smo-kafka']],
+    smopm:     { proj: 'ativo', nodes: ['sim-odu','smo-ves','smo-kafka'], flows: [['sim-odu','smo-ves','VES FileReady'],['smo-ves','smo-kafka']],
                  note: 'a O-DU grava a medida 3GPP e avisa o SMO' },
-    smolcm:    { proj: 'p2', nodes: ['sim-oru-hybrid','smo-controller'], flows: [['sim-oru-hybrid','smo-controller','call home']],
+    smolcm:    { proj: 'ativo', nodes: ['sim-oru-hybrid','smo-controller'], flows: [['sim-oru-hybrid','smo-controller','call home']],
                  note: 'o O-RU é encerrado e volta, ligando sozinho para o SMO' },
-    smoocloud: { proj: 'p2', nodes: ['smo-gateway','smo-identity','smo-topology','smo-odlux','smo-kafka','smo-controller','smo-ves','sim-odu','sim-oru-hybrid','sim-oru-hier'],
+    smoocloud: { proj: 'ativo', nodes: ['smo-gateway','smo-identity','smo-topology','smo-odlux','smo-kafka','smo-controller','smo-ves','sim-odu','sim-oru-hybrid','sim-oru-hier'],
                  flows: [], note: 'o O-Cloud do lab: as funções implantadas e o que consomem (sem O2)' },
   };
   var TOPO = { p1: null, p2: null }, hosts = {};
@@ -354,6 +354,8 @@
       if (host && host !== floatHost) { host.style.display = 'none'; host.innerHTML = ''; }
       return;
     }
+    // cenas do SMO: ele aparece nas duas topologias, então o mapa é o do projeto ativo
+    if (mm.proj === 'ativo') mm = Object.assign({}, mm, { proj: projFoco === 'p1' ? 'p1' : 'p2' });
     load(mm.proj).then(function (topo) { draw(host, mm, topo, live); }).catch(function () {});
   }
 
@@ -396,5 +398,7 @@
       winSet(!win.open);
     },
     isOpen: function () { return !!win.open; },
+    // O painel avisa qual projeto está em foco: as cenas do SMO desenham o mapa dele.
+    projeto: function (p) { if (p === 'p1' || p === 'p2') projFoco = p; },
   };
 })();

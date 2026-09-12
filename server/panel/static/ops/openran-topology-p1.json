@@ -1,173 +1,893 @@
 {
   "_comment": "Topologia REAL do Projeto 1 (Open5GS 5GC containerizado + UERANSIM gNB/UE). Nomes de container conforme server/docker-compose.yml. Redes: SBI 10.10/16, N2 10.20/16, N3 10.30/16, N4 10.40/16, N6 10.50/16, UE 10.60/16 (aula01). CUPS: core dividido em core-cp (controle, azul) e core-up (usuário, laranja).",
   "_como_atualizar": "Mesmo schema do openran-topology.json (p2): nodes com id/layer/kind/role/statusKey (container=nome exato) e from/does/to; links com iface (secondary:true some no modo Simplificado). Layers com band:true ganham retângulo de fundo — não deixe bandas se sobrepor. Canvas 1420x880; card 184x66. Valide a geometria (nenhum link pode atravessar card de terceiro).",
-  "canvas": { "w": 1420, "h": 880 },
+  "canvas": {
+    "w": 1980,
+    "h": 980
+  },
   "layers": {
-    "external":  { "label": "Usuário / Admin",                     "color": "#4dabf7" },
-    "admin":     { "label": "Acesso & Administração",              "color": "#b197fc" },
-    "ran":       { "label": "RAN (UERANSIM)",                      "color": "#2f9e44", "band": true },
-    "core-cp":   { "label": "Core 5G — Plano de Controle (SBA)",   "color": "#1c7ed6", "band": true },
-    "core-up":   { "label": "Core 5G — Plano de Usuário",          "color": "#e8590c", "band": true }
+    "external": {
+      "label": "Usuário / Admin",
+      "color": "#4dabf7"
+    },
+    "admin": {
+      "label": "Acesso & Administração",
+      "color": "#b197fc"
+    },
+    "ran": {
+      "label": "RAN (UERANSIM)",
+      "color": "#2f9e44",
+      "band": true
+    },
+    "core-cp": {
+      "label": "Core 5G — Plano de Controle (SBA)",
+      "color": "#1c7ed6",
+      "band": true
+    },
+    "core-up": {
+      "label": "Core 5G — Plano de Usuário",
+      "color": "#e8590c",
+      "band": true
+    },
+    "smo": {
+      "label": "SMO — O-RAN SC OAM (O1 · VES) · ARM64 nativo",
+      "color": "#b197fc",
+      "band": true
+    },
+    "o1net": {
+      "label": "Rede gerenciada por O1 — O-DU e O-RU simulados",
+      "color": "#2f9e44",
+      "band": true
+    }
   },
   "nodes": [
-    { "id": "user", "label": "Usuário / Admin", "role": "Acesso", "sublabel": "navegador",
-      "layer": "external", "kind": "external", "x": 360, "y": 30,
+    {
+      "id": "user",
+      "label": "Usuário / Admin",
+      "role": "Acesso",
+      "sublabel": "navegador",
+      "layer": "external",
+      "kind": "external",
+      "x": 360,
+      "y": 30,
       "from": "Pessoa operando o laboratório pelo navegador.",
       "does": "Acessa o painel web por HTTPS; admin controla, guest só observa.",
       "to": "Envia requisições ao Caddy (porta 443).",
-      "ports": "—", "network": "internet", "ip": "—", "statusKey": null, "planned": false },
-    { "id": "caddy", "label": "Caddy", "role": "Proxy", "sublabel": "reverse proxy + TLS",
-      "layer": "admin", "kind": "systemd", "x": 600, "y": 30, "image": "caddy v2 (systemd)",
+      "ports": "—",
+      "network": "internet",
+      "ip": "—",
+      "statusKey": null,
+      "planned": false
+    },
+    {
+      "id": "caddy",
+      "label": "Caddy",
+      "role": "Proxy",
+      "sublabel": "reverse proxy + TLS",
+      "layer": "admin",
+      "kind": "systemd",
+      "x": 600,
+      "y": 30,
+      "image": "caddy v2 (systemd)",
       "from": "Recebe as requisições HTTPS do navegador (443).",
       "does": "Termina o TLS e autentica (cookie de sessão admin/guest).",
       "to": "Encaminha para o painel em 127.0.0.1:8765 (proxy reverso).",
-      "ports": "HTTPS: 443/TCP · HTTP: 80/TCP", "network": "host", "ip": "0.0.0.0", "statusKey": "svc:caddy", "planned": false },
-    { "id": "panel", "label": "core5g-panel", "role": "Painel", "sublabel": "FastAPI + observabilidade",
-      "layer": "admin", "kind": "systemd", "x": 840, "y": 30, "image": "uvicorn/FastAPI (systemd)",
+      "ports": "HTTPS: 443/TCP · HTTP: 80/TCP",
+      "network": "host",
+      "ip": "0.0.0.0",
+      "statusKey": "svc:caddy",
+      "planned": false
+    },
+    {
+      "id": "panel",
+      "label": "core5g-panel",
+      "role": "Painel",
+      "sublabel": "FastAPI + observabilidade",
+      "layer": "admin",
+      "kind": "systemd",
+      "x": 840,
+      "y": 30,
+      "image": "uvicorn/FastAPI (systemd)",
       "from": "Recebe as chamadas do navegador (via Caddy) e lê o estado do host.",
       "does": "Telemetria leve, logs, controle do lab e cadastro de UE.",
       "to": "Executa scripts locais e consulta os containers do Open5GS.",
-      "ports": "HTTP: 8765/TCP", "network": "loopback", "ip": "127.0.0.1", "statusKey": "svc:core5g-panel", "planned": false },
-    { "id": "webui", "label": "WebUI", "role": "Admin de assinantes", "sublabel": "Open5GS WebUI",
-      "layer": "admin", "kind": "container", "x": 1180, "y": 30, "image": "open5gs-webui",
+      "ports": "HTTP: 8765/TCP",
+      "network": "loopback",
+      "ip": "127.0.0.1",
+      "statusKey": "svc:core5g-panel",
+      "planned": false
+    },
+    {
+      "id": "webui",
+      "label": "WebUI",
+      "role": "Admin de assinantes",
+      "sublabel": "Open5GS WebUI",
+      "layer": "admin",
+      "kind": "container",
+      "x": 1180,
+      "y": 30,
+      "image": "open5gs-webui",
       "from": "Interface web oficial do Open5GS.",
       "does": "Cadastra/edita assinantes (IMSI, K, OPc, slice) no banco.",
       "to": "Grava no MongoDB (UDR).",
-      "ports": "HTTP: 3000/TCP", "network": "core", "ip": "—", "statusKey": "open5gs-webui-containerized", "planned": false },
-
-    { "id": "ueransim", "label": "UERANSIM", "role": "gNB + UE", "sublabel": "RAN simulada (gNB+UE)",
-      "layer": "ran", "kind": "container", "x": 80, "y": 560, "image": "gradiant/ueransim:3.2.6",
+      "ports": "HTTP: 3000/TCP",
+      "network": "core",
+      "ip": "—",
+      "statusKey": "open5gs-webui-containerized",
+      "planned": false
+    },
+    {
+      "id": "ueransim",
+      "label": "UERANSIM",
+      "role": "gNB + UE",
+      "sublabel": "RAN simulada (gNB+UE)",
+      "layer": "ran",
+      "kind": "container",
+      "x": 80,
+      "y": 560,
+      "image": "gradiant/ueransim:3.2.6",
       "from": "Simula a estação rádio-base (gNB) e o celular (UE) no mesmo container.",
       "does": "Faz NG Setup (N2) com o AMF, registra o UE (NAS/N1, que viaja dentro do N2) e abre a sessão PDU; o UE ganha uesimtun0 (10.60.x).",
       "to": "N2 (NGAP) ao AMF e N3 (GTP-U) ao UPF.",
-      "ports": "N2: →38412 · N3: →2152", "network": "n2 10.20.0.101 · n3 10.30.0.11", "ip": "uesimtun0 10.60.0.x", "statusKey": "ueransim", "planned": false },
-
-    { "id": "scp", "label": "SCP", "role": "Proxy SBI", "sublabel": "Service Comm. Proxy",
-      "layer": "core-cp", "kind": "container", "x": 360, "y": 130, "image": "open5gs-scp",
+      "ports": "N2: →38412 · N3: →2152",
+      "network": "n2 10.20.0.101 · n3 10.30.0.11",
+      "ip": "uesimtun0 10.60.0.x",
+      "statusKey": "ueransim",
+      "planned": false
+    },
+    {
+      "id": "scp",
+      "label": "SCP",
+      "role": "Proxy SBI",
+      "sublabel": "Service Comm. Proxy",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 360,
+      "y": 130,
+      "image": "open5gs-scp",
       "from": "Recebe chamadas HTTP/2 entre os NFs.",
       "does": "Roteia o SBI sem cada NF saber o endereço do outro.",
       "to": "Encaminha via NRF (descoberta).",
-      "ports": "SBI: HTTP/2", "network": "sbi 10.10", "ip": "—", "statusKey": "open5gs-scp-containerized", "planned": false },
-    { "id": "nssf", "label": "NSSF", "role": "Seleção de slice", "sublabel": "Slice Selection",
-      "layer": "core-cp", "kind": "container", "x": 360, "y": 250, "image": "open5gs-nssf",
+      "ports": "SBI: HTTP/2",
+      "network": "sbi 10.10",
+      "ip": "—",
+      "statusKey": "open5gs-scp-containerized",
+      "planned": false
+    },
+    {
+      "id": "nssf",
+      "label": "NSSF",
+      "role": "Seleção de slice",
+      "sublabel": "Slice Selection",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 360,
+      "y": 250,
+      "image": "open5gs-nssf",
       "from": "Consultado pelo AMF no registro.",
       "does": "Escolhe a network slice (S-NSSAI) adequada ao UE.",
       "to": "SBI ao AMF.",
-      "ports": "SBI: HTTP/2", "network": "sbi 10.10", "ip": "—", "statusKey": "open5gs-nssf-containerized", "planned": false },
-    { "id": "nrf", "label": "NRF", "role": "Registro de NFs", "sublabel": "Repository Function",
-      "layer": "core-cp", "kind": "container", "x": 620, "y": 250, "image": "open5gs-nrf",
+      "ports": "SBI: HTTP/2",
+      "network": "sbi 10.10",
+      "ip": "—",
+      "statusKey": "open5gs-nssf-containerized",
+      "planned": false
+    },
+    {
+      "id": "nrf",
+      "label": "NRF",
+      "role": "Registro de NFs",
+      "sublabel": "Repository Function",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 620,
+      "y": 250,
+      "image": "open5gs-nrf",
       "from": "Catálogo central de funções de rede.",
       "does": "Toda NF se registra e descobre as outras aqui (SBI).",
       "to": "Responde descobertas a AMF/SMF/AUSF/UDM/…",
-      "ports": "SBI: HTTP/2", "network": "sbi 10.10", "ip": "—", "statusKey": "open5gs-nrf-containerized", "planned": false },
-    { "id": "ausf", "label": "AUSF", "role": "Autenticação", "sublabel": "Auth Server Function",
-      "layer": "core-cp", "kind": "container", "x": 880, "y": 250, "image": "open5gs-ausf",
+      "ports": "SBI: HTTP/2",
+      "network": "sbi 10.10",
+      "ip": "—",
+      "statusKey": "open5gs-nrf-containerized",
+      "planned": false
+    },
+    {
+      "id": "ausf",
+      "label": "AUSF",
+      "role": "Autenticação",
+      "sublabel": "Auth Server Function",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 880,
+      "y": 250,
+      "image": "open5gs-ausf",
       "from": "Chamado pelo AMF no registro do UE.",
       "does": "Valida as credenciais do UE no 5G-AKA.",
       "to": "Consulta o UDM (Nudm).",
-      "ports": "SBI: HTTP/2", "network": "sbi 10.10", "ip": "—", "statusKey": "open5gs-ausf-containerized", "planned": false },
-    { "id": "mongodb", "label": "MongoDB", "role": "Banco", "sublabel": "assinantes",
-      "layer": "core-cp", "kind": "container", "x": 1140, "y": 250, "image": "mongo",
+      "ports": "SBI: HTTP/2",
+      "network": "sbi 10.10",
+      "ip": "—",
+      "statusKey": "open5gs-ausf-containerized",
+      "planned": false
+    },
+    {
+      "id": "mongodb",
+      "label": "MongoDB",
+      "role": "Banco",
+      "sublabel": "assinantes",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 1140,
+      "y": 250,
+      "image": "mongo",
       "from": "Backend de dados do UDR/WebUI.",
       "does": "Guarda os assinantes (IMSI, chaves, slice).",
       "to": "—",
-      "ports": "SQL: 27017/TCP", "network": "core", "ip": "—", "statusKey": "open5gs-mongodb-containerized", "planned": false },
-    { "id": "amf", "label": "AMF", "role": "Mobilidade", "sublabel": "Access & Mobility",
-      "layer": "core-cp", "kind": "container", "x": 360, "y": 410, "image": "open5gs-amf",
+      "ports": "SQL: 27017/TCP",
+      "network": "core",
+      "ip": "—",
+      "statusKey": "open5gs-mongodb-containerized",
+      "planned": false
+    },
+    {
+      "id": "amf",
+      "label": "AMF",
+      "role": "Mobilidade",
+      "sublabel": "Access & Mobility",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 360,
+      "y": 410,
+      "image": "open5gs-amf",
       "from": "Primeiro contato do UE com o core, via gNB (N2/NGAP); recebe também o NAS do UE (N1).",
       "does": "Registro, autenticação e mobilidade do UE; escolhe AUSF/SMF/NSSF.",
       "to": "N2 ao gNB; SBI ao NRF/AUSF; N11 ao SMF.",
-      "ports": "N2: 38412/SCTP · SBI: HTTP/2", "network": "sbi 10.10 · n2 10.20.0.11", "ip": "10.20.0.11", "statusKey": "open5gs-amf-containerized", "planned": false },
-    { "id": "udm", "label": "UDM", "role": "Dados do usuário", "sublabel": "Unified Data Mgmt",
-      "layer": "core-cp", "kind": "container", "x": 880, "y": 410, "image": "open5gs-udm",
+      "ports": "N2: 38412/SCTP · SBI: HTTP/2",
+      "network": "sbi 10.10 · n2 10.20.0.11",
+      "ip": "10.20.0.11",
+      "statusKey": "open5gs-amf-containerized",
+      "planned": false
+    },
+    {
+      "id": "udm",
+      "label": "UDM",
+      "role": "Dados do usuário",
+      "sublabel": "Unified Data Mgmt",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 880,
+      "y": 410,
+      "image": "open5gs-udm",
       "from": "Lógica de assinante sobre o UDR.",
       "does": "Fornece perfil/credenciais (IMSI, K, slice) ao AUSF/SMF.",
       "to": "Lê do UDR (Nudr).",
-      "ports": "SBI: HTTP/2", "network": "sbi 10.10", "ip": "—", "statusKey": "open5gs-udm-containerized", "planned": false },
-    { "id": "udr", "label": "UDR", "role": "Repositório", "sublabel": "Unified Data Repository",
-      "layer": "core-cp", "kind": "container", "x": 1140, "y": 410, "image": "open5gs-udr",
+      "ports": "SBI: HTTP/2",
+      "network": "sbi 10.10",
+      "ip": "—",
+      "statusKey": "open5gs-udm-containerized",
+      "planned": false
+    },
+    {
+      "id": "udr",
+      "label": "UDR",
+      "role": "Repositório",
+      "sublabel": "Unified Data Repository",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 1140,
+      "y": 410,
+      "image": "open5gs-udr",
       "from": "Camada de acesso aos dados do assinante.",
       "does": "Lê/grava o perfil do assinante no MongoDB.",
       "to": "SQL ao MongoDB.",
-      "ports": "SBI: HTTP/2", "network": "sbi 10.10", "ip": "—", "statusKey": "open5gs-udr-containerized", "planned": false },
-    { "id": "smf", "label": "SMF", "role": "Sessão de dados", "sublabel": "Session Management",
-      "layer": "core-cp", "kind": "container", "x": 620, "y": 570, "image": "open5gs-smf",
+      "ports": "SBI: HTTP/2",
+      "network": "sbi 10.10",
+      "ip": "—",
+      "statusKey": "open5gs-udr-containerized",
+      "planned": false
+    },
+    {
+      "id": "smf",
+      "label": "SMF",
+      "role": "Sessão de dados",
+      "sublabel": "Session Management",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 620,
+      "y": 570,
+      "image": "open5gs-smf",
       "from": "Acionado pelo AMF (N11/Nsmf) quando o UE pede sessão PDU.",
       "does": "Cria/gerencia a sessão PDU e programa o UPF (N4/PFCP) — elo de controle do CUPS.",
       "to": "N4 ao UPF; SBI ao NRF/PCF.",
-      "ports": "N4: 8805/UDP · SBI: HTTP/2", "network": "sbi 10.10 · n4 10.40", "ip": "—", "statusKey": "open5gs-smf-containerized", "planned": false },
-    { "id": "pcf", "label": "PCF", "role": "Política/QoS", "sublabel": "Policy Control",
-      "layer": "core-cp", "kind": "container", "x": 880, "y": 570, "image": "open5gs-pcf",
+      "ports": "N4: 8805/UDP · SBI: HTTP/2",
+      "network": "sbi 10.10 · n4 10.40",
+      "ip": "—",
+      "statusKey": "open5gs-smf-containerized",
+      "planned": false
+    },
+    {
+      "id": "pcf",
+      "label": "PCF",
+      "role": "Política/QoS",
+      "sublabel": "Policy Control",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 880,
+      "y": 570,
+      "image": "open5gs-pcf",
       "from": "Consultado pelo SMF/AMF para políticas.",
       "does": "Decide QoS e regras de cobrança das sessões.",
       "to": "Lê do UDR (binding via BSF).",
-      "ports": "SBI: HTTP/2", "network": "sbi 10.10", "ip": "—", "statusKey": "open5gs-pcf-containerized", "planned": false },
-    { "id": "bsf", "label": "BSF", "role": "Binding", "sublabel": "Binding Support",
-      "layer": "core-cp", "kind": "container", "x": 1140, "y": 570, "image": "open5gs-bsf",
+      "ports": "SBI: HTTP/2",
+      "network": "sbi 10.10",
+      "ip": "—",
+      "statusKey": "open5gs-pcf-containerized",
+      "planned": false
+    },
+    {
+      "id": "bsf",
+      "label": "BSF",
+      "role": "Binding",
+      "sublabel": "Binding Support",
+      "layer": "core-cp",
+      "kind": "container",
+      "x": 1140,
+      "y": 570,
+      "image": "open5gs-bsf",
       "from": "Auxilia o PCF.",
       "does": "Localiza qual sessão pertence a qual UE/IP.",
       "to": "SBI ao PCF.",
-      "ports": "SBI: HTTP/2", "network": "sbi 10.10", "ip": "—", "statusKey": "open5gs-bsf-containerized", "planned": false },
-
-    { "id": "upf-a", "label": "UPF-A", "role": "Plano de dados", "sublabel": "User Plane (principal)",
-      "layer": "core-up", "kind": "container", "x": 620, "y": 760, "image": "open5gs-upf",
+      "ports": "SBI: HTTP/2",
+      "network": "sbi 10.10",
+      "ip": "—",
+      "statusKey": "open5gs-bsf-containerized",
+      "planned": false
+    },
+    {
+      "id": "upf-a",
+      "label": "UPF-A",
+      "role": "Plano de dados",
+      "sublabel": "User Plane (principal)",
+      "layer": "core-up",
+      "kind": "container",
+      "x": 620,
+      "y": 760,
+      "image": "open5gs-upf",
       "from": "Recebe N3 (GTP-U) do gNB e N4 (PFCP) do SMF.",
       "does": "Plano de usuário (CUPS): encaminha o tráfego do UE para a internet (DN) sem passar pelo plano de controle; alvo principal do failover.",
       "to": "N6 ao DN.",
-      "ports": "N3: 2152/UDP · N4: 8805/UDP", "network": "n3 10.30 · n6 10.50", "ip": "—", "statusKey": "open5gs-upf-containerized-a", "planned": false },
-    { "id": "dn", "label": "Data Network", "role": "Internet (DN)", "sublabel": "rede externa / iperf3",
-      "layer": "core-up", "kind": "container", "x": 880, "y": 760, "image": "open5gs-dn",
+      "ports": "N3: 2152/UDP · N4: 8805/UDP",
+      "network": "n3 10.30 · n6 10.50",
+      "ip": "—",
+      "statusKey": "open5gs-upf-containerized-a",
+      "planned": false
+    },
+    {
+      "id": "dn",
+      "label": "Data Network",
+      "role": "Internet (DN)",
+      "sublabel": "rede externa / iperf3",
+      "layer": "core-up",
+      "kind": "container",
+      "x": 880,
+      "y": 760,
+      "image": "open5gs-dn",
       "from": "Destino N6 do UPF.",
       "does": "Simula a internet; roda o servidor iperf3 dos testes de throughput.",
       "to": "—",
-      "ports": "iperf3: 5201/TCP", "network": "n6 10.50", "ip": "—", "statusKey": "open5gs-dn-containerized", "planned": false },
-    { "id": "upf-b", "label": "UPF-B", "role": "Plano de dados (backup)", "sublabel": "User Plane (failover)",
-      "layer": "core-up", "kind": "container", "x": 1140, "y": 760, "image": "open5gs-upf",
+      "ports": "iperf3: 5201/TCP",
+      "network": "n6 10.50",
+      "ip": "—",
+      "statusKey": "open5gs-dn-containerized",
+      "planned": false
+    },
+    {
+      "id": "upf-b",
+      "label": "UPF-B",
+      "role": "Plano de dados (backup)",
+      "sublabel": "User Plane (failover)",
+      "layer": "core-up",
+      "kind": "container",
+      "x": 1140,
+      "y": 760,
+      "image": "open5gs-upf",
       "from": "Segunda instância de UPF.",
       "does": "Assume o tráfego quando a UPF-A cai (teste de failover).",
       "to": "N6 ao DN.",
-      "ports": "N3: 2152/UDP · N4: 8805/UDP", "network": "n3 10.30 · n6 10.50", "ip": "—", "statusKey": "open5gs-upf-containerized-b", "planned": false }
+      "ports": "N3: 2152/UDP · N4: 8805/UDP",
+      "network": "n3 10.30 · n6 10.50",
+      "ip": "—",
+      "statusKey": "open5gs-upf-containerized-b",
+      "planned": false
+    },
+    {
+      "id": "smo-identity",
+      "label": "identity (Keycloak)",
+      "role": "Identidade",
+      "sublabel": "usuários e papéis (OIDC)",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1500,
+      "y": 150,
+      "image": "bitnamilegacy/keycloak:26.1.2 + PostgreSQL 13 (imagens oficiais multi-arch)",
+      "from": "Recebe logins e validações de token do ODLUX, do controlador e do kafka-ui, sempre pelo gateway.",
+      "does": "Guarda os usuários do SMO e os papéis de cada um (administration, provision, supervision) no realm onap e emite os tokens OAuth.",
+      "to": "Devolve o token assinado; quem o recebe (o controlador) decide o que aquele usuário pode fazer na O1.",
+      "ports": "HTTP: 8080/TCP (interno)",
+      "network": "dmz",
+      "ip": "—",
+      "statusKey": "identity",
+      "planned": false
+    },
+    {
+      "id": "smo-topology",
+      "label": "topology (NTSim-NG)",
+      "role": "Topologia",
+      "sublabel": "inventário TAPI",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1730,
+      "y": 150,
+      "image": "core5g/smo-nts-ng-topology-server:1.5.2-arm64 (compilado da fonte)",
+      "from": "Carrega o modelo de topologia (TAPI) dos arquivos de dados ao subir.",
+      "does": "Serve o inventário e a topologia da rede gerenciada num OpenDaylight próprio — o mapa de quem se liga a quem que o SMO consulta.",
+      "to": "Responde consultas RESTCONF pelo gateway (topology.<domínio>).",
+      "ports": "RESTCONF: 8181/TCP",
+      "network": "dmz · smo",
+      "ip": "—",
+      "statusKey": "topology",
+      "planned": false
+    },
+    {
+      "id": "smo-gateway",
+      "label": "gateway (Traefik)",
+      "role": "Entrada",
+      "sublabel": "proxy HTTPS + call home",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1500,
+      "y": 280,
+      "image": "traefik:v3.6.25 (o v3.3.6 do upstream não fala com o Docker 29)",
+      "from": "Recebe o operador (HTTPS: o Caddy do servidor publica o console ODLUX e o login; o resto do SMO fica em 127.0.0.1:8443) e o NETCONF call home dos elementos gerenciados.",
+      "does": "A porta única do SMO: termina o TLS e roteia pelo nome do serviço (identity, odlux, controller, ves-collector, topology). Não publica 80/443 no host — são do Caddy do painel.",
+      "to": "Encaminha a cada serviço pela rede interna; simuladores e controlador o alcançam pelo IP fixo 10.250.50.10 (rede dcn).",
+      "ports": "HTTPS: 443/TCP · no host: 127.0.0.1:8443, atrás do Caddy · call home: 4334-4335/TCP",
+      "network": "dmz · dcn",
+      "ip": "10.250.50.10",
+      "statusKey": "gateway",
+      "planned": false
+    },
+    {
+      "id": "smo-odlux",
+      "label": "odlux",
+      "role": "Console",
+      "sublabel": "web do operador (O1)",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1730,
+      "y": 280,
+      "image": "core5g/oam-sdnr-web:13.0.1-arm64 (troca de base)",
+      "from": "Recebe o operador pelo gateway (odlux.oam.<domínio>), já autenticado no Keycloak.",
+      "does": "A tela do SMO: lista os elementos conectados, abre a configuração YANG de cada um e mostra alarmes e medidas.",
+      "to": "Chama o controlador por RESTCONF (controller:8181).",
+      "ports": "HTTP: 8080/TCP",
+      "network": "dmz · smo",
+      "ip": "—",
+      "statusKey": "odlux",
+      "planned": false
+    },
+    {
+      "id": "smo-kafka",
+      "label": "kafka",
+      "role": "Barramento",
+      "sublabel": "tópicos de eventos",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1500,
+      "y": 410,
+      "image": "quay.io/strimzi/kafka:0.35.0 + zookeeper (imagens oficiais multi-arch)",
+      "from": "Recebe os eventos publicados pelo coletor VES.",
+      "does": "O barramento de mensagens do SMO: guarda os eventos em tópicos por domínio, na ordem em que chegaram.",
+      "to": "Entrega a quem assina — análise, rApps, o kafka-ui. É por aqui que alarme e medida chegariam a um Non-RT RIC (no lab, o Non-RT RIC ainda não está ligado ao SMO).",
+      "ports": "Kafka: 9092/TCP (interno)",
+      "network": "smo",
+      "ip": "—",
+      "statusKey": "kafka",
+      "planned": false
+    },
+    {
+      "id": "smo-controller",
+      "label": "controller (SDN-R)",
+      "role": "O1",
+      "sublabel": "OpenDaylight · NETCONF",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1730,
+      "y": 410,
+      "image": "core5g/oam-sdnr:13.0.1-arm64 (troca de base, JDK 21)",
+      "from": "Recebe o call home NETCONF dos elementos (O-DU, O-RU) e os pedidos RESTCONF do ODLUX.",
+      "does": "O cliente NETCONF do SMO: monta cada elemento pelas capacidades YANG que ele anuncia (154 na O-DU), lê e grava configuração e recebe notificações — é a O1 do lab.",
+      "to": "Configura os elementos (O1 e M-plane), valida o login no Keycloak (OAuth) e reporta os próprios eventos ao VES. Nenhum rádio do lab tem O1 (nem o UERANSIM do P1, nem o gNB do OAI do P2): por isso a gerência é demonstrada com simuladores.",
+      "ports": "RESTCONF: 8181/TCP · NETCONF call home: 4334/4335",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "controller",
+      "planned": false
+    },
+    {
+      "id": "smo-ves",
+      "label": "ves-collector",
+      "role": "Eventos",
+      "sublabel": "falhas e medidas (VES 7)",
+      "layer": "smo",
+      "kind": "container",
+      "x": 1500,
+      "y": 540,
+      "image": "core5g/ves-collector:1.12.5-arm64 (troca de base, JDK 11)",
+      "from": "Recebe eventos VES por HTTPS: o registro (pnfRegistration) e os avisos de medida pronta da O-DU, e os eventos do controlador.",
+      "does": "Valida cada evento contra o esquema VES 7.2.1 e o separa por domínio (heartbeat, pnfRegistration, fault, stndDefined).",
+      "to": "Publica cada domínio num tópico do Kafka (ex.: unauthenticated.VES_PNFREG_OUTPUT).",
+      "ports": "VES: 8080/TCP · caminho /eventListener/v7",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "ves-collector",
+      "planned": false
+    },
+    {
+      "id": "sim-odu",
+      "label": "pynts-o-du-o1",
+      "role": "O-DU (sim)",
+      "sublabel": "NETCONF + VES",
+      "layer": "o1net",
+      "kind": "container",
+      "x": 1500,
+      "y": 760,
+      "image": "core5g/pynts-o-du-o1:1212417-arm64 (compilado da fonte: netopeer2, sysrepo)",
+      "from": "Ao subir, liga para o SMO (NETCONF call home sobre TLS).",
+      "does": "Simula uma O-DU gerenciável: um servidor NETCONF (netopeer2) com os modelos YANG da O-RAN, que anuncia 154 capacidades e gera medidas.",
+      "to": "Aceita configuração do controlador (O1), se anuncia e manda medidas ao VES, e gerencia o O-RU hierárquico (M-plane).",
+      "ports": "NETCONF/TLS: 6513/TCP",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "pynts-o-du-o1",
+      "planned": false
+    },
+    {
+      "id": "sim-oru-hybrid",
+      "label": "pynts-o-ru-hybrid",
+      "role": "O-RU (sim)",
+      "sublabel": "M-plane · modelo híbrido",
+      "layer": "o1net",
+      "kind": "container",
+      "x": 1730,
+      "y": 760,
+      "image": "core5g/pynts-o-ru-mplane:1212417-arm64 (compilado da fonte)",
+      "from": "Ao subir, liga para o SMO (NETCONF call home).",
+      "does": "Simula um O-RU do Open Fronthaul no modelo HÍBRIDO: o M-plane dele é gerenciado direto pelo SMO (114 capacidades YANG).",
+      "to": "Aceita configuração do controlador pelo M-plane.",
+      "ports": "NETCONF: 830/TCP",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "pynts-o-ru-hybrid",
+      "planned": false
+    },
+    {
+      "id": "sim-oru-hier",
+      "label": "pynts-o-ru-hierarchical",
+      "role": "O-RU (sim)",
+      "sublabel": "M-plane · modelo hierárquico",
+      "layer": "o1net",
+      "kind": "container",
+      "x": 1500,
+      "y": 890,
+      "image": "core5g/pynts-o-ru-mplane:1212417-arm64 (compilado da fonte)",
+      "from": "Espera a O-DU que o gerencia.",
+      "does": "Simula um O-RU no modelo HIERÁRQUICO: quem o gerencia é a O-DU, não o SMO — por isso ele não aparece no controlador.",
+      "to": "Responde ao M-plane da O-DU.",
+      "ports": "NETCONF: 830/TCP",
+      "network": "smo · dcn",
+      "ip": "—",
+      "statusKey": "pynts-o-ru-hierarchical",
+      "planned": false
+    }
   ],
   "links": [
-    { "from": "user", "to": "caddy", "iface": "HTTPS" },
-    { "from": "caddy", "to": "panel", "iface": "Proxy" },
-    { "from": "panel", "to": "nrf", "iface": "Telemetria", "secondary": true, "dashed": true },
-    { "from": "webui", "to": "mongodb", "iface": "SQL", "secondary": true },
-    { "from": "ueransim", "to": "amf", "iface": "N2" },
-    { "from": "ueransim", "to": "amf", "iface": "N1", "dashed": true, "detail": "NAS UE↔AMF — interface LÓGICA: o UE (dentro do container UERANSIM) fala com o AMF encapsulado no N2." },
-    { "from": "ueransim", "to": "upf-a", "iface": "N3" },
-    { "from": "amf", "to": "nrf", "iface": "SBI" },
-    { "from": "smf", "to": "nrf", "iface": "SBI" },
-    { "from": "ausf", "to": "nrf", "iface": "SBI" },
-    { "from": "udm", "to": "nrf", "iface": "SBI" },
-    { "from": "udr", "to": "nrf", "iface": "SBI", "secondary": true },
-    { "from": "pcf", "to": "nrf", "iface": "SBI", "secondary": true },
-    { "from": "nssf", "to": "nrf", "iface": "SBI", "secondary": true },
-    { "from": "scp", "to": "nrf", "iface": "SBI", "secondary": true },
-    { "from": "amf", "to": "ausf", "iface": "Nausf" },
-    { "from": "amf", "to": "smf", "iface": "N11/Nsmf", "detail": "AMF aciona a criação da sessão PDU no SMF — interface lógica N11 do 3GPP, realizada pelo serviço SBI Nsmf." },
-    { "from": "amf", "to": "nssf", "iface": "Nnssf", "secondary": true },
-    { "from": "ausf", "to": "udm", "iface": "Nudm" },
-    { "from": "udm", "to": "udr", "iface": "Nudr" },
-    { "from": "udr", "to": "mongodb", "iface": "SQL" },
-    { "from": "smf", "to": "pcf", "iface": "Npcf", "secondary": true },
-    { "from": "pcf", "to": "bsf", "iface": "Nbsf", "secondary": true },
-    { "from": "smf", "to": "upf-a", "iface": "N4" },
-    { "from": "smf", "to": "upf-b", "iface": "N4", "secondary": true },
-    { "from": "upf-a", "to": "dn", "iface": "N6" },
-    { "from": "upf-b", "to": "dn", "iface": "N6", "secondary": true }
+    {
+      "from": "user",
+      "to": "caddy",
+      "iface": "HTTPS"
+    },
+    {
+      "from": "caddy",
+      "to": "panel",
+      "iface": "Proxy"
+    },
+    {
+      "from": "panel",
+      "to": "nrf",
+      "iface": "Telemetria",
+      "secondary": true,
+      "dashed": true
+    },
+    {
+      "from": "webui",
+      "to": "mongodb",
+      "iface": "SQL",
+      "secondary": true
+    },
+    {
+      "from": "ueransim",
+      "to": "amf",
+      "iface": "N2"
+    },
+    {
+      "from": "ueransim",
+      "to": "amf",
+      "iface": "N1",
+      "dashed": true,
+      "detail": "NAS UE↔AMF — interface LÓGICA: o UE (dentro do container UERANSIM) fala com o AMF encapsulado no N2."
+    },
+    {
+      "from": "ueransim",
+      "to": "upf-a",
+      "iface": "N3"
+    },
+    {
+      "from": "amf",
+      "to": "nrf",
+      "iface": "SBI"
+    },
+    {
+      "from": "smf",
+      "to": "nrf",
+      "iface": "SBI"
+    },
+    {
+      "from": "ausf",
+      "to": "nrf",
+      "iface": "SBI"
+    },
+    {
+      "from": "udm",
+      "to": "nrf",
+      "iface": "SBI"
+    },
+    {
+      "from": "udr",
+      "to": "nrf",
+      "iface": "SBI",
+      "secondary": true
+    },
+    {
+      "from": "pcf",
+      "to": "nrf",
+      "iface": "SBI",
+      "secondary": true
+    },
+    {
+      "from": "nssf",
+      "to": "nrf",
+      "iface": "SBI",
+      "secondary": true
+    },
+    {
+      "from": "scp",
+      "to": "nrf",
+      "iface": "SBI",
+      "secondary": true
+    },
+    {
+      "from": "amf",
+      "to": "ausf",
+      "iface": "Nausf"
+    },
+    {
+      "from": "amf",
+      "to": "smf",
+      "iface": "N11/Nsmf",
+      "detail": "AMF aciona a criação da sessão PDU no SMF — interface lógica N11 do 3GPP, realizada pelo serviço SBI Nsmf."
+    },
+    {
+      "from": "amf",
+      "to": "nssf",
+      "iface": "Nnssf",
+      "secondary": true
+    },
+    {
+      "from": "ausf",
+      "to": "udm",
+      "iface": "Nudm"
+    },
+    {
+      "from": "udm",
+      "to": "udr",
+      "iface": "Nudr"
+    },
+    {
+      "from": "udr",
+      "to": "mongodb",
+      "iface": "SQL"
+    },
+    {
+      "from": "smf",
+      "to": "pcf",
+      "iface": "Npcf",
+      "secondary": true
+    },
+    {
+      "from": "pcf",
+      "to": "bsf",
+      "iface": "Nbsf",
+      "secondary": true
+    },
+    {
+      "from": "smf",
+      "to": "upf-a",
+      "iface": "N4"
+    },
+    {
+      "from": "smf",
+      "to": "upf-b",
+      "iface": "N4",
+      "secondary": true
+    },
+    {
+      "from": "upf-a",
+      "to": "dn",
+      "iface": "N6"
+    },
+    {
+      "from": "upf-b",
+      "to": "dn",
+      "iface": "N6",
+      "secondary": true
+    },
+    {
+      "from": "smo-gateway",
+      "to": "smo-identity",
+      "iface": "Proxy",
+      "detail": "O Traefik roteia identity.<domínio> para o Keycloak (8080)."
+    },
+    {
+      "from": "smo-gateway",
+      "to": "smo-topology",
+      "iface": "Proxy",
+      "detail": "O Traefik roteia topology.<domínio> para o RESTCONF da topologia."
+    },
+    {
+      "from": "smo-gateway",
+      "to": "smo-odlux",
+      "iface": "Proxy",
+      "detail": "O Traefik roteia odlux.oam.<domínio> para a web do operador."
+    },
+    {
+      "from": "smo-odlux",
+      "to": "smo-controller",
+      "iface": "RESTCONF",
+      "detail": "A web lê e grava a configuração dos elementos no controlador (HTTP :8181)."
+    },
+    {
+      "from": "smo-controller",
+      "to": "smo-gateway",
+      "iface": "OAuth",
+      "detail": "O controlador valida o token do usuário no Keycloak — pelo gateway, no IP fixo da rede dcn."
+    },
+    {
+      "from": "smo-controller",
+      "to": "sim-odu",
+      "iface": "O1",
+      "detail": "NETCONF sobre TLS (:6513), aberto pela própria O-DU (call home): configuração, estado e notificações pelos modelos YANG."
+    },
+    {
+      "from": "smo-controller",
+      "to": "sim-oru-hybrid",
+      "iface": "M-plane",
+      "detail": "NETCONF do Open Fronthaul, modelo híbrido: o SMO gerencia o O-RU direto."
+    },
+    {
+      "from": "sim-odu",
+      "to": "sim-oru-hier",
+      "iface": "M-plane",
+      "detail": "Modelo hierárquico: a O-DU gerencia o O-RU; o SMO só o enxerga através dela."
+    },
+    {
+      "from": "sim-odu",
+      "to": "smo-ves",
+      "iface": "VES",
+      "detail": "Eventos VES por HTTPS: pnfRegistration ao subir e o aviso de arquivo de medida 3GPP pronto."
+    },
+    {
+      "from": "smo-controller",
+      "to": "smo-ves",
+      "iface": "VES",
+      "detail": "O controlador também reporta os próprios eventos ao coletor."
+    },
+    {
+      "from": "smo-ves",
+      "to": "smo-kafka",
+      "iface": "Kafka",
+      "detail": "Cada domínio VES vira um tópico (SEC_HEARTBEAT_OUTPUT, VES_PNFREG_OUTPUT, SEC_3GPP_PERFORMANCEASSURANCE_OUTPUT…)."
+    },
+    {
+      "from": "caddy",
+      "to": "smo-gateway",
+      "iface": "HTTPS",
+      "detail": "Operador → Caddy do servidor → gateway do SMO (127.0.0.1:8443): na internet ficam só o console ODLUX e o login do Keycloak; Basic auth, admin do Keycloak, kafka-ui e VES ficam por dentro."
+    }
   ],
   "interfaces_legend": [
-    { "iface": "HTTPS", "desc": "Acesso web do painel (TLS)." },
-    { "iface": "N1", "desc": "NAS — sinalização lógica UE↔AMF (no UERANSIM, UE e gNB vivem no mesmo container; o N1 viaja dentro do N2)." },
-    { "iface": "N2", "desc": "NGAP/SCTP — controle gNB↔AMF (porta 38412)." },
-    { "iface": "N3", "desc": "GTP-U (UDP 2152) — dados gNB↔UPF (plano de usuário)." },
-    { "iface": "N4", "desc": "PFCP (UDP 8805) — SMF programa o UPF (CUPS: controle → dados)." },
-    { "iface": "N6", "desc": "UPF↔Data Network (internet/iperf3) — saída do plano de usuário." },
-    { "iface": "N11/Nsmf", "desc": "AMF↔SMF — pedido de sessão PDU (interface lógica N11; serviço SBI Nsmf)." },
-    { "iface": "SBI", "desc": "HTTP/2 entre os NFs do Core (registro via NRF) — plano de controle." },
-    { "iface": "Nausf/Nudm/Nudr/Npcf", "desc": "Serviços SBI específicos." },
-    { "iface": "SQL", "desc": "UDR/WebUI ↔ MongoDB (dados de assinante)." },
-    { "iface": "Telemetria", "desc": "Coleta leve de métricas do painel." }
+    {
+      "iface": "HTTPS",
+      "desc": "Acesso web do painel (TLS)."
+    },
+    {
+      "iface": "N1",
+      "desc": "NAS — sinalização lógica UE↔AMF (no UERANSIM, UE e gNB vivem no mesmo container; o N1 viaja dentro do N2)."
+    },
+    {
+      "iface": "N2",
+      "desc": "NGAP/SCTP — controle gNB↔AMF (porta 38412)."
+    },
+    {
+      "iface": "N3",
+      "desc": "GTP-U (UDP 2152) — dados gNB↔UPF (plano de usuário)."
+    },
+    {
+      "iface": "N4",
+      "desc": "PFCP (UDP 8805) — SMF programa o UPF (CUPS: controle → dados)."
+    },
+    {
+      "iface": "N6",
+      "desc": "UPF↔Data Network (internet/iperf3) — saída do plano de usuário."
+    },
+    {
+      "iface": "N11/Nsmf",
+      "desc": "AMF↔SMF — pedido de sessão PDU (interface lógica N11; serviço SBI Nsmf)."
+    },
+    {
+      "iface": "SBI",
+      "desc": "HTTP/2 entre os NFs do Core (registro via NRF) — plano de controle."
+    },
+    {
+      "iface": "Nausf/Nudm/Nudr/Npcf",
+      "desc": "Serviços SBI específicos."
+    },
+    {
+      "iface": "SQL",
+      "desc": "UDR/WebUI ↔ MongoDB (dados de assinante)."
+    },
+    {
+      "iface": "Telemetria",
+      "desc": "Coleta leve de métricas do painel."
+    },
+    {
+      "iface": "Proxy",
+      "desc": "Reverse proxy do Caddy para o painel (127.0.0.1:8765) — TLS termina no Caddy."
+    },
+    {
+      "iface": "O1",
+      "desc": "Gerência O-RAN pelo SMO: NETCONF/YANG (configuração, estado, falhas). No lab: SDN-R ↔ O-DU simulada — nenhum rádio do lab tem O1."
+    },
+    {
+      "iface": "M-plane",
+      "desc": "Gerência do O-RU no Open Fronthaul (NETCONF): direto do SMO (modelo híbrido) ou através da O-DU (hierárquico)."
+    },
+    {
+      "iface": "VES",
+      "desc": "Envelope padrão de eventos (falhas, medidas, registro) dos elementos até o coletor do SMO."
+    },
+    {
+      "iface": "Kafka",
+      "desc": "Barramento de eventos do SMO: um tópico por domínio VES."
+    },
+    {
+      "iface": "RESTCONF",
+      "desc": "YANG por HTTP: a web do operador falando com o controlador."
+    },
+    {
+      "iface": "OAuth",
+      "desc": "Token de login emitido pelo Keycloak e validado pelo controlador."
+    }
   ]
 }

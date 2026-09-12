@@ -13,11 +13,19 @@ services:
   gateway:
     ports: !override
       - "127.0.0.1:${SMO_HTTPS_PORT}:443"
+    # 4. O gateway também na rede smo (a "default" do common). Os serviços que
+    #    ele roteia (controller, ves-collector, odlux, identity, topology,
+    #    kafka-bridge) estão em smo e em dcn ou dmz, e o Traefik usa o endereço
+    #    da primeira rede que o Docker listar. Depois de religar a instância em
+    #    12/09/2026 essa ordem inverteu: o Traefik tentou o controlador em smo,
+    #    que o gateway não alcançava — RESTCONF sem resposta e o call home dos
+    #    simuladores recusado. Nas três redes, qualquer endereço serve.
     networks: !override
       dmz:
         ipv4_address: ${SMO_GATEWAY_DMZ_IP}
       dcn:
         ipv4_address: ${SMO_GATEWAY_IP}
+      default: {}
   # Com o domínio público, o kafka-ui vai ao Keycloak pelo Caddy do painel, que
   # tem certificado válido: o autoassinado do upstream não tem os nomes novos, e
   # a descoberta OIDC do Spring confere o nome (a opção disableHostnameVerification

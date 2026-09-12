@@ -579,6 +579,13 @@ def topology_logs(proj: str = "p2") -> JSONResponse:
     """Logs recentes por componente para a tela de topologia, conforme o projeto
     ativo (?proj=p1|p2). Containers via `docker logs`; gNB/RIC nativos do P2 via
     arquivos de log. Só volta seções com conteúdo (componente parado some)."""
+    # O SMO roda à parte e aparece nas duas topologias.
+    smo = [
+        {"title": "SMO · controller (SDN-R · O1)", "comp": "smo-controller", "lines": _docker_logs("controller", 8)},
+        {"title": "SMO · ves-collector (VES)", "comp": "smo-ves", "lines": _docker_logs("ves-collector", 6)},
+        {"title": "SMO · gateway (Traefik)", "comp": "smo-gateway", "lines": _docker_logs("gateway", 5)},
+        {"title": "O-DU simulada (pynts · O1)", "comp": "sim-odu", "lines": _docker_logs("pynts-o-du-o1", 6)},
+    ]
     if proj == "p1":
         # Projeto 1 — Open5GS (5GC) + UERANSIM (RAN)
         sections = [
@@ -587,6 +594,7 @@ def topology_logs(proj: str = "p2") -> JSONResponse:
             {"title": "SMF (Sessão)", "comp": "smf", "lines": _docker_logs("open5gs-smf-containerized", 8)},
             {"title": "AUSF (Autenticação)", "comp": "ausf", "lines": _docker_logs("open5gs-ausf-containerized", 8)},
             {"title": "NRF (Descoberta)", "comp": "nrf", "lines": _docker_logs("open5gs-nrf-containerized", 6)},
+            *smo,
         ]
     else:
         # Projeto 2 — OAI 5GC v2 + gNB/RIC nativos (host)
@@ -604,10 +612,7 @@ def topology_logs(proj: str = "p2") -> JSONResponse:
             {"title": "A1 Simulator (OSC)", "comp": "a1sim", "lines": _docker_logs("a1-sim-OSC", 6)},
             {"title": "A1 Mediator (O-RAN SC · A1 real)", "comp": "a1mediator", "lines": _docker_logs("ric_a1mediator", 8)},
             {"title": "dbaas (Redis · SDL)", "comp": "dbaas", "lines": _docker_logs("ric_dbaas", 5)},
-            {"title": "SMO · controller (SDN-R · O1)", "comp": "smo-controller", "lines": _docker_logs("controller", 8)},
-            {"title": "SMO · ves-collector (VES)", "comp": "smo-ves", "lines": _docker_logs("ves-collector", 6)},
-            {"title": "SMO · gateway (Traefik)", "comp": "smo-gateway", "lines": _docker_logs("gateway", 5)},
-            {"title": "O-DU simulada (pynts · O1)", "comp": "sim-odu", "lines": _docker_logs("pynts-o-du-o1", 6)},
+            *smo,
             {"title": "AMF (Mobilidade)", "comp": "amf", "lines": _docker_logs("oai-amf", 10)},
             {"title": "SMF (Sessão)", "comp": "smf", "lines": _docker_logs("oai-smf", 8)},
             {"title": "AUSF (Autenticação)", "comp": "ausf", "lines": _docker_logs("oai-ausf", 8)},

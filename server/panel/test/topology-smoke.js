@@ -6,7 +6,7 @@
  * headless, stubando o fetch de /api/topology com os JSONs reais de
  * static/ — sem servidor nem login. Valida:
  *   - render sem pageerror;
- *   - bandas: P1=3 (RAN/CP/UP) · P2=7 (+ Non-RT RIC, near-RT O-RAN SC, SMO e rede gerenciada por O1);
+ *   - bandas: P1=5 (RAN/CP/UP + SMO e rede gerenciada por O1) · P2=7 (+ Non-RT RIC, near-RT O-RAN SC, SMO e rede O1);
  *   - cada contêiner do SMO com o cartão completo (de onde vem, o que faz, para onde vai, imagem);
  *   - rótulos didáticos N1 e N11/Nsmf presentes (links e legenda);
  *   - links paralelos entre os mesmos nós (N1/N2 no P1) com offset;
@@ -79,17 +79,16 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       nodes: document.querySelectorAll('.node').length,
       legend: document.getElementById('legend').textContent,
     }));
-    // P1: 3 bandas (RAN, CP, UP) · P2: 7 (+ Non-RT âmbar e O-RAN SC rosa, v0.53+; SMO e rede O1, v0.91)
-    const wantBands = proj === 'p2' ? 7 : 3;
+    // P1: 5 bandas (RAN, CP, UP + SMO e rede O1, v0.98) · P2: 7 (+ Non-RT âmbar e O-RAN SC rosa, v0.53+; SMO e rede O1, v0.91)
+    const wantBands = proj === 'p2' ? 7 : 5;
     assert(d.bands === wantBands, `${proj}: esperava ${wantBands} bandas, veio ${d.bands}`);
     assert(d.bandLabels.some(l => l.includes('PLANO DE CONTROLE')), `${proj}: banda plano de controle`);
     assert(d.bandLabels.some(l => l.includes('PLANO DE USUÁRIO')), `${proj}: banda plano de usuário`);
-    if (proj === 'p2') {
-      assert(d.bandLabels.some(l => l.startsWith('SMO')), 'p2: banda do SMO');
-      assert(d.bandLabels.some(l => l.includes('REDE GERENCIADA POR O1')), 'p2: banda da rede gerenciada por O1');
-      const faltam = ['O1', 'M-plane', 'VES', 'Kafka', 'RESTCONF', 'OAuth'].filter(i => !d.labels.includes(i));
-      assert(!faltam.length, `p2: interfaces do SMO ausentes no desenho: ${faltam.join(', ')}`);
-    }
+    // o SMO aparece nas duas topologias (v0.91 no P2, v0.98 no P1)
+    assert(d.bandLabels.some(l => l.startsWith('SMO')), `${proj}: banda do SMO`);
+    assert(d.bandLabels.some(l => l.includes('REDE GERENCIADA POR O1')), `${proj}: banda da rede gerenciada por O1`);
+    const faltam = ['O1', 'M-plane', 'VES', 'Kafka', 'RESTCONF', 'OAuth'].filter(i => !d.labels.includes(i));
+    assert(!faltam.length, `${proj}: interfaces do SMO ausentes no desenho: ${faltam.join(', ')}`);
     assert(d.labels.includes('N1'), `${proj}: rótulo N1 presente`);
     assert(d.labels.includes('N11/Nsmf'), `${proj}: rótulo N11/Nsmf presente`);
     assert(d.legend.includes('N11/Nsmf'), `${proj}: legenda com N11/Nsmf`);
@@ -111,7 +110,7 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
 
     await page.click('#tour-btn');
     const ttotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
-    const tEsperado = proj === 'p2' ? 9 : 5;   // P2: + SMO e rede gerenciada por O1 (v0.91)
+    const tEsperado = proj === 'p2' ? 9 : 7;   // + SMO e rede gerenciada por O1 (v0.91 no P2, v0.98 no P1)
     assert(ttotal === tEsperado, `${proj}: tour esperava ${tEsperado} camadas, veio ${ttotal}`);
     const tourSemTexto = [];
     for (let i = 0; i < ttotal; i++) {
@@ -124,9 +123,10 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     await page.click('#tour-exit');
     console.log(`PASS ${proj} · tour (${ttotal} camadas, todas com legenda) sem erro`);
 
-    if (proj === 'p2') {
+    {
       // Cada contêiner do SMO tem a explicação completa no cartão, igual aos
       // outros nós: de onde vem, o que faz, para onde vai, imagem e conexões.
+      // O texto é o mesmo nas duas topologias (topo.smo.*).
       const cartoes = await page.evaluate(() => TOPO.nodes.filter(n => /^(smo|sim)-/.test(n.id)).map(n => {
         openNode(n.id);
         const t = id => document.getElementById(id).textContent;
@@ -134,12 +134,15 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
         document.getElementById('node-overlay').classList.remove('open');
         return r;
       }));
-      assert(cartoes.length === 10, `p2: esperava 10 contêineres do SMO na topologia, veio ${cartoes.length}`);
+      assert(cartoes.length === 10, `${proj}: esperava 10 contêineres do SMO na topologia, veio ${cartoes.length}`);
       const rasos = cartoes.filter(c => [c.from, c.does, c.to].some(v => v.length < 25)
                                      || !c.tech.includes('Imagem') || !c.tech.includes('Conexões'));
-      assert(!rasos.length, `p2: cartão sem explicação completa: ${rasos.map(c => c.id).join(', ')}`);
-      assert(errors.length === 0, `p2: pageerror nos cartões do SMO: ${errors.join(' | ')}`);
-      console.log(`PASS p2 · ${cartoes.length} contêineres do SMO com cartão completo (de onde vem · o que faz · para onde vai · imagem · conexões)`);
+      assert(!rasos.length, `${proj}: cartão sem explicação completa: ${rasos.map(c => c.id).join(', ')}`);
+      assert(errors.length === 0, `${proj}: pageerror nos cartões do SMO: ${errors.join(' | ')}`);
+      console.log(`PASS ${proj} · ${cartoes.length} contêineres do SMO com cartão completo (de onde vem · o que faz · para onde vai · imagem · conexões)`);
+    }
+
+    if (proj === 'p2') {
 
       // Zoom automático: a etapa da jornada enquadra os nós dela; desligado, o
       // mapa fica inteiro; ao sair, volta ao mapa inteiro.
@@ -174,6 +177,24 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
       assert(Math.abs(saiu[2] - cheio[2]) < 1, `p2: ao sair da jornada o mapa não voltou inteiro (${saiu})`);
       assert(errors.length === 0, `p2: pageerror no zoom automático: ${errors.join(' | ')}`);
       console.log('PASS p2 · zoom automático: aproxima na etapa, respeita o botão desligado e volta ao mapa inteiro ao sair');
+    }
+
+    // Jornada do P1: as 13 etapas do UE e as 3 do SMO (o que é e como se liga, O1, VES)
+    if (proj === 'p1') {
+      await page.click('#journey-btn');
+      const jtotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
+      assert(jtotal === 16, `p1: jornada esperava 16 etapas (13 + o SMO: o que é e como se liga, gestão O1 e eventos VES), veio ${jtotal}`);
+      const smo = await page.evaluate(() => {
+        showJourney(JOURNEY.findIndex(s => s.id === 'smo'));
+        return { titulo: document.getElementById('tour-title').textContent, legenda: document.getElementById('tour-caption').textContent };
+      });
+      assert(/SMO/.test(smo.titulo) && /para que serve/.test(smo.titulo), `p1: etapa 6 sem o título do SMO: "${smo.titulo}"`);
+      assert(/gestão e orquestração/.test(smo.legenda) && /mesmo servidor/.test(smo.legenda) && /UERANSIM/.test(smo.legenda),
+        'p1: a etapa 6 não explica o que é o SMO e como ele se liga à rede do P1');
+      for (let i = 0; i < jtotal; i++) await page.evaluate((n) => showJourney(n), i);
+      assert(errors.length === 0, `p1: pageerror na jornada: ${errors.join(' | ')}`);
+      await page.evaluate(() => endJourney());
+      console.log(`PASS p1 · jornada (${jtotal} etapas, com o SMO) sem erro`);
     }
 
     // Jornada do UE (só P2): percorre as 20 etapas seguindo o pacote, sem erro
@@ -272,7 +293,7 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     } else {
       await page.click('#journey-btn');
       const jtotal = await page.evaluate(() => Number(document.getElementById('tour-step').textContent.split('/')[1]));
-      assert(jtotal === 13, `p1: jornada esperava 13 etapas, veio ${jtotal}`);
+      assert(jtotal === 16, `p1: jornada esperava 16 etapas, veio ${jtotal}`);
       for (let i = 0; i < jtotal - 1; i++) await page.click('#tour-next');
       assert(errors.length === 0, `p1: pageerror na jornada: ${errors.join(' | ')}`);
       await page.click('#tour-exit');

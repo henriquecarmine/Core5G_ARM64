@@ -83,6 +83,13 @@ Nenhum deles é de ARM64: todos apareceriam num x86 com o mesmo software de hoje
 | ODLUX logado, mas Connect e Fault vazios; no `karaf.log`, `Unable to update connection-status` | cada contêiner novo do controlador escolhe outro `controllerId`, e o banco guarda conexões e alarmes com o id de quem os gravou; o ODLUX filtra pelo id atual | `smo_alinha_controlador` (`lib.sh`), que o `up_smo.sh` chama depois da camada oam |
 | gateway e kafka-ui perderiam os certificados | a troca ampla reescreveu também `certs-selfsigned/smo.o-ran-sc.org.crt` no compose | linhas com `certs-selfsigned/` ficam como estão |
 
+### Depois de desligar e religar a instância (12/09/2026)
+
+| Sintoma | Causa | Correção |
+|---|---|---|
+| simuladores parados e um contêiner do SMO fora | quase todos os serviços do SMO (e os simuladores) não têm política de reinício; de propósito, o SMO só sobe pelo botão (pesa ~5 GB e não sobe com o P2) | `./up_smo.sh` (ou o botão SMO do painel) |
+| controlador "healthy" no Docker, mas RESTCONF pelo gateway sem resposta (HTTP 000) e nenhum elemento conectado; no log do Traefik, `dial tcp 172.18.0.11:4335` | os serviços roteados estão na rede `smo` e em `dcn`/`dmz`, e o Traefik usa o endereço da primeira rede listada; após o religamento a ordem inverteu e ele passou a usar `smo`, onde o gateway não estava | gateway também na rede `smo` (`compose/common.override.yaml`); na hora, `docker network connect smo gateway` resolveu e os elementos voltaram em 10 s |
+
 ## Operação
 
 - `./smo_ao_vivo.sh` imprime o retrato do SMO em JSON (elementos sob gerência,

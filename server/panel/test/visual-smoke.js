@@ -239,6 +239,50 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   await page.setRequestInterception(false);
   console.log(`PASS 9 · rótulo "servidor" abre as características (${srvInfo.secoes.length} seções, ${srvInfo.rotulos.length} itens, clique e Enter)`);
 
+  // 10) SMO ao vivo: o botão da cadeira 5 abre o retrato do SMO no modal de
+  // texto — 6 seções traduzidas, estados coloridos, idade do último evento —
+  // e, com o SMO desligado, diz o que fazer em vez de uma tela vazia.
+  let smoResposta = { no_ar: true, gerado_em: '21:00:00', falhas: [],
+    elementos: [{ no: 'pynts-o-du-o1', estado: 'connected', endereco: '10.250.50.4:6513', yang: 154, oran: 60, g3: 20 }],
+    conexoes: [{ hora: '20:14:12.400', no: 'pynts-o-ru-hybrid', estado: 'Connected' }],
+    alarmes: [],
+    historico: { total: 8, itens: [{ hora: '20:13:22.312', severidade: 'Critical', no: 'pynts-o-du-o1', objeto: 'fronthaul-0', problema: 'linkDown' }] },
+    barramento: [{ topico: 'unauthenticated.SEC_FAULT_OUTPUT', eventos: 9,
+      ultimo: { hora: '20:13:23', idade_s: 190, dominio: 'fault', evento: 'fault_O-RAN-DU_linkDown', origem: 'pynts-o-du-o1' } }],
+    conteineres: [{ camada: 'oam', nome: 'controller', estado: 'running', status: 'Up 3 hours (healthy)' }] };
+  const onSmo = (req) => req.url().includes('/api/smo')
+    ? req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(smoResposta) }) : req.continue();
+  await page.setRequestInterception(true);
+  page.on('request', onSmo);
+  await page.evaluate(() => document.getElementById('smo-live-btn').click());
+  await page.waitForFunction(() => document.querySelectorAll('#smo-body .smo-sec').length > 0, { timeout: 5000 });
+  const smoVivo = await page.evaluate(() => ({
+    aberto: document.getElementById('smo-overlay').classList.contains('open'),
+    secoes: [...document.querySelectorAll('#smo-body .smo-sec h4')].map(h => h.textContent),
+    texto: document.getElementById('smo-body').innerText,
+    verdes: document.querySelectorAll('#smo-body .ok').length,
+    vermelhos: document.querySelectorAll('#smo-body .err').length,
+    ts: document.getElementById('smo-ts').textContent,
+  }));
+  assert(smoVivo.aberto && smoVivo.secoes.length === 6, `SMO ao vivo devia abrir com 6 seções, veio ${smoVivo.secoes.length}`);
+  assert(!/\bsmo\.[a-z_]+/.test(smoVivo.texto + smoVivo.secoes.join(' ')), 'SMO ao vivo com chave de tradução crua');
+  for (const esperado of ['pynts-o-du-o1', '154 modelos YANG', 'nenhum alarme ativo', '8 no total', '9 eventos', 'há 3 min', 'controller', 'Up 3 hours (healthy)']) {
+    assert(smoVivo.texto.includes(esperado) || smoVivo.secoes.join(' ').includes(esperado), `SMO ao vivo devia mostrar "${esperado}"`);
+  }
+  assert(smoVivo.verdes >= 3 && smoVivo.vermelhos >= 1, `estados coloridos: ${smoVivo.verdes} verdes, ${smoVivo.vermelhos} vermelhos`);
+  assert(smoVivo.ts.includes('21:00:00'), `a hora da leitura devia aparecer (veio "${smoVivo.ts}")`);
+  smoResposta = { no_ar: false };
+  await page.click('#smo-refresh');
+  await new Promise((r) => setTimeout(r, 400));
+  const smoDesligado = await page.evaluate(() => document.getElementById('smo-body').innerText);
+  assert(/desligado/.test(smoDesligado), `com o SMO desligado devia explicar (veio "${smoDesligado.slice(0, 80)}")`);
+  await page.keyboard.press('Escape');
+  const smoFechado = await page.evaluate(() => !document.getElementById('smo-overlay').classList.contains('open'));
+  assert(smoFechado, 'Escape devia fechar o SMO ao vivo');
+  page.off('request', onSmo);
+  await page.setRequestInterception(false);
+  console.log(`PASS 10 · SMO ao vivo: ${smoVivo.secoes.length} seções, ${smoVivo.verdes} estados verdes e ${smoVivo.vermelhos} vermelhos, SMO desligado explicado, Escape fecha`);
+
   // Screenshot de inspeção: projeto ativo + loaders em botões visíveis.
   await page.evaluate(() => {
     document.querySelectorAll('.tools-set').forEach(s => s.classList.toggle('active', s.dataset.tools === 'p1'));
@@ -259,7 +303,7 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   await new Promise(r => setTimeout(r, 200));
   await page.screenshot({ path: path.join(SHOTS, 'loaders.png'), clip: { x: 0, y: 0, width: 1400, height: 560 } });
   console.log('\nScreenshot: ' + path.join(SHOTS, 'loaders.png'));
-  console.log('✅ TODOS OS TESTES PASSARAM (0–8).');
+  console.log('✅ TODOS OS TESTES PASSARAM (0–10).');
   await browser.close();
   await srv.fechar();
 })().catch(e => { console.error('\n❌ ' + e.message); process.exit(1); });

@@ -532,6 +532,26 @@
   /* Características do servidor: o rótulo "servidor" da telemetria abre o modal */
   .q-lb-btn { cursor:pointer; }
   .q-lb-btn:hover, .q-lb-btn:focus-visible { color:var(--accent-text); }
+  /* SMO ao vivo: o mesmo modal de texto dos logs da topologia */
+  #smo-overlay { display:none; position:fixed; inset:0; background:var(--overlay); z-index:200; align-items:center; justify-content:center; }
+  #smo-overlay.open { display:flex; }
+  #smo-modal { background:var(--panel); border:1px solid var(--border); border-radius:12px; width:92vw; max-width:920px; height:82vh; display:flex; flex-direction:column; overflow:hidden; }
+  #smo-head { display:flex; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 18px; border-bottom:1px solid var(--border); }
+  #smo-head h3 { font-size:14px; margin:0; color:var(--text); }
+  #smo-ts { font-size:11px; color:var(--muted); }
+  #smo-head label { margin-left:auto; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+  #smo-head button { width:auto; }
+  #smo-close { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:0 4px; line-height:1; }
+  /* corpo = terminal: escuro nos DOIS temas, paleta fixa (mesma regra dos logs) */
+  #smo-body { flex:1; overflow-y:auto; padding:6px 0; background:#0d0e11; }
+  .smo-sec { border-bottom:1px solid #2c3038; }
+  .smo-sec h4 { margin:0; padding:9px 18px 2px; font-size:12px; color:#e8590c; display:flex; align-items:center; gap:8px; }
+  .smo-sec h4 .dot { width:7px; height:7px; border-radius:50%; background:#2f9e44; }
+  .smo-sec h4 .dot.nok { background:#e03131; }
+  .smo-h { padding:0 18px 5px; font-size:11px; color:#8a8f98; }
+  .smo-sec pre { margin:0; padding:0 18px 10px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:11px; line-height:1.55; color:#9aa4b2; white-space:pre-wrap; word-break:break-word; }
+  .smo-sec .ok { color:#51cf66; } .smo-sec .err { color:#ff6b6b; } .smo-sec .warn { color:#fcc419; } .smo-sec .dim { color:#6c7480; }
+  #smo-msg { color:#8a8f98; padding:24px; text-align:center; font-size:13px; }
   #info-modal.srv { max-width:780px; }
   .srv-fonte { font-size:11px; color:var(--muted); margin:0 0 10px; }
   .srv-sec { margin:0 0 14px; }
@@ -774,6 +794,18 @@
     <div id="info-modal-body"></div>
   </div>
 </div>
+<div id="smo-overlay">
+  <div id="smo-modal" role="dialog" aria-labelledby="smo-modal-title">
+    <div id="smo-head">
+      <h3 id="smo-modal-title" data-i18n="smo.titulo">SMO ao vivo</h3>
+      <span id="smo-ts"></span>
+      <label><input type="checkbox" id="smo-auto" checked> <span data-i18n="smo.auto">auto (10 s)</span></label>
+      <button id="smo-refresh" data-i18n="topo.refresh">Atualizar</button>
+      <button id="smo-close" aria-label="×">×</button>
+    </div>
+    <div id="smo-body"></div>
+  </div>
+</div>
 <div id="demo-overlay">
   <div id="demo-modal">
     <div id="demo-modal-header">
@@ -983,6 +1015,7 @@
         <details class="estudo" data-estudo="e4" open>
           <summary><span class="est-n">5</span><span class="est-t" data-i18n="rail.e5">Gestão, Orquestração e Automação (SMO)</span><span class="est-b">SMO</span></summary>
           <div class="est-body">
+            <button class="primary" id="smo-live-btn" data-i18n="smo.vivo" data-i18n-title="smo.vivo_title" title="O SMO agora, só leitura: elementos sob gerência, conexões, alarmes, barramento Kafka e contêineres. Atualiza sozinho; o endereço curto é /smo">SMO ao vivo (o que o operador vê)</button>
             <div class="est-sub" data-i18n="rail.e5_aval">Avaliação · plataformas de SMO, um teste por item</div>
             <div class="test-block" data-proj-tests="any">
               <button class="test-any" data-cmd="smo-arquitetura" data-i18n="t.smo_arquitetura" data-i18n-title="t.smo_arquitetura_title" title="Itens 1 a 3: as 3 camadas e os contêineres em execução, os serviços publicados no gateway e os elementos O-RAN sob gerência — e o que fica fora do OAM (A1, O2)">Arquitetura do SMO (serviços e componentes)</button>
@@ -2906,6 +2939,99 @@ async function openServerInfo() {
   hb.addEventListener('click', openServerInfo);
   hb.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openServerInfo(); } });
 }
+
+// ---- SMO ao vivo: o retrato do SMO no modal de texto (botão na cadeira 5, ou /smo) ----
+// Só leitura, lido no servidor por server/smo/smo_ao_vivo.sh (GET /api/smo):
+// elementos sob gerência, conexões, alarmes, barramento Kafka e contêineres.
+// Valores técnicos como o SMO informa; títulos e explicações nos 4 idiomas.
+const SMO_AUTO_MS = 10000;
+let smoTimer = null;
+function smoIdade(s) { s = Math.max(0, s || 0); return s < 60 ? s + ' s' : s < 3600 ? Math.round(s / 60) + ' min' : Math.round(s / 3600) + ' h'; }
+function smoCor(v) {
+  const s = String(v ?? '');
+  const cls = /unhealthy|^exited|^dead|unable-to-connect|^critical$|^major$|^disconnected$|^unmounted$/i.test(s) ? 'err'
+    : /starting|^restarting|^connecting$|^minor$|^warning$/i.test(s) ? 'warn'
+    : /^connected$|^running$|^mounted$|healthy\)$/i.test(s) ? 'ok'
+    : /^nonalarmed$|^cleared$/i.test(s) ? 'dim' : '';
+  return cls ? `<span class="${cls}">${escHtml(s)}</span>` : escHtml(s);
+}
+// coluna de largura fixa (o texto é monoespaçado); cor só nos estados
+function smoCol(v, n, cor) { const s = String(v ?? ''); return (cor ? smoCor(s) : escHtml(s)) + ' '.repeat(Math.max(1, n - s.length)); }
+function smoSecao(id, titulo, linhas, ok = true) {
+  return `<div class="smo-sec" data-sec="${id}"><h4><span class="dot${ok ? '' : ' nok'}"></span>${escHtml(titulo)}</h4>`
+    + `<div class="smo-h">${escHtml(I18N.t('smo.h_' + id))}</div><pre>${linhas.join('\n')}</pre></div>`;
+}
+function renderSmo(d) {
+  const t = (k, p) => I18N.t(k, p);
+  const vazio = k => [`<span class="dim">${escHtml(t(k))}</span>`];
+  const larg = (arr, f, min) => Math.max(min, ...arr.map(x => String(f(x) ?? '').length)) + 2;
+  const out = [];
+  const wEl = larg(d.elementos, e => e.no, 14);
+  out.push(smoSecao('elementos', t('smo.sec_elementos'), d.elementos.length
+    ? d.elementos.map(e => smoCol(e.no, wEl) + smoCol(e.estado, 12, true) + smoCol(e.endereco, 22) + escHtml(t('smo.yang', { n: e.yang, oran: e.oran, g3: e.g3 })))
+    : vazio('smo.sem_elementos'), d.elementos.length > 0 && d.elementos.every(e => e.estado === 'connected')));
+  const wCx = larg(d.conexoes, c => c.no, 14);
+  out.push(smoSecao('conexoes', t('smo.sec_conexoes'), d.conexoes.length
+    ? d.conexoes.map(c => smoCol(c.hora, 14) + smoCol(c.no, wCx) + smoCor(c.estado)) : vazio('smo.sem_conexoes')));
+  const evs = d.alarmes.concat(d.historico.itens);
+  const wNo = larg(evs, a => a.no, 14), wObj = larg(evs, a => a.objeto, 8);
+  const ev = a => smoCol(a.hora, 14) + smoCol(a.severidade, 12, true) + smoCol(a.no, wNo) + smoCol(a.objeto, wObj) + escHtml(a.problema);
+  out.push(smoSecao('alarmes', t('smo.sec_alarmes'), d.alarmes.length ? d.alarmes.map(ev) : vazio('smo.sem_alarmes'), d.alarmes.length === 0));
+  out.push(smoSecao('historico', t('smo.sec_historico', { n: d.historico.total }), d.historico.itens.length ? d.historico.itens.map(ev) : vazio('smo.sem_historico')));
+  const wTp = larg(d.barramento, b => b.topico, 20), wEv = larg(d.barramento, b => t('smo.eventos', { n: b.eventos }), 10);
+  out.push(smoSecao('barramento', t('smo.sec_barramento'), d.barramento.length
+    ? d.barramento.map(b => smoCol(b.topico, wTp) + smoCol(t('smo.eventos', { n: b.eventos }), wEv) + (b.ultimo
+      ? escHtml([t('smo.ultimo', { hora: b.ultimo.hora, idade: smoIdade(b.ultimo.idade_s) }), b.ultimo.dominio, b.ultimo.evento, b.ultimo.origem].filter(Boolean).join(' · '))
+      : `<span class="dim">${escHtml(t('smo.sem_eventos'))}</span>`))
+    : vazio('smo.sem_eventos'), d.barramento.length > 0));
+  const wCt = larg(d.conteineres, c => c.nome, 14);
+  out.push(smoSecao('conteineres', t('smo.sec_conteineres', { n: d.conteineres.length }),
+    d.conteineres.map(c => smoCol(c.camada, 9) + smoCol(c.nome, wCt) + smoCol(c.estado, 10, true) + smoCor(c.status)),
+    d.conteineres.every(c => c.estado === 'running')));
+  const parcial = (d.falhas || []).length ? `<div id="smo-msg">${escHtml(t('smo.parcial', { partes: d.falhas.join(', ') }))}</div>` : '';
+  return parcial + out.join('');
+}
+async function loadSmo() {
+  const body = document.getElementById('smo-body');
+  const msg = txt => { body.innerHTML = `<div id="smo-msg">${escHtml(txt)}</div>`; };
+  if (!body.firstChild) msg(I18N.t('smo.carregando'));
+  try {
+    const r = await fetch('/api/smo', { cache: 'no-store' });
+    if (r.status === 401) { location.href = '/login'; return; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (!document.getElementById('smo-overlay').classList.contains('open')) return;
+    if (d.no_ar === false) { document.getElementById('smo-ts').textContent = ''; msg(I18N.t('smo.desligado')); return; }
+    if (d.erro) throw new Error(d.erro);
+    document.getElementById('smo-ts').textContent = I18N.t('smo.atualizado', { hora: d.gerado_em });
+    const rolagem = body.scrollTop;
+    body.innerHTML = renderSmo(d);
+    body.scrollTop = rolagem;          // a atualização automática não tira o leitor do lugar
+  } catch (e) {
+    msg(I18N.t('smo.falha') + ' (' + String(e.message || e) + ')');
+  }
+}
+function smoAgenda() {
+  clearInterval(smoTimer);
+  smoTimer = document.getElementById('smo-auto').checked ? setInterval(loadSmo, SMO_AUTO_MS) : null;
+}
+function openSmo() {
+  document.getElementById('smo-body').innerHTML = '';
+  document.getElementById('smo-overlay').classList.add('open');
+  loadSmo(); smoAgenda();
+}
+function closeSmo() {
+  document.getElementById('smo-overlay').classList.remove('open');
+  clearInterval(smoTimer); smoTimer = null;
+  if (location.hash === '#smo') history.replaceState(null, '', location.pathname + location.search);
+}
+document.getElementById('smo-live-btn').addEventListener('click', openSmo);
+document.getElementById('smo-close').addEventListener('click', closeSmo);
+document.getElementById('smo-refresh').addEventListener('click', loadSmo);
+document.getElementById('smo-auto').addEventListener('change', smoAgenda);
+document.getElementById('smo-overlay').addEventListener('click', e => { if (e.target.id === 'smo-overlay') closeSmo(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('smo-overlay').classList.contains('open')) closeSmo(); });
+if (location.hash === '#smo') openSmo();   // /smo redireciona para /#smo
 
 // ===== UE Lab =====
 document.getElementById('uelab-open-btn').addEventListener('click', openUeLab);

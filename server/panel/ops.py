@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Iterator
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
 
 from core import (
     pagina,
@@ -1095,6 +1095,37 @@ def server_info(request: Request) -> JSONResponse:
         with _srv_info_lock:
             _SRV_INFO["data"], _SRV_INFO["ts"] = data, agora
     return JSONResponse({**data, "dominio": request.url.hostname})
+
+
+# ---------------------------------------------------------------------------
+# SMO ao vivo — o modal de texto do painel (botão na cadeira 5, ou /smo).
+# Quem lê é server/smo/smo_ao_vivo.sh, com o mesmo acesso dos testes da
+# apresentação (gateway local). Uma leitura leva alguns segundos: o cache faz
+# N alunos custarem uma a cada SMO_VIVO_TTL, e o lock evita duas ao mesmo tempo.
+# ---------------------------------------------------------------------------
+SMO_VIVO_TTL = 8.0
+_SMO_VIVO: dict = {"data": None, "ts": 0.0}
+_smo_vivo_lock = threading.Lock()
+
+
+@router.get("/smo")
+def smo_page() -> RedirectResponse:
+    """Endereço curto para a projeção: abre o painel já com o SMO ao vivo."""
+    return RedirectResponse("/#smo")
+
+
+@router.get("/api/smo")
+def smo_ao_vivo() -> JSONResponse:
+    with _smo_vivo_lock:
+        if _SMO_VIVO["data"] is None or time.time() - _SMO_VIVO["ts"] > SMO_VIVO_TTL:
+            try:
+                out = subprocess.run(["./smo_ao_vivo.sh"], cwd=SERVER_DIR / "smo",
+                                     capture_output=True, text=True, timeout=45)
+                data = json.loads(out.stdout)
+            except (subprocess.TimeoutExpired, OSError, ValueError) as e:
+                data = {"erro": type(e).__name__}
+            _SMO_VIVO["data"], _SMO_VIVO["ts"] = data, time.time()
+        return JSONResponse(_SMO_VIVO["data"])
 
 
 @router.get("/api/logs/{service}")

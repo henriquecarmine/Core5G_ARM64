@@ -71,6 +71,9 @@ Nenhum deles é de ARM64: todos apareceriam num x86 com o mesmo software de hoje
 
 ## Operação
 
+- `./smo_ao_vivo.sh` imprime o retrato do SMO em JSON (elementos sob gerência,
+  conexões, alarmes, barramento Kafka, contêineres). É o que o painel mostra no
+  modal **SMO ao vivo** (cadeira 5, ou `/smo`), sem túnel. Só leitura; ~3 s.
 - `./test_smo.sh` confere o SMO pelo gateway e serve de evidência: realm do
   Keycloak, controlador pronto, nós NETCONF conectados (O-DU com 154 e O-RU com
   114 capacidades YANG em 11/09/2026), heartbeat aceito pelo VES (202) e
@@ -99,6 +102,23 @@ e, no `/etc/hosts` da máquina local:
 ```
 
 Depois: `https://odlux.oam.smo.o-ran-sc.org` (certificado autoassinado).
+
+Com `sudo`, passe a chave por caminho absoluto (o `~` do root é outro). A porta
+tem de ser a 443 porque o controlador manda o login para
+`IDENTITY_PROVIDER_URL=https://identity.smo.o-ran-sc.org`, sem porta.
+
+Usuários do ODLUX: os do realm em
+`run/solution/smo/common/identity/authentication.json`, todos com a senha padrão
+pública `Default4SDN!`; `martin.skorupski`, `leia.organa` e `r2.d2` têm o papel
+`administration`, `luke.skywalker` é `provision` e `jargo.fett` é `supervision`.
+O Keycloak pede troca de senha no primeiro login (`UPDATE_PASSWORD`). Os testes
+do painel não usam esses usuários (vão ao controlador com o `ADMIN_USERNAME` de
+`smo/oam/.env`), então trocar a senha não quebra nada. O admin do próprio
+Keycloak é `admin`, com a senha em `smo/common/.env`.
+
+ODLUX e Keycloak mandam `X-Frame-Options: SAMEORIGIN` e
+`frame-ancestors 'self'`: não abrem dentro de um iframe do painel. Para a turma,
+o painel tem o **SMO ao vivo** (só leitura, mesmos dados).
 
 ## Limites
 

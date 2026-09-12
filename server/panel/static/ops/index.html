@@ -539,7 +539,8 @@
   #smo-head { display:flex; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 18px; border-bottom:1px solid var(--border); }
   #smo-head h3 { font-size:14px; margin:0; color:var(--text); }
   #smo-ts { font-size:11px; color:var(--muted); }
-  #smo-head label { margin-left:auto; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+  #smo-head label { margin-left:auto; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:5px; white-space:nowrap; }
+  #smo-head input { width:auto; margin:0; }
   #smo-head button { width:auto; }
   #smo-close { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:0 4px; line-height:1; }
   /* corpo = terminal: escuro nos DOIS temas, paleta fixa (mesma regra dos logs) */
@@ -2978,11 +2979,12 @@ function renderSmo(d) {
   const ev = a => smoCol(a.hora, 14) + smoCol(a.severidade, 12, true) + smoCol(a.no, wNo) + smoCol(a.objeto, wObj) + escHtml(a.problema);
   out.push(smoSecao('alarmes', t('smo.sec_alarmes'), d.alarmes.length ? d.alarmes.map(ev) : vazio('smo.sem_alarmes'), d.alarmes.length === 0));
   out.push(smoSecao('historico', t('smo.sec_historico', { n: d.historico.total }), d.historico.itens.length ? d.historico.itens.map(ev) : vazio('smo.sem_historico')));
-  const wTp = larg(d.barramento, b => b.topico, 20), wEv = larg(d.barramento, b => t('smo.eventos', { n: b.eventos }), 10);
+  // nomes de tópico são longos: o último evento vai na linha de baixo, recuado
+  const wTp = larg(d.barramento, b => b.topico, 20);
   out.push(smoSecao('barramento', t('smo.sec_barramento'), d.barramento.length
-    ? d.barramento.map(b => smoCol(b.topico, wTp) + smoCol(t('smo.eventos', { n: b.eventos }), wEv) + (b.ultimo
-      ? escHtml([t('smo.ultimo', { hora: b.ultimo.hora, idade: smoIdade(b.ultimo.idade_s) }), b.ultimo.dominio, b.ultimo.evento, b.ultimo.origem].filter(Boolean).join(' · '))
-      : `<span class="dim">${escHtml(t('smo.sem_eventos'))}</span>`))
+    ? d.barramento.map(b => smoCol(b.topico, wTp) + escHtml(t('smo.eventos', { n: b.eventos })) + '\n  ' + (b.ultimo
+      ? '<span class="dim">└</span> ' + escHtml([t('smo.ultimo', { hora: b.ultimo.hora, idade: smoIdade(b.ultimo.idade_s) }), b.ultimo.dominio, b.ultimo.evento, b.ultimo.origem].filter(Boolean).join(' · '))
+      : `<span class="dim">└ ${escHtml(t('smo.sem_eventos'))}</span>`))
     : vazio('smo.sem_eventos'), d.barramento.length > 0));
   const wCt = larg(d.conteineres, c => c.nome, 14);
   out.push(smoSecao('conteineres', t('smo.sec_conteineres', { n: d.conteineres.length }),

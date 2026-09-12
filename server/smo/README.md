@@ -157,9 +157,17 @@ atualização no primeiro login.
 A tela de login fala português (padrão), inglês, espanhol e francês, com
 seletor de idioma, e usa o tema `keycloak.v2` do próprio Keycloak, que acompanha
 o modo claro ou escuro do aparelho (o tema `oam` do upstream só tem o claro).
-As traduções são as que o Keycloak já traz. O console ODLUX em si não tem
-tradução nem modo escuro: é o build do upstream, com textos e cores fixos.
-Para a turma, o painel tem o **SMO ao vivo** nos 4 idiomas e nos dois temas. Os testes do painel não
+As traduções são as que o Keycloak já traz.
+
+O console ODLUX em si é o build do upstream, com textos em inglês e só o tema
+claro. O modo escuro vem de fora: o nginx do contêiner (`location.rules` da
+cópia de trabalho) injeta na página o `odlux/core5g-tema.css`, que só vale com
+o aparelho no escuro e mira as classes globais do MUI v5. Os gráficos do Home
+são canvas e têm as cores invertidas por filtro. Quem aplica é
+`smo_tema_odlux` (`lib.sh`), chamado pelo `up_smo.sh` depois da camada oam; o
+nginx valida antes de recarregar e, se recusar, o bloco sai. Tradução do ODLUX
+não há: seria editar o pacote compilado. Para a turma, o painel tem o **SMO ao
+vivo** nos 4 idiomas e nos dois temas. Os testes do painel não
 usam usuários do Keycloak: vão ao controlador por dentro, com o `ADMIN_USERNAME`
 de `smo/oam/.env`.
 

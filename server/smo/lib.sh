@@ -83,6 +83,33 @@ smo_alinha_controlador() {
     echo "banco do controlador alinhado ao controllerId $id"
 }
 
+# smo_tema_odlux — o console ODLUX do upstream só tem o tema claro. O nginx do
+# contêiner (location.rules, montado da cópia de trabalho) injeta no </head> da
+# página o tema escuro de odlux/core5g-tema.css, que só vale com o aparelho no
+# escuro. Reescreve o bloco entre os marcadores (sem trocar o inode do arquivo
+# montado) e recarrega o nginx só quando algo mudou.
+smo_tema_odlux() {
+    local regras="$RUN/smo/oam/odlux/location.rules" css atual novo
+    css="$(tr '\n' ' ' < odlux/core5g-tema.css | sed -E 's#/\*([^*]|\*+[^*/])*\*+/##g; s/[[:space:]]+/ /g')"
+    case "$css" in *\'*|*'$'*) echo "AVISO: o tema não pode ter aspas simples nem \$ (vai numa string do nginx)" >&2; return 1 ;; esac
+    atual="$(cat "$regras")"
+    novo="$(printf '%s\n' "$atual" | awk '/# core5g-tema:inicio/{f=1} !f{print} /# core5g-tema:fim/{f=0}')
+# core5g-tema:inicio — tema escuro do console (server/smo/odlux/core5g-tema.css)
+location = /odlux/index.html {
+    root /opt/bitnami/nginx/html;
+    add_header Cache-Control \"no-cache\";
+    sub_filter '</head>' '<style id=\"core5g-tema\">${css}</style></head>';
+    sub_filter_once on;
+}
+# core5g-tema:fim"
+    [ "$novo" = "$atual" ] && return 0
+    printf '%s\n' "$novo" > "$regras.core5g" && cat "$regras.core5g" > "$regras" && rm "$regras.core5g"
+    docker exec odlux nginx -t >/dev/null 2>&1 && docker exec odlux nginx -s reload \
+        && echo "tema escuro do console ODLUX aplicado" \
+        || { echo "AVISO: nginx do odlux recusou o tema; bloco removido" >&2
+             printf '%s\n' "$atual" > "$regras.core5g" && cat "$regras.core5g" > "$regras" && rm "$regras.core5g"; return 1; }
+}
+
 # Para no começo do teste se o SMO estiver desligado (usa o testlog.sh).
 smo_exige_no_ar() {
     if ! docker ps --format '{{.Names}}' | grep -qx controller; then

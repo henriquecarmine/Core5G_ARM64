@@ -108,6 +108,7 @@ for camada in "${QUAIS[@]}"; do
             dc smo/oam up -d --build --wait --wait-timeout 900
             # controlador recriado = controllerId novo: sem isto o ODLUX lista zero
             smo_alinha_controlador || true
+            smo_tema_odlux || true
             ;;
         network)
             echo "== network (simuladores O1 / M-plane) =="

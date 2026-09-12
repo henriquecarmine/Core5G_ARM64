@@ -1,0 +1,46 @@
+/* Core5G · tema escuro do console ODLUX, ativo quando o aparelho está no escuro.
+   O ODLUX do upstream só tem o tema claro, com as cores fixas no build. Esta
+   folha é injetada na página pelo nginx do próprio contêiner (smo_tema_odlux,
+   em lib.sh) e mira as classes globais do MUI v5, que o build mantém. No claro,
+   nada muda. Sem aspas simples aqui: o conteúdo vai dentro de uma string do
+   nginx. */
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: dark; }
+  html, body, main, #app { background-color: #121417 !important; color: #e6e8eb !important; }
+
+  .MuiPaper-root, .MuiDrawer-paper, .MuiMenu-paper, .MuiPopover-paper, .MuiDialog-paper,
+  .MuiTableContainer-root, .MuiCard-root {
+    background-color: #1b1e23 !important; color: #e6e8eb !important; background-image: none !important;
+  }
+  .MuiAppBar-root { background-color: #1b1e23 !important; color: #5fc4d8 !important; box-shadow: 0 1px 0 #2c3038 !important; }
+  .MuiAppBar-root img { background-color: #e6e8eb; border-radius: 6px; padding: 2px 6px; }
+  .MuiDrawer-paper { border-right: 1px solid #2c3038 !important; }
+
+  .MuiTableCell-root { color: #e6e8eb !important; border-bottom-color: #2c3038 !important; }
+  .MuiTableCell-head, .MuiTableCell-stickyHeader { background-color: #23272e !important; color: #f1f3f5 !important; }
+  .MuiTableRow-root:hover { background-color: rgba(95, 196, 216, .08) !important; }
+  .MuiTableRow-root.Mui-selected { background-color: rgba(95, 196, 216, .16) !important; }
+
+  .MuiListItemIcon-root, .MuiIconButton-root, .MuiButton-textInherit, .MuiTab-root,
+  .MuiTableSortLabel-root, .MuiTablePagination-root, .MuiSelect-select, .MuiSelect-icon,
+  .MuiInputBase-root, .MuiInputBase-input, .MuiListItemText-primary, .MuiListItemText-secondary,
+  .MuiTypography-root, .MuiFormLabel-root, .MuiInputLabel-root, .MuiCheckbox-root, .MuiSvgIcon-root {
+    color: #d7dbe0 !important;
+  }
+  .MuiTab-root.Mui-selected, .MuiTableSortLabel-root.Mui-active { color: #5fc4d8 !important; }
+  .MuiTabs-indicator { background-color: #5fc4d8 !important; }
+  .MuiDivider-root { border-color: #2c3038 !important; }
+  .MuiInputBase-root::before, .MuiInput-underline::before { border-bottom-color: #4a505a !important; }
+  .MuiOutlinedInput-notchedOutline { border-color: #4a505a !important; }
+  .MuiListItem-root.Mui-selected, .MuiListItemButton-root.Mui-selected { background-color: rgba(95, 196, 216, .14) !important; }
+  .MuiListItem-root:hover, .MuiListItemButton-root:hover { background-color: rgba(255, 255, 255, .05) !important; }
+  .MuiBackdrop-root:not(.MuiBackdrop-invisible) { background-color: rgba(0, 0, 0, .6) !important; }
+  a { color: #5fc4d8; }
+
+  /* Gráficos do Home são canvas: o CSS não alcança o texto de dentro (preto no
+     centro das roscas). Inverte o desenho e gira a matiz, e as cores voltam
+     ao lugar: verde segue verde, preto vira claro, anel vazio vira escuro. */
+  main canvas { filter: invert(.9) hue-rotate(180deg); }
+  /* ícones coloridos do menu lateral: os escuros sumiam no fundo */
+  .MuiListItemIcon-root > * { filter: brightness(1.7); }
+}

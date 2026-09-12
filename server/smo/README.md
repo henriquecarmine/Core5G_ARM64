@@ -142,8 +142,11 @@ proteção contra força bruta e seis usuários ativos — os cinco do upstream,
 senha pública `Default4SDN!`, e o que o `config.py` cria com o nome do usuário
 Unix. Agora cadastro e recuperação estão desligados, a força bruta protegida, os
 endereços de retorno do login seguem o domínio novo e só um operador fica ativo
-(`martin.skorupski`, papel `administration`), com senha forte gerada uma vez e
-guardada em `server/smo/.odlux-acesso` (fora do git). Os testes do painel não
+com o papel `administration`. Usuário e senha vêm de `server/smo/.odlux-acesso`
+(fora do git) — hoje o mesmo login do painel; sem o arquivo, o script gera uma
+senha forte para o `martin.skorupski` do upstream. Operador que ainda não existe
+no realm é criado, com o perfil preenchido para o Keycloak não pedir
+atualização no primeiro login. Os testes do painel não
 usam usuários do Keycloak: vão ao controlador por dentro, com o `ADMIN_USERNAME`
 de `smo/oam/.env`.
 

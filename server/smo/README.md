@@ -152,7 +152,14 @@ com o papel `administration`. Usuário e senha vêm de `server/smo/.odlux-acesso
 (fora do git) — hoje o mesmo login do painel; sem o arquivo, o script gera uma
 senha forte para o `martin.skorupski` do upstream. Operador que ainda não existe
 no realm é criado, com o perfil preenchido para o Keycloak não pedir
-atualização no primeiro login. Os testes do painel não
+atualização no primeiro login.
+
+A tela de login fala português (padrão), inglês, espanhol e francês, com
+seletor de idioma, e usa o tema `keycloak.v2` do próprio Keycloak, que acompanha
+o modo claro ou escuro do aparelho (o tema `oam` do upstream só tem o claro).
+As traduções são as que o Keycloak já traz. O console ODLUX em si não tem
+tradução nem modo escuro: é o build do upstream, com textos e cores fixos.
+Para a turma, o painel tem o **SMO ao vivo** nos 4 idiomas e nos dois temas. Os testes do painel não
 usam usuários do Keycloak: vão ao controlador por dentro, com o `ADMIN_USERNAME`
 de `smo/oam/.env`.
 

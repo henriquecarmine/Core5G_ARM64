@@ -7,6 +7,9 @@
 #      realm foi importado uma vez com o domínio de exemplo do upstream.
 #   2. Realm onap sem auto-cadastro nem "esqueci a senha" (não há e-mail), e com
 #      proteção contra força bruta. Em 11/09/2026 o cadastro estava aberto.
+#      A tela de login fala os 4 idiomas do painel (pt-BR padrão, en, es, fr,
+#      com seletor) e usa o tema keycloak.v2, que acompanha o modo claro/escuro
+#      do aparelho; o tema oam do upstream só tem o claro.
 #   3. Um único operador ativo (papel administration). Usuário e senha vêm de
 #      .odlux-acesso (fora do git); sem o arquivo, gera uma senha forte para o
 #      martin.skorupski do upstream. Um operador que ainda não existe no realm é
@@ -39,7 +42,9 @@ for par in odlux.app:odlux.oam kafka-ui.app:kafka-ui; do
     id="$($K get clients -r onap -q clientId="${par%%:*}" --fields id --format csv --noquotes --config "$C")"
     $K update "clients/$id" -r onap -s "redirectUris=[\"https://${par#*:}.$DOM/*\"]" --config "$C"
 done
-$K update realms/onap -s registrationAllowed=false -s resetPasswordAllowed=false -s bruteForceProtected=true --config "$C"
+$K update realms/onap -s registrationAllowed=false -s resetPasswordAllowed=false -s bruteForceProtected=true \
+    -s internationalizationEnabled=true -s 'supportedLocales=["pt-BR","en","es","fr"]' -s defaultLocale=pt-BR \
+    -s loginTheme=keycloak.v2 --config "$C"
 # administration é o papel de realm que o upstream dá aos seus administradores
 if [ -z "$($K get users -r onap -q username="$OP" -q exact=true --fields id --format csv --noquotes --config "$C")" ]; then
     $K create users -r onap -s username="$OP" -s enabled=true -s firstName="$OP" -s lastName=SMO \
@@ -59,6 +64,6 @@ for u in $($K get users -r onap --fields username --format csv --noquotes --conf
     fi
 done
 [ "$ativos" = 1 ] || { echo "ERRO: operador $OP não existe no realm onap" >&2; exit 1; }
-echo "Keycloak fechado: retorno em https://odlux.oam.$DOM · sem cadastro · força bruta protegida · só $OP ativo"
+echo "Keycloak fechado: retorno em https://odlux.oam.$DOM · sem cadastro · força bruta protegida · só $OP ativo · login em pt-BR/en/es/fr, claro e escuro"
 KC
 echo "Credenciais do operador em server/smo/$ACESSO (fora do git)."

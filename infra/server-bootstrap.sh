@@ -210,6 +210,14 @@ odlux.oam.${SMO_DOMINIO}, identity.${SMO_DOMINIO} {
     # /oauth/providers, /oauth/login/identity e /oauth/redirect/identity.
     @login_local path /oauth/login /oauth/login/
     respond @login_local 403
+    # A entrada do console vai direto ao login do Keycloak (o mesmo caminho do
+    # botão ONAP-IDENTITY): a tela do ODLUX mostra o formulário local antes de o
+    # botão carregar, e quem digitava ali recebia "Could not log in".
+    @entrada {
+        host odlux.oam.${SMO_DOMINIO}
+        path /
+    }
+    redir @entrada /oauth/login/identity 302
     # console de administração e realm master do Keycloak: só por dentro
     @interno path /admin /admin/* /realms/master /realms/master/*
     respond @interno 403

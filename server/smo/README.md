@@ -123,6 +123,12 @@ O console abre direto, sem túnel nem nada instalado na máquina de quem acessa:
 
   O login pelo Keycloak usa só `/oauth/providers`, `/oauth/login/identity` e
   `/oauth/redirect/identity`, e depois o console chama o RESTCONF com o token.
+  A raiz do console (`/`) redireciona direto para `/oauth/login/identity`: a
+  tela do ODLUX desenha o formulário local antes de carregar o botão
+  ONAP-IDENTITY, e quem digitava ali recebia "Could not log in. Please check
+  your credentials…" (o formulário é bloqueado e nem conhece os usuários do
+  Keycloak). Se o console for aberto por `/odlux/index.html`, entre pelo botão
+  ONAP-IDENTITY.
 - Kafka-ui, painel do Traefik e VES não são publicados. Para eles, túnel SSH
   (`sudo ssh -i <chave, caminho absoluto> -L 443:127.0.0.1:8443 ubuntu@core5g-arm64.duckdns.org`)
   e os nomes `<serviço>.smo.core5g-arm64.duckdns.org` apontando para 127.0.0.1
@@ -159,6 +165,13 @@ o painel tem o **SMO ao vivo** (só leitura, mesmos dados).
 - Fora o operador do ODLUX, as senhas continuam as padrão do upstream (admin do
   Keycloak, controlador, VES, bancos). Por isso só o console e o login vão para
   a internet, e o Caddy barra Basic auth e o admin do Keycloak.
+- No console, o canal de notificações ao vivo (`/websocket`) é recusado pelo
+  controlador com o OAuth ligado ("HTTP Authentication failed; no valid
+  credentials available"): o ODLUX guarda o token no `localStorage` e abre o
+  WebSocket sem credencial, e o nginx dele repassa sem autenticação. Login,
+  Connect, Fault e as demais telas carregam pelo RESTCONF; só as notificações
+  em tempo real do cabeçalho do console não chegam. Visto em 12/09/2026, com e
+  sem o redirecionamento da raiz.
 - O gNB OAI monolítico não tem O1: a O1 é demonstrada com os simuladores.
 - Não roda junto com a pilha do P2 (OAI + RIC): memória. O upstream testou em
   4 núcleos, 16 GB e 50 GB de disco, o mesmo porte deste servidor.

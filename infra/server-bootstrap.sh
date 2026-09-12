@@ -191,6 +191,39 @@ ${AWS_SERVER_HOST} {
     reverse_proxy 127.0.0.1:8765
 }
 CADDYFILE
+    # SMO do O-RAN SC (server/smo/README.md): publicado só quando o domínio do
+    # SMO é subdomínio deste host. Só o console ODLUX e o login do Keycloak; o
+    # Traefik continua em 127.0.0.1:8443, e kafka-ui, painel do Traefik e VES
+    # ficam fora da internet.
+    SMO_DOMINIO="$(sed -n 's/^HTTP_DOMAIN=//p' ~/server/smo/smo.env 2>/dev/null | head -1)"
+    if [ -n "$SMO_DOMINIO" ] && [ "${SMO_DOMINIO%".${AWS_SERVER_HOST}"}" != "$SMO_DOMINIO" ]; then
+        sudo tee -a /etc/caddy/Caddyfile > /dev/null <<CADDYFILE
+
+odlux.oam.${SMO_DOMINIO}, identity.${SMO_DOMINIO} {
+    # O nginx do ODLUX repassa ao controlador tudo o que não é arquivo, e o
+    # RESTCONF aceita Basic com a senha padrão (pública) do admin; o console usa
+    # token do Keycloak, então Basic não precisa passar.
+    @basica header Authorization "Basic *"
+    respond @basica 403
+    # O formulário local do ODLUX (POST /oauth/login) emite token para o admin do
+    # controlador, também com senha padrão. O login pelo Keycloak usa só
+    # /oauth/providers, /oauth/login/identity e /oauth/redirect/identity.
+    @login_local path /oauth/login /oauth/login/
+    respond @login_local 403
+    # console de administração e realm master do Keycloak: só por dentro
+    @interno path /admin /admin/* /realms/master /realms/master/*
+    respond @interno 403
+    reverse_proxy https://127.0.0.1:8443 {
+        # o Traefik roteia pelo nome: o Host tem de chegar como veio
+        header_up Host {host}
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+}
+CADDYFILE
+        echo "Caddy publica o console do SMO: https://odlux.oam.${SMO_DOMINIO}"
+    fi
     sudo systemctl reload caddy 2>/dev/null || sudo systemctl restart caddy
     sudo systemctl enable caddy
     echo "Caddyfile gerado e Caddy (re)iniciado."

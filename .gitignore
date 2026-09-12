@@ -51,6 +51,7 @@ server/smo/src/
 server/smo/run/
 server/smo/*.log
 server/smo/logs/
+server/smo/.odlux-acesso
 
 # Cola da apresentação de SMO: leva os NOMES dos integrantes — nunca no repo público
 pdfs/04-gestao-orquestracao/entrega/

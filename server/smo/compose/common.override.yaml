@@ -2,7 +2,7 @@
 #   docker compose -f run/solution/smo/common/docker-compose.yaml -f compose/common.override.yaml
 #
 # 1. O gateway não publica 80/443/4334/4335 no host (são do Caddy do painel):
-#    publica só o HTTPS em 127.0.0.1, para túnel SSH.
+#    publica só o HTTPS em 127.0.0.1; o Caddy publica o console e o login.
 # 2. A rede dcn ganha uma sub-rede IPv4 e o gateway um IP fixo nela; é por esse
 #    IP que os simuladores e o controlador alcançam o Traefik (HTTPS e NETCONF
 #    call home), no lugar do IP do host.
@@ -18,9 +18,15 @@ services:
         ipv4_address: ${SMO_GATEWAY_DMZ_IP}
       dcn:
         ipv4_address: ${SMO_GATEWAY_IP}
+  # Com o domínio público, o kafka-ui vai ao Keycloak pelo Caddy do painel, que
+  # tem certificado válido: o autoassinado do upstream não tem os nomes novos, e
+  # a descoberta OIDC do Spring confere o nome (a opção disableHostnameVerification
+  # do upstream só vale para o cliente HTTP do JDK). Por isso sem extra_hosts e
+  # com o truststore padrão da JVM.
   kafka-ui:
-    extra_hosts:
-      - "identity.${HTTP_DOMAIN}:${SMO_GATEWAY_DMZ_IP}"
+    extra_hosts: !reset []
+    environment:
+      JAVA_OPTS: ""
 
 networks:
   dmz:

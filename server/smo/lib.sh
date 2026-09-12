@@ -22,7 +22,7 @@ dc() {
 # Acesso ao SMO no ar — usado pelos testes da apresentação (smo_*.sh).
 # Tudo passa pelo gateway em 127.0.0.1, como passaria um operador.
 # ---------------------------------------------------------------------------
-SMO_DOM="$(grep -m1 '^HTTP_DOMAIN=' "$RUN/smo/common/.env" 2>/dev/null | cut -d= -f2)"
+SMO_DOM="$HTTP_DOMAIN"   # do smo.env; o up_smo.sh aplica o mesmo na cópia de trabalho
 MONTAGEM="data/network-topology:network-topology/topology=topology-netconf"
 
 smo_env() { grep -m1 "^$1=" "$RUN/smo/oam/.env" | cut -d= -f2; }

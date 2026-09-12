@@ -7,7 +7,7 @@ set -uo pipefail
 cd "$(dirname "$0")"
 . ./lib.sh
 
-DOM="$(grep -m1 '^HTTP_DOMAIN=' "$RUN/smo/common/.env" | cut -d= -f2)"
+DOM="$SMO_DOM"
 ADMIN_USER="$(grep -m1 '^ADMIN_USERNAME=' "$RUN/smo/oam/.env" | cut -d= -f2)"
 ADMIN_PASS="$(grep -m1 '^ADMIN_PASSWORD=' "$RUN/smo/oam/.env" | cut -d= -f2)"
 VES_USER="$(grep -m1 '^VES_ENDPOINT_USERNAME=' "$RUN/smo/oam/.env" | cut -d= -f2)"

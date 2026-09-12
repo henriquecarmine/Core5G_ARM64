@@ -48,7 +48,8 @@ Versões fixadas no `build_arm64.sh`: controlador 13.0.1, VES 1.12.5, NTSim-NG
 O upstream supõe uma VM dedicada. Aqui o host já usa 80/443 (Caddy do painel),
 então:
 
-- o gateway publica só `127.0.0.1:8443` (acesso por túnel SSH), e não 80/443/4334/4335;
+- o gateway publica só `127.0.0.1:8443`, e não 80/443/4334/4335; quem fala com a
+  internet é o Caddy do painel (ver *Acesso pelo navegador*);
 - a rede `dcn` ganha uma sub-rede IPv4 e o gateway o IP fixo `10.250.50.10`, que
   ocupa o lugar do IP do host na configuração: é por ele que simuladores e
   controlador chegam ao Traefik;
@@ -69,6 +70,18 @@ Nenhum deles é de ARM64: todos apareceriam num x86 com o mesmo software de hoje
 | tudo no gateway responde 404; OAuth do controlador falha (`Unable to configure OAuth service`), kafka-ui cai | o Traefik v3.3.6 fixa a API 1.24 do Docker; o Docker 29 aceita a partir da 1.40 (`client version 1.24 is too old`) e o Traefik fica sem rotas. `DOCKER_API_VERSION` não tem efeito nessa versão | Traefik `v3.6.25`, que negocia a versão (`TRAEFIK_IMAGE` em `smo.env`) |
 | `identity/config.py` cai com `getpwuid(): uid not found` | o script cria um usuário com o nome do usuário Unix, e o UID do host não existe no contêiner | `USER` passado ao contêiner (`up_smo.sh`) |
 
+### Na troca para o domínio público (11/09/2026)
+
+| Sintoma | Causa | Correção |
+|---|---|---|
+| controlador `unhealthy`, ODLUX não sobe | com o E2 lab do P2 ligado (carga 11–15 em 4 vCPU), a instalação de certificados levou 210 s e o healthcheck desistiu antes de a porta 8181 abrir | esperar ficar saudável e rodar `./up_smo.sh` de novo (idempotente) |
+| login do ODLUX ainda mandava para `identity.smo.o-ran-sc.org` | o `oauth-provider.config.json` é montado da cópia de trabalho com o domínio fixo; `sed -i` por dentro dá `Resource busy`, e por fora troca o inode que o contêiner prende | a troca de domínio cobre os arquivos montados e reescreve o conteúdo no mesmo arquivo |
+| kafka-ui cai com `PKIX path building failed` | para os nomes novos o Traefik servia o certificado genérico dele | o autoassinado do upstream vira `defaultCertificate` (`up_smo.sh`) |
+| kafka-ui cai com `Unable to resolve Configuration with the provided Issuer` | a descoberta OIDC confere o nome do certificado | kafka-ui vai ao Keycloak pelo Caddy (`compose/common.override.yaml`) |
+| público responde 404 em tudo | o Caddy mandava ao Traefik o Host do upstream (127.0.0.1) | `header_up Host {host}` |
+| `up_smo.sh` sai com 1 sem escrever nada | sem ocorrência do domínio antigo, o `grep` sai com 1 e o `pipefail` encerra o script | `{ grep … \|\| true; }` |
+| gateway e kafka-ui perderiam os certificados | a troca ampla reescreveu também `certs-selfsigned/smo.o-ran-sc.org.crt` no compose | linhas com `certs-selfsigned/` ficam como estão |
+
 ## Operação
 
 - `./smo_ao_vivo.sh` imprime o retrato do SMO em JSON (elementos sob gerência,
@@ -88,33 +101,50 @@ Nenhum deles é de ARM64: todos apareceriam num x86 com o mesmo software de hoje
 
 ### Acesso pelo navegador
 
-As URLs usam o nome do serviço na porta 443 (inclusive o redirecionamento do
-login para o Keycloak), então o túnel precisa ocupar a 443 da máquina local:
+O console abre direto, sem túnel nem nada instalado na máquina de quem acessa:
+**https://odlux.oam.smo.core5g-arm64.duckdns.org** (login em
+`identity.smo.core5g-arm64.duckdns.org`, certificado válido).
 
-```bash
-sudo ssh -i <chave> -L 443:127.0.0.1:8443 ubuntu@core5g-arm64.duckdns.org
-```
+- `HTTP_DOMAIN` em `smo.env` é subdomínio do host do painel, e o DuckDNS resolve
+  qualquer nível abaixo dele. O `up_smo.sh` troca o domínio de exemplo do
+  upstream (`smo.o-ran-sc.org`) na cópia de trabalho: `.env`, realm do Keycloak
+  e kafka-ui. Certificados autoassinados e READMEs ficam como estão.
+- O `infra/server-bootstrap.sh` (roda a cada `./deploy.sh panel`) acrescenta ao
+  Caddy só esses dois nomes, com proxy para o Traefik em `127.0.0.1:8443` e o
+  `Host` original (o Traefik roteia pelo nome; sem `header_up Host {host}` tudo
+  dava 404). O Caddy recusa:
+  - **Basic auth**: o nginx do ODLUX repassa ao controlador tudo o que não é
+    arquivo, e o RESTCONF aceita a senha padrão do admin;
+  - o **formulário local do ODLUX** (`/oauth/login`), que emite token para o
+    admin do controlador com essa mesma senha — em 11/09/2026 funcionou pela
+    internet antes do bloqueio;
+  - o `/admin` e o `/realms/master` do Keycloak.
 
-e, no `/etc/hosts` da máquina local:
+  O login pelo Keycloak usa só `/oauth/providers`, `/oauth/login/identity` e
+  `/oauth/redirect/identity`, e depois o console chama o RESTCONF com o token.
+- Kafka-ui, painel do Traefik e VES não são publicados. Para eles, túnel SSH
+  (`sudo ssh -i <chave, caminho absoluto> -L 443:127.0.0.1:8443 ubuntu@core5g-arm64.duckdns.org`)
+  e os nomes `<serviço>.smo.core5g-arm64.duckdns.org` apontando para 127.0.0.1
+  no `/etc/hosts`.
+- O controlador continua indo ao Keycloak pelo gateway, pelo IP fixo. O
+  certificado do gateway é o autoassinado do upstream, com o nome antigo (agora
+  o padrão do Traefik para qualquer nome), e passa porque o controlador usa
+  `trustAll`. O kafka-ui não aceitaria — a descoberta OIDC do Spring confere o
+  nome, e o `disableHostnameVerification` do upstream só vale para o cliente
+  HTTP do JDK —, então vai ao Keycloak pelo Caddy, com o truststore padrão da JVM
+  (`compose/common.override.yaml`).
 
-```text
-127.0.0.1  odlux.oam.smo.o-ran-sc.org identity.smo.o-ran-sc.org kafka-ui.smo.o-ran-sc.org gateway.smo.o-ran-sc.org
-```
-
-Depois: `https://odlux.oam.smo.o-ran-sc.org` (certificado autoassinado).
-
-Com `sudo`, passe a chave por caminho absoluto (o `~` do root é outro). A porta
-tem de ser a 443 porque o controlador manda o login para
-`IDENTITY_PROVIDER_URL=https://identity.smo.o-ran-sc.org`, sem porta.
-
-Usuários do ODLUX: os do realm em
-`run/solution/smo/common/identity/authentication.json`, todos com a senha padrão
-pública `Default4SDN!`; `martin.skorupski`, `leia.organa` e `r2.d2` têm o papel
-`administration`, `luke.skywalker` é `provision` e `jargo.fett` é `supervision`.
-O Keycloak pede troca de senha no primeiro login (`UPDATE_PASSWORD`). Os testes
-do painel não usam esses usuários (vão ao controlador com o `ADMIN_USERNAME` de
-`smo/oam/.env`), então trocar a senha não quebra nada. O admin do próprio
-Keycloak é `admin`, com a senha em `smo/common/.env`.
+**Quem entra.** O `smo_acesso_web.sh` (idempotente; o `up_smo.sh` roda no fim do
+smo/common) fecha o realm `onap` antes de ele ir para a internet. Encontrado em
+11/09/2026: auto-cadastro aberto, "esqueci a senha" ligado sem e-mail, sem
+proteção contra força bruta e seis usuários ativos — os cinco do upstream, com a
+senha pública `Default4SDN!`, e o que o `config.py` cria com o nome do usuário
+Unix. Agora cadastro e recuperação estão desligados, a força bruta protegida, os
+endereços de retorno do login seguem o domínio novo e só um operador fica ativo
+(`martin.skorupski`, papel `administration`), com senha forte gerada uma vez e
+guardada em `server/smo/.odlux-acesso` (fora do git). Os testes do painel não
+usam usuários do Keycloak: vão ao controlador por dentro, com o `ADMIN_USERNAME`
+de `smo/oam/.env`.
 
 ODLUX e Keycloak mandam `X-Frame-Options: SAMEORIGIN` e
 `frame-ancestors 'self'`: não abrem dentro de um iframe do painel. Para a turma,
@@ -122,8 +152,9 @@ o painel tem o **SMO ao vivo** (só leitura, mesmos dados).
 
 ## Limites
 
-- As senhas são as padrão do upstream (públicas). Por isso nada é publicado fora
-  do localhost.
+- Fora o operador do ODLUX, as senhas continuam as padrão do upstream (admin do
+  Keycloak, controlador, VES, bancos). Por isso só o console e o login vão para
+  a internet, e o Caddy barra Basic auth e o admin do Keycloak.
 - O gNB OAI monolítico não tem O1: a O1 é demonstrada com os simuladores.
 - Não roda junto com a pilha do P2 (OAI + RIC): memória. O upstream testou em
   4 núcleos, 16 GB e 50 GB de disco, o mesmo porte deste servidor.

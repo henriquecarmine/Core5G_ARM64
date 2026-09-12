@@ -463,10 +463,10 @@
       "x": 1350,
       "y": 220,
       "image": "traefik:v3.6.25 (o v3.3.6 do upstream não fala com o Docker 29)",
-      "from": "Recebe o operador (HTTPS pelo túnel SSH em 127.0.0.1:8443) e o NETCONF call home dos elementos gerenciados.",
+      "from": "Recebe o operador (HTTPS: o Caddy do servidor publica o console ODLUX e o login; o resto do SMO fica em 127.0.0.1:8443) e o NETCONF call home dos elementos gerenciados.",
       "does": "A porta única do SMO: termina o TLS e roteia pelo nome do serviço (identity, odlux, controller, ves-collector, topology). Não publica 80/443 no host — são do Caddy do painel.",
       "to": "Encaminha a cada serviço pela rede interna; simuladores e controlador o alcançam pelo IP fixo 10.250.50.10 (rede dcn).",
-      "ports": "HTTPS: 443/TCP · no host: 127.0.0.1:8443 · call home: 4334-4335/TCP",
+      "ports": "HTTPS: 443/TCP · no host: 127.0.0.1:8443, atrás do Caddy · call home: 4334-4335/TCP",
       "network": "dmz · dcn",
       "ip": "10.250.50.10",
       "statusKey": "gateway",
@@ -767,7 +767,7 @@
       "from": "user",
       "to": "smo-gateway",
       "iface": "HTTPS",
-      "detail": "Operador → SMO pelo túnel SSH (127.0.0.1:8443): nada do SMO fica exposto na internet."
+      "detail": "Operador → Caddy do servidor → gateway (127.0.0.1:8443): na internet ficam só o console ODLUX e o login do Keycloak; Basic auth, admin do Keycloak, kafka-ui e VES ficam por dentro."
     },
     {
       "from": "smo-gateway",

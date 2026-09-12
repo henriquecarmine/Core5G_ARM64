@@ -68,6 +68,21 @@ kafka_fecha() { kb -X DELETE -o /dev/null "$1"; }
 # db <SQL> — banco do controlador (MariaDB do compose, credenciais do upstream)
 db() { docker exec persistence mariadb -usdnrdb -psdnrdb sdnrdb -N -B -e "$1" 2>/dev/null; }
 
+# smo_alinha_controlador — cada contêiner novo do controlador escolhe outro
+# controllerId, e o banco guarda conexões e alarmes com o id de quem os gravou.
+# O ODLUX (Connect, Fault) filtra pelo id atual e mostraria zero, e o controlador
+# deixa de atualizar o estado ("Unable to update connection-status"). Põe todas
+# as linhas no id atual, lido do log do próprio controlador.
+smo_alinha_controlador() {
+    local id t
+    id="$(docker exec controller sh -c "grep -ohE 'set controllerId [0-9a-f-]{36}' /opt/opendaylight/data/log/karaf.log*" | tail -1 | awk '{print $3}')"
+    [ -n "$id" ] || { echo "AVISO: controllerId não encontrado no log do controlador" >&2; return 1; }
+    for t in $(db "select table_name from information_schema.columns where table_schema = database() and column_name = 'controller-id'"); do
+        db "update \`$t\` set \`controller-id\` = '$id' where \`controller-id\` <> '$id'"
+    done
+    echo "banco do controlador alinhado ao controllerId $id"
+}
+
 # Para no começo do teste se o SMO estiver desligado (usa o testlog.sh).
 smo_exige_no_ar() {
     if ! docker ps --format '{{.Names}}' | grep -qx controller; then

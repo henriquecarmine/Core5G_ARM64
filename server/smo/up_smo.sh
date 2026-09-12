@@ -106,6 +106,8 @@ for camada in "${QUAIS[@]}"; do
         smo/oam)
             echo "== smo/oam (o ves-collector-configured é montado aqui, sobre a imagem arm64) =="
             dc smo/oam up -d --build --wait --wait-timeout 900
+            # controlador recriado = controllerId novo: sem isto o ODLUX lista zero
+            smo_alinha_controlador || true
             ;;
         network)
             echo "== network (simuladores O1 / M-plane) =="

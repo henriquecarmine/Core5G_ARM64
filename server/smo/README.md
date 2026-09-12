@@ -80,6 +80,7 @@ Nenhum deles é de ARM64: todos apareceriam num x86 com o mesmo software de hoje
 | kafka-ui cai com `Unable to resolve Configuration with the provided Issuer` | a descoberta OIDC confere o nome do certificado | kafka-ui vai ao Keycloak pelo Caddy (`compose/common.override.yaml`) |
 | público responde 404 em tudo | o Caddy mandava ao Traefik o Host do upstream (127.0.0.1) | `header_up Host {host}` |
 | `up_smo.sh` sai com 1 sem escrever nada | sem ocorrência do domínio antigo, o `grep` sai com 1 e o `pipefail` encerra o script | `{ grep … \|\| true; }` |
+| ODLUX logado, mas Connect e Fault vazios; no `karaf.log`, `Unable to update connection-status` | cada contêiner novo do controlador escolhe outro `controllerId`, e o banco guarda conexões e alarmes com o id de quem os gravou; o ODLUX filtra pelo id atual | `smo_alinha_controlador` (`lib.sh`), que o `up_smo.sh` chama depois da camada oam |
 | gateway e kafka-ui perderiam os certificados | a troca ampla reescreveu também `certs-selfsigned/smo.o-ran-sc.org.crt` no compose | linhas com `certs-selfsigned/` ficam como estão |
 
 ## Operação

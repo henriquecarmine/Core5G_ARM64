@@ -416,6 +416,15 @@
   #map-btn:hover { background:color-mix(in srgb, var(--warn) 24%, transparent); border-color:color-mix(in srgb, var(--warn) 66%, transparent); }
   #map-btn.on { background:color-mix(in srgb, var(--warn) 28%, transparent); border-color:color-mix(in srgb, var(--warn) 80%, transparent); color:var(--text); }
   #map-btn .tb-ic { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  #smo-hdr-btn { display:inline-flex; align-items:center; gap:6px; width:auto; margin:0; padding:3px 11px;
+    border-radius:20px; font-family:inherit; font-size:11.5px; line-height:1; cursor:pointer;
+    color:var(--accent-text); background:color-mix(in srgb, var(--accent) 12%, transparent); border:1px solid color-mix(in srgb, var(--accent) 42%, transparent);
+    transition:background .15s, border-color .15s; }
+  #smo-hdr-btn:hover { background:color-mix(in srgb, var(--accent) 24%, transparent); border-color:color-mix(in srgb, var(--accent) 66%, transparent); }
+  #smo-hdr-btn .smo-dot { width:7px; height:7px; border-radius:50%; background:var(--n-4); }
+  #smo-hdr-btn.on .smo-dot { background:var(--good); box-shadow:0 0 5px var(--good); }
+  #smo-odlux { font-size:12px; color:var(--accent-text); text-decoration:none; }
+  #smo-odlux:hover { text-decoration:underline; }
   #clear-btn { color:var(--ok-fg); background:color-mix(in srgb, var(--good) 12%, transparent); border-color:color-mix(in srgb, var(--good) 42%, transparent); }
   #clear-btn:hover { background:color-mix(in srgb, var(--good) 24%, transparent); border-color:color-mix(in srgb, var(--good) 64%, transparent); }
   /* consoles/terminais ficam escuros nos dois temas (identidade + colorização JS dos logs) */
@@ -712,6 +721,10 @@
         <svg class="tb-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>
         <span data-i18n="btn.map">mapa</span><span class="mm-live"></span>
       </button>
+      <!-- Só olha e abre: ligar e desligar o SMO continua na barra de serviços. -->
+      <button id="smo-hdr-btn" data-i18n-title="smo.hdr_title" title="SMO do O-RAN SC: o que está sob gerência agora (verde = no ar) e o console ODLUX">
+        <span class="smo-dot"></span><span>SMO</span>
+      </button>
     </div>
     <div class="tb-right">
       <span id="viewer-badge"><span class="vb-dot"></span><span id="viewer-count">0 alunos</span></span>
@@ -800,6 +813,7 @@
     <div id="smo-head">
       <h3 id="smo-modal-title" data-i18n="smo.titulo">SMO ao vivo</h3>
       <span id="smo-ts"></span>
+      <a id="smo-odlux" target="_blank" rel="noopener" data-i18n="smo.odlux">Console ODLUX ↗</a>
       <label><input type="checkbox" id="smo-auto" checked> <span data-i18n="smo.auto">auto (10 s)</span></label>
       <button id="smo-refresh" data-i18n="topo.refresh">Atualizar</button>
       <button id="smo-close" aria-label="×">×</button>
@@ -2743,6 +2757,7 @@ function renderTelemetry(data) {
       const st = data.groups[b.dataset.toggle];
       if (st !== undefined) setToggleState(b, st);
     });
+    document.getElementById('smo-hdr-btn').classList.toggle('on', data.groups.smo === 'on');
     updateProjSelector(data.groups);
     if (!_opBusy) setSelectorEnabled(true);  // setSelectorEnabled já trata guest
   }
@@ -3029,6 +3044,10 @@ function closeSmo() {
   if (location.hash === '#smo') history.replaceState(null, '', location.pathname + location.search);
 }
 document.getElementById('smo-live-btn').addEventListener('click', openSmo);
+document.getElementById('smo-hdr-btn').addEventListener('click', openSmo);
+// O console do SMO mora num subdomínio deste host (HTTP_DOMAIN = smo.<host> no
+// server/smo/smo.env; o Caddy publica odlux.oam.<domínio>): o link sai do endereço.
+document.getElementById('smo-odlux').href = 'https://odlux.oam.smo.' + location.hostname + '/';
 document.getElementById('smo-close').addEventListener('click', closeSmo);
 document.getElementById('smo-refresh').addEventListener('click', loadSmo);
 document.getElementById('smo-auto').addEventListener('change', smoAgenda);

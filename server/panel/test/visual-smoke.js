@@ -279,6 +279,13 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   await page.keyboard.press('Escape');
   const smoFechado = await page.evaluate(() => !document.getElementById('smo-overlay').classList.contains('open'));
   assert(smoFechado, 'Escape devia fechar o SMO ao vivo');
+  // o botão SMO do cabeçalho abre o mesmo modal, com o link do console ODLUX
+  await page.click('#smo-hdr-btn');
+  await new Promise((r) => setTimeout(r, 400));
+  const pelaBarra = await page.evaluate(() => document.getElementById('smo-overlay').classList.contains('open')
+    && /^https:\/\/odlux\.oam\.smo\./.test(document.getElementById('smo-odlux').href));
+  assert(pelaBarra, 'o botão SMO do cabeçalho devia abrir o SMO ao vivo, com o link do console ODLUX');
+  await page.keyboard.press('Escape');
   page.off('request', onSmo);
   await page.setRequestInterception(false);
   console.log(`PASS 10 · SMO ao vivo: ${smoVivo.secoes.length} seções, ${smoVivo.verdes} estados verdes e ${smoVivo.vermelhos} vermelhos, SMO desligado explicado, Escape fecha`);

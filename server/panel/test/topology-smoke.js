@@ -341,8 +341,9 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     const mini = () => page.evaluate(() => {
       const s = document.querySelector('#mm-teste svg');
       const l = document.querySelector('#mm-teste line.mm-flow');
+      const pk = document.querySelector('#mm-teste circle.mm-pkt');
       return { vb: s && s.getAttribute('viewBox').split(' ').map(Number), cor: l && l.getAttribute('stroke'),
-               pacotes: document.querySelectorAll('#mm-teste circle').length };
+               pacotes: document.querySelectorAll('#mm-teste circle.mm-pkt').length, pacoteCor: pk && pk.getAttribute('fill') };
     });
     await page.evaluate(() => {
       const d = document.createElement('div'); d.id = 'mm-teste'; document.body.appendChild(d);
@@ -360,7 +361,8 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
     await espera();
     const todo = await mini();
     assert(todo.vb[2] === 1800 && todo.vb[3] === 900, `minimapa: "mapa todo" não mostrou o desenho inteiro (${todo.vb})`);
-    assert(todo.cor === 'var(--good)' && todo.pacotes === 0, 'minimapa: o resultado do teste se perdeu ao redesenhar');
+    assert(todo.cor === 'var(--good)' && todo.pacotes > 0 && todo.pacoteCor === 'var(--good)',
+      `minimapa: depois do fim, linha e pacotes deviam seguir na cor do resultado ao redesenhar (linha ${todo.cor}, ${todo.pacotes} pacotes em ${todo.pacoteCor})`);
     await page.evaluate(() => document.querySelector('#mm-teste .mm-foco').click());
     await espera();
     const volta = await mini();

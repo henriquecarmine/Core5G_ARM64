@@ -36,20 +36,26 @@ Nada de HTML por aula. O conteúdo vive em JSON:
 
 ```
 server/panel/static/lab/estudos/
-├── index.json    # catálogo: 4 cadeiras, rótulos dos comandos, os 7 temas (fórmulas)
+├── index.json    # catálogo: as cadeiras, rótulos dos comandos, os 7 temas (fórmulas)
 ├── e1a01.json    # uma aula = um arquivo (extraído dos slides do professor)
 ├── e2a01.json … e2a06.json
 ├── e4a01.json … e4a06.json
+├── e5a00.json, e5a01.json   # Gestão e Orquestração (SMO): o professor começa na Aula 0
 └── ex/          # os exercícios (ver "Exercícios das cadeiras")
 ```
 
 Schema de uma aula: `id, n, titulo, slide, resumo, objetivos[], conceitos[{t,d}],
 formulas[{nome,expr,vars,unidade,quando}], onde{scene,texto}, exercicios[cmd],
 quiz[{q,a}], fontes`. `onde.scene` é o nome de uma cena do `mini-map.js`
-(`reg · kpm · rc · analytics · ml · thp · failover · check · a1 · tema`).
-Para adicionar uma aula: criar `eNaKK.json` e listar o id em `index.json`.
-Duas páginas genéricas (`lab-estudo.html`, `lab-aula.html`, CSS em
-`lab-estudos.css`) leem o caminho e renderizam. Rotas em `lab.py`.
+(`reg · kpm · rc · analytics · ml · thp · failover · check · a1 · tema`, e as do
+SMO: `smoarq · smoo1 · smoprov · smofm · smopm · smolcm · smoocloud`).
+Para adicionar uma aula: criar `eNaKK.json` e listar o id em `index.json`; para
+uma cadeira nova, uma entrada em `estudos` (nos 4 `index*.json`). As rotas de
+`lab.py` aceitam as cadeiras e o número de aulas que o catálogo tiver. A URL
+`/lab/estudo/N/aula/K` usa a **posição** K da aula na lista `aulas`; o número
+mostrado na tela é o `n` do JSON, o do professor (a Aula 0 da cadeira 5 abre em
+`aula/1`). Duas páginas genéricas (`lab-estudo.html`, `lab-aula.html`, CSS em
+`lab-estudos.css`) leem o caminho e renderizam.
 
 ## Os 7 temas do projeto integrador (Estudo 4)
 

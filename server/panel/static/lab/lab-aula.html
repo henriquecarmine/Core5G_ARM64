@@ -110,7 +110,11 @@ async function main(){
     try{window.parent.postMessage({c5gLab:{runCmd:b.dataset.cmd}},location.origin);}catch(x){}}));
   $("#quiz").innerHTML=a.quiz.map((q,i)=>`<details class="q"><summary>${i+1}. ${esc(q.q)}</summary><p>${esc(q.a)}</p></details>`).join("");
   const prev=K>1?`/lab/estudo/${e.n}/aula/${K-1}`:null, next=K<e.aulas.length?`/lab/estudo/${e.n}/aula/${K+1}`:null;
-  $("#nav").innerHTML=`${prev?`<a class="navb" href="${prev}">${T("aula.prev",{n:K-1})}</a>`:"<span></span>"}<a class="navb" href="/lab/estudo/${e.n}">${T("aula.back",{n:e.n})}</a>${next?`<a class="navb primary" href="${next}">${T("aula.next",{n:K+1})}</a>`:"<span></span>"}`;
+  // A URL anda pela posição; o rótulo diz o número do professor (que pode
+  // começar na Aula 0), lido da aula vizinha.
+  const numero=async j=>{ try{ return (await jl(e.aulas[j-1])).n; }catch(x){ return j; } };
+  const [nPrev,nNext]=await Promise.all([prev?numero(K-1):null, next?numero(K+1):null]);
+  $("#nav").innerHTML=`${prev?`<a class="navb" href="${prev}">${T("aula.prev",{n:nPrev})}</a>`:"<span></span>"}<a class="navb" href="/lab/estudo/${e.n}">${T("aula.back",{n:e.n})}</a>${next?`<a class="navb primary" href="${next}">${T("aula.next",{n:nNext})}</a>`:"<span></span>"}`;
   $("#footer").innerHTML=a.slide
     ?`${esc(T("aula.src"))} <a href="${GH}${esc(e.pdfs)}/${esc(a.slide)}" target="_blank" rel="noopener">${esc(a.slide)}</a> (${esc(a.fontes)})${esc(T("aula.src_tail",{prof:e.prof}))}`
     :esc(T("aula.src_previa",{f:a.fontes,prof:e.prof}));

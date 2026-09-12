@@ -1,0 +1,130 @@
+{
+  "id": "e5a00",
+  "n": 0,
+  "titulo": "Review: virtualization, cloud, SDN and the Open RAN architecture",
+  "slide": "aula00-revisao.pdf",
+  "resumo": "This lecture opens the course on Management, Orchestration and Automation in OpenRAN Networks with the syllabus (SMO architecture, O1/O2 interfaces, CI/CD, monitoring, assurance and telco cloud management) and a two-part assessment built around an SMO platform. It then reviews the foundations that made Open RAN possible: virtualization (type 1 and type 2 hypervisors and containers), NFV and cloud native, automation tools, cloud and edge computing, SDN and network slicing. Next it walks through the D-RAN, C-RAN, vRAN and O-RAN evolution and closes on the logical architecture, separating the radio, cloud (O-Cloud) and management (SMO) sets, with quizzes and the 'The network is down!' scenario, which asks whether the problem lies in the infrastructure or in the Network Function and whether the interface involved is O1 or O2.",
+  "objetivos": [
+    "Explain the difference between a type 1 hypervisor, a type 2 hypervisor and a container, and choose between a VM and a container for a Network Function.",
+    "Relate virtualization, NFV, cloud native, cloud computing, SDN and network slicing as the technological foundation of Open RAN.",
+    "Describe the D-RAN, C-RAN, vRAN and O-RAN evolution and state what O-RAN adds beyond virtualization.",
+    "Classify the elements of the O-RAN logical architecture into the radio, cloud (O-Cloud) and management (SMO) sets.",
+    "Distinguish RAN management (O1) from O-Cloud management (O2) in a cell degradation scenario.",
+    "Recognize the course syllabus and the two parts of the assessment, both centered on an SMO platform."
+  ],
+  "conceitos": [
+    {
+      "t": "The course: syllabus and two-part assessment",
+      "d": "The syllabus covers the SMO (Service Management and Orchestration) architecture, the O1/O2 interfaces, deployment automation with CI/CD (Continuous Integration/Continuous Delivery; the usual expansion, the slide only uses the acronym), monitoring of Open RAN components, assurance and telco cloud management. Lectures are expository, with slides and review exercises, on Tuesdays and Thursdays (18:30 to 22:00) and on Saturdays (8:00 to 13:00); assessment combines group work and class participation. Part 1 (30%), in groups of up to 5 people, investigates an SMO tool or framework: architecture, SMO services and functions offered, supported O-RAN components, implementation of O1 and O2, management, provisioning and orchestration mechanisms, O-Cloud management, Network Function lifecycle support, and monitoring, telemetry and fault management; it delivers a 20-minute oral presentation on 12/09 and a report on 15/09. Part 2 (70%), with the same team, uses that tool to provision and manage an Open RAN stack made of Network Functions (NFs) and to analyze its management, orchestration and operation mechanisms, with a 20 to 30-minute presentation on 26/09. The bibliography lists the O-RAN Operations and Maintenance Architecture, the O2 Interface: General Aspects and Principles specification and the book Open RAN: The Definitive Guide."
+    },
+    {
+      "t": "High-level Open RAN architecture: where SMO, O1 and O2 sit",
+      "d": "In the high-level diagram, the SMO framework sits at the top and hosts the Non-RT RIC (non-real-time RAN Intelligent Controller). Four O-RAN-defined interfaces go down from it: O2 to the O-Cloud (the cloud that hosts the functions), A1 to the Near-RT RIC (near-real-time RIC), O1 to the O-RAN Network Functions and the Open Fronthaul M-Plane (the fronthaul management plane) to the O-RU (O-RAN Radio Unit). The Near-RT RIC lives inside the Network Functions and exposes information to external consumers over Y1; the O-Cloud informs the functions through O-Cloud Notification; the functions talk to the 5GC (5G core) over NG, an interface defined by 3GPP; and an external system can provide enrichment data to the SMO over an interface out of O-RAN scope. Slide 10 highlights exactly the SMO, O1 and O2: that is the scope of this course, with the SMO managing the Network Functions and the O-Cloud below it."
+    },
+    {
+      "t": "Virtualization: type 1 hypervisor, type 2 hypervisor and container",
+      "d": "Virtualization is the creation of a virtual version of computing resources, allowing multiple resources to operate on a single physical host. The motivation is that running each application on a dedicated server is inefficient and expensive, with very low resource usage. Machines/servers, operating systems, network and storage can all be virtualized. In type 1 (bare metal), the hypervisor runs directly on the host hardware and each virtual machine (VM) has its own guest kernel with its applications. In type 2 (hosted), the hypervisor is a program running on the host operating system kernel, side by side with native host applications. In containerization there is no guest kernel: containers share the host kernel and isolate only the applications. Tools cited: Parallels, VirtualBox and VMware Player (desktop virtualization), Hyper-V, Xen, VMware ESXi and KVM (hypervisors), and Linux LXC, Docker and FreeBSD Jail (containers)."
+    },
+    {
+      "t": "From dedicated appliance to NFV and cloud native",
+      "d": "NFV (Network Functions Virtualization) takes functions such as firewall, Carrier Grade NAT, DPI (Deep Packet Inspection) and PE router out of appliances with dedicated hardware and runs them as VNFs (Virtual Network Functions) on COTS (Commercial Off-the-Shelf) servers, each in a VM with a guest OS on top of a hypervisor. The NFV architecture has three blocks: the VNFs; the NFVI (NFV Infrastructure), with virtual compute, storage and network over a virtualization layer and the physical hardware; and NFV Management and Orchestration. Slide 20 characterizes the VNF as stateful and monolithic. The next step is cloud native: the CNF (Cloud-native Network Function) is stateless, built from microservices in containers on a container engine, with intelligent orchestration and an efficient NFVI. Slide 21 shows the transition in management: in the past, MANO (NFVO/VNFM) orchestrated only VMs over the VIM; today MANO (NFVO/VNFM/CNFM) handles both VMs and containers, with a CaaS next to the VIM, and the traditional method is Kubernetes with out-of-band automation. The expansions MANO (Management and Orchestration), NFVO (NFV Orchestrator), VNFM/CNFM (VNF/CNF Manager), VIM (Virtualized Infrastructure Manager) and CaaS (Container as a Service) are the usual ones; the slide only uses the acronyms."
+    },
+    {
+      "t": "Tools and automation per layer (GitOps)",
+      "d": "The deck groups well-known tools by role: configuration management (Vagrant, Terraform, Ansible, Puppet, Chef), container orchestration (Kubernetes, MiniKube, OpenShift, Rancher) and cloud orchestration (Eucalyptus, OpenNebula, OpenStack, CloudStack). Slide 23 maps each stack layer to an automation tool and a GitOps tool: application and container with Kubernetes (ConfigSync and Argo), operating system with Ansible (Ansible Tower) and cloud or bare metal with Terraform (Flux with Weaveworks). GitOps is the practice of keeping the desired state of the infrastructure in a Git repository and letting an agent apply it (usual definition; the slide only names the column). It is the bridge to the deployment automation (CI/CD) topic of the syllabus."
+    },
+    {
+      "t": "Cloud, fog, edge and mist computing",
+      "d": "Cloud computing has four characteristics: elasticity (scalability and dynamic provisioning), security (reliability, availability, fault tolerance, backup and confidentiality), agility (locality, traffic engineering, automation, programmability and DevOps) and economy (pay-as-you-go model, economies of scale, OPEX reduction, time savings and salary reduction). The service models are SaaS, PaaS and IaaS (Software, Platform and Infrastructure as a Service). Slide 26 spreads computing across the network: cloud computing in the data centers and core cloud attached to the core network; fog computing in the metropolitan network, also known as the edge network; mobile edge computing, edge cloud and cloudlet next to the access network; mist computing on the devices of the local IoT network themselves; and mobile ad hoc cloud computing among mobile devices."
+    },
+    {
+      "t": "SDN: separating control from data to program the network",
+      "d": "In SDN (Software-Defined Networking), network applications such as MAC learning, routing algorithms, intrusion detection and load balancing run on top of an SDN controller, which commands the switches, instead of each device deciding on its own as in conventional networking. The strategic characteristics are: separation of the data and control planes, with data plane devices only forwarding packets; a controller (or a set of controllers) centralizes the control plane, has a global view of the network and is portable software that runs on legacy or virtualized servers; open, well-defined interfaces between the controller and the devices; and the network is programmable by the applications running above the controllers, which present them with a global view of the resources. In 5G, SDN is a strategic paradigm for the new features (for example eMBB, enhanced Mobile Broadband); centralizing control brings flexibility, scalability and agility; programmability optimizes the automation of NFVs in scenarios with constant topology changes; and the result is the softwarization of the 5G network. The figure on slide 31 lays out the phases: virtualization and cloudification (SDN, NFV and cloud computing), service migration, end-to-end orchestration and service network automation (network slicing and MEC, edge computing)."
+    },
+    {
+      "t": "Network slicing, virtualization in telecom and the synergy",
+      "d": "Network slicing is the partitioning of one physical infrastructure (WiMAX, 2G to 5G, satellite and xDSL/cable access, access, transport/aggregation and core nodes, edge cloud and core cloud) into logically isolated slices, such as the mobile broadband, healthcare and Internet of Things slices on slide 32. Slide 49 defines virtualization in telecommunications as turning network functionality into software, which enables dynamic allocation and slicing; it is driven by SDN, which separates the control and data planes that used to be monolithic, and with that separation the control plane becomes centralized and external to the network. Slide 33 sums up the first half of the lecture: virtualization enabled cloud computing and transformed communication networks, and the two work in synergy."
+    },
+    {
+      "t": "D-RAN and C-RAN: from the integrated site to a BBU pool",
+      "d": "In the traditional RAN, antenna, RRH (Remote Radio Head) and proprietary BBU (Baseband Unit) sit at the same site, connected by proprietary CPRI fronthaul (Common Public Radio Interface, the official name; the legend on slide 46 says 'Common Private'). In Evolution 1, D-RAN (Distributed RAN), the RU (Radio Unit) and the BBU are close together and integrated by one system, each RAN is operated independently, and more user equipment requires more base stations. In Evolution 2, C-RAN (Centralized/Cloud RAN), the base station is disaggregated: the BBUs are separated from the RUs and grouped into a pool, and the fronthaul interface is created to connect the RUs to the pool, the first disaggregation initiative. This reduces costs but overloads that interface (the text on slide 39 is cut off at 'Sobrecarga na interfa'). In both cases, the link to the core network is the backhaul."
+    },
+    {
+      "t": "vRAN and O-RAN: virtualize, then open",
+      "d": "In Evolution 3, vRAN (Virtualized RAN), the BBU is virtualized in VMs or containers on COTS hardware, with virtualized functions (NFV), scalability and resource orchestration and lower energy consumption; but orchestrating multiple RANs is complex and the hardware and interfaces remain proprietary (closed CPRI and mid-haul). In Evolution 4, O-RAN (Open RAN), standardization and software come from the O-RAN Alliance, compatible with the 3GPP specification, on COTS hardware with open, standardized interfaces; the BBU is fully disaggregated into CU (Central Unit, mobility management and resource control) and DU (Distributed Unit, wireless traffic processing); RAN management is automated with AI/ML; and there are intelligent non-RT and near-RT controllers. Slide 43 sums up the comparison: vRAN is off-the-shelf hardware with proprietary interfaces and software and a single vendor; Open RAN is off-the-shelf hardware with open interfaces (open eCPRI and mid-haul), proprietary software and multiple vendors. On slides 46 and 48, the disaggregated O-RAN shows O-RU, O-DU and the O-CU split into O-CU-CP (control plane) and O-CU-UP (user plane), Open Fronthaul, Open Midhaul and the Open RAN Intelligent Controller with Near-RT RIC and Non-RT RIC."
+    },
+    {
+      "t": "Logical architecture: the radio set",
+      "d": "The logical architecture groups the elements into three sets. The radio set gathers the Near-RT RIC, O-CU-CP, O-CU-UP, O-DU, O-RU and the E2 interface. From the diagram: the Near-RT RIC receives policies from the Non-RT RIC over A1 and speaks E2 with the O-CU-CP, O-CU-UP, O-DU and with the O-eNB (O-RAN-compliant 4G eNB); O-CU-CP and O-CU-UP connect over E1 and reach the O-DU over F1-c (control) and F1-u (user); the O-DU talks to the O-RU over the Open Fronthaul CUS-Plane (Control, User and Synchronization; usual expansion, the slide only uses the acronym); and the O-CU-CP and O-CU-UP connect to other base stations and to the core over the X2, Xn and NG interfaces. The legend separates 3GPP-defined interfaces from O-RAN-defined ones."
+    },
+    {
+      "t": "Logical architecture: O-Cloud and SMO",
+      "d": "The cloud set, the O-Cloud, is the collection of physical infrastructure nodes that host the O-RAN network functions, together with the supporting software components (operating system, virtual machine monitor, container runtime, etc.) and the appropriate management and orchestration functions; this is where the virtualization and cloud reviewed at the start of the lecture enter the architecture. The management set is the SMO framework, which contains the Non-RT RIC with its rApps, the SMO services, the SMO consumers and SMO communication, plus the O1 and O2 interfaces. In the diagram, O1 connects the SMO to the Network Functions (Near-RT RIC, O-CU-CP, O-CU-UP, O-DU and O-eNB), the Open FH M-Plane connects the SMO to the O-RU, and O2 connects the SMO to the O-Cloud."
+    },
+    {
+      "t": "O1 or O2: managing the RAN or managing the O-Cloud",
+      "d": "Slide 59 repeats the logical architecture highlighting the SMO, the O1 and O2 interfaces and two regions: the Network Functions (O-CU-CP, O-CU-UP, O-DU) and the O-Cloud. It is the key to the 'The network is down!' scenario: at 2 p.m. a cell degraded, the O-DU is operational, the O-Cloud shows high utilization, the SMO has received monitoring information, and the operator must find out whether the problem is in the infrastructure or in the Network Function. Managing the RAN means looking at the Network Functions, which the SMO reaches over O1; managing the O-Cloud means looking at the physical nodes and the software that hosts them, which the SMO reaches over O2. The deck leaves the conclusion to the class; since the scenario shows signals on both sides, the diagnosis has to cross both views."
+    }
+  ],
+  "formulas": [],
+  "onde": {
+    "scene": "smoarq",
+    "texto": "In the lab, the SMO is the O-RAN SC OAM solution running in Docker containers on the AWS Graviton (ARM64) server: the SDN-R/OpenDaylight controller manages simulated O-DU and O-RU (pynts) over O1 with NETCONF/YANG, the VES collector publishes to Kafka and ODLUX is the console, while the radio set shows up in Projeto 2 (OAI gNB in RFSIM with an E2 agent, FlexRIC as Near-RT RIC and the O-RAN SC Non-RT RIC over A1). The OAI gNB has no O1, so O1 is demonstrated with the simulators, and there is no O2, which in O-RAN SC belongs to the INF project."
+  },
+  "exercicios": [
+    "status",
+    "smo-arquitetura",
+    "smo-o1-leitura",
+    "smo-ocloud",
+    "smo-falhas",
+    "p2-test-e2-sm",
+    "p2-test-a1"
+  ],
+  "quiz": [
+    {
+      "q": "When you think of Open RAN, what are the 5 words that come to your mind?",
+      "a": "Open question, with no answer from the professor; it opens the lecture (slide 12) and comes back unchanged at the end (slide 62), after the review. The deck provides the vocabulary to answer it: virtualization, container, NFV, cloud native, cloud computing, SDN, network slicing, disaggregation (D-RAN, C-RAN, vRAN, O-RAN), open interfaces, RIC, O-Cloud and SMO (slides 16 to 59)."
+    },
+    {
+      "q": "Which of these words do you think will be most important in this course?",
+      "a": "Open question, with no answer from the professor (slide 13). The deck points to the course focus in the syllabus: SMO architecture, O1/O2 interfaces, CI/CD, monitoring, assurance and telco cloud management (slide 3); and slide 10 highlights precisely the SMO, O1 and O2 in the diagram. Words related to management, orchestration and the O-Cloud are the ones the course will go deeper into."
+    },
+    {
+      "q": "Which set of technologies best represents the technological evolution that enabled the transition from a traditional RAN, based on proprietary hardware and interfaces, to a more disaggregated, virtualized and automatable Open RAN architecture? a) SDN, NFV, MEC, Network Slicing and virtualization of network functions; b) Virtualization, NFV, SDN, Cloud Computing and cloud-native technologies; c) Cloud Computing, Network Slicing, MEC, SDN and containers; d) NFV, SDN, Network Slicing, Kubernetes and edge computing (MEC)",
+      "a": "b) Virtualization, NFV, SDN, Cloud Computing and cloud-native technologies (highlighted on slide 15). It is the sequence the lecture reviews as the foundation: virtualization (slides 16 to 19), NFV and cloud native (slides 20 and 28), cloud computing (slides 25 and 26) and SDN (slides 29 to 31); slide 33 says virtualization enabled the cloud and transformed networks. The other options mix foundation with consequence or with tooling: network slicing and MEC appear in the figure on slide 31 as the last phase (service network automation), after the virtualization and cloudification phase with SDN, NFV and cloud computing, and slide 49 says it is virtualization that enables slicing; containers and Kubernetes are ways to run and orchestrate cloud native (slides 20 and 22), not the underlying technology."
+    },
+    {
+      "q": "Would you choose a VM or a container? (1) I need to run two completely different operating systems on the same server. (2) I have hundreds of cloud-native network functions that need to be created and destroyed quickly. (3) I want to run a Network Function that has specific kernel requirements.",
+      "a": "The deck has no answer slide (slide 24); the reading below comes from the lecture's own diagrams. (1) VM: with a type 1 or type 2 hypervisor each VM has its own guest kernel, so different operating systems coexist on the same host, whereas containers share the host kernel (slides 17 to 19). (2) Container: this is the cloud-native model, with stateless CNFs built from microservices in containers on a container engine and intelligent orchestration (slide 20), orchestrated by tools such as Kubernetes (slides 22 and 23). (3) VM: the function needs a kernel with its own requirements, and only a VM has a guest kernel; in a container the kernel is the host's, shared with every other container (slide 19)."
+    },
+    {
+      "q": "Which of these technologies is most directly related to network programmability? A. NFV; B. SDN; C. Virtualization; D. Container",
+      "a": "B. SDN (marked on slide 35). Slide 30 says that in SDN the network is programmable by the applications running above the controllers, thanks to the separation of the data and control planes and the open interfaces between controller and devices; slide 31 adds that this programmability optimizes the automation of NFVs. NFV takes network functions off dedicated hardware and runs them as VNFs (slide 28), virtualization creates virtual versions of resources on a host (slide 16) and a container isolates applications on top of the host kernel (slide 19): none of them, on its own, makes the network programmable."
+    },
+    {
+      "q": "Which evolution introduced BBU virtualization? A. D-RAN; B. C-RAN; C. vRAN; D. O-RAN",
+      "a": "C. vRAN (marked on slide 45). Slide 41 lists, under Evolution 3, BBU virtualization with VMs or containers on COTS hardware. In D-RAN the BBU sits next to the RU (slide 38); in C-RAN the BBUs are separated from the RUs and pooled, but they are still physical equipment (slides 39 and 46, where only V-RAN shows a vBBU); O-RAN inherits virtualization and adds open interfaces, full CU/DU disaggregation and intelligent controllers (slide 42), but it was not the one that introduced it."
+    },
+    {
+      "q": "Is O-RAN simply vRAN with open interfaces?",
+      "a": "Open question: slide 47 has no written answer, but the surrounding slides point to no. The comparison on slide 43 shows open interfaces (open eCPRI and mid-haul, with multiple vendors) as the visible difference, but slide 42 lists more: standardization by the O-RAN Alliance compatible with 3GPP, full disaggregation of the BBU into CU and DU, and automation of RAN management with AI/ML through intelligent non-RT and near-RT controllers. The slide right after the question (slide 48) shows what vRAN does not have: the O-CU split into O-CU-CP and O-CU-UP and the Open RAN Intelligent Controller with Near-RT RIC and Non-RT RIC; and the logical architecture (slides 51 to 54) adds the SMO and the O-Cloud."
+    },
+    {
+      "q": "Which of these elements belongs to the radio set? A. SMO; B. O2; C. O-DU; D. O-Cloud",
+      "a": "C. O-DU (marked on slide 56). Slide 52 lists the radio set: Near-RT RIC, O-CU-CP, O-CU-UP, O-DU, O-RU and the E2 interface. The SMO and the O2 interface belong to the management set (slide 54), and the O-Cloud is the cloud set itself (slide 53)."
+    },
+    {
+      "q": "Which component is associated with management and orchestration? A. O-RU; B. O-DU; C. SMO; D. O-CU-UP",
+      "a": "C. SMO (marked on slide 58). The SMO (Service Management and Orchestration) is the framework of the management set, with the Non-RT RIC and its rApps, the SMO services, consumers and communication, and the O1 and O2 interfaces (slide 54). O-RU, O-DU and O-CU-UP are elements of the radio set (slide 52): they are managed by the SMO, they do not manage."
+    },
+    {
+      "q": "The network is down! Scenario: it is 2 p.m.; an operator detects that a cell has degraded; the O-DU is operational; the O-Cloud shows high utilization; the SMO has received monitoring information; the operator needs to find out: 'Is the problem in the infrastructure or in the Network Function?'. Tell me: what information needs to be collected? Where could that information come from? Which part of the architecture is involved? Is this RAN management or O-Cloud management? Which interface will probably be involved? O1 or O2?",
+      "a": "Open question for class discussion (slides 60 and 61); the deck gives no answer from the professor, and what follows is one possible reading using the lecture material. There are two sides to collect: the state and performance of the cell's Network Functions (O-DU, O-CU-CP, O-CU-UP), which the SMO gets over O1, and the utilization of the O-Cloud physical nodes and of the software that hosts them (operating system, VM monitor, container runtime), which the SMO gets over O2 (slides 53, 54 and 59). The scenario's clues lean toward the infrastructure, because the O-DU is operational and the O-Cloud is the one showing the deviation: that would be O-Cloud management, with O2 as the likely interface. Even so, Network Function data over O1 is needed to rule out the function before concluding."
+    },
+    {
+      "q": "Which concept from this lecture do you think will be most important to understand SMO?",
+      "a": "Open question, with no answer from the professor (slide 63). The deck suggests candidates: the split into management, radio and cloud sets (slides 52 to 54), because the SMO is what manages the other two; the O1 and O2 interfaces, highlighted on slides 10 and 59; and virtualization and cloud native (slides 16 to 23), because the O-Cloud the SMO manages includes a virtual machine monitor and a container runtime (slide 53)."
+    }
+  ],
+  "fontes": "p. 3-7 (syllabus, bibliography, method, assessment Parts 1 and 2), 9-10 (high-level Open RAN architecture), 12-15 (opening questions and technologies quiz), 16-24 (virtualization, types 1 and 2, container, NFV and cloud native, MANO, tools, GitOps, VM or container), 25-26 (cloud, fog, edge and mist computing), 27-35 (NFV, SDN, network slicing, synergy, SDN quiz), 36-49 (D-RAN, C-RAN, vRAN, O-RAN, BBU quiz, O-RAN vs vRAN, virtualization in telecom), 50-59 (logical architecture: radio, cloud and management sets, quizzes), 60-63 (The network is down! scenario, closing questions)"
+}

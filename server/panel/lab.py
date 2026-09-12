@@ -101,11 +101,30 @@ def lab_projeto_page() -> HTMLResponse:
 
 
 # Fase C — Estudos por cadeira. Conteúdo plugável: static/lab/estudos/index.json
-# (catálogo: 4 cadeiras, exercícios, os 7 temas) + <id>.json por aula
+# (catálogo: cadeiras, exercícios, os 7 temas) + <id>.json por aula
 # (extraído dos slides). Duas páginas genéricas leem o caminho e renderizam.
+# Quais cadeiras e quantas aulas existem vem do próprio catálogo: cadeira nova
+# ou aula a mais entra pelo JSON, sem mexer nas rotas.
+ESTUDOS_INDEX = LAB_DIR / "estudos" / "index.json"
+_catalogo: dict = {"mtime": None, "aulas": {}}
+
+
+def _aulas_por_cadeira() -> dict[int, int]:
+    """{n da cadeira: quantas aulas}, relido quando o index.json muda."""
+    try:
+        mtime = ESTUDOS_INDEX.stat().st_mtime
+        if mtime != _catalogo["mtime"]:
+            cat = json.loads(ESTUDOS_INDEX.read_text(encoding="utf-8"))
+            _catalogo["aulas"] = {e["n"]: len(e.get("aulas", [])) for e in cat.get("estudos", [])}
+            _catalogo["mtime"] = mtime
+    except (OSError, ValueError, KeyError):
+        pass
+    return _catalogo["aulas"]
+
+
 @router.get("/lab/estudo/{n}")
 def lab_estudo_page(n: int) -> FileResponse:
-    if n not in (1, 2, 3, 4):
+    if n not in _aulas_por_cadeira():
         raise HTTPException(404, "estudo inexistente")
     return pagina(LAB_DIR / "lab-estudo.html")
 
@@ -119,7 +138,7 @@ def lab_exercicio_page(n: int, slug: str) -> HTMLResponse:
 
 @router.get("/lab/estudo/{n}/aula/{k}")
 def lab_aula_page(n: int, k: int) -> FileResponse:
-    if n not in (1, 2, 4) or not (1 <= k <= 6):
+    if not (1 <= k <= _aulas_por_cadeira().get(n, 0)):
         raise HTTPException(404, "aula inexistente")
     return pagina(LAB_DIR / "lab-aula.html")
 

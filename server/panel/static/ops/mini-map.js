@@ -16,7 +16,7 @@
                    'reduzida' (canto, nao tapa o texto) e vai a 'expandida'
                    (modal com fundo escurecido) num clique. */
     '.mm-box{margin:6px 0;border:1px solid var(--line);border-radius:8px;background:var(--console-bg);overflow:hidden;flex:0 0 auto}',
-    '.mm-head{display:flex;align-items:center;gap:6px;padding:4px 10px;font:10px -apple-system,sans-serif;color:var(--ink-3);user-select:none}',
+    '.mm-head{display:flex;align-items:center;gap:6px;padding:4px 10px;font:11px -apple-system,sans-serif;color:var(--ink-2);user-select:none}',
     '.mm-head b{color:var(--warn)}',
     '.mm-head .mm-ct{flex:1 1 auto;min-width:0}',
     '.mm-head .mm-btn{flex:none;border:1px solid var(--line);border-radius:5px;padding:0 6px;line-height:16px;font-size:11px;color:var(--ink-3);cursor:pointer}',
@@ -167,11 +167,12 @@
     return [x, y, w, h];
   }
 
-  // fim do teste: congela o fluxo (sem pacote) na cor do resultado — reaplicado
-  // se o mapa for redesenhado (ex.: alternar foco / mapa todo depois do fim)
+  // fim do teste: linha, seta e pacotes na cor do resultado. Os pacotes seguem
+  // andando — é quando o teste acaba que se olha o mapa para ver por onde o dado
+  // passou. Reaplicado se o mapa for redesenhado (alternar foco / mapa todo).
   function pintaFim(h) {
     var c = h.dataset.fim; if (!c) return;
-    h.querySelectorAll('circle').forEach(function (x) { x.remove(); });
+    h.querySelectorAll('circle.mm-pkt').forEach(function (x) { x.setAttribute('fill', c); });
     h.querySelectorAll('line.mm-flow').forEach(function (l) { l.setAttribute('stroke', c); });
     h.querySelectorAll('polygon.mm-flow').forEach(function (p) { p.setAttribute('fill', c); });
   }
@@ -192,8 +193,8 @@
       var x1 = Math.max.apply(0, ns.map(function (n) { return n.x + 184; })) + 24;
       var y1 = Math.max.apply(0, ns.map(function (n) { return n.y + 66; })) + 14;
       var c = ly.color || 'var(--n-4)';
-      s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" rx="14" fill="' + c + '" fill-opacity=".05" stroke="' + c + '" stroke-opacity=".35"/>';
-      s += '<text x="' + (x0 + 14) + '" y="' + (y0 + 20) + '" font-family="-apple-system,sans-serif" font-size="14" font-weight="600" fill="' + c + '" fill-opacity=".75">' + esc(ly.label || k) + '</text>';
+      s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" rx="14" fill="' + c + '" fill-opacity=".08" stroke="' + c + '" stroke-opacity=".6"/>';
+      s += '<text x="' + (x0 + 14) + '" y="' + (y0 + 21) + '" font-family="-apple-system,sans-serif" font-size="16" font-weight="700" fill="' + c + '">' + esc(ly.label || k) + '</text>';
     }
     var FONT ='font-family="-apple-system,sans-serif"';
     var ghost = mm.ghost || [];
@@ -217,9 +218,9 @@
       var a = byId[l.from], b = byId[l.to]; if (!a || !b) return;
       if (isFlow(l.from, l.to)) return;
       var ca = center(a), cb = center(b);
-      var op = l.planned ? '.35' : '.8';
-      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="var(--line-2)" stroke-width="1.5" opacity="' + op + '"' + (l.dashed || l.planned ? ' stroke-dasharray="7 6"' : '') + '/>';
-      if (l.iface) s += '<text x="' + ((ca.x + cb.x) / 2) + '" y="' + ((ca.y + cb.y) / 2 - 6) + '" text-anchor="middle" ' + FONT + ' font-size="12" fill="var(--ink-3)" stroke="var(--console-bg)" stroke-width="4" paint-order="stroke">' + esc(l.iface) + '</text>';
+      var op = l.planned ? '.45' : '.85';
+      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="var(--ink-3)" stroke-width="2" opacity="' + op + '"' + (l.dashed || l.planned ? ' stroke-dasharray="7 6"' : '') + '/>';
+      if (l.iface) s += '<text x="' + ((ca.x + cb.x) / 2) + '" y="' + ((ca.y + cb.y) / 2 - 6) + '" text-anchor="middle" ' + FONT + ' font-size="14" fill="var(--ink-2)" stroke="var(--console-bg)" stroke-width="4" paint-order="stroke">' + esc(l.iface) + '</text>';
     });
 
     // Rótulos de fluxo/linhagem entram em lbl e são pintados DEPOIS dos nós
@@ -229,10 +230,10 @@
     ghost.forEach(function (f) {
       var a = byId[f[0]], b = byId[f[1]]; if (!a || !b) return;
       var ca = center(a), cb = center(b);
-      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="var(--warn)" stroke-width="2.5" opacity=".4" stroke-dasharray="8 7"/>';
+      s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="var(--warn)" stroke-width="3" opacity=".7" stroke-dasharray="8 7"/>';
       var mx = (ca.x + cb.x) / 2, my = (ca.y + cb.y) / 2;
       var ang = (Math.atan2(cb.y - ca.y, cb.x - ca.x) * 180 / Math.PI).toFixed(1);
-      s += '<polygon points="0,-7 14,0 0,7" fill="var(--warn)" opacity=".5" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
+      s += '<polygon points="0,-7 14,0 0,7" fill="var(--warn)" opacity=".85" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
       var glabel = flowLabel(f);
       if (glabel) lbl += '<text x="' + mx + '" y="' + (my - 12) + '" text-anchor="middle" ' + FONT + ' font-size="14" font-style="italic" fill="var(--warn-text)" stroke="var(--console-bg)" stroke-width="4" paint-order="stroke">' + esc(glabel) + '</text>';
     });
@@ -240,24 +241,59 @@
     mm.flows.forEach(function (f) {
       var a = byId[f[0]], b = byId[f[1]]; if (!a || !b) return;
       var ca = center(a), cb = center(b);
-      s += '<line class="mm-flow" x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="var(--warn)" stroke-width="3" opacity=".6"/>';
+      s += '<line class="mm-flow" x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="var(--warn)" stroke-width="4" opacity=".95"/>';
       var mx = (ca.x + cb.x) / 2, my = (ca.y + cb.y) / 2;
       var ang = (Math.atan2(cb.y - ca.y, cb.x - ca.x) * 180 / Math.PI).toFixed(1);
-      s += '<polygon class="mm-flow" points="0,-8 16,0 0,8" fill="var(--warn)" opacity=".9" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
+      s += '<polygon class="mm-flow" points="0,-8 16,0 0,8" fill="var(--warn)" opacity="1" transform="translate(' + mx + ',' + my + ') rotate(' + ang + ')"/>';
       var flabel = flowLabel(f);
       if (flabel) lbl += '<text x="' + mx + '" y="' + (my - 14) + '" text-anchor="middle" ' + FONT + ' font-size="16" font-weight="700" fill="var(--warn-text)" stroke="var(--console-bg)" stroke-width="5" paint-order="stroke">' + esc(flabel) + '</text>';
-      if (live) {
-        var dur = (Math.hypot(cb.x - ca.x, cb.y - ca.y) / 220 + 0.6).toFixed(2);
-        s += '<circle r="7" fill="var(--warn-text)"><animate attributeName="cx" from="' + ca.x + '" to="' + cb.x + '" dur="' + dur + 's" repeatCount="indefinite"/><animate attributeName="cy" from="' + ca.y + '" to="' + cb.y + '" dur="' + dur + 's" repeatCount="indefinite"/></circle>';
-      }
     });
+    // PACOTES: um trem de bolinhas percorre o caminho inteiro, trecho por trecho,
+    // na ordem da cena (a ordem dos dados), com dois trens meio ciclo defasados.
+    // Cada bolinha só aparece no próprio trecho (opacidade discreta nos keyTimes),
+    // então o olho acompanha o dado de ponta a ponta. Quem pede menos movimento
+    // vê as bolinhas paradas no meio de cada trecho.
+    if (live && mm.flows.length) {
+      var trechos = mm.flows.map(function (f) {
+        var a = byId[f[0]], b = byId[f[1]]; if (!a || !b) return null;
+        var ca = center(a), cb = center(b);
+        return { a: ca, b: cb, d: Math.hypot(cb.x - ca.x, cb.y - ca.y) / 260 + 0.5 };
+      }).filter(Boolean);
+      var parado = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      var ciclo = trechos.reduce(function (t, x) { return t + x.d; }, 0) + 0.6;
+      var PKT = '<circle class="mm-pkt" r="11" fill="var(--warn-text)" stroke="var(--console-bg)" stroke-width="3"';
+      // [[t, valor], ...] → values/keyTimes sem tempos repetidos (vale o último)
+      var chaves = function (pts) {
+        var r = [];
+        pts.forEach(function (p) { if (r.length && r[r.length - 1][0] === p[0]) r[r.length - 1] = p; else r.push(p); });
+        return 'values="' + r.map(function (p) { return p[1]; }).join(';') + '" keyTimes="' + r.map(function (p) { return p[0]; }).join(';') + '"';
+      };
+      var t0 = 0;
+      trechos.forEach(function (tr) {
+        if (parado) {
+          s += PKT + ' cx="' + ((tr.a.x + tr.b.x) / 2) + '" cy="' + ((tr.a.y + tr.b.y) / 2) + '"/>';
+          return;
+        }
+        var ini = +(t0 / ciclo).toFixed(4), fim = +((t0 + tr.d) / ciclo).toFixed(4);
+        t0 += tr.d;
+        var anima = function (attr, pts, extra) {
+          return '<animate attributeName="' + attr + '" ' + chaves(pts) + (extra || '') + ' dur="' + ciclo.toFixed(2) + 's" repeatCount="indefinite" begin="COMECO"/>';
+        };
+        var corpo = anima('cx', [[0, tr.a.x], [ini, tr.a.x], [fim, tr.b.x], [1, tr.b.x]])
+          + anima('cy', [[0, tr.a.y], [ini, tr.a.y], [fim, tr.b.y], [1, tr.b.y]])
+          + anima('opacity', [[0, 0], [ini, 1], [fim, 0]], ' calcMode="discrete"');
+        [0, -ciclo / 2].forEach(function (b0) {
+          s += (PKT + ' cx="' + tr.a.x + '" cy="' + tr.a.y + '" opacity="0">' + corpo + '</circle>').replace(/COMECO/g, b0.toFixed(2) + 's');
+        });
+      });
+    }
     // nós: TODOS com nome — aceso (âmbar), origem do dado (âmbar tracejado) ou apagado
     topo.nodes.forEach(function (n) {
       var on = hi[n.id], g = gh[n.id];
       s += '<rect x="' + n.x + '" y="' + n.y + '" width="184" height="66" rx="9" fill="'
-        + (on ? 'var(--warn-soft)' : g ? 'var(--warn-soft)' : 'var(--surface)') + '" stroke="' + (on ? 'var(--warn)' : g ? 'var(--w-8)' : 'var(--n-4)')
-        + '" stroke-width="' + (on ? 3 : g ? 1.5 : 1) + '"' + (g ? ' stroke-dasharray="6 5"' : '') + '/>';
-      s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" ' + FONT + ' font-size="' + (on ? 18 : 15) + '" font-weight="' + (on ? 700 : 500) + '" fill="' + (on ? 'var(--warn-text)' : g ? 'var(--warn-text)' : 'var(--ink-2)') + '">' + esc(n.label || n.id) + '</text>';
+        + (on ? 'var(--warn-soft)' : g ? 'var(--warn-soft)' : 'var(--surface)') + '" stroke="' + (on ? 'var(--warn)' : g ? 'var(--w-8)' : 'var(--ink-3)')
+        + '" stroke-width="' + (on ? 3 : g ? 2 : 1.5) + '"' + (g ? ' stroke-dasharray="6 5"' : '') + '/>';
+      s += '<text x="' + (n.x + 92) + '" y="' + (n.y + 40) + '" text-anchor="middle" ' + FONT + ' font-size="' + (on ? 19 : 16) + '" font-weight="' + (on ? 700 : 600) + '" fill="' + (on ? 'var(--warn-text)' : g ? 'var(--warn-text)' : 'var(--ink)') + '">' + esc(n.label || n.id) + '</text>';
     });
     s += lbl + '</svg>';
     var flutua = host === floatHost;

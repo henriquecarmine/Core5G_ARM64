@@ -21,6 +21,13 @@
     "p2-ml-pm": "IA: detectar RRU perdida (PM)",
     "p2-kpi-qoe": "Cadena medida → KPI → KQI → QoE",
     "p2-closed-loop": "Closed loop A1 paso a paso (offline)",
+    "smo-arquitetura": "SMO: arquitectura, servicios y componentes",
+    "smo-o1-leitura": "SMO: leer la O-DU por O1",
+    "smo-o1-prov": "SMO: aprovisionar por O1 y deshacer",
+    "smo-falhas": "SMO: alarma VES hasta Kafka",
+    "smo-telemetria": "SMO: medidas 3GPP de la O-DU",
+    "smo-ciclo-vida": "SMO: ciclo de vida de una función de red",
+    "smo-ocloud": "SMO: O-Cloud y O2",
     "p2-tema-t1": "T1 Throughput del usuario",
     "p2-tema-t2": "T2 Anomalía de carga",
     "p2-tema-t3": "T3 Latencia y QoE",
@@ -33,7 +40,8 @@
   "bancadas": {
     "p1": "Proyecto 1: Open5GS + UERANSIM",
     "p2": "Proyecto 2: OAI + FlexRIC + Non-RT RIC",
-    "any": "corre sobre archivo, sin necesidad de la RAN"
+    "any": "corre sobre archivo, sin necesidad de la RAN",
+    "smo": "SMO de O-RAN SC (OAM) en el servidor, sin necesidad de la RAN"
   },
   "estudos": [
     {
@@ -205,6 +213,16 @@
           {"rot": "Dashboard KPI / NOC", "t": "Monitoramento RAN (BI)", "d": "Painel de NOC sobre as 100 amostras KPM do lab: cartões, semáforo, alertas e três cenários (carga, interferência, backhaul).", "h": "#data/kpi-dashboard", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"aula": 5, "href": "/lab/dashboard-kpi", "rot": "Dashboard KPI / NOC"}}
         ]
       }
+    },
+    {
+      "id": "e5", "n": 5, "icon": "🎛️", "bancada": "smo",
+      "titulo": "Gestión, Orquestación y Automatización en Redes Open RAN",
+      "prof": "Prof. Lucas Borges de Oliveira",
+      "periodo": "sep/2026 (en curso)",
+      "resumo": "Cómo se opera una red Open RAN entera. La clase 0 repasa la base (virtualización, NFV, SDN, la evolución D-RAN → C-RAN → vRAN → O-RAN y los componentes de la arquitectura O-RAN); la clase 1 presenta el SMO (Service Management and Orchestration): por qué existe, su arquitectura basada en servicios y los servicios que gestionan la red, recogen sus datos y la orquestan. En nuestro lab, el SMO de O-RAN SC corre en el servidor ARM64 — controlador O1 (NETCONF/YANG), colector VES con Kafka, Keycloak y la consola ODLUX — gestionando una O-DU y O-RU simulados. La primera evaluación (30%) analiza una plataforma de SMO en 8 ítems, y cada ítem tiene una prueba real en el panel.",
+      "pdfs": "pdfs/04-gestao-orquestracao",
+      "aulas": ["e5a00", "e5a01"],
+      "exercicios": ["smo-arquitetura", "smo-o1-leitura", "smo-o1-prov", "smo-falhas", "smo-telemetria", "smo-ciclo-vida", "smo-ocloud"]
     }
   ]
 }

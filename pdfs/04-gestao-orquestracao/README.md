@@ -3,7 +3,15 @@
 **Prof. Lucas Borges de Oliveira** · OpenRAN Especialização 2025.2 · início em
 08/09/2026 (18:30).
 
-Slides na raiz desta pasta, com os nomes dados pelo professor.
+## Slides do professor
+
+| Arquivo | Aula | Páginas |
+|---|---|---|
+| [`aula00-revisao.pdf`](aula00-revisao.pdf) | Aula 0 — Revisão | 64 |
+| [`aula01-smo.pdf`](aula01-smo.pdf) | Aula 1 — SMO | 67 |
+
+Nomes no padrão das outras cadeiras (`aulaNN-assunto.pdf`); no Classroom, os
+arquivos se chamam "Aula 0 - Revisão.pdf" e "Aula 1 - SMO.pdf".
 
 ## Avaliação — 1ª parte (30%): plataformas de SMO
 

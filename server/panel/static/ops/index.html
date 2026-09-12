@@ -1013,9 +1013,10 @@
             </div>
           </div>
         </details>
-        <details class="estudo" data-estudo="e4" open>
+        <details class="estudo" data-estudo="e5" open>
           <summary><span class="est-n">5</span><span class="est-t" data-i18n="rail.e5">Gestão, Orquestração e Automação (SMO)</span><span class="est-b">SMO</span></summary>
           <div class="est-body">
+            <a class="est-link" href="/lab/estudo/5" data-i18n="rail.aulas">📖 Aulas desta cadeira</a>
             <button class="primary" id="smo-live-btn" data-i18n="smo.vivo" data-i18n-title="smo.vivo_title" title="O SMO agora, só leitura: elementos sob gerência, conexões, alarmes, barramento Kafka e contêineres. Atualiza sozinho; o endereço curto é /smo">SMO ao vivo (o que o operador vê)</button>
             <div class="est-sub" data-i18n="rail.e5_aval">Avaliação · plataformas de SMO, um teste por item</div>
             <div class="test-block" data-proj-tests="any">
@@ -3879,8 +3880,11 @@ window.addEventListener('message', ev => {
   pop.querySelector('.x').addEventListener('click', fecha);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecha(); });
   document.addEventListener('click', (e) => {
-    // quem é botão de verdade (o rótulo "servidor") faz a própria ação, não explica
-    const alvo = e.target.closest && e.target.closest('#topbar-telemetry [title]:not([role="button"])');
+    // Controle de verdade faz a própria ação, não explica: o rótulo "servidor",
+    // o "containers ▾" (um <details>: explicar o clique impedia a lista de abrir
+    // e de fechar) e o que está dentro da lista. O title deles segue no hover.
+    if (e.target.closest && e.target.closest('#topbar-telemetry :is(summary, button, a, input, select, [role="button"]), #tm-containers-wrap')) { fecha(); return; }
+    const alvo = e.target.closest && e.target.closest('#topbar-telemetry [title]');
     if (!alvo) { if (!e.target.closest('#explica-pop')) fecha(); return; }
     const txt = alvo.getAttribute('title');
     if (!txt) return;

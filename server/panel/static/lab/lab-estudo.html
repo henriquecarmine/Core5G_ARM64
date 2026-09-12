@@ -101,17 +101,19 @@ async function main(){
   } else {
     $("#aulas-sub").textContent=(e.nota?e.nota+" ":"")+T("est.aulas_sub");
     const aulas=await Promise.all(e.aulas.map(id=>jl(id).catch(()=>null)));
-    $("#aulas").innerHTML=aulas.filter(Boolean).map(a=>`
+    // O link leva a POSIÇÃO da aula na lista (a rota abre e.aulas[k-1]); o número
+    // mostrado é o do professor, que pode começar na Aula 0.
+    $("#aulas").innerHTML=aulas.map((a,i)=>a&&`
       <div class="step"><div class="stepnum">${a.n}</div>
         <div class="stepbody"><h4>${esc(a.titulo)}${a.previa?` <span class="previa-tag">${esc(T("est.previa"))}</span>`:""}</h4><p>${esc(a.resumo)}</p>
           <div class="oran">${T("est.stats",{c:a.conceitos.length,f:a.formulas.length,x:a.exercicios.length})} · ${a.slide?esc(a.slide):esc(T("est.noslides"))}</div></div>
-        <a class="stepgo" href="/lab/estudo/${e.n}/aula/${a.n}">${T("est.open_aula")}</a></div>`).join("");
+        <a class="stepgo" href="/lab/estudo/${e.n}/aula/${i+1}">${T("est.open_aula")}</a></div>`).filter(Boolean).join("");
   }
 
   // ---- exercícios (comandos do console)
   $("#ex-sub").innerHTML=e.bancada==="p2"
     ?T("est.ex_p2")+(e.temas?T("est.ex_p2_temas"):"")
-    :T("est.ex_p1");
+    :e.bancada==="smo"?T("est.ex_smo"):T("est.ex_p1");
   $("#ex").innerHTML=e.exercicios.map(c=>runBtn(c,idx.comandos[c]||c)).join("");
 
   // ---- Estudo 4: dados do projeto + os 7 temas + próximas aulas

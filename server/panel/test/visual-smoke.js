@@ -283,6 +283,33 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   await page.setRequestInterception(false);
   console.log(`PASS 10 · SMO ao vivo: ${smoVivo.secoes.length} seções, ${smoVivo.verdes} estados verdes e ${smoVivo.vermelhos} vermelhos, SMO desligado explicado, Escape fecha`);
 
+  // 11) "containers ▾" abre e fecha no clique. A explicação no clique dos
+  // instrumentos capturava o <summary> (que tem title): a lista não abria nem
+  // fechava e um cartão vazio aparecia no lugar. Os instrumentos seguem
+  // explicando no clique.
+  const cont = () => page.evaluate(() => ({
+    aberto: document.getElementById('tm-containers-wrap').open,
+    cartao: !document.getElementById('explica-pop').hidden,
+  }));
+  await page.click('#tm-containers-wrap summary');
+  await new Promise((r) => setTimeout(r, 250));
+  const contAberto = await cont();
+  await page.click('#tm-containers-wrap summary');
+  await new Promise((r) => setTimeout(r, 250));
+  const contFechado = await cont();
+  assert(contAberto.aberto && !contAberto.cartao, `"containers ▾" devia abrir no clique (aberto=${contAberto.aberto}, cartão=${contAberto.cartao})`);
+  assert(!contFechado.aberto && !contFechado.cartao, `"containers ▾" devia fechar no segundo clique (aberto=${contFechado.aberto}, cartão=${contFechado.cartao})`);
+  const instrumento = await page.evaluate(() => {
+    const el = [...document.querySelectorAll('#topbar-telemetry [title]')]
+      .find(x => !x.closest('summary, button, a, [role="button"], #tm-containers-wrap') && x.getBoundingClientRect().width > 0);
+    if (!el) return null;
+    el.click();
+    return !document.getElementById('explica-pop').hidden;
+  });
+  assert(instrumento === true, 'os instrumentos da telemetria deviam continuar explicando no clique');
+  await page.keyboard.press('Escape');
+  console.log('PASS 11 · "containers ▾" abre e fecha no clique, sem cartão por cima; os instrumentos seguem explicando');
+
   // Screenshot de inspeção: projeto ativo + loaders em botões visíveis.
   await page.evaluate(() => {
     document.querySelectorAll('.tools-set').forEach(s => s.classList.toggle('active', s.dataset.tools === 'p1'));
@@ -303,7 +330,7 @@ const assert = (cond, msg) => { if (!cond) throw new Error('FALHOU: ' + msg); };
   await new Promise(r => setTimeout(r, 200));
   await page.screenshot({ path: path.join(SHOTS, 'loaders.png'), clip: { x: 0, y: 0, width: 1400, height: 560 } });
   console.log('\nScreenshot: ' + path.join(SHOTS, 'loaders.png'));
-  console.log('✅ TODOS OS TESTES PASSARAM (0–10).');
+  console.log('✅ TODOS OS TESTES PASSARAM (0–11).');
   await browser.close();
   await srv.fechar();
 })().catch(e => { console.error('\n❌ ' + e.message); process.exit(1); });

@@ -40,7 +40,8 @@
   "bancadas": {
     "p1": "Projeto 1: Open5GS + UERANSIM",
     "p2": "Projeto 2: OAI + FlexRIC + Non-RT RIC",
-    "any": "roda sobre arquivo, sem precisar da RAN"
+    "any": "roda sobre arquivo, sem precisar da RAN",
+    "smo": "SMO do O-RAN SC (OAM) no servidor, sem precisar da RAN"
   },
   "media": 70,
   "estudos": [
@@ -213,6 +214,16 @@
           {"rot": "Dashboard KPI / NOC", "t": "Monitoramento RAN (BI)", "d": "Painel de NOC sobre as 100 amostras KPM do lab: cartões, semáforo, alertas e três cenários (carga, interferência, backhaul).", "h": "#data/kpi-dashboard", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"aula": 5, "href": "/lab/dashboard-kpi", "rot": "Dashboard KPI / NOC"}}
         ]
       }
+    },
+    {
+      "id": "e5", "n": 5, "icon": "🎛️", "bancada": "smo",
+      "titulo": "Gestão, Orquestração e Automação em Redes OpenRAN",
+      "prof": "Prof. Lucas Borges de Oliveira",
+      "periodo": "set/2026 (em andamento)",
+      "resumo": "Como se opera uma rede Open RAN inteira. A Aula 0 revisa a base (virtualização, NFV, SDN, a evolução D-RAN → C-RAN → vRAN → O-RAN e os componentes da arquitetura O-RAN); a Aula 1 apresenta o SMO (Service Management and Orchestration): por que ele existe, a arquitetura baseada em serviços e os serviços que gerenciam a rede, coletam os dados dela e a orquestram. No nosso lab, o SMO do O-RAN SC roda no servidor ARM64 — controlador O1 (NETCONF/YANG), coletor VES com Kafka, Keycloak e o console ODLUX — gerenciando uma O-DU e O-RUs simulados. A 1ª avaliação (30%) analisa uma plataforma de SMO em 8 itens, e cada item tem um teste real no painel.",
+      "pdfs": "pdfs/04-gestao-orquestracao",
+      "aulas": ["e5a00", "e5a01"],
+      "exercicios": ["smo-arquitetura", "smo-o1-leitura", "smo-o1-prov", "smo-falhas", "smo-telemetria", "smo-ciclo-vida", "smo-ocloud"]
     }
   ]
 }

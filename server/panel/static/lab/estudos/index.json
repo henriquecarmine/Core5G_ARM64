@@ -35,7 +35,11 @@
     "p2-tema-t5": "T5 Visão agregada da célula",
     "p2-tema-t6": "T6 Economia de energia",
     "p2-tema-t7": "T7 Política de QoS / steering",
-    "p2-tema-all": "Os 7 temas lado a lado"
+    "p2-tema-all": "Os 7 temas lado a lado",
+    "smo-p2-pilha": "SMO: instanciar a pilha e pô-la sob gerência",
+    "smo-p2-prov": "SMO: provisionar a pilha (plano de rede)",
+    "smo-p2-operacao": "SMO: operar — do alarme à correção",
+    "smo-p2-escala": "SMO: criar uma célula nova pela O1"
   },
   "bancadas": {
     "p1": "Projeto 1: Open5GS + UERANSIM",
@@ -46,57 +50,277 @@
   "media": 70,
   "estudos": [
     {
-      "id": "e1", "n": 1, "icon": "🛰️", "bancada": "p1",
+      "id": "e1",
+      "n": 1,
+      "icon": "🛰️",
+      "bancada": "p1",
       "titulo": "Interfaces e Protocolos O-RAN",
       "prof": "Prof. Dr. Jonas Augusto Kunzler",
       "periodo": "mar a abr/2026",
       "resumo": "A primeira disciplina de Open RAN da especialização: o 5G que já existe (core, RAN, interfaces N1..N11), a nuvem telco e a motivação para abrir a RAN. No nosso lab isso é o Projeto 1: um core Open5GS completo com gNB e UE simulados, onde cada interface pode ser vista funcionando.",
       "pdfs": "pdfs/00-interfaces-oran",
       "nota": "Só a aula 01 foi compartilhada em PDF; as demais foram apresentadas em sala.",
-      "aulas": ["e1a01"],
-      "exercicios": ["status", "test-system-status", "test-ng-setup", "test-registration", "test-config-coherence", "test-ue-connection", "test-throughput", "test-upf-failover"],
+      "aulas": [
+        "e1a01"
+      ],
+      "exercicios": [
+        "status",
+        "test-system-status",
+        "test-ng-setup",
+        "test-registration",
+        "test-config-coherence",
+        "test-ue-connection",
+        "test-throughput",
+        "test-upf-failover"
+      ],
       "atividades": {
-        "modulo": "Módulo 05", "hash": "#oran",
+        "modulo": "Módulo 05",
+        "hash": "#oran",
         "itens": [
-          {"rot": "Aula 01", "t": "Introdução Open RAN", "d": "Quiz e mapeamento de papéis RU/DU/CU.", "h": "#oran/aula01", "pts": 15, "partes": "Bloco 1 3 · Bloco 2 3 · Bloco 3 3 · Organizar funções nas unidades 6", "prep": {"aula": 1}},
-          {"rot": "Aula 02", "t": "Aventura O-RAN", "d": "Circuito completo: ecossistema, split e comparação.", "h": "#oran/aula02", "prep": {"aula": 1}, "pts": 22, "partes": "Conceitos do ecossistema 3 · Mapeamento da arquitetura 6 · Fronthaul e PHY fatiado 3 · Comparação de arquiteturas 10"},
-          {"rot": "Interface A1", "t": "Políticas Non-RT ↔ Near-RT", "d": "Intents, compatibilidade e ciclo política → ação.", "h": "#oran/aulaa1", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Fluxo e governança 3 · Ordenar o ciclo 10", "prep": {"cmd": "p2-test-a1"}},
-          {"rot": "Interface E2", "t": "Controle near-real-time", "d": "E2AP, nós E2 e serviços REPORT/CONTROL.", "h": "#oran/aulae2", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Ordenar o ciclo E2 10", "prep": {"cmd": "p2-test-e2-sm"}},
-          {"rot": "Interface O1", "t": "OAM / FCAPS", "d": "Gestão, PM/FM e telemetria O1.", "h": "#oran/aulao1", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Governança e modelo 3 · Ordenar mudança assistida 10"},
-          {"rot": "Interface O2", "t": "O-Cloud", "d": "Orquestração e inventário de infraestrutura.", "h": "#oran/aulao2", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Operação contínua 3 · Ordenar rollout típico 10"},
-          {"rot": "Aula 04 · Intervalo 1", "t": "Open Fronthaul", "d": "Split 7.2x e fronthaul aberto.", "h": "#oran/aula04i1", "pts": 9, "partes": "Quiz 3 · Situações 6"},
-          {"rot": "Aula 04 · Intervalo 2", "t": "eCPRI e sincronismo", "d": "Taxa IQ, eCPRI e requisitos de sync.", "h": "#oran/aula04i2", "pts": 9, "partes": "Quiz 3 · Situações 6"},
-          {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
-          {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
-          {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenhe um algarismo e acompanhe a inferência no navegador: recorte, centro de massa, 784 valores e softmax.", "h": "#oran/aula05digit", "prep": {"href": "/lab/digitos", "rot": "Lab de dígitos"}, "pts": 9, "partes": "Quiz 3 · Situações 6"},
-          {"rot": "Lab Open5GS", "t": "Core e E2E", "d": "N2/N3, registro UE e troubleshooting.", "h": "#oran/lab-open5gs", "prep": {"cmd": "test-ue-connection"}, "pts": 22, "partes": "Core 3 · Ordenar o roteiro 6 · N2/N3 e E2E 3 · Troubleshooting 10"}
+          {
+            "rot": "Aula 01",
+            "t": "Introdução Open RAN",
+            "d": "Quiz e mapeamento de papéis RU/DU/CU.",
+            "h": "#oran/aula01",
+            "pts": 15,
+            "partes": "Bloco 1 3 · Bloco 2 3 · Bloco 3 3 · Organizar funções nas unidades 6",
+            "prep": {
+              "aula": 1
+            }
+          },
+          {
+            "rot": "Aula 02",
+            "t": "Aventura O-RAN",
+            "d": "Circuito completo: ecossistema, split e comparação.",
+            "h": "#oran/aula02",
+            "prep": {
+              "aula": 1
+            },
+            "pts": 22,
+            "partes": "Conceitos do ecossistema 3 · Mapeamento da arquitetura 6 · Fronthaul e PHY fatiado 3 · Comparação de arquiteturas 10"
+          },
+          {
+            "rot": "Interface A1",
+            "t": "Políticas Non-RT ↔ Near-RT",
+            "d": "Intents, compatibilidade e ciclo política → ação.",
+            "h": "#oran/aulaa1",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Fluxo e governança 3 · Ordenar o ciclo 10",
+            "prep": {
+              "cmd": "p2-test-a1"
+            }
+          },
+          {
+            "rot": "Interface E2",
+            "t": "Controle near-real-time",
+            "d": "E2AP, nós E2 e serviços REPORT/CONTROL.",
+            "h": "#oran/aulae2",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Ordenar o ciclo E2 10",
+            "prep": {
+              "cmd": "p2-test-e2-sm"
+            }
+          },
+          {
+            "rot": "Interface O1",
+            "t": "OAM / FCAPS",
+            "d": "Gestão, PM/FM e telemetria O1.",
+            "h": "#oran/aulao1",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Governança e modelo 3 · Ordenar mudança assistida 10"
+          },
+          {
+            "rot": "Interface O2",
+            "t": "O-Cloud",
+            "d": "Orquestração e inventário de infraestrutura.",
+            "h": "#oran/aulao2",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Operação contínua 3 · Ordenar rollout típico 10"
+          },
+          {
+            "rot": "Aula 04 · Intervalo 1",
+            "t": "Open Fronthaul",
+            "d": "Split 7.2x e fronthaul aberto.",
+            "h": "#oran/aula04i1",
+            "pts": 9,
+            "partes": "Quiz 3 · Situações 6"
+          },
+          {
+            "rot": "Aula 04 · Intervalo 2",
+            "t": "eCPRI e sincronismo",
+            "d": "Taxa IQ, eCPRI e requisitos de sync.",
+            "h": "#oran/aula04i2",
+            "pts": 9,
+            "partes": "Quiz 3 · Situações 6"
+          },
+          {
+            "rot": "Aula 05 · Intervalo 1",
+            "t": "ML na RAN",
+            "d": "Fundamentos e taxonomia de ML aplicado à RAN.",
+            "h": "#oran/aula05i1",
+            "pts": 9,
+            "partes": "Quiz 3 · Situações 6",
+            "prep": {
+              "href": "/lab/fundamentos",
+              "rot": "Fundamentos de IA"
+            }
+          },
+          {
+            "rot": "Aula 05 · Intervalo 2",
+            "t": "Workflow IA/ML",
+            "d": "rApps, workflow e superfície de segurança.",
+            "h": "#oran/aula05i2",
+            "pts": 9,
+            "partes": "Quiz 3 · Situações 6",
+            "prep": {
+              "href": "/lab/projeto",
+              "rot": "Projeto final do Lab de IA"
+            }
+          },
+          {
+            "rot": "Lab inferência de dígitos",
+            "t": "Canvas → modelo",
+            "d": "Desenhe um algarismo e acompanhe a inferência no navegador: recorte, centro de massa, 784 valores e softmax.",
+            "h": "#oran/aula05digit",
+            "prep": {
+              "href": "/lab/digitos",
+              "rot": "Lab de dígitos"
+            },
+            "pts": 9,
+            "partes": "Quiz 3 · Situações 6"
+          },
+          {
+            "rot": "Lab Open5GS",
+            "t": "Core e E2E",
+            "d": "N2/N3, registro UE e troubleshooting.",
+            "h": "#oran/lab-open5gs",
+            "prep": {
+              "cmd": "test-ue-connection"
+            },
+            "pts": 22,
+            "partes": "Core 3 · Ordenar o roteiro 6 · N2/N3 e E2E 3 · Troubleshooting 10"
+          }
         ]
       }
     },
     {
-      "id": "e2", "n": 2, "icon": "🧠", "bancada": "p2",
+      "id": "e2",
+      "n": 2,
+      "icon": "🧠",
+      "bancada": "p2",
       "titulo": "RAN Intelligent Controller (RIC)",
       "prof": "Prof. Dr. Jonas Augusto Kunzler",
       "periodo": "6 aulas",
       "resumo": "O controlador inteligente da RAN: near-RT e non-RT RIC, as interfaces E2 e A1, xApps e rApps, o SMO e como se testa tudo isso. No lab é o Projeto 2: gNB OAI com agente E2 falando com o FlexRIC, xApps de KPM e controle, e um Non-RT RIC que desce políticas pelo A1.",
       "pdfs": "pdfs/01-ric",
-      "aulas": ["e2a01", "e2a02", "e2a03", "e2a04", "e2a05", "e2a06"],
-      "exercicios": ["p2-test-e2-sm", "p2-test-e2-kpm", "p2-test-e2-kpm-traffic", "p2-test-e2-rc", "p2-kpm-real", "p2-test-a1"],
+      "aulas": [
+        "e2a01",
+        "e2a02",
+        "e2a03",
+        "e2a04",
+        "e2a05",
+        "e2a06"
+      ],
+      "exercicios": [
+        "p2-test-e2-sm",
+        "p2-test-e2-kpm",
+        "p2-test-e2-kpm-traffic",
+        "p2-test-e2-rc",
+        "p2-kpm-real",
+        "p2-test-a1"
+      ],
       "atividades": {
-        "modulo": "Módulo 07", "hash": "#ric",
+        "modulo": "Módulo 07",
+        "hash": "#ric",
         "itens": [
-          {"rot": "Aula 01", "t": "Retomada O-RAN + lab", "d": "Interfaces A1/E2/O1/O2 e revisão N1/N2/N3.", "h": "#ric/aula01", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 1}},
-          {"rot": "Aula 02", "t": "Artigo NGO — OSS RIC", "d": "Plataformas OSS e preparação de projeto.", "h": "#ric/aula02", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 2}},
-          {"rot": "Aula 03", "t": "Projeto 1 · A1", "d": "Políticas Non-RT ↔ Near-RT.", "h": "#ric/aula03", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 3, "cmd": "p2-test-a1"}},
-          {"rot": "Aula 04", "t": "xApps e open source", "d": "O-RAN SC, FlexRIC e lifecycle.", "h": "#ric/aula04", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 4, "cmd": "p2-test-e2-sm"}},
-          {"rot": "Aula 05", "t": "Design e SMO", "d": "SDK, callbacks E2 e integração SMO.", "h": "#ric/aula05", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 5}},
-          {"rot": "Aula 06", "t": "Testes e seminários", "d": "Troubleshooting e Projeto 2.", "h": "#ric/aula06", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 6, "cmd": "p2-test-e2-kpm"}},
-          {"rot": "Lab OAI+FlexRIC", "t": "E2, E2SM e xApps", "d": "Roteiro oai-cn-gnb: core, gNB RFSIM, FlexRIC.", "h": "#ric/lab-oai", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-kpm-real"}}
+          {
+            "rot": "Aula 01",
+            "t": "Retomada O-RAN + lab",
+            "d": "Interfaces A1/E2/O1/O2 e revisão N1/N2/N3.",
+            "h": "#ric/aula01",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 1
+            }
+          },
+          {
+            "rot": "Aula 02",
+            "t": "Artigo NGO — OSS RIC",
+            "d": "Plataformas OSS e preparação de projeto.",
+            "h": "#ric/aula02",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 2
+            }
+          },
+          {
+            "rot": "Aula 03",
+            "t": "Projeto 1 · A1",
+            "d": "Políticas Non-RT ↔ Near-RT.",
+            "h": "#ric/aula03",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 3,
+              "cmd": "p2-test-a1"
+            }
+          },
+          {
+            "rot": "Aula 04",
+            "t": "xApps e open source",
+            "d": "O-RAN SC, FlexRIC e lifecycle.",
+            "h": "#ric/aula04",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 4,
+              "cmd": "p2-test-e2-sm"
+            }
+          },
+          {
+            "rot": "Aula 05",
+            "t": "Design e SMO",
+            "d": "SDK, callbacks E2 e integração SMO.",
+            "h": "#ric/aula05",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 5
+            }
+          },
+          {
+            "rot": "Aula 06",
+            "t": "Testes e seminários",
+            "d": "Troubleshooting e Projeto 2.",
+            "h": "#ric/aula06",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 6,
+              "cmd": "p2-test-e2-kpm"
+            }
+          },
+          {
+            "rot": "Lab OAI+FlexRIC",
+            "t": "E2, E2SM e xApps",
+            "d": "Roteiro oai-cn-gnb: core, gNB RFSIM, FlexRIC.",
+            "h": "#ric/lab-oai",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "cmd": "p2-kpm-real"
+            }
+          }
         ]
       }
     },
     {
-      "id": "e3", "n": 3, "icon": "🎓", "bancada": "p2",
+      "id": "e3",
+      "n": 3,
+      "icon": "🎓",
+      "bancada": "p2",
       "titulo": "Aplicações de IA e ML em RIC",
       "prof": "Prof. Julio C. C. Tesolin",
       "periodo": "6 aulas",
@@ -104,126 +328,442 @@
       "pdfs": "pdfs/02-ric-ai",
       "lab": "/lab",
       "externas": [
-        {"icon": "🧭", "titulo": "Fundamentos", "one": "O que é IA/ML, supervisionado e não supervisionado, e o laço do O-RAN.", "href": "/lab/fundamentos"},
-        {"icon": "📶", "titulo": "Regressão", "one": "Prever um número: o throughput de cada UE (UE-TP).", "href": "/lab/regressao"},
-        {"icon": "🚦", "titulo": "Classificação", "one": "Prever uma categoria: o estado da célula.", "href": "/lab/classificacao"},
-        {"icon": "📍", "titulo": "Localização", "one": "Prever o andar do UE só com KPMs de rádio.", "href": "/lab/localizacao"},
-        {"icon": "🛠️", "titulo": "Manutenção preditiva", "one": "Detectar a RRU perdida pelo lado do UE.", "href": "/lab/manutencao"},
-        {"icon": "🎨", "titulo": "Clustering", "one": "Agrupar células parecidas, sem rótulo.", "href": "/lab/clustering"},
-        {"icon": "🚨", "titulo": "Anomalia", "one": "Achar a célula fora do padrão.", "href": "/lab/anomalia"},
-        {"icon": "🧭", "titulo": "PCA", "one": "Resumir muitos KPIs em poucos.", "href": "/lab/pca"},
-        {"icon": "📄", "titulo": "Projeto final", "one": "Aplicar uma técnica a um caso de uso e entregar o relatório.", "href": "/lab/projeto"},
-        {"icon": "✍️", "titulo": "Inferência de dígitos", "one": "Desenhe um algarismo e veja o host de inferência preparar o dado e o modelo responder.", "href": "/lab/digitos"}
+        {
+          "icon": "🧭",
+          "titulo": "Fundamentos",
+          "one": "O que é IA/ML, supervisionado e não supervisionado, e o laço do O-RAN.",
+          "href": "/lab/fundamentos"
+        },
+        {
+          "icon": "📶",
+          "titulo": "Regressão",
+          "one": "Prever um número: o throughput de cada UE (UE-TP).",
+          "href": "/lab/regressao"
+        },
+        {
+          "icon": "🚦",
+          "titulo": "Classificação",
+          "one": "Prever uma categoria: o estado da célula.",
+          "href": "/lab/classificacao"
+        },
+        {
+          "icon": "📍",
+          "titulo": "Localização",
+          "one": "Prever o andar do UE só com KPMs de rádio.",
+          "href": "/lab/localizacao"
+        },
+        {
+          "icon": "🛠️",
+          "titulo": "Manutenção preditiva",
+          "one": "Detectar a RRU perdida pelo lado do UE.",
+          "href": "/lab/manutencao"
+        },
+        {
+          "icon": "🎨",
+          "titulo": "Clustering",
+          "one": "Agrupar células parecidas, sem rótulo.",
+          "href": "/lab/clustering"
+        },
+        {
+          "icon": "🚨",
+          "titulo": "Anomalia",
+          "one": "Achar a célula fora do padrão.",
+          "href": "/lab/anomalia"
+        },
+        {
+          "icon": "🧭",
+          "titulo": "PCA",
+          "one": "Resumir muitos KPIs em poucos.",
+          "href": "/lab/pca"
+        },
+        {
+          "icon": "📄",
+          "titulo": "Projeto final",
+          "one": "Aplicar uma técnica a um caso de uso e entregar o relatório.",
+          "href": "/lab/projeto"
+        },
+        {
+          "icon": "✍️",
+          "titulo": "Inferência de dígitos",
+          "one": "Desenhe um algarismo e veja o host de inferência preparar o dado e o modelo responder.",
+          "href": "/lab/digitos"
+        }
       ],
-      "exercicios": ["p2-ml-uetp", "p2-ml-localizacao", "p2-ml-pm"],
+      "exercicios": [
+        "p2-ml-uetp",
+        "p2-ml-localizacao",
+        "p2-ml-pm"
+      ],
       "atividades": {
-        "modulo": "Módulo 05", "hash": "#oran", "cruzada": true,
+        "modulo": "Módulo 05",
+        "hash": "#oran",
+        "cruzada": true,
         "itens": [
-          {"rot": "Aula 05 · Intervalo 1", "t": "ML na RAN", "d": "Fundamentos e taxonomia de ML aplicado à RAN.", "h": "#oran/aula05i1", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/fundamentos", "rot": "Fundamentos de IA"}},
-          {"rot": "Aula 05 · Intervalo 2", "t": "Workflow IA/ML", "d": "rApps, workflow e superfície de segurança.", "h": "#oran/aula05i2", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"href": "/lab/projeto", "rot": "Projeto final do Lab de IA"}},
-          {"rot": "Lab inferência de dígitos", "t": "Canvas → modelo", "d": "Desenhe um algarismo e acompanhe a inferência no navegador: recorte, centro de massa, 784 valores e softmax.", "h": "#oran/aula05digit", "prep": {"href": "/lab/digitos", "rot": "Lab de dígitos"}, "pts": 9, "partes": "Quiz 3 · Situações 6"}
+          {
+            "rot": "Aula 05 · Intervalo 1",
+            "t": "ML na RAN",
+            "d": "Fundamentos e taxonomia de ML aplicado à RAN.",
+            "h": "#oran/aula05i1",
+            "pts": 9,
+            "partes": "Quiz 3 · Situações 6",
+            "prep": {
+              "href": "/lab/fundamentos",
+              "rot": "Fundamentos de IA"
+            }
+          },
+          {
+            "rot": "Aula 05 · Intervalo 2",
+            "t": "Workflow IA/ML",
+            "d": "rApps, workflow e superfície de segurança.",
+            "h": "#oran/aula05i2",
+            "pts": 9,
+            "partes": "Quiz 3 · Situações 6",
+            "prep": {
+              "href": "/lab/projeto",
+              "rot": "Projeto final do Lab de IA"
+            }
+          },
+          {
+            "rot": "Lab inferência de dígitos",
+            "t": "Canvas → modelo",
+            "d": "Desenhe um algarismo e acompanhe a inferência no navegador: recorte, centro de massa, 784 valores e softmax.",
+            "h": "#oran/aula05digit",
+            "prep": {
+              "href": "/lab/digitos",
+              "rot": "Lab de dígitos"
+            },
+            "pts": 9,
+            "partes": "Quiz 3 · Situações 6"
+          }
         ]
       }
     },
     {
-      "id": "e4", "n": 4, "icon": "📊", "bancada": "p2",
+      "id": "e4",
+      "n": 4,
+      "icon": "📊",
+      "bancada": "p2",
       "titulo": "Análise de Dados em Redes de Telecom",
       "prof": "Prof. Dr. Jonas Augusto Kunzler",
       "periodo": "ago a set/2026 (concluída)",
       "resumo": "De onde vêm os dados de uma rede (SMO, O1, E2, A1; PM, FM, KPM), como guardá-los (lake, warehouse, as zonas raw/bronze/silver/gold), como explorá-los (EDA, ETL, estatística, visualização) e como transformá-los em indicadores (KPIs/KQIs) e decisões. O projeto integrador (50% da nota) usa a telemetria KPM do nosso lab: todos os grupos partem dos mesmos dados e cada um responde a uma pergunta diferente.",
       "pdfs": "pdfs/03-dados-telecom",
-      "aulas": ["e4a01", "e4a02", "e4a03", "e4a04", "e4a05", "e4a06"],
-      "exercicios": ["p2-kpm-real", "p2-kpm-analytics", "p2-closed-loop"],
+      "aulas": [
+        "e4a01",
+        "e4a02",
+        "e4a03",
+        "e4a04",
+        "e4a05",
+        "e4a06"
+      ],
+      "exercicios": [
+        "p2-kpm-real",
+        "p2-kpm-analytics",
+        "p2-closed-loop"
+      ],
       "dados": {
         "fonte": "kpm-ue-tp-sample (trilha offline do professor): 100 medições KPM em 3 fases, baseline (20), stress (60) e recovery (20).",
         "metricas": [
-          {"k": "thp_ul", "kpm": "DRB.UEThpUl", "o": "vazão de subida do UE", "u": "kbps"},
-          {"k": "delay_dl", "kpm": "DRB.RlcSduDelayDl", "o": "atraso RLC de descida", "u": "µs"},
-          {"k": "prb_ul", "kpm": "RRU.PrbTotUl", "o": "PRB de subida em uso", "u": "% dos PRB"}
+          {
+            "k": "thp_ul",
+            "kpm": "DRB.UEThpUl",
+            "o": "vazão de subida do UE",
+            "u": "kbps"
+          },
+          {
+            "k": "delay_dl",
+            "kpm": "DRB.RlcSduDelayDl",
+            "o": "atraso RLC de descida",
+            "u": "µs"
+          },
+          {
+            "k": "prb_ul",
+            "kpm": "RRU.PrbTotUl",
+            "o": "PRB de subida em uso",
+            "u": "% dos PRB"
+          }
         ],
         "troca": "No console, clique no nó '💾 KPM (3 fases)' da faixa de execução para trocar a fonte: amostra do professor, um arquivo (.jsonl ou .csv) ou dados colados à mão. Só o professor troca; todo mundo vê."
       },
       "temas": [
-        {"id": "t1", "cmd": "p2-tema-t1", "icon": "📶", "titulo": "Vazão do usuário (UE-TP)", "grupo": "Grupo 6 (Henrique, Kelvin, Klinger)",
-         "pergunta": "A vazão do UE sobe e desce junto com o uso de PRB e com o atraso?",
-         "ind": [
-           {"nome": "Vazão UL por fase", "formula": "média(thp_ul) e p95(thp_ul), GROUP BY phase", "u": "kbps"},
-           {"nome": "Utilização de PRB UL por fase", "formula": "média(prb_ul), GROUP BY phase", "u": "% dos PRB"}
-         ],
-         "extra": "Relação: Pearson r = cov(x, y) / (sx * sy), global e dentro de cada fase (a global mistura idle com carga).",
-         "rec": "Se a vazão cair com o PRB alto (usuário mal servido), propor priorização em política A1 (dry-run)."},
-        {"id": "t2", "cmd": "p2-tema-t2", "icon": "🚨", "titulo": "Detecção de anomalia de carga",
-         "pergunta": "Em que momentos a rede sai do normal de forma sustentada, e não num pico isolado?",
-         "ind": [
-           {"nome": "% de amostras anômalas por fase", "formula": "score = |x - mediana_baseline| / max(MAD, 1); anômala se score > 3,5 em pelo menos 2 das 3 métricas", "u": "%"},
-           {"nome": "Intensidade do desvio na carga", "formula": "média e máximo do maior score da amostra, na fase de stress", "u": "adimensional"}
-         ],
-         "extra": "MAD = mediana(|x - mediana(x)|) calculado só no baseline. É o mesmo algoritmo do model.json do professor (robust-baseline-mad); a decisão 'apply' sai quando a janela inteira (5 amostras) é anômala.",
-         "rec": "Com a maioria da janela anômala, decisão de reduzir congestionamento UL em A1 (dry-run). Picos isolados viram falso alarme, não decisão."},
-        {"id": "t3", "cmd": "p2-tema-t3", "icon": "⏱️", "titulo": "Latência e qualidade percebida (QoE)",
-         "pergunta": "Quando o atraso de rádio sugere que a experiência do usuário pode estar ruim?",
-         "ind": [
-           {"nome": "Atraso RLC DL por fase", "formula": "mediana(delay_dl) e p95(delay_dl), GROUP BY phase", "u": "µs"},
-           {"nome": "Fração do tempo em atraso alto", "formula": "n(delay_dl > 100 ms) / n, por fase", "u": "%"}
-         ],
-         "extra": "Cruzamento: atraso alto COM vazão baixa reforça a hipótese de má experiência; atraso alto com vazão alta é fila de carga. O limiar de 100 ms é justificado e ajustável.",
-         "rec": "Atraso sustentado acima do limiar na carga: investigar a sessão e priorizar tráfego sensível (A1 dry-run). O atraso é um proxy: não há nota MOS."},
-        {"id": "t4", "cmd": "p2-tema-t4", "icon": "🚧", "titulo": "Risco de congestionamento",
-         "pergunta": "Os dados mostram saturação que justifique um alerta de capacidade?",
-         "ind": [
-           {"nome": "Utilização de PRB UL", "formula": "média(prb_ul) e p95(prb_ul), GROUP BY phase", "u": "% dos PRB"},
-           {"nome": "Índice de risco", "formula": "n( MM5(prb_ul) > 0,8 * PRB_max  E  MM5(thp_ul) < 0,5 * p95(thp_ul) ) / n", "u": "%"}
-         ],
-         "extra": "MM5 = média móvel de 5 amostras: olha a tendência, não um instante. Rádio cheio com vazão alta é capacidade em uso, não em risco.",
-         "rec": "Só com PRB saturado E vazão caindo: alerta de capacidade e intenção de alívio de carga em A1 (dry-run)."},
-        {"id": "t5", "cmd": "p2-tema-t5", "icon": "🏙️", "titulo": "Visão agregada da célula",
-         "pergunta": "Como resumir o experimento em indicadores de célula, e qual o limite disso no lab?",
-         "ind": [
-           {"nome": "PRB médio da célula por fase", "formula": "média(prb_ul), GROUP BY run_id, phase", "u": "% dos PRB"},
-           {"nome": "Vazão representativa da célula", "formula": "média(thp_ul) por fase; soma = média * n_UE quando há vários UEs", "u": "kbps"}
-         ],
-         "extra": "É o GROUP BY da zona gold do mini-lake. Com 1 UE, média = soma: a agregação é didática, não estatística de campus.",
-         "rec": "Comparar fase normal com fase de carga e declarar o limite: poucos UEs em RFSIM."},
-        {"id": "t6", "cmd": "p2-tema-t6", "icon": "🔋", "titulo": "Economia de energia (só intenção)",
-         "pergunta": "Em que trechos a carga está baixa o suficiente para pensar em economizar energia, sem desligar nada?",
-         "ind": [
-           {"nome": "Fração do tempo em baixa carga", "formula": "baixa carga = prb_ul <= 0,1 * PRB_max  E  thp_ul <= 0,1 * p95(thp_ul); n(baixa) / n", "u": "%"},
-           {"nome": "Vazão e atraso nessas janelas", "formula": "média(thp_ul) e mediana(delay_dl) só nas amostras de baixa carga", "u": "kbps / µs"}
-         ],
-         "extra": "Antes de qualquer intenção, checar se o atraso continua aceitável (<= 100 ms) nas janelas de baixa carga.",
-         "rec": "Intenção de economia em A1 (dry-run) apenas: o lab não controla potência de RU e nada é desligado."},
-        {"id": "t7", "cmd": "p2-tema-t7", "icon": "🎛️", "titulo": "Política de QoS / steering (candidata)",
-         "pergunta": "Diante de degradação, que regra de decisão seria segura para propor uma política de QoS?",
-         "ind": [
-           {"nome": "Tempo em degradação", "formula": "degradação = delay_dl > 100 ms  OU  (prb_ul > 0,8 * PRB_max  E  thp_ul < 0,5 * p95); n(regra) / n", "u": "%"},
-           {"nome": "Acionamentos da política", "formula": "subidas da regra (falso para verdadeiro); 'sustentado' = 3 amostras seguidas", "u": "contagem"}
-         ],
-         "extra": "O filtro de persistência evita reagir a pico isolado (falsos alarmes no baseline e no recovery). A linha do tempo ASCII mostra onde a regra dispara.",
-         "rec": "Política A1 candidata (escopo UE/QoS, prioridade, steering) com validação humana antes de automatizar. Não afirmamos que handover ou path mudaram."}
+        {
+          "id": "t1",
+          "cmd": "p2-tema-t1",
+          "icon": "📶",
+          "titulo": "Vazão do usuário (UE-TP)",
+          "grupo": "Grupo 6 (Henrique, Kelvin, Klinger)",
+          "pergunta": "A vazão do UE sobe e desce junto com o uso de PRB e com o atraso?",
+          "ind": [
+            {
+              "nome": "Vazão UL por fase",
+              "formula": "média(thp_ul) e p95(thp_ul), GROUP BY phase",
+              "u": "kbps"
+            },
+            {
+              "nome": "Utilização de PRB UL por fase",
+              "formula": "média(prb_ul), GROUP BY phase",
+              "u": "% dos PRB"
+            }
+          ],
+          "extra": "Relação: Pearson r = cov(x, y) / (sx * sy), global e dentro de cada fase (a global mistura idle com carga).",
+          "rec": "Se a vazão cair com o PRB alto (usuário mal servido), propor priorização em política A1 (dry-run)."
+        },
+        {
+          "id": "t2",
+          "cmd": "p2-tema-t2",
+          "icon": "🚨",
+          "titulo": "Detecção de anomalia de carga",
+          "pergunta": "Em que momentos a rede sai do normal de forma sustentada, e não num pico isolado?",
+          "ind": [
+            {
+              "nome": "% de amostras anômalas por fase",
+              "formula": "score = |x - mediana_baseline| / max(MAD, 1); anômala se score > 3,5 em pelo menos 2 das 3 métricas",
+              "u": "%"
+            },
+            {
+              "nome": "Intensidade do desvio na carga",
+              "formula": "média e máximo do maior score da amostra, na fase de stress",
+              "u": "adimensional"
+            }
+          ],
+          "extra": "MAD = mediana(|x - mediana(x)|) calculado só no baseline. É o mesmo algoritmo do model.json do professor (robust-baseline-mad); a decisão 'apply' sai quando a janela inteira (5 amostras) é anômala.",
+          "rec": "Com a maioria da janela anômala, decisão de reduzir congestionamento UL em A1 (dry-run). Picos isolados viram falso alarme, não decisão."
+        },
+        {
+          "id": "t3",
+          "cmd": "p2-tema-t3",
+          "icon": "⏱️",
+          "titulo": "Latência e qualidade percebida (QoE)",
+          "pergunta": "Quando o atraso de rádio sugere que a experiência do usuário pode estar ruim?",
+          "ind": [
+            {
+              "nome": "Atraso RLC DL por fase",
+              "formula": "mediana(delay_dl) e p95(delay_dl), GROUP BY phase",
+              "u": "µs"
+            },
+            {
+              "nome": "Fração do tempo em atraso alto",
+              "formula": "n(delay_dl > 100 ms) / n, por fase",
+              "u": "%"
+            }
+          ],
+          "extra": "Cruzamento: atraso alto COM vazão baixa reforça a hipótese de má experiência; atraso alto com vazão alta é fila de carga. O limiar de 100 ms é justificado e ajustável.",
+          "rec": "Atraso sustentado acima do limiar na carga: investigar a sessão e priorizar tráfego sensível (A1 dry-run). O atraso é um proxy: não há nota MOS."
+        },
+        {
+          "id": "t4",
+          "cmd": "p2-tema-t4",
+          "icon": "🚧",
+          "titulo": "Risco de congestionamento",
+          "pergunta": "Os dados mostram saturação que justifique um alerta de capacidade?",
+          "ind": [
+            {
+              "nome": "Utilização de PRB UL",
+              "formula": "média(prb_ul) e p95(prb_ul), GROUP BY phase",
+              "u": "% dos PRB"
+            },
+            {
+              "nome": "Índice de risco",
+              "formula": "n( MM5(prb_ul) > 0,8 * PRB_max  E  MM5(thp_ul) < 0,5 * p95(thp_ul) ) / n",
+              "u": "%"
+            }
+          ],
+          "extra": "MM5 = média móvel de 5 amostras: olha a tendência, não um instante. Rádio cheio com vazão alta é capacidade em uso, não em risco.",
+          "rec": "Só com PRB saturado E vazão caindo: alerta de capacidade e intenção de alívio de carga em A1 (dry-run)."
+        },
+        {
+          "id": "t5",
+          "cmd": "p2-tema-t5",
+          "icon": "🏙️",
+          "titulo": "Visão agregada da célula",
+          "pergunta": "Como resumir o experimento em indicadores de célula, e qual o limite disso no lab?",
+          "ind": [
+            {
+              "nome": "PRB médio da célula por fase",
+              "formula": "média(prb_ul), GROUP BY run_id, phase",
+              "u": "% dos PRB"
+            },
+            {
+              "nome": "Vazão representativa da célula",
+              "formula": "média(thp_ul) por fase; soma = média * n_UE quando há vários UEs",
+              "u": "kbps"
+            }
+          ],
+          "extra": "É o GROUP BY da zona gold do mini-lake. Com 1 UE, média = soma: a agregação é didática, não estatística de campus.",
+          "rec": "Comparar fase normal com fase de carga e declarar o limite: poucos UEs em RFSIM."
+        },
+        {
+          "id": "t6",
+          "cmd": "p2-tema-t6",
+          "icon": "🔋",
+          "titulo": "Economia de energia (só intenção)",
+          "pergunta": "Em que trechos a carga está baixa o suficiente para pensar em economizar energia, sem desligar nada?",
+          "ind": [
+            {
+              "nome": "Fração do tempo em baixa carga",
+              "formula": "baixa carga = prb_ul <= 0,1 * PRB_max  E  thp_ul <= 0,1 * p95(thp_ul); n(baixa) / n",
+              "u": "%"
+            },
+            {
+              "nome": "Vazão e atraso nessas janelas",
+              "formula": "média(thp_ul) e mediana(delay_dl) só nas amostras de baixa carga",
+              "u": "kbps / µs"
+            }
+          ],
+          "extra": "Antes de qualquer intenção, checar se o atraso continua aceitável (<= 100 ms) nas janelas de baixa carga.",
+          "rec": "Intenção de economia em A1 (dry-run) apenas: o lab não controla potência de RU e nada é desligado."
+        },
+        {
+          "id": "t7",
+          "cmd": "p2-tema-t7",
+          "icon": "🎛️",
+          "titulo": "Política de QoS / steering (candidata)",
+          "pergunta": "Diante de degradação, que regra de decisão seria segura para propor uma política de QoS?",
+          "ind": [
+            {
+              "nome": "Tempo em degradação",
+              "formula": "degradação = delay_dl > 100 ms  OU  (prb_ul > 0,8 * PRB_max  E  thp_ul < 0,5 * p95); n(regra) / n",
+              "u": "%"
+            },
+            {
+              "nome": "Acionamentos da política",
+              "formula": "subidas da regra (falso para verdadeiro); 'sustentado' = 3 amostras seguidas",
+              "u": "contagem"
+            }
+          ],
+          "extra": "O filtro de persistência evita reagir a pico isolado (falsos alarmes no baseline e no recovery). A linha do tempo ASCII mostra onde a regra dispara.",
+          "rec": "Política A1 candidata (escopo UE/QoS, prioridade, steering) com validação humana antes de automatizar. Não afirmamos que handover ou path mudaram."
+        }
       ],
       "atividades": {
-        "modulo": "Módulo 09", "hash": "#data",
+        "modulo": "Módulo 09",
+        "hash": "#data",
         "itens": [
-          {"rot": "Aula 01", "t": "DIKW, mapas e fontes", "d": "DIKW · mapas Open5GS/O-RAN · SMO/O1/E2 · PM/FM/KPM · lab UE-TP (Tripathi + Wong 1–3).", "h": "#data/aula01", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 1}},
-          {"rot": "Aula 02", "t": "Lakes e O-Cloud", "d": "Lake vs warehouse, lote/streaming e localidade edge/regional (Wong Cap. 4).", "h": "#data/aula02", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 2}},
-          {"rot": "Aula 03", "t": "EDA, ETL e BI", "d": "Loops non/near-RT, data pipeline ML e laboratório SUTD (Wong Cap. 5).", "h": "#data/aula03", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 3, "cmd": "p2-kpm-analytics"}},
-          {"rot": "Aula 04", "t": "KPIs e QoE", "d": "Medida → KPI → KQI → QoE, E2SM e slice SLA.", "h": "#data/aula04", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 4, "cmd": "p2-kpi-qoe"}},
-          {"rot": "Aula 05", "t": "Capacidade e otimização", "d": "Painel BI, SEHAL, matriz sintoma → alavanca e o closed loop A1: decision ≠ policy ≠ action.", "h": "#data/aula05", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 5, "cmd": "p2-closed-loop"}},
-          {"rot": "Aula 06", "t": "Consolidação", "d": "Pipeline completo, dry-run × closed loop, rúbrica e defesa individual.", "h": "#data/aula06", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"aula": 6, "cmd": "p2-tema-all"}},
-          {"rot": "Lab OAI · UE-TP / KPM→A1", "t": "Projeto prático M09", "d": "Pipeline KPM→SQLite/JSONL→IA→policy A1 (oai-cn-gnb-nonrt-nearrt).", "h": "#data/lab", "pts": 22, "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10", "prep": {"cmd": "p2-ml-uetp"}},
-          {"rot": "Dashboard KPI / NOC", "t": "Monitoramento RAN (BI)", "d": "Painel de NOC sobre as 100 amostras KPM do lab: cartões, semáforo, alertas e três cenários (carga, interferência, backhaul).", "h": "#data/kpi-dashboard", "pts": 9, "partes": "Quiz 3 · Situações 6", "prep": {"aula": 5, "href": "/lab/dashboard-kpi", "rot": "Dashboard KPI / NOC"}}
+          {
+            "rot": "Aula 01",
+            "t": "DIKW, mapas e fontes",
+            "d": "DIKW · mapas Open5GS/O-RAN · SMO/O1/E2 · PM/FM/KPM · lab UE-TP (Tripathi + Wong 1–3).",
+            "h": "#data/aula01",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 1
+            }
+          },
+          {
+            "rot": "Aula 02",
+            "t": "Lakes e O-Cloud",
+            "d": "Lake vs warehouse, lote/streaming e localidade edge/regional (Wong Cap. 4).",
+            "h": "#data/aula02",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 2
+            }
+          },
+          {
+            "rot": "Aula 03",
+            "t": "EDA, ETL e BI",
+            "d": "Loops non/near-RT, data pipeline ML e laboratório SUTD (Wong Cap. 5).",
+            "h": "#data/aula03",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 3,
+              "cmd": "p2-kpm-analytics"
+            }
+          },
+          {
+            "rot": "Aula 04",
+            "t": "KPIs e QoE",
+            "d": "Medida → KPI → KQI → QoE, E2SM e slice SLA.",
+            "h": "#data/aula04",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 4,
+              "cmd": "p2-kpi-qoe"
+            }
+          },
+          {
+            "rot": "Aula 05",
+            "t": "Capacidade e otimização",
+            "d": "Painel BI, SEHAL, matriz sintoma → alavanca e o closed loop A1: decision ≠ policy ≠ action.",
+            "h": "#data/aula05",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 5,
+              "cmd": "p2-closed-loop"
+            }
+          },
+          {
+            "rot": "Aula 06",
+            "t": "Consolidação",
+            "d": "Pipeline completo, dry-run × closed loop, rúbrica e defesa individual.",
+            "h": "#data/aula06",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "aula": 6,
+              "cmd": "p2-tema-all"
+            }
+          },
+          {
+            "rot": "Lab OAI · UE-TP / KPM→A1",
+            "t": "Projeto prático M09",
+            "d": "Pipeline KPM→SQLite/JSONL→IA→policy A1 (oai-cn-gnb-nonrt-nearrt).",
+            "h": "#data/lab",
+            "pts": 22,
+            "partes": "Conceitos 3 · Cenários 6 · Profundidade 3 · Sequência 10",
+            "prep": {
+              "cmd": "p2-ml-uetp"
+            }
+          },
+          {
+            "rot": "Dashboard KPI / NOC",
+            "t": "Monitoramento RAN (BI)",
+            "d": "Painel de NOC sobre as 100 amostras KPM do lab: cartões, semáforo, alertas e três cenários (carga, interferência, backhaul).",
+            "h": "#data/kpi-dashboard",
+            "pts": 9,
+            "partes": "Quiz 3 · Situações 6",
+            "prep": {
+              "aula": 5,
+              "href": "/lab/dashboard-kpi",
+              "rot": "Dashboard KPI / NOC"
+            }
+          }
         ]
       }
     },
     {
-      "id": "e5", "n": 5, "icon": "🎛️", "bancada": "smo",
+      "id": "e5",
+      "n": 5,
+      "icon": "🎛️",
+      "bancada": "smo",
       "titulo": "Gestão, Orquestração e Automação em Redes OpenRAN",
       "prof": "Prof. Lucas Borges de Oliveira",
       "periodo": "set/2026 (em andamento)",
-      "resumo": "Como se opera uma rede Open RAN inteira. A Aula 0 revisa a base (virtualização, NFV, SDN, a evolução D-RAN → C-RAN → vRAN → O-RAN e os componentes da arquitetura O-RAN); a Aula 1 apresenta o SMO (Service Management and Orchestration): por que ele existe, a arquitetura baseada em serviços e os serviços que gerenciam a rede, coletam os dados dela e a orquestram. No nosso lab, o SMO do O-RAN SC roda no servidor ARM64 — controlador O1 (NETCONF/YANG), coletor VES com Kafka, Keycloak e o console ODLUX — gerenciando uma O-DU e O-RUs simulados. A 1ª avaliação (30%) analisa uma plataforma de SMO em 8 itens, e cada item tem um teste real no painel.",
+      "resumo": "Como se opera uma rede Open RAN inteira. A Aula 0 revisa a base (virtualização, NFV, SDN, a evolução D-RAN → C-RAN → vRAN → O-RAN e os componentes da arquitetura O-RAN); a Aula 1 apresenta o SMO (Service Management and Orchestration): por que ele existe, a arquitetura baseada em serviços e os serviços que gerenciam a rede, coletam os dados dela e a orquestram. No nosso lab, o SMO do O-RAN SC roda no servidor ARM64 — controlador O1 (NETCONF/YANG), coletor VES com Kafka, Keycloak e o console ODLUX — gerenciando uma O-DU e O-RUs simulados. A 1ª avaliação (30%) analisa uma plataforma de SMO em 8 itens, e cada item tem um teste real no painel. A Aula 2 detalha a interface O1 como um conjunto de serviços de gerenciamento (MnS): provisionamento, supervisão de falhas, garantia de desempenho, rastreamento, arquivos e software de PNF. A 2ª avaliação (70%) usa o SMO para provisionar, gerenciar e acompanhar uma pilha Open RAN, e tem quatro testes próprios no painel.",
       "pdfs": "pdfs/04-gestao-orquestracao",
-      "aulas": ["e5a00", "e5a01"],
-      "exercicios": ["smo-arquitetura", "smo-o1-leitura", "smo-o1-prov", "smo-falhas", "smo-telemetria", "smo-ciclo-vida", "smo-ocloud"]
+      "aulas": [
+        "e5a00",
+        "e5a01",
+        "e5a02"
+      ],
+      "exercicios": [
+        "smo-arquitetura",
+        "smo-o1-leitura",
+        "smo-o1-prov",
+        "smo-falhas",
+        "smo-telemetria",
+        "smo-ciclo-vida",
+        "smo-ocloud",
+        "smo-p2-pilha",
+        "smo-p2-prov",
+        "smo-p2-operacao",
+        "smo-p2-escala"
+      ]
     }
   ]
 }

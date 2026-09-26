@@ -75,3 +75,16 @@ Os quatro casos estão mapeados nos MnS da Aula 2 no relatório da 2ª parte
 (`build_relatorio_p2.py`): Provisioning e Fault Supervision exercitados por
 inteiro; Performance Assurance e File Management pela metade (a entrega funciona,
 o controle e a transferência não); Trace e PNF Software não existem na solução.
+
+## Acesso do professor
+
+O Prof. Lucas Borges tem login próprio no painel (`lborges`), criado em 26/09/2026
+com acesso total: roda os 11 testes da cadeira 5 e abre os Estudos com as três
+aulas. A senha é gerada na máquina do grupo, vive só no `.env`
+(`PANEL_EXTRA_USERS`) e **nunca entra no git** — foi enviada a ele por e-mail.
+
+- Painel: https://core5g-arm64.duckdns.org
+- Console do SMO (ODLUX): operador único `hcarmine`; se o professor quiser entrar
+  no console, criar a conta dele com `server/smo/smo_acesso_web.sh` na hora.
+- A instância AWS é ligada sob demanda: fora dos horários combinados, o painel
+  não responde. O SMO sobe pelo botão **SMO** do painel e leva ~5 minutos.

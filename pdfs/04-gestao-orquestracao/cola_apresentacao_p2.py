@@ -60,7 +60,11 @@ Ninguém precisa decorar nada: <b>os testes mostram os números sozinhos</b>, e 
 <ol class="check">
 <li>Abra <b>{PAINEL}</b>, entre como <b>Professor</b> e aperte <b>Ctrl+Shift+R</b>.</li>
 <li>No cabeçalho, o botão <b>SMO</b> tem de estar com o <b>ponto verde</b>. Se estiver apagado: quadrante
-    <b>serviços</b> → botão <b>SMO</b> → OK, e espere uns 5 minutos.</li>
+    <b>serviços</b> → botão <b>SMO</b> → OK. <b>Conte uns 6 minutos:</b> o ponto fica verde em uns 2 minutos e meio,
+    mas os equipamentos só entram sob gerência depois disso. O painel recria sozinho o simulador que não se apresentar.</li>
+<li><b>O passo que confirma que está tudo pronto:</b> aperte o botão <b>SMO</b> do cabeçalho, veja no
+    <b>SMO ao vivo</b> os <b>2 elementos conectados</b> e feche. Só o ponto verde não basta — sem os dois elementos,
+    os testes de provisionamento falham.</li>
 <li>Quadrante <b>serviços</b>: se o botão <b>E2 lab</b> estiver verde, desligue (ele deixa o SMO lento).</li>
 <li>Ensaio: {RAIL} → <b>Pilha: instanciar e pôr sob gerência</b> → <b>▶ Iniciar teste</b>. Tem de terminar em verde.
     Depois aperte <b>limpar</b>. (É o único teste demorado: cerca de 1 minuto.)</li>

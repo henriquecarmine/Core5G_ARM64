@@ -56,7 +56,8 @@ section "1. A pilha em operação"
 kv "Célula" "$ME_ID / $DU_ID / $CEL_ID"
 PCI0="$(pci_pela_o1)"
 kv "PCI atual (nRPCI)" "$PCI0"
-kv "Alarmes no controlador" "$(db 'select count(*) from `faultcurrent-v7`') ativos · $(db 'select count(*) from `faultlog-v7`') no histórico"
+ATIVOS0="$(db 'select count(*) from `faultcurrent-v7`')"
+kv "Alarmes no controlador" "$ATIVOS0 ativos · $(db 'select count(*) from `faultlog-v7`') no histórico"
 kv "Eventos de medida no barramento" "$(kafka_fim "$T_PM")"
 [ -n "${PCI0:-}" ] && [ "$PCI0" != "?" ] || { err "não li o PCI da célula pela O1"; summary "tentou operar a pilha" "leitura do PCI falhou" err; exit 1; }
 
@@ -96,9 +97,13 @@ kv "no datastore da O-DU" "$(pci_no_equipamento)   (sysrepo, dentro do elemento)
 
 section "4. Limpar o alarme pelo mesmo caminho"
 FIM2="$(kafka_fim "$TOPICO")"; T2=$(date +%s%3N)
-COD3="$(ves_envia "$(evento NORMAL pciConflict "$ID-limpo" "conflito de PCI resolvido por reconfiguração")")"
+# mesmo eventId do alarme: é assim que o controlador entende que é a limpeza
+# MESMO eventId e MESMO texto do problema: é o par (origem, condição, problema)
+# que o controlador usa para identificar o alarme. Com texto diferente ele
+# guarda dois alarmes e o original fica ativo para sempre (visto em 26/09/2026).
+COD3="$(ves_envia "$(evento NORMAL pciConflict "$ID" "conflito de PCI com célula vizinha (demonstração Core5G)")")"
 kv "VES → coletor" "HTTP $COD3"
-LINHA_LM="$(chega_ao_barramento "$T2" "$FIM2" "$ID-limpo")"
+LINHA_LM="$(chega_ao_barramento "$T2" "$FIM2" "$ID")"
 if [ -n "$LINHA_LM" ]; then
     read -r SEV2 MS2 <<<"$LINHA_LM"
     ok "limpeza $SEV2 no barramento ${MS2} ms depois do envio"
@@ -111,6 +116,11 @@ section "5. Voltar a célula ao plano original"
 restconf PATCH "$BASE_CEL/attributes" "{\"_3gpp-nr-nrm-nrcelldu:attributes\":{\"nRPCI\":$PCI0}}" -o /dev/null -w '%{http_code}' >/dev/null
 trap - EXIT
 kv "PCI no equipamento" "$(pci_no_equipamento) (original: $PCI0)"
+sleep 3   # o controlador leva um instante para tirar o alarme da lista de ativos
+ATIVOS1="$(db 'select count(*) from `faultcurrent-v7`')"
+kv "Alarmes ativos no controlador" "$ATIVOS1 (antes do laço: $ATIVOS0)"
+[ "$ATIVOS1" -le "$ATIVOS0" ] && ok "o alarme saiu da lista de ativos: a limpeza fechou o ciclo" \
+                              || warn "o alarme continua ativo no controlador"
 
 section "6. Quem agiu e quem faltou"
 info "Agiram: RAN NF OAM (provisionamento e falhas pela O1) e o barramento de dados do SMO (tópicos VES)."

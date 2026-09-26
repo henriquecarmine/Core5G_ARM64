@@ -83,6 +83,18 @@ Nenhum deles é de ARM64: todos apareceriam num x86 com o mesmo software de hoje
 | ODLUX logado, mas Connect e Fault vazios; no `karaf.log`, `Unable to update connection-status` | cada contêiner novo do controlador escolhe outro `controllerId`, e o banco guarda conexões e alarmes com o id de quem os gravou; o ODLUX filtra pelo id atual | `smo_alinha_controlador` (`lib.sh`), que o `up_smo.sh` chama depois da camada oam |
 | gateway e kafka-ui perderiam os certificados | a troca ampla reescreveu também `certs-selfsigned/smo.o-ran-sc.org.crt` no compose | linhas com `certs-selfsigned/` ficam como estão |
 
+### Limpeza de alarme que não limpava (26/09/2026)
+
+O `smo_p2_operacao.sh` levantava um alarme de conflito de PCI e mandava a
+limpeza, mas o alarme **continuava na lista de ativos** do controlador. Causa: a
+limpeza ia com outro `specificProblem` ("conflito resolvido por
+reconfiguração"). O SDN-R identifica o alarme pelo par origem + condição +
+problema, então texto diferente vira **outro** alarme, e o original fica ativo
+para sempre. O teste da 1ª parte (`smo_falhas.sh`) nunca teve isso porque usa o
+mesmo texto nos dois eventos. Agora a limpeza repete o mesmo `eventId` e o mesmo
+texto, mudando só a severidade — e o teste mostra na tela os alarmes ativos
+antes e depois, para a limpeza ser visível (1 → 0).
+
 ### Ao ligar o SMO pelo botão do painel (26/09/2026)
 
 | Sintoma | Causa | Correção |

@@ -83,6 +83,17 @@ Nenhum deles é de ARM64: todos apareceriam num x86 com o mesmo software de hoje
 | ODLUX logado, mas Connect e Fault vazios; no `karaf.log`, `Unable to update connection-status` | cada contêiner novo do controlador escolhe outro `controllerId`, e o banco guarda conexões e alarmes com o id de quem os gravou; o ODLUX filtra pelo id atual | `smo_alinha_controlador` (`lib.sh`), que o `up_smo.sh` chama depois da camada oam |
 | gateway e kafka-ui perderiam os certificados | a troca ampla reescreveu também `certs-selfsigned/smo.o-ran-sc.org.crt` no compose | linhas com `certs-selfsigned/` ficam como estão |
 
+### Ao ligar o SMO pelo botão do painel (26/09/2026)
+
+| Sintoma | Causa | Correção |
+|---|---|---|
+| `test_smo.sh` diz **SMO OK**, mas toda escrita pela O1 responde **HTTP 503** e os testes de provisionamento falham | os três simuladores sobem, mas o **call home da O-DU não registra**: ela fica fora da topologia do controlador (só o O-RU híbrido aparece). O `test_smo.sh` não pega isso porque olha realm, controlador e ODLUX | `docker restart pynts-o-du-o1`. Desde a v1.1.2 o próprio `up_smo.sh` cuida disso: `smo_espera_elementos` (lib.sh) espera até 150 s pelos elementos esperados e recria quem não registrou, esperando mais 90 s |
+
+**O ponto verde do botão SMO vem antes dos elementos.** Ele acende quando o
+controlador sobe (~2,5 min); os elementos só entram sob gerência depois do call
+home — com a recriação automática, até uns 6 min no total. Antes de apresentar,
+confira no **SMO ao vivo** os **2 elementos conectados**, não só o ponto verde.
+
 ### Depois de desligar e religar a instância (12/09/2026)
 
 | Sintoma | Causa | Correção |

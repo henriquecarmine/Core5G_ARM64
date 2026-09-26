@@ -110,6 +110,43 @@ location = /odlux/index.html {
              printf '%s\n' "$atual" > "$regras.core5g" && cat "$regras.core5g" > "$regras" && rm "$regras.core5g"; return 1; }
 }
 
+# smo_estado_no <nó> — estado da conexão NETCONF daquele elemento no controlador.
+smo_estado_no() {
+    restconf GET "$MONTAGEM/node=$1?content=nonconfig" \
+      | python3 -c 'import json,sys; print(json.load(sys.stdin)["network-topology:node"][0]["netconf-node-topology:netconf-node"].get("connection-status","?"))' 2>/dev/null \
+      || echo ausente
+}
+
+# smo_espera_elementos — depois de subir a camada network, garante que os
+# elementos que fazem call home apareceram de fato no controlador.
+# Em 26/09/2026, ligando o SMO pelo botão do painel, os três simuladores subiram
+# mas só o O-RU híbrido registrou: a O-DU ficou fora da gerência e TODA escrita
+# pela O1 respondia HTTP 503 (o teste de provisionamento falhava inteiro, e o
+# test_smo.sh dizia "SMO OK" porque olha o controlador, não os elementos).
+# Reiniciar o contêiner do simulador resolve, então a subida faz isso sozinha.
+smo_espera_elementos() {
+    local esperados=(pynts-o-du-o1 pynts-o-ru-hybrid)
+    local nf faltando t0 tentativa limite
+    for tentativa in 1 2; do
+        limite=$([ "$tentativa" = 1 ] && echo 150 || echo 90)
+        t0=$SECONDS
+        while :; do
+            faltando=()
+            for nf in "${esperados[@]}"; do
+                [ "$(smo_estado_no "$nf")" = connected ] || faltando+=("$nf")
+            done
+            [ ${#faltando[@]} -eq 0 ] && { echo "elementos sob gerência: ${esperados[*]}"; return 0; }
+            (( SECONDS - t0 >= limite )) && break
+            sleep 5
+        done
+        [ "$tentativa" = 2 ] && break
+        echo "AVISO: sem call home de ${faltando[*]} em ${limite}s — recriando esse(s) simulador(es)"
+        docker restart "${faltando[@]}" >/dev/null 2>&1 || true
+    done
+    echo "AVISO: ${faltando[*]} não entrou na gerência do SMO. Rode ./up_smo.sh network" >&2
+    return 1
+}
+
 # Para no começo do teste se o SMO estiver desligado (usa o testlog.sh).
 smo_exige_no_ar() {
     if ! docker ps --format '{{.Names}}' | grep -qx controller; then

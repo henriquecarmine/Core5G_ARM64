@@ -116,6 +116,9 @@ for camada in "${QUAIS[@]}"; do
             # controlador reiniciou, só voltam a aparecer recriados. --no-deps
             # para não recriar mais nada junto.
             dc network up -d --force-recreate --no-deps
+            # O call home pode não registrar (visto em 26/09/2026 com a O-DU):
+            # espera os elementos aparecerem e recria quem ficou de fora.
+            smo_espera_elementos || true
             ;;
     esac
     echo "   $camada no ar em $(( (SECONDS - INICIO) / 60 )) min $(( (SECONDS - INICIO) % 60 )) s"

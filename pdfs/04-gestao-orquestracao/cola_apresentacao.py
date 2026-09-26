@@ -109,8 +109,13 @@ def pagina(v1, v2, v3):
 <li>Abra <b>{PAINEL}</b> e entre como <b>Professor</b>.</li>
 <li>No topo, quadrante <b>serviços</b>, com o <b>Projeto 2</b> selecionado: se o botão <b>E2 lab</b> estiver verde,
     aperte e confirme <b>OK</b> para desligar. O gNB e o UE simulados comem 3 dos 4 núcleos e deixam o SMO lento.</li>
-<li>O botão <b>SMO</b> tem de estar <b>verde</b>. Se estiver apagado: aperte, confirme <b>OK</b> e espere ~5 minutos até ficar verde.</li>
 <li>Aperte <b>Ctrl+Shift+R</b> (a tela mudou de versão).</li>
+<li>No cabeçalho, o botão <b>SMO</b> tem de estar com o <b>ponto verde</b> (conferido às 10:05: SMO OK, 15 contêineres,
+    O-DU e O-RU <i>connected</i>). Se estiver apagado: quadrante <b>serviços</b> → botão <b>SMO</b> → <b>OK</b> e espere ~5 minutos.</li>
+<li>Aperte o botão <b>SMO</b> do cabeçalho: abre o <b>SMO ao vivo</b> (elementos conectados, alarmes, eventos do Kafka).
+    Tem de mostrar os 2 elementos <b>connected</b>. Feche.</li>
+<li>Abra uma <b>terceira aba</b> no console do SMO: <b>odlux.oam.smo.core5g-arm64.duckdns.org</b> (ou o link
+    <b>Console ODLUX ↗</b> dentro do SMO ao vivo). Entre com o <b>mesmo usuário e senha do painel</b>. Deixe a aba pronta.</li>
 <li>Ensaio: {RAIL} → <b>Arquitetura do SMO</b> → <b>▶ Iniciar teste</b>. No fim tem de aparecer
     <i>"Resultado: arquitetura completa no ar"</i>. Aperte <b>limpar</b>.</li>
 <li>Ensaio: <b>Telemetria: medidas 3GPP da O-DU</b> → <b>▶ Iniciar teste</b>. Se aparecer
@@ -123,7 +128,8 @@ def pagina(v1, v2, v3):
 <div class="alerta"><b>Como todo teste funciona:</b> botão no rail → <b>▶ Iniciar teste</b> → a faixa acende →
 no fim leia o <b>Resumo</b> e a caixa <b>"O que acabou de acontecer"</b> → <b>limpar</b>.
 O botão <b>mapa</b> (barra do console) abre o mapa da rede com zoom no SMO, para mostrar onde aquilo acontece.
-<b>Se um teste falhar na hora:</b> não conserte na frente da turma — leia o Resumo (ele diz o motivo) e siga para o próximo bloco.</div>
+<b>Se um teste falhar na hora:</b> não conserte na frente da turma — leia o Resumo (ele diz o motivo), rode <b>uma</b> vez de novo e, se falhar outra vez, siga para o próximo bloco.
+<b>Se o ponto do SMO no cabeçalho apagar:</b> quadrante serviços → <b>SMO</b> → OK; enquanto sobe (~5 min), mostre a topologia.</div>
 
 <h2>Os blocos</h2>
 {bloco("0:00–1:30", v1, "Abertura — o que é um SMO e o que vamos mostrar", "abre a apresentação",
@@ -194,6 +200,16 @@ O botão <b>mapa</b> (barra do console) abre o mapa da rede com zoom no SMO, par
    "E montamos tudo em ARM64: os problemas que encontramos no caminho — JDK novo, Traefik antigo com Docker novo — estão documentados, e nenhum era de ARM. Obrigado."],
   "nada — volte para a topologia se quiserem perguntar sobre um componente.")}
 
+{bloco("extra", v1, "Se o professor pedir a tela do próprio SMO", "só se pedirem",
+  ["no painel: botão <b>SMO</b> do cabeçalho → <b>SMO ao vivo</b>",
+   "depois: aba do <b>console ODLUX</b> (já logada) → <b>Connect</b> (elementos) e <b>Fault</b> (alarmes)",
+   "se cair na tela de login: use o botão <b>ONAP-IDENTITY</b>, não o formulário de cima"],
+  ["Esta é a interface do próprio SMO, o <b>ODLUX</b>. O login passa pelo <b>Keycloak</b>, que é a identidade do SMO, com papéis de usuário.",
+   "No <b>Connect</b> estão os elementos que ligaram para o SMO por call home, com o estado da conexão NETCONF. No <b>Fault</b> estão os alarmes que chegaram por VES.",
+   "O SMO ao vivo do painel lê essas mesmas informações, só em texto: elementos, alarmes e os últimos eventos do Kafka."],
+  "O-DU e O-RU <b>Connected</b> no Connect · o histórico de alarmes no Fault.",
+  "\"Could not log in\" é o formulário local, que bloqueamos por segurança — entre pelo botão ONAP-IDENTITY.")}
+
 <h2>Perguntas prováveis — quem responde</h2>
 <div class="qa"><b>Por que simuladores e não o gNB do laboratório?</b> ({html.escape(v2)}) O gNB do OAI não tem agente O1. Por isso usamos a O-DU e os O-RU do próprio O-RAN SC, que falam O1 e M-plane de verdade.</div>
 <div class="qa"><b>Onde está a O2?</b> ({html.escape(v3)}) No projeto INF do O-RAN SC (IMS e DMS sobre StarlingX). O OAM não traz O2.</div>
@@ -201,6 +217,7 @@ O botão <b>mapa</b> (barra do console) abre o mapa da rede com zoom no SMO, par
 <div class="qa"><b>NETCONF × RESTCONF?</b> ({html.escape(v2)}) O mesmo modelo YANG: NETCONF é SSH ou TLS com XML; RESTCONF é HTTP com JSON.</div>
 <div class="qa"><b>Por que o alarme é enviado pelo teste?</b> ({html.escape(v3)}) A O-DU simulada não traz receita de alarmes; o teste usa o formato VES que ela usaria, e o caminho do coletor ao Kafka é o real.</div>
 <div class="qa"><b>E o Non-RT RIC?</b> ({html.escape(v1)}) Pela O-RAN ele mora dentro do SMO. No laboratório ele existe (banda âmbar da topologia), mas as duas pilhas ainda não conversam.</div>
+<div class="qa"><b>O console do SMO está na internet: é seguro?</b> ({html.escape(v1)}) Só o console e o login saem, pelo Caddy com HTTPS válido. Auto-cadastro fechado, proteção contra força bruta, um único operador, e bloqueados o formulário local, o admin e o realm master do Keycloak.</div>
 <div class="qa"><b>Quanto custa rodar?</b> ({html.escape(v3)}) Perto de 5 GB de memória para o SMO e os simuladores, e pouca CPU.</div>
 
 <footer>Gerado para uso do grupo — não versionar. {html.escape(v1)} · {html.escape(v2)} · {html.escape(v3)} ·

@@ -101,6 +101,11 @@ COMMANDS: dict[str, dict] = {
     "smo-telemetria": {"cmd": ["./smo_telemetria.sh"], "cwd": SERVER_DIR / "smo"},
     "smo-ciclo-vida": {"cmd": ["./smo_ciclo_vida.sh"], "cwd": SERVER_DIR / "smo"},
     "smo-ocloud": {"cmd": ["./smo_ocloud.sh"], "cwd": SERVER_DIR / "smo"},
+    # 2ª parte da avaliação: provisionar e gerenciar uma pilha Open RAN com o SMO.
+    "smo-p2-pilha": {"cmd": ["./smo_p2_pilha.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-p2-prov": {"cmd": ["./smo_p2_provisiona.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-p2-operacao": {"cmd": ["./smo_p2_operacao.sh"], "cwd": SERVER_DIR / "smo"},
+    "smo-p2-escala": {"cmd": ["./smo_p2_escala.sh"], "cwd": SERVER_DIR / "smo"},
     "p2-tema-t1": {"cmd": ["./scripts/p2_temas.sh", "t1"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-tema-t2": {"cmd": ["./scripts/p2_temas.sh", "t2"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},
     "p2-tema-t3": {"cmd": ["./scripts/p2_temas.sh", "t3"], "cwd": SERVER_DIR / "oai-cn-gnb-e2"},

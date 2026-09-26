@@ -1045,6 +1045,13 @@
               <button class="test-any" data-cmd="smo-ciclo-vida" data-i18n="t.smo_ciclo_vida" data-i18n-title="t.smo_ciclo_vida_title" title="Item 7: encerra e reinstancia um O-RU; mede a queda, o call home e a nova montagem no controlador">Ciclo de vida de uma função de rede</button>
               <button class="test-any" data-cmd="smo-ocloud" data-i18n="t.smo_ocloud" data-i18n-title="t.smo_ocloud_title" title="Itens 4 e 6: inventário do O-Cloud do lab e a ausência de O2 no OAM do O-RAN SC">O-Cloud e O2 (o que existe e o que falta)</button>
             </div>
+            <div class="est-sub" data-i18n="rail.e5_p2">Parte 2 · provisionar e gerenciar a pilha Open RAN</div>
+            <div class="test-block" data-proj-tests="any">
+              <button class="test-any" data-cmd="smo-p2-pilha" data-i18n="t.smo_p2_pilha" data-i18n-title="t.smo_p2_pilha_title" title="Encerra e instancia as funções de rede simuladas e mede quanto o SMO leva para descobrir cada uma por call home e inventariá-la">Pilha: instanciar e pôr sob gerência</button>
+              <button class="test-any" data-cmd="smo-p2-prov" data-i18n="t.smo_p2_prov" data-i18n-title="t.smo_p2_prov_title" title="Aplica em lote um plano de rede pela O1 (nome da gNB-DU, PCI e ARFCN), confere dentro do equipamento e desfaz">Provisionar a pilha (plano de rede)</button>
+              <button class="test-any" data-cmd="smo-p2-operacao" data-i18n="t.smo_p2_operacao" data-i18n-title="t.smo_p2_operacao_title" title="Laço de operação: alarme de conflito de PCI pelo VES até o barramento, decisão, provisionamento pela O1, verificação no elemento e limpeza do alarme">Operar: do alarme à correção</button>
+              <button class="test-any" data-cmd="smo-p2-escala" data-i18n="t.smo_p2_escala" data-i18n-title="t.smo_p2_escala_title" title="Instancia uma função de rede nova, mede o call home até ela entrar no inventário do SMO e depois a encerra">Escalar: uma função de rede nova</button>
+            </div>
           </div>
         </details>
       </div>
@@ -2063,6 +2070,72 @@ const TEST_EXPLAIN = {
       '<b>O que ficaria com o O2</b>: inventário e alarmes do O-Cloud (IMS) e instanciar/escalar/encerrar NFs pelo SMO (DMS).',
     ],
     concl: '⚠ O-Cloud visível e medido; O2 ausente nesta solução — é a lacuna a apontar na apresentação, com onde ele existe no O-RAN SC.',
+  },
+  // ---- 2ª parte da avaliação: provisionar e gerenciar uma pilha Open RAN ----
+  'smo-p2-pilha': {
+    title: 'O que acabou de acontecer — a pilha Open RAN instanciada e sob gerência',
+    antes: [
+      'Vai <b>encerrar e instanciar de novo</b> as funções de rede simuladas (uma O-DU e dois O-RU) e medir quanto o SMO leva para pôr cada uma sob gerência.',
+      'Ninguém configura o controlador: cada função de rede, ao subir, <b>liga para o SMO</b> (NETCONF call home) e é montada sozinha.',
+      'Quem instancia aqui é o Docker — o papel que num O-RAN completo seria do O-Cloud, pela O2 DMS. Leva cerca de 1 minuto.',
+    ],
+    items: [
+      '<b>Inventário antes e depois</b>: quais elementos o SMO enxerga e quantos modelos YANG cada um anunciou.',
+      '<b>Encerrar</b>: o inventário esvazia — a gerência percebe que a pilha saiu do ar.',
+      '<b>Instanciar</b>: o tempo, por função de rede, entre subir e estar <i>connected</i> no controlador.',
+      '<b>O O-RU hierárquico não aparece</b>, e isso é o esperado: no M-plane hierárquico quem o gerencia é a O-DU.',
+      '<b>Histórico</b>: o connectionlog do controlador guarda Unmounted → Mounted → Connected de cada elemento.',
+    ],
+    concl: '✓ Descoberta, montagem e inventário são automáticos no SMO — é sobre esse inventário que todo o provisionamento se apoia.',
+  },
+  'smo-p2-prov': {
+    title: 'O que acabou de acontecer — um plano de rede provisionado na pilha pela O1',
+    antes: [
+      'Vai aplicar um <b>plano de rede</b> na pilha: nome da gNB-DU, <b>PCI</b> da célula e <b>ARFCN</b> de descida, tudo pela O1.',
+      'Cada parâmetro é um RESTCONF <b>PATCH</b> que o controlador traduz em NETCONF <i>edit-config</i> no elemento.',
+      'Depois <b>confere dentro do equipamento</b> (no datastore do próprio simulador) e <b>desfaz</b> o plano inteiro. Leva uns 10 segundos.',
+    ],
+    items: [
+      '<b>Estado antes</b>: o valor de cada parâmetro do plano, lido pela O1.',
+      '<b>Lote</b>: as escritas uma a uma, com o código HTTP e o tempo de cada uma.',
+      '<b>Conferência</b>: o valor novo lido pela O1 <b>e</b> dentro da O-DU — a prova de que chegou ao equipamento.',
+      '<b>O que o SMO não faz</b>: não há transação entre elementos nem modelo de serviço; se uma escrita falha no meio, quem desfaz é o operador.',
+      '<b>Desfazer</b>: o plano é revertido e o equipamento volta ao estado original.',
+    ],
+    concl: '✓ Provisionamento de pilha pela O1, confirmado dentro dos elementos — e a lacuna de orquestração dita na tela.',
+  },
+  'smo-p2-operacao': {
+    title: 'O que acabou de acontecer — o laço de operação: do alarme à correção',
+    antes: [
+      'Vai simular o dia a dia da operação: um alarme de <b>conflito de PCI</b> chega pelo VES ao barramento do SMO.',
+      'Em seguida, a correção: escolher um PCI livre, <b>provisionar pela O1</b>, conferir dentro do elemento e <b>limpar o alarme</b>.',
+      'Quem decide aqui é o teste, no papel que caberia a uma rApp de SON. No fim, a célula volta ao PCI original.',
+    ],
+    items: [
+      '<b>Alarme</b>: evento VES 7.2.1 aceito pelo coletor (HTTP 202) e publicado no tópico de falhas, com o tempo até chegar.',
+      '<b>Decisão</b>: o PCI novo escolhido a partir do que estava configurado.',
+      '<b>Provisionamento</b>: o PATCH aceito pelo controlador, com o tempo, e o valor conferido no datastore da O-DU.',
+      '<b>Limpeza</b>: o mesmo alarme com severidade NORMAL, de volta ao barramento.',
+      '<b>Quem agiu e quem faltou</b>: agiram a gerência de funções de rede e o barramento de dados; faltaram análise, políticas e a A1 — por isso o laço é fechado pelo operador.',
+    ],
+    concl: '✓ O SMO entrega os meios do laço fechado (dados e provisionamento); a automação em si depende de peças que esta solução não traz.',
+  },
+  'smo-p2-escala': {
+    title: 'O que acabou de acontecer — capacidade nova na pilha, provisionada pela O1',
+    antes: [
+      'Vai <b>criar uma célula nova</b> na O-DU pela O1 — não mudar um parâmetro: criar um objeto de rede que não existia.',
+      'Depois lê de volta, <b>confere dentro do equipamento</b>, <b>altera</b> um atributo da célula nova e por fim a <b>apaga</b>.',
+      'É o ciclo completo de operações de configuração (criar, ler, alterar, apagar) sobre o modelo 3GPP. Leva uns 10 segundos.',
+    ],
+    items: [
+      '<b>A pilha hoje</b>: as células que a O-DU tem, com PCI e identificador local.',
+      '<b>Criar</b>: um RESTCONF POST na lista de células (HTTP 201), com os demais atributos herdados da célula existente.',
+      '<b>Conferir</b>: a célula nova aparece no datastore da própria O-DU — a pilha cresceu de verdade.',
+      '<b>Alterar</b>: um PATCH no ARFCN da célula nova, confirmado no equipamento: ela já é gerenciada como qualquer outra.',
+      '<b>Apagar</b>: DELETE e a pilha volta ao tamanho original.',
+      '<b>O que continua fora</b>: nenhum modelo de serviço gera essa célula a partir de uma intenção, e nada coordena vários elementos — isso seria o SO e o NFO.',
+    ],
+    concl: '✓ Escalar a pilha pela O1 funciona ponta a ponta: criar, alterar e apagar objetos de rede, sempre confirmados dentro do elemento.',
   },
   'p2-kpm-analytics': {
     title: 'O que acabou de acontecer — Dados na RAN (do KPM ao KPI)',

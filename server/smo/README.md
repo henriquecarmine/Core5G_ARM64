@@ -89,6 +89,7 @@ Nenhum deles é de ARM64: todos apareceriam num x86 com o mesmo software de hoje
 |---|---|---|
 | simuladores parados e um contêiner do SMO fora | quase todos os serviços do SMO (e os simuladores) não têm política de reinício; de propósito, o SMO só sobe pelo botão (pesa ~5 GB e não sobe com o P2) | `./up_smo.sh` (ou o botão SMO do painel) |
 | controlador "healthy" no Docker, mas RESTCONF pelo gateway sem resposta (HTTP 000) e nenhum elemento conectado; no log do Traefik, `dial tcp 172.18.0.11:4335` | os serviços roteados estão na rede `smo` e em `dcn`/`dmz`, e o Traefik usa o endereço da primeira rede listada; após o religamento a ordem inverteu e ele passou a usar `smo`, onde o gateway não estava | gateway também na rede `smo` (`compose/common.override.yaml`); na hora, `docker network connect smo gateway` resolveu e os elementos voltaram em 10 s |
+| `kafka` sai com código 1 e `NodeExists` no log, depois de desligar a instância à força | o Zookeeper ainda guardava o registro efêmero do broker anterior (a sessão não expirou porque o volume persistiu) | reiniciar o **zookeeper** antes do kafka (`docker restart zookeeper && sleep 15 && docker start kafka`) e rodar o `up_smo.sh` de novo — visto em 25/09/2026 |
 
 ## Operação
 
@@ -181,6 +182,30 @@ de `smo/oam/.env`.
 ODLUX e Keycloak mandam `X-Frame-Options: SAMEORIGIN` e
 `frame-ancestors 'self'`: não abrem dentro de um iframe do painel. Para a turma,
 o painel tem o **SMO ao vivo** (só leitura, mesmos dados).
+
+## Testes da 2ª parte da avaliação (provisionar e gerenciar a pilha)
+
+Quatro testes, no grupo "Parte 2" da cadeira 5 do painel. Medidos em 25/09/2026:
+
+| Script | O que faz | Medido |
+|---|---|---|
+| `smo_p2_pilha.sh` | encerra e instancia as 3 funções de rede e mede o SMO descobri-las por call home | inventário de 0 a 2 elementos; pilha sob gerência em 18 s |
+| `smo_p2_provisiona.sh` | aplica um plano de rede (gNBDUName, nRPCI, arfcnDL) pela O1, confere no datastore da O-DU e desfaz | 3 escritas em 903 ms, todas confirmadas no elemento |
+| `smo_p2_operacao.sh` | laço fechado: alarme de PCI por VES → barramento → correção pela O1 → verificação → limpeza | alarme em 384 ms; correção HTTP 200 em 188 ms; limpeza em 399 ms |
+| `smo_p2_escala.sh` | CRUD de objeto de rede pela O1: cria a célula NRCellDU-002, confere, altera o ARFCN e apaga | POST 201 em 278 ms; PATCH 200; DELETE 204 |
+
+Todos revertem o que fizeram, inclusive se falharem no meio (`trap`).
+
+**Escalar em número de elementos não dá para demonstrar aqui.** A primeira versão do
+`smo_p2_escala.sh` instanciava um contêiner novo clonando a configuração de um O-RU
+(variáveis e montagens do `docker inspect`). O contêiner sobe, mas nunca entra no
+inventário: os simuladores pynts compartilham a identidade NETCONF — chaves e
+`ietf-netconf-server-running.json` vêm do mesmo diretório montado —, então, para o
+SMO, o clone é o mesmo elemento. Dar identidade nova a uma função de rede instanciada
+é justamente o que a O2 DMS faria; sem ela, o teste virou o CRUD da célula, que mostra
+capacidade nova pela O1. Cuidado ao mexer nesse script: ele não pode imprimir o
+ambiente do contêiner (ali vão credenciais do SMO), e não use `RUN` como nome de
+variável — é do `lib.sh` e aponta para a cópia de trabalho.
 
 ## Limites
 

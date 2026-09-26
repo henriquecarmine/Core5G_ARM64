@@ -138,6 +138,19 @@
                  note: 'o O-RU é encerrado e volta, ligando sozinho para o SMO' },
     smoocloud: { proj: 'ativo', nodes: ['smo-gateway','smo-identity','smo-topology','smo-odlux','smo-kafka','smo-controller','smo-ves','sim-odu','sim-oru-hybrid','sim-oru-hier'],
                  flows: [], note: 'o O-Cloud do lab: as funções implantadas e o que consomem (sem O2)' },
+    // SMO · 2ª parte: provisionar e gerenciar uma pilha Open RAN
+    smop2pilha:  { proj: 'ativo', nodes: ['smo-controller','sim-odu','sim-oru-hybrid','sim-oru-hier'],
+                   flows: [['sim-odu','smo-controller','call home'],['sim-oru-hybrid','smo-controller','call home']],
+                   note: 'a pilha inteira é encerrada e instanciada de novo (Docker, no lugar do O-Cloud); cada função liga para o SMO e volta ao inventário sozinha — o O-RU hierárquico não aparece porque quem o gerencia é a O-DU' },
+    smop2prov:   { proj: 'ativo', nodes: ['smo-controller','sim-odu'], flows: [['smo-controller','sim-odu','O1 · edit-config em lote']],
+                   ghost: [['smo-gateway','smo-controller','RESTCONF PATCH']],
+                   note: 'um plano de rede de 3 parâmetros escrito em lote pela O1, conferido dentro do equipamento e desfeito no fim' },
+    smop2op:     { proj: 'ativo', nodes: ['sim-odu','smo-ves','smo-kafka','smo-controller'],
+                   flows: [['sim-odu','smo-ves','VES fault'],['smo-ves','smo-kafka'],['smo-controller','sim-odu','O1 · correção']],
+                   note: 'o laço da operação: o alarme sobe pelo VES até o barramento e a correção desce pela O1 — quem decide no meio é o operador, não o SMO' },
+    smop2escala: { proj: 'ativo', nodes: ['smo-controller','sim-odu'], flows: [['smo-controller','sim-odu','O1 · criar célula']],
+                   ghost: [['smo-gateway','smo-controller','RESTCONF POST']],
+                   note: 'capacidade nova provisionada pela O1: uma célula criada no modelo 3GPP da O-DU, conferida dentro do equipamento, alterada e apagada — nenhum elemento novo entra no mapa' },
   };
   var TOPO = { p1: null, p2: null }, hosts = {};
 

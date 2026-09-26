@@ -39,7 +39,8 @@ def pagina(n1, n2, n3):
   Gestão, Orquestração e Automação em Redes OpenRAN</div>
   <div class="meio">
     <h1>Provisionamento e gerenciamento de uma pilha Open RAN com o SMO da O-RAN Software Community</h1>
-    <div class="sub">Relatório da avaliação — 2ª parte (70%): uso da ferramenta de SMO analisada na 1ª parte</div>
+    <div class="sub">Relatório da avaliação — 2ª parte (70%): provisionamento, gerenciamento e acompanhamento de uma
+    pilha Open RAN utilizando SMO</div>
     <div class="fio"></div>
     <div class="quem">Trabalho em grupo<br><b>{n1}</b><br><b>{n2}</b><br><b>{n3}</b><br><br>
     Professor: Lucas Borges de Oliveira</div>
@@ -61,9 +62,11 @@ operação que a solução emprega — e os que ela não emprega, com a evidênc
 <p class="kw"><b>Palavras-chave:</b> SMO; O-RAN SC; provisionamento; interface O1; NETCONF/YANG; operação de rede; O2.</p>
 
 <h2>1. Objetivo e método</h2>
-<p>A 2ª parte da avaliação pede usar a ferramenta de SMO analisada na 1ª parte para <b>provisionar e gerenciar uma
-pilha Open RAN composta por funções de rede</b>, e analisar os mecanismos de gestão, orquestração e operação
-empregados pela solução. A ferramenta é o SMO da O-RAN SC, na solução <i>docker compose</i> do projeto OAM, rodando
+<p>A 2ª parte da avaliação pede usar a ferramenta de SMO analisada na 1ª parte para realizar o
+<b>provisionamento, o gerenciamento e o acompanhamento de uma pilha Open RAN</b> e analisar os mecanismos de gestão,
+orquestração e operação empregados pela solução. Os quatro casos deste relatório cobrem os três verbos:
+provisionamento (casos 2 e 4), gerenciamento (casos 1 e 2) e acompanhamento (caso 3, com as falhas e a telemetria
+que o SMO recebe continuamente). A ferramenta é o SMO da O-RAN SC, na solução <i>docker compose</i> do projeto OAM, rodando
 no servidor do grupo (4 vCPU ARM64, 16 GiB), descrito no relatório da 1ª parte.</p>
 <p>O método é o mesmo: em vez de descrever a documentação, <b>operamos a pilha de verdade</b> e medimos. Para cada
 etapa do ciclo de vida operacional escrevemos um teste reproduzível, que conversa com o SMO pelo gateway como um
@@ -186,7 +189,7 @@ gestão, orquestração e operação a solução emprega, com a evidência de ca
      "plano de 3 parâmetros em 903 ms (Caso 2); célula criada e apagada (Caso 4)", SIM],
     ["Gerência de falhas", "dois canais: eventos VES publicados no barramento e notificações NETCONF guardadas pelo controlador",
      "alarme no barramento em 384 ms (Caso 3)", SIM],
-    ["Monitoramento e telemetria", "medidas 3GPP em arquivo, anunciadas por evento VES FileReady no barramento",
+    ["Acompanhamento: monitoramento e telemetria", "medidas 3GPP em arquivo, anunciadas por evento VES FileReady no barramento, sem o SMO consultar o elemento",
      "1.020 eventos de medida acumulados (Caso 3)", SIM],
     ["Exposição de dados", "um tópico Kafka por domínio de evento, aberto a qualquer consumidor, com acesso HTTP pela ponte",
      "o laço do Caso 3 consumiu o alarme do próprio barramento", PARC],

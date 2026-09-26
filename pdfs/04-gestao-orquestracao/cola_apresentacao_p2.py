@@ -62,7 +62,7 @@ acontece na rede. <b>Se um teste falhar:</b> leia o Resumo (ele diz o motivo), r
 {bloco("0:00–3:30", v1, "Abertura — de analisar para operar", "o que muda da 1ª para a 2ª parte",
   ["vá para a aba da <b>Topologia</b>", "aperte <b>Tour</b> e avance até a banda do <b>SMO</b>, depois <b>Sair</b>"],
   ["Na 1ª parte nós analisamos o SMO do O-RAN SC nos oito itens e chegamos a uma conclusão: ele é forte na gerência de funções de rede — O1, M-plane, falhas e telemetria — e não traz O2, O-Cloud nem orquestração.",
-   "Hoje a pergunta é outra: <b>dá para provisionar e operar uma pilha Open RAN com ele?</b> A resposta vem em quatro casos ao vivo: instanciar a pilha, provisionar um plano de rede, operar um alarme até a correção, e escalar com uma função de rede nova.",
+   "Hoje a pergunta é a do enunciado: <b>dá para provisionar, gerenciar e acompanhar uma pilha Open RAN com ele?</b> A resposta vem em quatro casos ao vivo: instanciar a pilha, provisionar um plano de rede, operar um alarme até a correção, e escalar com uma função de rede nova.",
    "Tudo roda agora, no nosso servidor ARM64, e cada número que vocês verão é medido na hora."],
   "a banda <b>SMO</b> e a banda <b>Rede gerenciada por O1</b> — a pilha que vamos operar.")}
 

@@ -68,7 +68,11 @@ orquestração e operação empregados pela solução. Os quatro casos deste rel
 provisionamento (casos 2 e 4), gerenciamento (casos 1 e 2) e acompanhamento (caso 3, com as falhas e a telemetria
 que o SMO recebe continuamente). A ferramenta é o SMO da O-RAN SC, na solução <i>docker compose</i> do projeto OAM, rodando
 no servidor do grupo (4 vCPU ARM64, 16 GiB), descrito no relatório da 1ª parte.</p>
-<p>O método é o mesmo: em vez de descrever a documentação, <b>operamos a pilha de verdade</b> e medimos. Para cada
+<p>Usamos, para descrever o que fizemos, o vocabulário da Aula 2 da disciplina: a O1 é um conjunto de
+<b>serviços de gerenciamento</b> (<i>Management Services</i>, MnS) expostos por um <b>MnS Producer</b> — a função de
+rede, representada em gerência por um <i>ManagedElement</i> e suas <i>ManagedFunctions</i> — e consumidos pelo
+<b>MnS Consumer</b>, que é o SMO (OLIVEIRA, 2026b). A seção 7.1 mapeia cada caso nos serviços correspondentes.</p>
+<p>O método é o mesmo da 1ª parte: em vez de descrever a documentação, <b>operamos a pilha de verdade</b> e medimos. Para cada
 etapa do ciclo de vida operacional escrevemos um teste reproduzível, que conversa com o SMO pelo gateway como um
 operador faria. Os quatro testes estão no painel do laboratório e no repositório, e os números deste relatório vêm
 das execuções de 25/09/2026 (Tabela 1).</p>
@@ -205,6 +209,32 @@ gestão, orquestração e operação a solução emprega, com a evidência de ca
      "relatório da 1ª parte, seção 6.3", NAO],
 ], "Tabela 7 — Mecanismos de gestão, orquestração e operação")}
 
+<h3>7.1 Os serviços de gerenciamento da O1 (MnS) exercitados</h3>
+<p>A Aula 2 da disciplina organiza a O1 em seis serviços de gerenciamento. A Tabela 8 mostra quais deles esta
+solução entrega e quais nós de fato exercitamos nos quatro casos — “exercitar” aqui significa ter medido o serviço
+funcionando, não apenas encontrá-lo na documentação.</p>
+{tab(["Management Service (MnS)", "O que o serviço faz", "O que exercitamos", "Situação"], [
+    ["<b>Provisioning</b>", "criar, ler, modificar e excluir instâncias de configuração",
+     "Caso 2 (modificar: 3 atributos em 903 ms) e Caso 4 (criar e excluir a célula NRCellDU-002)", SIM],
+    ["<b>Fault Supervision</b>", "reportar falhas, manter a lista de alarmes ativos e acompanhar severidade e limpeza",
+     "Caso 3: alarme CRITICAL no barramento em 384 ms e limpeza NORMAL; o controlador mantém alarmes ativos e histórico", SIM],
+    ["<b>Performance Assurance</b>", "coletar e entregar métricas (em arquivo ou fluxo) e controlar o que medir e com que frequência",
+     "a entrega por arquivo funciona (arquivo 3GPP a cada 60 s, 1.020 avisos no barramento); o <i>controle</i> — criar job de medição, escolher métricas — não é exposto pela solução: a configuração de PM vive dentro do simulador", PARC],
+    ["<b>File Management</b>", "avisar que há arquivo pronto, listar e transferir artefatos",
+     "o <code>notifyFileReady</code> chega ao barramento com o endereço do arquivo; nenhum componente da solução lista ou transfere o arquivo", PARC],
+    ["<b>Trace</b>", "criar TraceJob, ativar e coletar rastreamento",
+     "não exercitado: a solução não traz gerência de rastreamento", NAO],
+    ["<b>PNF Software</b>", "inventário, download, validação, ativação e fallback de software",
+     "não exercitado: a solução não traz gerência de software das funções físicas", NAO],
+], "Tabela 8 — Os seis MnS da O1 (OLIVEIRA, 2026b) diante do que a solução entregou")}
+<p>Fora dos seis serviços, o registro e a inicialização do elemento — a função de rede se apresentar à gerência —
+também foram medidos: é o Caso 1, em que cada função de rede faz <i>call home</i> e é montada e inventariada
+automaticamente.</p>
+<p>Vale registrar a aderência de detalhe: as operações NETCONF que a Aula 2 lista são exatamente as que os testes
+usam — <code>get-config</code> nas leituras e <code>edit-config</code> nas escritas, esta última gerada pelo
+controlador a partir de um RESTCONF PATCH ou POST —, e as notificações seguem o padrão REST/HTTP com JSON, que nesta
+solução é o evento VES publicado no barramento.</p>
+
 <h2>8. Limites e achados da operação</h2>
 <ul>
 <li><b>Funções de rede precisam falar O1.</b> O gNB do OpenAirInterface do laboratório não tem agente O1 e por isso
@@ -243,7 +273,9 @@ O-RAN SC — e cada limite encontrado no caminho está exatamente onde a arquite
 <p>BIERMAN, A.; BJORKLUND, M.; WATSEN, K. <b>RFC 8040</b>: RESTCONF Protocol. IETF, 2017.</p>
 <p>ENNS, R. et al. <b>RFC 6241</b>: Network Configuration Protocol (NETCONF). IETF, 2011.</p>
 <p>OLIVEIRA, L. B. de. <b>Aula 1 — Service Management and Orchestrator (SMO)</b>. Gestão, Orquestração e Automação em
-Redes OpenRAN. Recife: CESAR School, 2026. Slides de aula.</p>
+Redes OpenRAN. Recife: CESAR School, 2026a. Slides de aula.</p>
+<p>OLIVEIRA, L. B. de. <b>Aula 2 — Interface O1</b>. Gestão, Orquestração e Automação em Redes OpenRAN. Recife:
+CESAR School, 2026b. Slides de aula.</p>
 <p>O-RAN ALLIANCE. <b>O-RAN Operations and Maintenance Interface Specification</b> (O1). Especificação técnica.</p>
 <p>O-RAN SOFTWARE COMMUNITY. <b>Repositório oam</b>. Disponível em:
 <a href="https://github.com/o-ran-sc/oam">https://github.com/o-ran-sc/oam</a>.</p>

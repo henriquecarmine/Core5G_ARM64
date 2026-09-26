@@ -100,7 +100,8 @@ acontece na rede. <b>Se um teste falhar:</b> leia o Resumo (ele diz o motivo), r
 {bloco("34:00–37:00", v3, "Os mecanismos, em uma tela", "análise pedida pela avaliação",
   ["botão <b>SMO</b> do cabeçalho → <b>SMO ao vivo</b>",
    "se quiserem ver a interface do operador: aba do <b>console ODLUX</b> → <b>Connect</b> e <b>Fault</b>"],
-  ["Resumindo os mecanismos que a solução emprega: <b>descoberta e inventário</b> por call home; <b>provisionamento</b> por NETCONF/YANG com RESTCONF na frente; <b>supervisão de falhas</b> por dois canais, VES no barramento e notificações NETCONF no banco do controlador; <b>telemetria</b> por arquivo 3GPP com aviso FileReady; e <b>identidade</b> com Keycloak.",
+  ["Resumindo na linguagem da <b>Aula 2</b>: a O1 é um conjunto de serviços de gerenciamento, os <b>MnS</b>, que a função de rede (o <b>MnS Producer</b>) expõe e o SMO (o <b>MnS Consumer</b>) consome. Exercitamos quatro deles: <b>Provisioning</b> — criar, alterar e excluir instâncias, nos casos 2 e 4; <b>Fault Supervision</b> — alarme, severidade e limpeza, no caso 3; <b>Performance Assurance</b> — entrega das medidas por arquivo; e <b>File Management</b> — o aviso notifyFileReady.",
+   "Dois ficaram de fora porque a solução não os traz: <b>Trace</b> e <b>PNF Software Management</b>. E nos dois que exercitamos pela metade, o que falta é a parte de controle: o SMO não cria job de medição nem busca o arquivo anunciado.",
    "E os que ela não emprega: não há orquestração de serviço, não há gestão de O-Cloud, não há automação orientada por políticas.",
    "Na prática, isso quer dizer que o SMO do O-RAN SC é uma base de gerência sólida sobre a qual ainda é preciso compor o resto."],
   "no SMO ao vivo: elementos sob gerência, alarmes e os últimos eventos do barramento — tudo o que os quatro casos produziram.")}
@@ -118,6 +119,8 @@ acontece na rede. <b>Se um teste falhar:</b> leia o Resumo (ele diz o motivo), r
 <div class="qa"><b>Quem instancia as funções de rede?</b> ({e(v1)}) Aqui, o Docker. Num O-RAN completo, o O-Cloud pela O2 DMS; no O-RAN SC isso é o projeto INF, sobre StarlingX.</div>
 <div class="qa"><b>O laço de operação é automático?</b> ({e(v3)}) Não: quem decide é o operador ou uma rApp. O SMO entrega os dados no barramento e o provisionamento pela O1.</div>
 <div class="qa"><b>Dá para operar uma rede real com isso?</b> ({e(v1)}) Como base de gerência, sim; faltam orquestração, O-Cloud e o endurecimento de segurança — as senhas do upstream são de laboratório.</div>
+<div class="qa"><b>Quais serviços da O1 vocês exercitaram?</b> ({e(v3)}) Provisioning (casos 2 e 4), Fault Supervision (caso 3), Performance Assurance e File Management (parciais: a entrega funciona, o controle e a transferência não). Trace e PNF Software não existem nesta solução.</div>
+<div class="qa"><b>As operações NETCONF batem com a aula?</b> ({e(v2)}) Sim: <code>get-config</code> nas leituras e <code>edit-config</code> nas escritas, geradas pelo controlador a partir de RESTCONF PATCH ou POST; as notificações vão por REST/HTTP com JSON, que aqui é o evento VES.</div>
 <div class="qa"><b>Quanto custa rodar?</b> ({e(v3)}) Cerca de 4,7 GB de memória para o SMO com os simuladores, em 4 vCPU ARM64.</div>
 
 <footer>Gerado para uso do grupo — não versionar. {e(v1)} · {e(v2)} · {e(v3)} ·
